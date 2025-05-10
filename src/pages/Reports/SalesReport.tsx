@@ -61,8 +61,8 @@ export default function SalesReport() {
   // Calculate average order value
   const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-  // Group sales by product
-  const salesByProduct = filteredOrders.reduce((acc, order) => {
+  // Group sales by product with proper typing
+  const salesByProduct = filteredOrders.reduce<Record<string, ProductSalesData>>((acc, order) => {
     order.items.forEach(item => {
       const productId = item.productId;
       const product = products.find(p => p.id === productId);
@@ -84,13 +84,13 @@ export default function SalesReport() {
       acc[productId].amount += amount;
     });
     return acc;
-  }, {} as Record<string, ProductSalesData>);
+  }, {});
   
-  // Convert to array for charts
+  // Convert to array for charts ensuring type safety
   const productSalesData: ProductSalesData[] = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
   
-  // Group sales by customer
-  const salesByCustomer = filteredOrders.reduce((acc, order) => {
+  // Group sales by customer with proper typing
+  const salesByCustomer = filteredOrders.reduce<Record<string, CustomerSalesData>>((acc, order) => {
     const customerId = order.customerId;
     if (!customerId) return acc;
     
@@ -109,9 +109,9 @@ export default function SalesReport() {
     acc[customerId].totalAmount += (order.totalAmount || 0);
     
     return acc;
-  }, {} as Record<string, CustomerSalesData>);
+  }, {});
   
-  // Convert to array for charts
+  // Convert to array for charts ensuring type safety
   const customerSalesData: CustomerSalesData[] = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
 
   // Function to handle PDF export
