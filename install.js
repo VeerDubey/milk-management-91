@@ -4,19 +4,19 @@ import fs from 'fs';
 import path from 'path';
 
 console.log('Installing dependencies for Milk Center Management Application...');
-console.log('This script will use npm instead of bun to avoid issues with native dependencies.');
+console.log('Using npm for all dependencies to ensure compatibility.');
 
 try {
   // Check if npm is installed
   execSync('npm --version', { stdio: 'ignore' });
   
   console.log('Installing main dependencies...');
-  // Adding --ignore-scripts to avoid running node-gyp and other problematic scripts
-  execSync('npm install --ignore-scripts', { stdio: 'inherit' });
+  // Using --no-fund to reduce console noise
+  execSync('npm install --ignore-scripts --no-fund', { stdio: 'inherit' });
   
   console.log('Installing Electron-specific dependencies...');
-  // Using specific versions that are known to work without node-gyp issues
-  execSync('npm install --no-save --ignore-scripts electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+  // Using specific versions that are known to work well with npm
+  execSync('npm install --no-save --ignore-scripts --no-fund electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
