@@ -83,13 +83,13 @@ Node Version: ${process.version}
 // Execute the appropriate command based on arguments
 switch (command) {
   case 'start':
-    // Start both Vite dev server and Electron - use npm to avoid bun issues with electron
+    // Start both Vite dev server and Electron - use npm to avoid issues
     console.log('Starting development environment...');
-    runCommand('concurrently "npm run dev" "cross-env NODE_ENV=development electron electron/main.js"');
+    runCommand('npx concurrently "npm run dev -- --host" "cross-env NODE_ENV=development electron electron/main.js"');
     break;
 
   case 'build':
-    // Build for current platform only - use npm to avoid bun issues
+    // Build for current platform only
     console.log('Building for current platform...');
     prepareBuildDirectories();
     copyIconFile();
@@ -100,52 +100,52 @@ switch (command) {
     
     const platform = os.platform();
     if (platform === 'win32') {
-      runCommand('npm run electron:build-win');
+      runCommand('npx electron-builder --win --config electron-builder.json');
     } else if (platform === 'darwin') {
-      runCommand('npm run electron:build-mac');
+      runCommand('npx electron-builder --mac --config electron-builder.json');
     } else {
-      runCommand('npm run electron:build-linux');
+      runCommand('npx electron-builder --linux --config electron-builder.json');
     }
     break;
 
   case 'build-all':
-    // Build for all platforms - use npm to avoid bun issues
+    // Build for all platforms
     console.log('Building for all supported platforms...');
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('npm run electron:build');
+    runCommand('npx electron-builder --config electron-builder.json');
     break;
 
   case 'build-win':
-    // Build for Windows - use npm to avoid bun issues
+    // Build for Windows
     console.log('Building for Windows...');
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('electron-builder --win --config electron-builder.json');
+    runCommand('npx electron-builder --win --config electron-builder.json');
     break;
 
   case 'build-mac':
-    // Build for macOS - use npm to avoid bun issues
+    // Build for macOS
     console.log('Building for macOS...');
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('electron-builder --mac --config electron-builder.json');
+    runCommand('npx electron-builder --mac --config electron-builder.json');
     break;
 
   case 'build-linux':
-    // Build for Linux - use npm to avoid bun issues
+    // Build for Linux
     console.log('Building for Linux...');
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('electron-builder --linux --config electron-builder.json');
+    runCommand('npx electron-builder --linux --config electron-builder.json');
     break;
 
   case 'dev':
-    // For development only - use npm to avoid bun issues
+    // For development only
     runCommand('npm run build');
     runCommand('cross-env NODE_ENV=development electron electron/main.js');
     break;

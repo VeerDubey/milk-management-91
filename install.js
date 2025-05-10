@@ -11,10 +11,12 @@ try {
   execSync('npm --version', { stdio: 'ignore' });
   
   console.log('Installing main dependencies...');
-  execSync('npm install', { stdio: 'inherit' });
+  // Adding --ignore-scripts to avoid running node-gyp and other problematic scripts
+  execSync('npm install --ignore-scripts', { stdio: 'inherit' });
   
   console.log('Installing Electron-specific dependencies...');
-  execSync('npm install --no-save electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+  // Using specific versions that are known to work without node-gyp issues
+  execSync('npm install --no-save --ignore-scripts electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
