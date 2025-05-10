@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,13 @@ import { DateRange } from "react-day-picker";
 // Chart colors
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F"];
 
+// Define interface for area data
+interface AreaData {
+  area: string;
+  count: number;
+  totalSpent: number;
+}
+
 export default function CustomerReport() {
   const { customers, orders } = useData();
   const today = new Date();
@@ -23,8 +31,10 @@ export default function CustomerReport() {
   });
 
   // Handler for date range changes
-  const handleDateChange = (range: DateRange) => {
-    setDateRange(range);
+  const handleDateChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   // Filter orders by date range
@@ -90,10 +100,10 @@ export default function CustomerReport() {
     acc[area].count++;
     acc[area].totalSpent += customer.totalSpent;
     return acc;
-  }, {} as Record<string, {area: string; count: number; totalSpent: number}>);
+  }, {} as Record<string, AreaData>);
 
   // Convert to array for charts
-  const areaData = Object.values(customersByArea).sort((a, b) => b.count - a.count);
+  const areaData: AreaData[] = Object.values(customersByArea).sort((a, b) => b.count - a.count);
 
   // Export customer data to PDF
   const handleExportPdf = () => {
@@ -145,9 +155,7 @@ export default function CustomerReport() {
         <div className="flex items-center gap-2">
           <DateRangePicker
             date={dateRange}
-            onDateChange={(range) => {
-              if (range) setDateRange(range);
-            }}
+            onDateChange={handleDateChange}
           />
           <Button variant="outline" onClick={handleExportPdf}>
             <Download className="mr-2 h-4 w-4" />
@@ -304,7 +312,7 @@ export default function CustomerReport() {
               {sortedCustomers.length > 10 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-2 text-sm text-muted-foreground">
-                    {String(sortedCustomers.length - 10)} more customers not shown
+                    {sortedCustomers.length - 10} more customers not shown
                   </TableCell>
                 </TableRow>
               )}

@@ -30,6 +30,12 @@ interface CustomerSalesData {
   totalAmount: number;
 }
 
+// Define daily sales data type
+interface DailySalesData {
+  date: string;
+  amount: number;
+}
+
 export default function SalesReport() {
   const { orders, products, customers } = useData();
   const today = new Date();
@@ -81,7 +87,7 @@ export default function SalesReport() {
   }, {} as Record<string, ProductSalesData>);
   
   // Convert to array for charts
-  const productSalesData = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
+  const productSalesData: ProductSalesData[] = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
   
   // Group sales by customer
   const salesByCustomer = filteredOrders.reduce((acc, order) => {
@@ -106,7 +112,7 @@ export default function SalesReport() {
   }, {} as Record<string, CustomerSalesData>);
   
   // Convert to array for charts
-  const customerSalesData = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
+  const customerSalesData: CustomerSalesData[] = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
 
   // Function to handle PDF export
   const handleExportPdf = () => {
@@ -154,11 +160,17 @@ export default function SalesReport() {
   };
 
   // Handler for date range change
-  const handleDateChange = (range: DateRange) => {
+  const handleDateChange = (range: DateRange | undefined) => {
     if (range) {
       setDateRange(range);
     }
   };
+
+  // Create daily sales data for the chart
+  const dailySalesData: DailySalesData[] = filteredOrders.map(order => ({
+    date: format(parseISO(order.date), "MMM dd"),
+    amount: order.totalAmount || 0
+  }));
 
   return (
     <div className="space-y-6">
@@ -241,10 +253,7 @@ export default function SalesReport() {
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={filteredOrders.map(order => ({
-                      date: format(parseISO(order.date), "MMM dd"),
-                      amount: order.totalAmount
-                    }))}
+                    data={dailySalesData}
                     margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -383,7 +392,7 @@ export default function SalesReport() {
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerName || "N/A"}</TableCell>
                       <TableCell>{order.items.length}</TableCell>
-                      <TableCell className="text-right">{order.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">{order.totalAmount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
                         <Badge variant={order.status === "Completed" ? "success" : 
                                        order.status === "Processing" ? "warning" : "default"}>
