@@ -27,7 +27,7 @@ export default function CustomerRates() {
   const filteredCustomers = customers.filter(
     (customer: Customer) =>
       customer.name.toLowerCase().includes(search.toLowerCase()) ||
-      customer.mobileNumber?.toLowerCase().includes(search.toLowerCase())
+      customer.phone?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleRateChange = (customerId: string, productId: string, value: string) => {
@@ -103,7 +103,7 @@ export default function CustomerRates() {
           const rate = getCustomerRate(customer.id, product.id);
           data.push([
             customer.name,
-            customer.mobileNumber || "-",
+            customer.phone || "-",
             product.name,
             rate.toFixed(2)
           ]);

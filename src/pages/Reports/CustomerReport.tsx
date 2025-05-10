@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DateRange } from "react-day-picker";
 
 // Define chart colors
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
@@ -21,7 +22,10 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"
 export default function CustomerReport() {
   const { customers, orders, payments, products } = useData();
   const today = new Date();
-  const [dateRange, setDateRange] = useState({ from: subDays(today, 90), to: today });
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(today, 90),
+    to: today
+  });
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
@@ -29,13 +33,15 @@ export default function CustomerReport() {
   // Filter orders by date range
   const filteredOrders = orders.filter(order => {
     const orderDate = parseISO(order.date);
-    return orderDate >= dateRange.from && orderDate <= dateRange.to;
+    return dateRange.from && orderDate >= dateRange.from && 
+           dateRange.to && orderDate <= dateRange.to;
   });
 
   // Filter payments by date range
   const filteredPayments = payments.filter(payment => {
     const paymentDate = parseISO(payment.date);
-    return paymentDate >= dateRange.from && paymentDate <= dateRange.to;
+    return dateRange.from && paymentDate >= dateRange.from && 
+           dateRange.to && paymentDate <= dateRange.to;
   });
 
   // Customer acquisition data
@@ -82,7 +88,7 @@ export default function CustomerReport() {
     return {
       id: customer.id,
       name: customer.name,
-      mobileNumber: customer.mobileNumber || "N/A",
+      mobileNumber: customer.phone || "N/A",
       email: customer.email || "N/A",
       orderCount,
       totalSpent,
@@ -155,13 +161,13 @@ export default function CustomerReport() {
         rows,
         {
           title: "Customer Report",
-          subtitle: `Period: ${format(dateRange.from, "dd MMM yyyy")} to ${format(dateRange.to, "dd MMM yyyy")}`,
+          subtitle: `Period: ${dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} to ${dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}`,
           additionalInfo: [
             { label: "Total Customers", value: displayedCustomers.length.toString() },
             { label: "Active Customers", value: displayedCustomers.filter(c => c.orderCount > 0).length.toString() },
             { label: "Total Outstanding", value: `₹${displayedCustomers.reduce((sum, c) => sum + c.outstandingAmount, 0).toFixed(2)}` }
           ],
-          filename: `customer-report-${format(dateRange.from, "yyyyMMdd")}-to-${format(dateRange.to, "yyyyMMdd")}.pdf`,
+          filename: `customer-report-${dateRange.from ? format(dateRange.from, "yyyyMMdd") : ""}-to-${dateRange.to ? format(dateRange.to, "yyyyMMdd") : ""}.pdf`,
           landscape: true
         }
       );
@@ -184,7 +190,7 @@ export default function CustomerReport() {
         </div>
         <div className="flex items-center gap-2">
           <DateRangePicker
-            date={{ from: dateRange.from, to: dateRange.to }}
+            date={dateRange}
             onDateChange={setDateRange}
           />
           <Button variant="outline" onClick={handleExportPdf}>
@@ -425,6 +431,8 @@ export default function CustomerReport() {
                     const count = segment.customers.length;
                     const totalRevenue = segment.customers.reduce((sum, c) => sum + c.totalSpent, 0);
                     const totalRevAll = customerActivity.reduce((sum, c) => sum + c.totalSpent, 0);
+                    const percentOfTotal = count / customers.length;
+                    const percentOfRevenue = totalRevenue / (totalRevAll || 1);
                     const avgOrderValue = count > 0 ? 
                       (segment.customers.reduce((sum, c) => sum + (c.orderCount > 0 ? c.totalSpent / c.orderCount : 0), 0) / count) : 0;
                     
@@ -433,13 +441,13 @@ export default function CustomerReport() {
                         <TableCell>{segment.name}</TableCell>
                         <TableCell className="text-right">{count}</TableCell>
                         <TableCell className="text-right">
-                          {((count / customers.length) * 100).toFixed(1)}%
+                          {(percentOfTotal * 100).toFixed(1)}%
                         </TableCell>
-                        <TableCell className="text-right">{totalRevenue.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{totalRevenue.toFixed(2)}</TableCell>
                         <TableCell className="text-right">
-                          {totalRevAll ? ((totalRevenue / totalRevAll) * 100).toFixed(1) : "0"}%
+                          {(percentOfRevenue * 100).toFixed(1)}%
                         </TableCell>
-                        <TableCell className="text-right">{avgOrderValue.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{avgOrderValue.toFixed(2)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -452,8 +460,8 @@ export default function CustomerReport() {
         <TabsContent value="acquisition">
           <Card>
             <CardHeader>
-              <CardTitle>Customer Acquisition Trend</CardTitle>
-              <CardDescription>New customers over time</CardDescription>
+              <CardTitle>Customer Acquisition</CardTitle>
+              <CardDescription>New customer growth over time</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
@@ -463,40 +471,46 @@ export default function CustomerReport() {
                     margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
+                    <XAxis 
+                      dataKey="month" 
+                      angle={-45} 
+                      textAnchor="end"
+                      height={70} 
+                      tick={{ dy: 10 }}
+                    />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="count" name="New Customers" fill="#8884d8" />
+                    <Bar dataKey="count" name="New Customers" fill="#0088FE" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              
-              <Table className="mt-8">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Month</TableHead>
-                    <TableHead className="text-right">New Customers</TableHead>
-                    <TableHead className="text-right">Growth</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {acquisitionData.map((item, i) => {
-                    const prevMonth = i > 0 ? acquisitionData[i - 1].count : 0;
-                    const growth = prevMonth ? ((item.count - prevMonth) / prevMonth) * 100 : 0;
-                    
-                    return (
-                      <TableRow key={i}>
-                        <TableCell>{item.month}</TableCell>
-                        <TableCell className="text-right">{item.count}</TableCell>
-                        <TableCell className="text-right">
-                          {i === 0 ? "N/A" : `${growth > 0 ? "+" : ""}${growth.toFixed(1)}%`}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <div className="mt-8">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Month</TableHead>
+                      <TableHead className="text-right">New Customers</TableHead>
+                      <TableHead className="text-right">Cumulative Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {acquisitionData.map((data, index, array) => {
+                      const cumulativeCount = array
+                        .slice(0, index + 1)
+                        .reduce((sum, item) => sum + item.count, 0);
+                      
+                      return (
+                        <TableRow key={data.month}>
+                          <TableCell>{data.month}</TableCell>
+                          <TableCell className="text-right">{data.count}</TableCell>
+                          <TableCell className="text-right">{cumulativeCount}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

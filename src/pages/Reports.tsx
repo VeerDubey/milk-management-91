@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { BarChart4, FileChart, Users } from "lucide-react";
+import { BarChart4, FileText, Users } from "lucide-react";
 import SalesReport from "./Reports/SalesReport";
 import CustomerReport from "./Reports/CustomerReport";
 
@@ -65,7 +65,7 @@ export default function Reports() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Financial Reports</CardTitle>
-                    <FileChart className="h-8 w-8 text-primary" />
+                    <FileText className="h-8 w-8 text-primary" />
                   </div>
                   <CardDescription>Financial performance data</CardDescription>
                 </CardHeader>
@@ -95,7 +95,7 @@ export default function Reports() {
                       Customer Activity Report
                     </Button>
                     <Button variant="outline" className="justify-start">
-                      <FileChart className="mr-2 h-4 w-4" />
+                      <FileText className="mr-2 h-4 w-4" />
                       Inventory Status Report
                     </Button>
                   </div>

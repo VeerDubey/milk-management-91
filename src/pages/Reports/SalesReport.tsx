@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { addDays, format, isBetween, parseISO, subDays } from "date-fns";
+import { addDays, format, isAfter, isBefore, parseISO, subDays } from "date-fns";
 import { Download, FileText, Filter, Settings } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { exportToPdf } from "@/utils/pdfUtils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { DateRange } from "react-day-picker";
 
 // Define chart colors
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F"];
@@ -19,7 +20,7 @@ const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F"
 export default function SalesReport() {
   const { orders, products, customers } = useData();
   const today = new Date();
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(today, 30),
     to: today
   });
@@ -28,7 +29,8 @@ export default function SalesReport() {
   // Filter orders by date range
   const filteredOrders = orders.filter(order => {
     const orderDate = parseISO(order.date);
-    return orderDate >= dateRange.from && orderDate <= dateRange.to;
+    return dateRange.from && orderDate >= dateRange.from && 
+           dateRange.to && orderDate <= dateRange.to;
   });
 
   // Calculate total sales
@@ -120,13 +122,13 @@ export default function SalesReport() {
         rows,
         {
           title: "Sales Report",
-          subtitle: `Period: ${format(dateRange.from, "dd MMM yyyy")} to ${format(dateRange.to, "dd MMM yyyy")}`,
+          subtitle: `Period: ${dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} to ${dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}`,
           additionalInfo: [
             { label: "Total Sales", value: `₹${totalSales.toFixed(2)}` },
             { label: "Total Orders", value: totalOrders.toString() },
             { label: "Average Order Value", value: `₹${avgOrderValue.toFixed(2)}` }
           ],
-          filename: `sales-report-${format(dateRange.from, "yyyyMMdd")}-to-${format(dateRange.to, "yyyyMMdd")}.pdf`,
+          filename: `sales-report-${dateRange.from ? format(dateRange.from, "yyyyMMdd") : ""}-to-${dateRange.to ? format(dateRange.to, "yyyyMMdd") : ""}.pdf`,
           landscape: true
         }
       );
@@ -149,7 +151,7 @@ export default function SalesReport() {
         </div>
         <div className="flex items-center gap-2">
           <DateRangePicker
-            date={{ from: dateRange.from, to: dateRange.to }}
+            date={dateRange}
             onDateChange={setDateRange}
           />
           <Button variant="outline" onClick={handleExportPdf}>
@@ -169,7 +171,7 @@ export default function SalesReport() {
           <CardContent>
             <div className="text-3xl font-bold">₹{totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-2">
-              For period {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
             </p>
           </CardContent>
         </Card>
@@ -182,7 +184,7 @@ export default function SalesReport() {
           <CardContent>
             <div className="text-3xl font-bold">{totalOrders}</div>
             <p className="text-xs text-muted-foreground mt-2">
-              For period {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
             </p>
           </CardContent>
         </Card>
@@ -195,7 +197,7 @@ export default function SalesReport() {
           <CardContent>
             <div className="text-3xl font-bold">₹{avgOrderValue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground mt-2">
-              For period {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
             </p>
           </CardContent>
         </Card>

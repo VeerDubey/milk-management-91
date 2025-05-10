@@ -138,8 +138,8 @@ export default function ProductList() {
                 new Set(products?.map((product) => product.category).filter(Boolean))
               ).map((category) => (
                 <DropdownMenuItem 
-                  key={category} 
-                  onClick={() => setSearchTerm(category || '')}
+                  key={category as React.Key} 
+                  onClick={() => setSearchTerm(category as string)}
                 >
                   {category}
                 </DropdownMenuItem>

@@ -141,8 +141,8 @@ export default function CustomerList() {
                 new Set(customers?.map((customer) => customer.area).filter(Boolean))
               ).map((area) => (
                 <DropdownMenuItem 
-                  key={area} 
-                  onClick={() => setSearchTerm(area || '')}
+                  key={area as React.Key} 
+                  onClick={() => setSearchTerm(area as string)}
                 >
                   {area}
                 </DropdownMenuItem>

@@ -42,13 +42,14 @@ import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { toast } from "sonner";
 import InvoiceDownloadButton from "@/components/invoices/InvoiceDownloadButton";
+import { DateRange } from "react-day-picker";
 
 export default function InvoiceHistory() {
   const { invoices } = useData();
   const { downloadInvoice, generateInvoicePreview } = useInvoices();
   
   // State for date range filtering
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: subDays(new Date(), 30),
     to: new Date()
   });
@@ -71,7 +72,7 @@ export default function InvoiceHistory() {
     if (dateRange.from && dateRange.to) {
       filtered = filtered.filter(invoice => {
         const invoiceDate = parseISO(invoice.date);
-        return !isBefore(invoiceDate, dateRange.from) && !isAfter(invoiceDate, dateRange.to);
+        return !isBefore(invoiceDate, dateRange.from as Date) && !isAfter(invoiceDate, dateRange.to as Date);
       });
     }
     
@@ -272,7 +273,7 @@ export default function InvoiceHistory() {
           
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
             <DateRangePicker
-              date={{ from: dateRange.from, to: dateRange.to }}
+              date={dateRange}
               onDateChange={setDateRange}
             />
             
@@ -412,7 +413,7 @@ export default function InvoiceHistory() {
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4" />
                     <span>
-                      {format(dateRange.from, "dd MMM yyyy")} - {format(dateRange.to, "dd MMM yyyy")}
+                      {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
                     </span>
                   </div>
                 </div>
