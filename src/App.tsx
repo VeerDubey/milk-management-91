@@ -35,10 +35,8 @@ import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import TrackSheet from "./pages/TrackSheet";
 import InvoiceHistory from "./pages/InvoiceHistory";
-import InvoiceGenerator from "./pages/InvoiceGenerator";
 import Payments from "./pages/Payments";
 import Products from "./pages/Products";
-import CustomerStatement from "./pages/CustomerStatement";
 import Master from "./pages/Master";
 import StockSettings from "./pages/StockSettings";
 import Suppliers from "./pages/Suppliers";
@@ -52,13 +50,15 @@ import CustomerLedger from "./pages/CustomerLedger";
 import SupplierLedger from "./pages/SupplierLedger";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import SupplierPayments from "./pages/SupplierPayments";
-import Outstanding from "./pages/Outstanding";
-import OutstandingDues from "./pages/OutstandingDues";
 import FinancialYear from "./pages/FinancialYear";
 import Communication from "./pages/Communication";
 import StockManagement from "./pages/StockManagement";
 import BulkRates from "./pages/BulkRates";
 import Signup from "./pages/Signup";
+import SalesReport from "./pages/Reports/SalesReport";
+import CustomerReport from "./pages/Reports/CustomerReport";
+import CustomerRates from "./pages/CustomerRates";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 
 function App() {
   const [createInvoiceFunc, setCreateInvoiceFunc] = useState<Function | null>(null);
@@ -68,6 +68,7 @@ function App() {
       <AuthProvider>
         <DataProvider createInvoiceFunc={createInvoiceFunc}>
           <AppContent setCreateInvoiceFunc={setCreateInvoiceFunc} />
+          <OfflineIndicator />
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>
@@ -116,26 +117,20 @@ function AppContent({ setCreateInvoiceFunc }: AppContentProps) {
               <Route path="area-management" element={<AreaManagement />} />
               
               {/* Invoice Management */}
-              <Route path="invoice-generator" element={<InvoiceGenerator />} />
-              <Route path="invoice-history" element={<InvoiceHistory />} />
               <Route path="invoice-create" element={<InvoiceCreate />} />
-              <Route path="invoice-list" element={<InvoiceHistory />} />
+              <Route path="invoice-history" element={<InvoiceHistory />} />
               
               {/* Customer Management */}
               <Route path="customers" element={<Customers />} />
               <Route path="customer-list" element={<CustomerList />} />
               <Route path="customer-directory" element={<CustomerDirectory />} />
               <Route path="customer/:id" element={<CustomerDetail />} />
-              <Route path="customer/:id/statement" element={<CustomerStatement />} />
-              <Route path="customer-statement" element={<CustomerStatement />} />
               <Route path="customer-ledger" element={<CustomerLedger />} />
-              <Route path="customer-rates" element={<CustomerList />} />
+              <Route path="customer-rates" element={<CustomerRates />} />
               
               {/* Payment Management */}
               <Route path="payments" element={<Payments />} />
-              <Route path="payment-list" element={<PaymentList />} />
               <Route path="payment-create" element={<PaymentCreate />} />
-              <Route path="payment-history" element={<PaymentList />} />
               
               {/* Product Management */}
               <Route path="products" element={<Products />} />
@@ -156,11 +151,9 @@ function AppContent({ setCreateInvoiceFunc }: AppContentProps) {
               
               {/* Financial Management */}
               <Route path="expenses" element={<Expenses />} />
-              <Route path="outstanding" element={<Outstanding />} />
-              <Route path="outstanding-dues" element={<OutstandingDues />} />
               <Route path="reports" element={<Reports />} />
-              <Route path="reports/sales" element={<Reports />} />
-              <Route path="reports/customers" element={<Reports />} />
+              <Route path="reports/sales" element={<SalesReport />} />
+              <Route path="reports/customers" element={<CustomerReport />} />
               
               {/* Master Module */}
               <Route path="master" element={<Master />} />

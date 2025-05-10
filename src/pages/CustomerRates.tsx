@@ -1,181 +1,228 @@
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
+import { Customer } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomerProductRate } from "@/types";
-import { format } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, Download, FileText, Filter } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { exportToPdf } from "@/utils/pdfUtils";
+import { toast } from "sonner";
 
 export default function CustomerRates() {
-  const { customers, products, addCustomerProductRate, updateCustomerProductRate, deleteCustomerProductRate, getCustomerProductRates } = useData();
-  const [selectedCustomerId, setSelectedCustomerId] = useState("none"); // Changed from empty string to "none"
-  const [customerRates, setCustomerRates] = useState<CustomerProductRate[]>([]);
-  const [editingRates, setEditingRates] = useState<Record<string, number>>({});
+  const { customers, products, customerProductRates, addCustomerProductRate, updateCustomerProductRate } = useData();
+  const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [editingRates, setEditingRates] = useState<Record<string, Record<string, number>>>({});
+  
+  // Filter customers based on search
+  const filteredCustomers = customers.filter(
+    (customer: Customer) =>
+      customer.name.toLowerCase().includes(search.toLowerCase()) ||
+      customer.mobileNumber?.toLowerCase().includes(search.toLowerCase())
+  );
 
-  // Load customer rates when customer selection changes
-  useEffect(() => {
-    if (selectedCustomerId && selectedCustomerId !== "none") {
-      const rates = getCustomerProductRates(selectedCustomerId);
-      setCustomerRates(rates);
-      
-      // Initialize editing state with current rates
-      const rateMap: Record<string, number> = {};
-      rates.forEach(rate => {
-        rateMap[rate.productId] = rate.rate;
-      });
-      setEditingRates(rateMap);
-    } else {
-      setCustomerRates([]);
-      setEditingRates({});
-    }
-  }, [selectedCustomerId, getCustomerProductRates]);
-
-  const handleRateChange = (productId: string, value: string) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue >= 0) {
-      setEditingRates(prev => ({
-        ...prev,
+  const handleRateChange = (customerId: string, productId: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setEditingRates(prev => ({
+      ...prev,
+      [customerId]: {
+        ...(prev[customerId] || {}),
         [productId]: numValue
-      }));
-    }
+      }
+    }));
   };
 
-  const saveProductRate = (productId: string) => {
-    const rate = editingRates[productId];
-    if (!rate) return;
+  const saveRates = (customerId: string) => {
+    if (!editingRates[customerId]) return;
 
-    const existingRate = customerRates.find(r => r.productId === productId);
+    Object.entries(editingRates[customerId]).forEach(([productId, rate]) => {
+      // Check if rate already exists
+      const existingRate = customerProductRates.find(
+        r => r.customerId === customerId && r.productId === productId
+      );
+
+      if (existingRate) {
+        updateCustomerProductRate(existingRate.id, { rate });
+      } else {
+        addCustomerProductRate({
+          customerId,
+          productId,
+          rate,
+          effectiveDate: new Date().toISOString()
+        });
+      }
+    });
+
+    // Clear edited rates for this customer
+    setEditingRates(prev => {
+      const updated = { ...prev };
+      delete updated[customerId];
+      return updated;
+    });
+
+    toast.success("Customer rates updated successfully");
+  };
+
+  const getCustomerRate = (customerId: string, productId: string) => {
+    const existingRate = customerProductRates.find(
+      r => r.customerId === customerId && r.productId === productId
+    );
     
     if (existingRate) {
-      updateCustomerProductRate(existingRate.id, { rate });
-      toast.success("Product rate updated");
-    } else {
-      addCustomerProductRate({
-        customerId: selectedCustomerId,
-        productId,
-        rate,
-        effectiveDate: format(new Date(), "yyyy-MM-dd")
-      });
-      toast.success("Product rate added");
+      return existingRate.rate;
     }
+    
+    const product = products.find(p => p.id === productId);
+    return product ? product.price : 0;
   };
 
-  const deleteProductRate = (rateId: string) => {
-    deleteCustomerProductRate(rateId);
-    toast.success("Custom rate removed");
-    
-    // Refresh rates after deletion
-    if (selectedCustomerId && selectedCustomerId !== "none") {
-      const rates = getCustomerProductRates(selectedCustomerId);
-      setCustomerRates(rates);
+  const getCurrentRate = (customerId: string, productId: string) => {
+    if (editingRates[customerId]?.[productId] !== undefined) {
+      return editingRates[customerId][productId];
+    }
+    return getCustomerRate(customerId, productId);
+  };
+
+  const exportRatesToPdf = () => {
+    try {
+      // Prepare headers and data for PDF
+      const headers = ["Customer Name", "Mobile", "Product", "Rate (₹)"];
+      
+      const data: any[][] = [];
+      filteredCustomers.forEach(customer => {
+        products.forEach(product => {
+          const rate = getCustomerRate(customer.id, product.id);
+          data.push([
+            customer.name,
+            customer.mobileNumber || "-",
+            product.name,
+            rate.toFixed(2)
+          ]);
+        });
+      });
+      
+      // Export to PDF
+      exportToPdf(
+        headers,
+        data,
+        {
+          title: "Customer Product Rates",
+          subtitle: "Rate sheet for all customers",
+          dateInfo: new Date().toLocaleDateString(),
+          filename: "customer-rates.pdf",
+          landscape: true
+        }
+      );
+      
+      toast.success("Customer rates exported to PDF");
+    } catch (error) {
+      console.error("Error exporting rates:", error);
+      toast.error("Failed to export customer rates");
     }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Customer-Wise Product Rates</h1>
-        <p className="text-gray-500">Set custom product rates for specific customers</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Customer Rates</h1>
+          <p className="text-muted-foreground">
+            Manage product rates for each customer
+          </p>
+        </div>
+        <Button onClick={exportRatesToPdf}>
+          <Download className="mr-2 h-4 w-4" />
+          Export Rates
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Customer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-w-md mb-6">
-            <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a customer" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Select a customer</SelectItem>
-                {customers.map(customer => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search customers..."
+            className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by customer" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Customers</SelectItem>
+            {customers.map((customer) => (
+              <SelectItem key={customer.id} value={customer.id}>
+                {customer.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {selectedCustomerId && selectedCustomerId !== "none" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Rates</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Default Rate (₹)</TableHead>
-                    <TableHead>Custom Rate (₹)</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.length > 0 ? (
-                    products.map(product => {
-                      const existingRate = customerRates.find(r => r.productId === product.id);
+      <div className="grid gap-6">
+        {filteredCustomers
+          .filter(c => !selectedCustomer || c.id === selectedCustomer)
+          .map((customer) => (
+            <Card key={customer.id} className="overflow-hidden">
+              <CardHeader className="bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <CardTitle>{customer.name}</CardTitle>
+                  {editingRates[customer.id] && (
+                    <Button size="sm" onClick={() => saveRates(customer.id)}>
+                      Save Changes
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-1/3">Product</TableHead>
+                      <TableHead className="w-1/3">Default Price (₹)</TableHead>
+                      <TableHead className="w-1/3">Customer Rate (₹)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {products.map((product) => {
+                      const currentRate = getCurrentRate(customer.id, product.id);
+                      const isDefaultRate = currentRate === product.price;
+                      
                       return (
-                        <TableRow key={product.id}>
+                        <TableRow key={`${customer.id}-${product.id}`}>
                           <TableCell>{product.name}</TableCell>
-                          <TableCell>{product.price}</TableCell>
+                          <TableCell>{product.price.toFixed(2)}</TableCell>
                           <TableCell>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={editingRates[product.id] || ""}
-                              onChange={(e) => handleRateChange(product.id, e.target.value)}
-                              placeholder={`${product.price}`}
-                              className="w-24"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {existingRate ? (
-                              <div className="flex space-x-2">
-                                <Button size="sm" onClick={() => saveProductRate(product.id)}>
-                                  Update
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => deleteProductRate(existingRate.id)}>
-                                  Remove
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button 
-                                size="sm" 
-                                onClick={() => saveProductRate(product.id)}
-                                disabled={!editingRates[product.id]}
-                              >
-                                Set Rate
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={currentRate}
+                                onChange={(e) => handleRateChange(customer.id, product.id, e.target.value)}
+                                className={isDefaultRate ? "" : "border-primary text-primary"}
+                                step="0.01"
+                              />
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
-                    })
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
-                        No products available. Add products first to set custom rates.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ))}
+      </div>
     </div>
   );
 }
