@@ -83,9 +83,9 @@ Node Version: ${process.version}
 // Execute the appropriate command based on arguments
 switch (command) {
   case 'start':
-    // Start both Vite dev server and Electron - use npm to avoid issues
+    // Start both Vite dev server and Electron - use npm consistently
     console.log('Starting development environment...');
-    runCommand('npx concurrently "npm run dev -- --host" "cross-env NODE_ENV=development electron electron/main.js"');
+    runCommand('npx concurrently "npm run dev -- --host" "npx cross-env NODE_ENV=development npx electron electron/main.js"');
     break;
 
   case 'build':
@@ -145,9 +145,9 @@ switch (command) {
     break;
 
   case 'dev':
-    // For development only
+    // For development only - use npm consistently
     runCommand('npm run build');
-    runCommand('cross-env NODE_ENV=development electron electron/main.js');
+    runCommand('npx cross-env NODE_ENV=development npx electron electron/main.js');
     break;
 
   default:

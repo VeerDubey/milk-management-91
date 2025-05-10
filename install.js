@@ -11,16 +11,16 @@ try {
   execSync('npm --version', { stdio: 'ignore' });
   
   console.log('Installing main dependencies...');
-  // Using --no-fund to reduce console noise
-  execSync('npm install --ignore-scripts --no-fund', { stdio: 'inherit' });
+  // Using --no-fund and --legacy-peer-deps to improve compatibility
+  execSync('npm install --ignore-scripts --no-fund --legacy-peer-deps', { stdio: 'inherit' });
   
   console.log('Installing Electron-specific dependencies...');
-  // Using specific versions that are known to work well with npm
-  execSync('npm install --no-save --ignore-scripts --no-fund electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+  // Adding explicit flags to avoid Git-based installation issues
+  execSync('npm install --no-save --ignore-scripts --no-fund --legacy-peer-deps --no-git electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
-  execSync('npm install --no-save --ignore-scripts lovable-tagger@latest', { stdio: 'inherit' });
+  execSync('npm install --no-save --ignore-scripts --legacy-peer-deps lovable-tagger@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
