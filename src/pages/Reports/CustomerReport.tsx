@@ -88,22 +88,23 @@ export default function CustomerReport() {
     totalRevenue / activeCustomersCount : 0;
 
   // Group customers by area
-  const customersByArea = activeCustomers.reduce<Record<string, AreaData>>((acc, customer) => {
+  const customersByArea: Record<string, AreaData> = {};
+  
+  activeCustomers.forEach(customer => {
     const area = customer.area || 'Unknown';
-    if (!acc[area]) {
-      acc[area] = {
+    if (!customersByArea[area]) {
+      customersByArea[area] = {
         area,
         count: 0,
         totalSpent: 0
       };
     }
-    acc[area].count++;
-    acc[area].totalSpent += customer.totalSpent;
-    return acc;
-  }, {});
+    customersByArea[area].count++;
+    customersByArea[area].totalSpent += customer.totalSpent;
+  });
 
   // Convert to array for charts with type safety
-  const areaData: AreaData[] = Object.values(customersByArea).sort((a, b) => b.count - a.count);
+  const areaData = Object.values(customersByArea).sort((a, b) => b.count - a.count);
 
   // Export customer data to PDF
   const handleExportPdf = () => {

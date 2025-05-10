@@ -62,7 +62,9 @@ export default function SalesReport() {
   const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
   // Group sales by product with proper typing
-  const salesByProduct = filteredOrders.reduce<Record<string, ProductSalesData>>((acc, order) => {
+  const salesByProduct: Record<string, ProductSalesData> = {};
+  
+  filteredOrders.forEach(order => {
     order.items.forEach(item => {
       const productId = item.productId;
       const product = products.find(p => p.id === productId);
@@ -72,47 +74,46 @@ export default function SalesReport() {
       const quantity = item.quantity || 0;
       const amount = product.price * quantity;
       
-      if (!acc[productId]) {
-        acc[productId] = {
+      if (!salesByProduct[productId]) {
+        salesByProduct[productId] = {
           name: productName,
           quantity: 0,
           amount: 0
         };
       }
       
-      acc[productId].quantity += quantity;
-      acc[productId].amount += amount;
+      salesByProduct[productId].quantity += quantity;
+      salesByProduct[productId].amount += amount;
     });
-    return acc;
-  }, {});
+  });
   
   // Convert to array for charts ensuring type safety
-  const productSalesData: ProductSalesData[] = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
+  const productSalesData = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
   
   // Group sales by customer with proper typing
-  const salesByCustomer = filteredOrders.reduce<Record<string, CustomerSalesData>>((acc, order) => {
+  const salesByCustomer: Record<string, CustomerSalesData> = {};
+  
+  filteredOrders.forEach(order => {
     const customerId = order.customerId;
-    if (!customerId) return acc;
+    if (!customerId) return;
     
     const customer = customers.find(c => c.id === customerId);
-    if (!customer) return acc;
+    if (!customer) return;
     
-    if (!acc[customerId]) {
-      acc[customerId] = {
+    if (!salesByCustomer[customerId]) {
+      salesByCustomer[customerId] = {
         name: customer.name,
         orders: 0,
         totalAmount: 0
       };
     }
     
-    acc[customerId].orders += 1;
-    acc[customerId].totalAmount += (order.totalAmount || 0);
-    
-    return acc;
-  }, {});
+    salesByCustomer[customerId].orders += 1;
+    salesByCustomer[customerId].totalAmount += (order.totalAmount || 0);
+  });
   
   // Convert to array for charts ensuring type safety
-  const customerSalesData: CustomerSalesData[] = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
+  const customerSalesData = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
 
   // Function to handle PDF export
   const handleExportPdf = () => {
