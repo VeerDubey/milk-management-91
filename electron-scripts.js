@@ -123,7 +123,7 @@ switch (command) {
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('npm run electron:build-win');
+    runCommand('electron-builder --win --config electron-builder.json');
     break;
 
   case 'build-mac':
@@ -132,7 +132,7 @@ switch (command) {
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('npm run electron:build-mac');
+    runCommand('electron-builder --mac --config electron-builder.json');
     break;
 
   case 'build-linux':
@@ -141,7 +141,7 @@ switch (command) {
     prepareBuildDirectories();
     copyIconFile();
     runCommand('npm run build');
-    runCommand('npm run electron:build-linux');
+    runCommand('electron-builder --linux --config electron-builder.json');
     break;
 
   case 'dev':

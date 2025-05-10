@@ -1,6 +1,7 @@
 
 import { execSync } from 'child_process';
 import fs from 'fs';
+import path from 'path';
 
 console.log('Installing dependencies for Milk Center Management Application...');
 console.log('This script will use npm instead of bun to avoid issues with native dependencies.');
@@ -12,10 +13,13 @@ try {
   console.log('Installing main dependencies...');
   execSync('npm install', { stdio: 'inherit' });
   
-  console.log('Installation completed successfully!');
+  console.log('Installing Electron-specific dependencies...');
+  execSync('npm install --no-save electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+
+  console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
-  console.log('  npm run electron:start   - to run in development mode');
-  console.log('  npm run electron:build   - to build for your current platform');
+  console.log('  node electron-scripts.js start   - to run in development mode');
+  console.log('  node electron-scripts.js build   - to build for your current platform');
 } catch (error) {
   console.error('Error during installation:');
   console.error(error.message);
