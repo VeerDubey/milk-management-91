@@ -83,70 +83,70 @@ Node Version: ${process.version}
 // Execute the appropriate command based on arguments
 switch (command) {
   case 'start':
-    // Start both Vite dev server and Electron
+    // Start both Vite dev server and Electron - use npm to avoid bun issues with electron
     console.log('Starting development environment...');
-    runCommand('concurrently "vite" "cross-env NODE_ENV=development electron electron/main.js"');
+    runCommand('concurrently "npm run dev" "cross-env NODE_ENV=development electron electron/main.js"');
     break;
 
   case 'build':
-    // Build for current platform only
+    // Build for current platform only - use npm to avoid bun issues
     console.log('Building for current platform...');
     prepareBuildDirectories();
     copyIconFile();
-    runCommand('vite build');
+    runCommand('npm run build');
     
     // Ensure electron directory is included in the build
     console.log('Ensuring electron directory is included in the build...');
     
     const platform = os.platform();
     if (platform === 'win32') {
-      runCommand('electron-builder build --win');
+      runCommand('npm run electron:build-win');
     } else if (platform === 'darwin') {
-      runCommand('electron-builder build --mac');
+      runCommand('npm run electron:build-mac');
     } else {
-      runCommand('electron-builder build --linux');
+      runCommand('npm run electron:build-linux');
     }
     break;
 
   case 'build-all':
-    // Build for all platforms
+    // Build for all platforms - use npm to avoid bun issues
     console.log('Building for all supported platforms...');
     prepareBuildDirectories();
     copyIconFile();
-    runCommand('vite build');
-    runCommand('electron-builder build --win --mac --linux');
+    runCommand('npm run build');
+    runCommand('npm run electron:build');
     break;
 
   case 'build-win':
-    // Build for Windows
+    // Build for Windows - use npm to avoid bun issues
     console.log('Building for Windows...');
     prepareBuildDirectories();
     copyIconFile();
-    runCommand('vite build');
-    runCommand('electron-builder build --win');
+    runCommand('npm run build');
+    runCommand('npm run electron:build-win');
     break;
 
   case 'build-mac':
-    // Build for macOS
+    // Build for macOS - use npm to avoid bun issues
     console.log('Building for macOS...');
     prepareBuildDirectories();
     copyIconFile();
-    runCommand('vite build');
-    runCommand('electron-builder build --mac');
+    runCommand('npm run build');
+    runCommand('npm run electron:build-mac');
     break;
 
   case 'build-linux':
-    // Build for Linux
+    // Build for Linux - use npm to avoid bun issues
     console.log('Building for Linux...');
     prepareBuildDirectories();
     copyIconFile();
-    runCommand('vite build');
-    runCommand('electron-builder build --linux');
+    runCommand('npm run build');
+    runCommand('npm run electron:build-linux');
     break;
 
   case 'dev':
-    // For development only
-    runCommand('vite build');
+    // For development only - use npm to avoid bun issues
+    runCommand('npm run build');
     runCommand('cross-env NODE_ENV=development electron electron/main.js');
     break;
 

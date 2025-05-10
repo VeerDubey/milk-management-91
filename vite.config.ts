@@ -19,18 +19,12 @@ export default defineConfig(({ mode }) => ({
   },
   base: './', // This is crucial for Electron to load assets correctly when packaged
   build: {
-    // Optimize production builds
-    target: 'es2015',
-    minify: 'terser',
-    cssMinify: true,
-    reportCompressedSize: false,
-    outDir: 'dist', // Ensure the output directory is explicitly set
-    assetsDir: 'assets', // Put assets in a subdirectory
-    sourcemap: false, // Don't generate sourcemaps for production
+    // Simplified build configuration to avoid complex dependencies
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: mode === 'development',
     rollupOptions: {
-      // External dependencies that should not be bundled
       output: {
-        // Chunk vendor code
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-vendor': [
@@ -53,8 +47,6 @@ export default defineConfig(({ mode }) => ({
           'chart-vendor': ['recharts']
         }
       }
-    },
-    // Improve chunk loading strategy
-    chunkSizeWarningLimit: 1000,
+    }
   },
 }));
