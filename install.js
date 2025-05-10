@@ -18,6 +18,10 @@ try {
   // Using specific versions that are known to work without node-gyp issues
   execSync('npm install --no-save --ignore-scripts electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
+  // Install lovable-tagger explicitly
+  console.log('Installing Lovable tagger plugin...');
+  execSync('npm install --no-save --ignore-scripts lovable-tagger@latest', { stdio: 'inherit' });
+
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
   console.log('  node electron-scripts.js start   - to run in development mode');
