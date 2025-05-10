@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -146,7 +145,9 @@ export default function CustomerReport() {
         <div className="flex items-center gap-2">
           <DateRangePicker
             date={dateRange}
-            onDateChange={handleDateChange}
+            onDateChange={(range) => {
+              if (range) setDateRange(range);
+            }}
           />
           <Button variant="outline" onClick={handleExportPdf}>
             <Download className="mr-2 h-4 w-4" />

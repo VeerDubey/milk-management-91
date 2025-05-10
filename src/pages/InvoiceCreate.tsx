@@ -197,8 +197,25 @@ export default function InvoiceCreate() {
   // Generate invoice preview
   const generatePreview = () => {
     try {
+      // Fix: Cast form values to the required type to ensure all required fields are present
       const invoiceData = form.getValues();
-      const invoice = createInvoiceFromFormData(invoiceData);
+      const invoice = createInvoiceFromFormData({
+        invoiceNumber: invoiceData.invoiceNumber,
+        invoiceDate: invoiceData.invoiceDate,
+        dueDate: invoiceData.dueDate,
+        customerId: invoiceData.customerId,
+        customerName: invoiceData.customerName,
+        notes: invoiceData.notes,
+        terms: invoiceData.terms,
+        taxRate: invoiceData.taxRate,
+        discountPercentage: invoiceData.discountPercentage,
+        items: invoiceData.items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount
+        }))
+      });
       const url = generateInvoicePreview(invoice);
       setPreviewUrl(url);
       setShowPreview(true);
@@ -211,8 +228,24 @@ export default function InvoiceCreate() {
   // Handle form submission
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
-      // Create invoice object
-      const invoice = createInvoiceFromFormData(data);
+      // Fix: Cast form values to the required type to ensure all required fields are present
+      const invoice = createInvoiceFromFormData({
+        invoiceNumber: data.invoiceNumber,
+        invoiceDate: data.invoiceDate,
+        dueDate: data.dueDate,
+        customerId: data.customerId,
+        customerName: data.customerName,
+        notes: data.notes,
+        terms: data.terms,
+        taxRate: data.taxRate,
+        discountPercentage: data.discountPercentage,
+        items: data.items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount
+        }))
+      });
       
       // Add to invoices
       addInvoice(invoice);

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,20 @@ import { Badge } from "@/components/ui/badge";
 import { DateRange } from "react-day-picker";
 
 // Define chart colors
-const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088fe", "#00C49F"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#0088fe", "#00C49F"];
+
+// Define types for our data structures
+interface ProductSalesData {
+  name: string;
+  quantity: number;
+  amount: number;
+}
+
+interface CustomerSalesData {
+  name: string;
+  orders: number;
+  totalAmount: number;
+}
 
 export default function SalesReport() {
   const { orders, products, customers } = useData();
@@ -64,7 +78,7 @@ export default function SalesReport() {
       acc[productId].amount += amount;
     });
     return acc;
-  }, {} as Record<string, {name: string; quantity: number; amount: number}>);
+  }, {} as Record<string, ProductSalesData>);
   
   // Convert to array for charts
   const productSalesData = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
@@ -89,7 +103,7 @@ export default function SalesReport() {
     acc[customerId].totalAmount += (order.totalAmount || 0);
     
     return acc;
-  }, {} as Record<string, {name: string; orders: number; totalAmount: number}>);
+  }, {} as Record<string, CustomerSalesData>);
   
   // Convert to array for charts
   const customerSalesData = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
@@ -141,7 +155,9 @@ export default function SalesReport() {
 
   // Handler for date range change
   const handleDateChange = (range: DateRange) => {
-    setDateRange(range);
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   return (

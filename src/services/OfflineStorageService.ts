@@ -1,6 +1,6 @@
 
 // Define the OfflineStorageService class for offline functionality
-export class OfflineStorageService {
+class OfflineStorageService {
   private static offlineQueue: any[] = [];
   private static syncInProgress = false;
 
@@ -126,3 +126,6 @@ export class OfflineStorageService {
     console.log('OfflineStorageService cleaned up');
   }
 }
+
+// Export the OfflineStorageService class
+export { OfflineStorageService };
