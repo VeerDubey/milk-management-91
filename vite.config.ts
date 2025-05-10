@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
   },
   base: './', // This is crucial for Electron to load assets correctly when packaged
   build: {
-    // Simplified build configuration for maximum npm compatibility
+    // Optimized build configuration for npm-only environment
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: mode === 'development',

@@ -10,17 +10,22 @@ try {
   // Check if npm is installed
   execSync('npm --version', { stdio: 'ignore' });
   
-  console.log('Installing main dependencies...');
-  // Using --no-fund and --legacy-peer-deps to improve compatibility
-  execSync('npm install --ignore-scripts --no-fund --legacy-peer-deps', { stdio: 'inherit' });
+  // Configure npm to use registry directly and avoid git
+  console.log('Configuring npm to avoid Git-based installations...');
+  execSync('npm config set git-tag-version false', { stdio: 'inherit' });
+  execSync('npm config set registry https://registry.npmjs.org/', { stdio: 'inherit' });
   
-  console.log('Installing Electron-specific dependencies...');
-  // Adding explicit flags to avoid Git-based installation issues
-  execSync('npm install --no-save --ignore-scripts --no-fund --legacy-peer-deps --no-git electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+  console.log('Installing main dependencies...');
+  // Using all safety flags to maximize compatibility
+  execSync('npm install --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git', { stdio: 'inherit' });
+  
+  console.log('Installing Electron-specific dependencies explicitly from npm registry...');
+  // Explicitly fetch from npm registry with full safety flags
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
-  execSync('npm install --no-save --ignore-scripts --legacy-peer-deps lovable-tagger@latest', { stdio: 'inherit' });
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ lovable-tagger@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
