@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +33,7 @@ export default function SalesReport() {
   });
 
   // Calculate total sales
-  const totalSales = filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalSales = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   
   // Calculate total number of orders
   const totalOrders = filteredOrders.length;
@@ -87,7 +86,7 @@ export default function SalesReport() {
     }
     
     acc[customerId].orders += 1;
-    acc[customerId].totalAmount += order.totalAmount;
+    acc[customerId].totalAmount += (order.totalAmount || 0);
     
     return acc;
   }, {} as Record<string, {name: string; orders: number; totalAmount: number}>);
@@ -105,7 +104,7 @@ export default function SalesReport() {
         order.id,
         order.customerName || "",
         order.items.length.toString(),
-        order.totalAmount.toFixed(2)
+        (order.totalAmount || 0).toFixed(2)
       ]);
       
       // Add a summary row
@@ -140,6 +139,11 @@ export default function SalesReport() {
     }
   };
 
+  // Handler for date range change
+  const handleDateChange = (range: DateRange) => {
+    setDateRange(range);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -152,7 +156,7 @@ export default function SalesReport() {
         <div className="flex items-center gap-2">
           <DateRangePicker
             date={dateRange}
-            onDateChange={setDateRange}
+            onDateChange={handleDateChange}
           />
           <Button variant="outline" onClick={handleExportPdf}>
             <Download className="mr-2 h-4 w-4" />

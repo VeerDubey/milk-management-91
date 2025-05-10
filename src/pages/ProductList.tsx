@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -138,10 +137,10 @@ export default function ProductList() {
                 new Set(products?.map((product) => product.category).filter(Boolean))
               ).map((category) => (
                 <DropdownMenuItem 
-                  key={category as React.Key} 
+                  key={category as string} 
                   onClick={() => setSearchTerm(category as string)}
                 >
-                  {category}
+                  {String(category)}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { ElectronDetector } from './components/ElectronDetector.tsx';
-import { OfflineStorageService } from './services/OfflineStorageService.ts';
+import { OfflineStorageService } from './services/OfflineStorageService';
 
 // Enhanced global error handler with more details
 window.addEventListener('error', (event) => {
