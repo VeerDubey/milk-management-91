@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -153,6 +152,10 @@ export interface Vehicle {
   type: string;
   driver?: string;
   isActive: boolean;
+  number: string;
+  model?: string;
+  capacity?: number;
+  notes?: string;
 }
 
 export interface Salesman {
@@ -161,6 +164,7 @@ export interface Salesman {
   phone: string;
   address?: string;
   isActive: boolean;
+  vehicleId?: string;
 }
 
 export interface UISettings {
