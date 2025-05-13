@@ -1,8 +1,6 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/data/DataContext";
-import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,8 +43,10 @@ import InvoiceDownloadButton from "@/components/invoices/InvoiceDownloadButton";
 import { DateRange } from "react-day-picker";
 
 export default function InvoiceHistory() {
-  const { invoices } = useData();
-  const { downloadInvoice, generateInvoicePreview } = useInvoices();
+  // Get data from context, ensure invoices is an array
+  const { invoices = [], downloadInvoice, generateInvoicePreview } = useData();
+  
+  console.log("Invoices data:", invoices);
   
   // State for date range filtering
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -63,10 +63,14 @@ export default function InvoiceHistory() {
   const [previewInvoiceId, setPreviewInvoiceId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   
-  // Filter invoices based on selected criteria
+  // Filter invoices based on selected criteria - ensure we're working with an array
   const filteredInvoices = useMemo(() => {
-    // Start with all invoices
-    let filtered = [...invoices];
+    // Start with all invoices, ensure it's an array
+    let filtered = Array.isArray(invoices) ? [...invoices] : [];
+    
+    if (filtered.length === 0) {
+      return [];
+    }
     
     // Apply date range filter
     if (dateRange.from && dateRange.to) {
@@ -125,23 +129,10 @@ export default function InvoiceHistory() {
     return filtered;
   }, [invoices, dateRange, statusFilter, searchQuery, selectedTab, sortBy, sortOrder]);
   
-  // Handle invoice download
-  const handleDownloadInvoice = async (invoiceId: string) => {
-    try {
-      const success = await downloadInvoice(invoiceId);
-      if (success) {
-        toast.success("Invoice downloaded successfully");
-      }
-    } catch (error) {
-      console.error("Error downloading invoice:", error);
-      toast.error("Failed to download invoice");
-    }
-  };
-  
   // Handle invoice preview
   const handlePreviewInvoice = (invoiceId: string) => {
     try {
-      const invoice = invoices.find(inv => inv.id === invoiceId);
+      const invoice = Array.isArray(invoices) ? invoices.find(inv => inv.id === invoiceId) : null;
       if (!invoice) {
         toast.error("Invoice not found");
         return;
