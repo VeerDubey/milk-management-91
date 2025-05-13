@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -9,17 +9,15 @@ import {
   CreditCard,
   BarChart3,
   FileText,
-  TruckIcon,
+  Truck,
   DollarSign,
   Tag,
-  Warehouse,
   Package,
   ShoppingBag,
   FileSpreadsheet,
   Database,
   Settings,
   UserRound,
-  Truck,
   Receipt,
   Menu,
   MapPin,
@@ -47,14 +45,15 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
   const isMobile = useMobile();
-
-  const navGroups: NavGroup[] = [
+  
+  // Memoize navigation groups to prevent unnecessary re-renders
+  const navGroups: NavGroup[] = useMemo(() => [
     {
       title: "Dashboard",
       items: [
         {
           title: "Overview",
-          href: "/",
+          href: "/dashboard",
           icon: Home,
         }
       ]
@@ -95,7 +94,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {
           title: "Vehicle Tracking",
           href: "/vehicle-tracking",
-          icon: TruckIcon,
+          icon: Truck,
+        },
+        {
+          title: "Vehicle & Salesmen",
+          href: "/vehicle-salesman-create",
+          icon: Truck,
         },
         {
           title: "Area Management",
@@ -173,6 +177,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           icon: ShoppingBag,
         },
         {
+          title: "Supplier Rates",
+          href: "/supplier-rates",
+          icon: Tag,
+        },
+        {
           title: "Supplier Payments",
           href: "/supplier-payments",
           icon: CreditCard,
@@ -239,7 +248,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         },
       ]
     },
-  ];
+  ], []);
 
   return (
     <>
@@ -247,6 +256,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div
           className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
           onClick={onClose}
+          aria-hidden="true"
         ></div>
       )}
       <div
@@ -300,12 +310,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
           ))}
         </nav>
-        <div className="pt-4 border-t border-purple-800/30">
-          <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-purple-800/50">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
-        </div>
       </div>
     </>
   );
