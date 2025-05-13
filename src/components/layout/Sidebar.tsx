@@ -32,6 +32,11 @@ interface SidebarGroupProps {
   defaultOpen?: boolean;
 }
 
+interface SidebarProps {
+  collapsed: boolean;
+  toggleSidebar: () => void;
+}
+
 const SidebarItem = ({ to, icon: Icon, label, end = false }: SidebarItemProps) => (
   <NavLink
     to={to}
@@ -74,7 +79,7 @@ const SidebarGroup = ({ label, icon: Icon, children, defaultOpen = false }: Side
   );
 };
 
-export function Sidebar() {
+export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
   return (
     <div className="flex h-full flex-col overflow-y-auto border-r bg-background">
       <div className="flex-1 py-4">
