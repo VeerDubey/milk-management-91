@@ -10,22 +10,30 @@ try {
   // Check if npm is installed
   execSync('npm --version', { stdio: 'ignore' });
   
-  // Configure npm to use registry directly and avoid git
+  // Configure npm to use registry directly and avoid git completely
   console.log('Configuring npm to avoid Git-based installations...');
   execSync('npm config set git-tag-version false', { stdio: 'inherit' });
   execSync('npm config set registry https://registry.npmjs.org/', { stdio: 'inherit' });
+  execSync('npm config set fetch-retries 5', { stdio: 'inherit' });
+  execSync('npm config set fetch-retry-mintimeout 20000', { stdio: 'inherit' });
+  execSync('npm config set fetch-retry-maxtimeout 120000', { stdio: 'inherit' });
+  execSync('npm config set fetch-timeout 300000', { stdio: 'inherit' });
   
   console.log('Installing main dependencies...');
-  // Using all safety flags to maximize compatibility
+  // Using all safety flags to maximize compatibility and avoid git
   execSync('npm install --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git', { stdio: 'inherit' });
   
   console.log('Installing Electron-specific dependencies explicitly from npm registry...');
-  // Explicitly fetch from npm registry with full safety flags
+  // Explicitly fetch from npm registry with full safety flags and without git
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ lovable-tagger@latest', { stdio: 'inherit' });
+
+  // Explicitly install node-gyp to avoid git issues
+  console.log('Installing node-gyp explicitly...');
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ node-gyp@latest @electron/node-gyp@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
