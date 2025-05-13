@@ -28,6 +28,7 @@ import PaymentList from "./pages/PaymentList";
 import CustomerDetail from "./pages/CustomerDetail";
 import ProductDetail from "./pages/ProductDetail";
 import InvoiceCreate from "./pages/InvoiceCreate";
+import InvoiceGenerator from "./pages/InvoiceGenerator"; 
 import PaymentCreate from "./pages/PaymentCreate";
 import CompanyProfile from "./pages/CompanyProfile";
 import OrderEntry from "./pages/OrderEntry";
@@ -58,6 +59,9 @@ import Signup from "./pages/Signup";
 import SalesReport from "./pages/Reports/SalesReport";
 import CustomerReport from "./pages/Reports/CustomerReport";
 import CustomerRates from "./pages/CustomerRates";
+import Outstanding from "./pages/Outstanding";
+import VehicleSalesmanCreate from "./pages/VehicleSalesmanCreate";
+import SupplierRates from "./pages/SupplierRates";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 
 function App() {
@@ -118,6 +122,7 @@ function AppContent({ setCreateInvoiceFunc }: AppContentProps) {
               
               {/* Invoice Management */}
               <Route path="invoice-create" element={<InvoiceCreate />} />
+              <Route path="invoice-generator" element={<InvoiceGenerator />} />
               <Route path="invoice-history" element={<InvoiceHistory />} />
               
               {/* Customer Management */}
@@ -131,6 +136,7 @@ function AppContent({ setCreateInvoiceFunc }: AppContentProps) {
               {/* Payment Management */}
               <Route path="payments" element={<Payments />} />
               <Route path="payment-create" element={<PaymentCreate />} />
+              <Route path="outstanding" element={<Outstanding />} />
               
               {/* Product Management */}
               <Route path="products" element={<Products />} />
@@ -147,7 +153,11 @@ function AppContent({ setCreateInvoiceFunc }: AppContentProps) {
               <Route path="supplier-directory" element={<SupplierDirectory />} />
               <Route path="supplier-ledger" element={<SupplierLedger />} />
               <Route path="supplier-payments" element={<SupplierPayments />} />
+              <Route path="supplier-rates" element={<SupplierRates />} />
               <Route path="purchase-history" element={<PurchaseHistory />} />
+              
+              {/* Vehicle & Salesman Management */}
+              <Route path="vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
               
               {/* Financial Management */}
               <Route path="expenses" element={<Expenses />} />
