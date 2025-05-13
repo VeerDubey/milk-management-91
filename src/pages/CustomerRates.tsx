@@ -160,7 +160,7 @@ export default function CustomerRates() {
             <SelectValue placeholder="Filter by customer" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Customers</SelectItem>
+            <SelectItem value="all">All Customers</SelectItem>
             {customers.map((customer) => (
               <SelectItem key={customer.id} value={customer.id}>
                 {customer.name}
@@ -172,7 +172,7 @@ export default function CustomerRates() {
 
       <div className="grid gap-6">
         {filteredCustomers
-          .filter(c => !selectedCustomer || c.id === selectedCustomer)
+          .filter(c => !selectedCustomer || selectedCustomer === "all" || c.id === selectedCustomer)
           .map((customer) => (
             <Card key={customer.id} className="overflow-hidden">
               <CardHeader className="bg-muted/50">
