@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useData } from "@/contexts/data/DataContext";
+import { useData } from "@/contexts/DataContext";
 import { Customer } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { exportToPdf } from "@/utils/pdfUtils";
+import { exportToExcel } from "@/utils/excelUtils";
 import { toast } from "sonner";
 
 export default function CustomerRates() {
@@ -129,6 +130,38 @@ export default function CustomerRates() {
       toast.error("Failed to export customer rates");
     }
   };
+  
+  const exportRatesToExcel = () => {
+    try {
+      // Prepare headers and data for Excel
+      const headers = ["Customer Name", "Mobile", "Product", "Rate (₹)"];
+      
+      const data: any[][] = [];
+      filteredCustomers.forEach(customer => {
+        products.forEach(product => {
+          const rate = getCustomerRate(customer.id, product.id);
+          data.push([
+            customer.name,
+            customer.phone || "-",
+            product.name,
+            rate.toFixed(2)
+          ]);
+        });
+      });
+      
+      // Export to Excel
+      exportToExcel(
+        headers,
+        data,
+        "customer-rates.xlsx"
+      );
+      
+      toast.success("Customer rates exported to Excel");
+    } catch (error) {
+      console.error("Error exporting rates:", error);
+      toast.error("Failed to export customer rates");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -139,10 +172,16 @@ export default function CustomerRates() {
             Manage product rates for each customer
           </p>
         </div>
-        <Button onClick={exportRatesToPdf}>
-          <Download className="mr-2 h-4 w-4" />
-          Export Rates
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportRatesToExcel}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel
+          </Button>
+          <Button onClick={exportRatesToPdf}>
+            <FileText className="mr-2 h-4 w-4" />
+            PDF
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4 mb-6">

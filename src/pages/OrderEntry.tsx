@@ -32,11 +32,14 @@ import {
   UserPlus, 
   Edit, 
   Trash2, 
-  PackagePlus
+  PackagePlus,
+  FileText
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Order, OrderItem, Customer, Product } from "@/types";
+import { exportToPdf } from "@/utils/pdfUtils";
+import { exportToExcel } from "@/utils/excelUtils";
 
 interface OrderGridCell {
   customerId: string;
@@ -54,7 +57,8 @@ const OrderEntry = () => {
     deleteCustomer,
     addProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getProductRateForCustomer
   } = useData();
   
   const [orderDate, setOrderDate] = useState<Date>(new Date());
@@ -101,7 +105,8 @@ const OrderEntry = () => {
     orderGrid.forEach(cell => {
       if (cell.quantity && !isNaN(Number(cell.quantity))) {
         const quantity = Number(cell.quantity);
-        const product = products.find(p => p.id === cell.productId);
+        // Use customer-specific rate instead of default product price
+        const rate = getProductRateForCustomer(cell.customerId, cell.productId);
         
         // Add to customer totals
         if (!newCustomerTotals[cell.customerId]) {
@@ -109,14 +114,12 @@ const OrderEntry = () => {
         }
         
         newCustomerTotals[cell.customerId].quantity += quantity;
-        if (product) {
-          newCustomerTotals[cell.customerId].amount += quantity * product.price;
-        }
+        newCustomerTotals[cell.customerId].amount += quantity * rate;
       }
     });
     
     setCustomerTotals(newCustomerTotals);
-  }, [orderGrid, products]);
+  }, [orderGrid, products, getProductRateForCustomer]);
   
   const handleCellChange = (customerId: string, productId: string, value: string) => {
     // Only allow numbers
@@ -138,6 +141,10 @@ const OrderEntry = () => {
       cell => cell.customerId === customerId && cell.productId === productId
     );
     return cell ? cell.quantity : "";
+  };
+  
+  const getProductRateForDisplay = (customerId: string, productId: string): number => {
+    return getProductRateForCustomer(customerId, productId);
   };
   
   const saveOrder = () => {
@@ -208,6 +215,88 @@ const OrderEntry = () => {
     link.setAttribute("href", url);
     link.setAttribute("download", `milk-order-${format(orderDate, "yyyy-MM-dd")}.csv`);
     link.click();
+  };
+  
+  const exportOrderToPdf = () => {
+    // Prepare headers
+    const headers = ["Customer", "Product", "Quantity", "Rate (₹)", "Amount (₹)"];
+    
+    // Prepare data rows
+    const data: any[][] = [];
+    
+    // Add each order line with customer info
+    orderGrid
+      .filter(cell => cell.quantity && !isNaN(Number(cell.quantity)) && Number(cell.quantity) > 0)
+      .forEach(cell => {
+        const customer = customers.find(c => c.id === cell.customerId);
+        const product = products.find(p => p.id === cell.productId);
+        const quantity = Number(cell.quantity);
+        const rate = getProductRateForDisplay(cell.customerId, cell.productId);
+        const amount = quantity * rate;
+        
+        if (customer && product) {
+          data.push([
+            customer.name,
+            product.name,
+            quantity.toString(),
+            rate.toFixed(2),
+            amount.toFixed(2)
+          ]);
+        }
+      });
+    
+    // Export to PDF
+    exportToPdf(
+      headers,
+      data,
+      {
+        title: "Daily Milk Order",
+        subtitle: `Order Date: ${format(orderDate, "dd/MM/yyyy")}`,
+        dateInfo: `Generated on: ${format(new Date(), "dd/MM/yyyy")}`,
+        filename: `milk-order-${format(orderDate, "yyyy-MM-dd")}.pdf`,
+        landscape: true
+      }
+    );
+    
+    toast.success("Order exported to PDF");
+  };
+  
+  const exportOrderToExcel = () => {
+    // Prepare headers
+    const headers = ["Customer", "Product", "Quantity", "Rate (₹)", "Amount (₹)"];
+    
+    // Prepare data rows
+    const data: any[][] = [];
+    
+    // Add each order line with customer info
+    orderGrid
+      .filter(cell => cell.quantity && !isNaN(Number(cell.quantity)) && Number(cell.quantity) > 0)
+      .forEach(cell => {
+        const customer = customers.find(c => c.id === cell.customerId);
+        const product = products.find(p => p.id === cell.productId);
+        const quantity = Number(cell.quantity);
+        const rate = getProductRateForDisplay(cell.customerId, cell.productId);
+        const amount = quantity * rate;
+        
+        if (customer && product) {
+          data.push([
+            customer.name,
+            product.name,
+            quantity.toString(),
+            rate.toFixed(2),
+            amount.toFixed(2)
+          ]);
+        }
+      });
+    
+    // Export to Excel
+    exportToExcel(
+      headers,
+      data,
+      `milk-order-${format(orderDate, "yyyy-MM-dd")}.xlsx`
+    );
+    
+    toast.success("Order exported to Excel");
   };
 
   // Customer CRUD operations
@@ -296,7 +385,7 @@ const OrderEntry = () => {
     setEditingProduct(product);
     setProductName(product.name);
     setProductPrice(product.price.toString());
-    setProductCategory(product.description || "");
+    setProductCategory(product.category || "");
     setProductUnit(product.unit || "L");
     setProductDescription(product.description || "");
     setIsAddingProduct(true);
@@ -331,7 +420,15 @@ const OrderEntry = () => {
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={exportToCSV}>
             <Download className="mr-2 h-4 w-4" />
-            Export
+            CSV
+          </Button>
+          <Button variant="outline" onClick={exportOrderToExcel}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={exportOrderToPdf}>
+            <FileText className="mr-2 h-4 w-4" />
+            PDF
           </Button>
           <Button onClick={saveOrder}>
             <Save className="mr-2 h-4 w-4" />
@@ -576,8 +673,11 @@ const OrderEntry = () => {
                     <TableRow>
                       <TableHead className="header-cell">Products</TableHead>
                       {customers.map(customer => (
-                        <TableHead key={customer.id} className="header-cell text-center">
+                        <TableHead key={customer.id} className="header-cell text-center whitespace-nowrap">
                           {customer.name}
+                          <div className="text-xs text-muted-foreground">
+                            (₹{getProductRateForDisplay(customer.id, products[0]?.id)}/{products[0]?.unit || 'unit'})
+                          </div>
                         </TableHead>
                       ))}
                     </TableRow>
@@ -588,16 +688,28 @@ const OrderEntry = () => {
                         <TableCell className="font-medium">
                           {product.name} (₹{product.price}/{product.unit})
                         </TableCell>
-                        {customers.map(customer => (
-                          <TableCell key={customer.id} className="table-cell p-0">
-                            <Input
-                              className="cell-input"
-                              type="text"
-                              value={getCellValue(customer.id, product.id)}
-                              onChange={(e) => handleCellChange(customer.id, product.id, e.target.value)}
-                            />
-                          </TableCell>
-                        ))}
+                        {customers.map(customer => {
+                          const customerRate = getProductRateForDisplay(customer.id, product.id);
+                          const isCustomRate = customerRate !== product.price;
+                          
+                          return (
+                            <TableCell key={customer.id} className="table-cell p-0">
+                              <div className="relative">
+                                <Input
+                                  className={`cell-input ${isCustomRate ? 'border-primary' : ''}`}
+                                  type="text"
+                                  value={getCellValue(customer.id, product.id)}
+                                  onChange={(e) => handleCellChange(customer.id, product.id, e.target.value)}
+                                />
+                                {isCustomRate && (
+                                  <div className="absolute -bottom-4 left-0 right-0 text-xs text-center text-primary">
+                                    Rate: ₹{customerRate}/{product.unit}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     ))}
                     <TableRow>
@@ -612,7 +724,7 @@ const OrderEntry = () => {
                       <TableCell className="amount-cell font-semibold">Total Amount (₹)</TableCell>
                       {customers.map(customer => (
                         <TableCell key={customer.id} className="amount-cell text-center">
-                          {customerTotals[customer.id]?.amount || 0}
+                          {customerTotals[customer.id]?.amount.toFixed(2) || '0.00'}
                         </TableCell>
                       ))}
                     </TableRow>

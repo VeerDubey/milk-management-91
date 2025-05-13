@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, FileDown, Printer } from "lucide-react";
+import { Search, FileText, Printer, Download } from "lucide-react";
 import { format } from "date-fns";
+import { exportToPdf } from "@/utils/pdfUtils";
+import { exportToExcel } from "@/utils/excelUtils";
+import { toast } from "sonner";
 
 export default function CustomerDirectory() {
   const { customers } = useData();
@@ -39,6 +42,70 @@ export default function CustomerDirectory() {
     link.setAttribute("href", url);
     link.setAttribute("download", `customer-directory-${format(new Date(), "yyyy-MM-dd")}.csv`);
     link.click();
+    
+    toast.success("Customer directory exported to CSV");
+  };
+  
+  const exportToPdfFile = () => {
+    // Generate PDF
+    const headers = ["Name", "Phone", "Address", "Email", "Outstanding Balance", "Last Payment"];
+    
+    const data = filteredCustomers.map(customer => {
+      const lastPaymentInfo = customer.lastPaymentDate 
+        ? `₹${customer.lastPaymentAmount} on ${customer.lastPaymentDate}` 
+        : "No payments";
+      
+      return [
+        customer.name,
+        customer.phone || "-",
+        customer.address || "-",
+        customer.email || "-",
+        `₹${customer.outstandingBalance || 0}`,
+        lastPaymentInfo
+      ];
+    });
+    
+    exportToPdf(
+      headers,
+      data,
+      {
+        title: "Customer Directory",
+        subtitle: "Complete customer database",
+        dateInfo: format(new Date(), "dd/MM/yyyy"),
+        filename: `customer-directory-${format(new Date(), "yyyy-MM-dd")}.pdf`,
+        landscape: true
+      }
+    );
+    
+    toast.success("Customer directory exported to PDF");
+  };
+  
+  const exportToExcelFile = () => {
+    // Generate Excel
+    const headers = ["Name", "Phone", "Address", "Email", "Outstanding Balance", "Last Payment"];
+    
+    const data = filteredCustomers.map(customer => {
+      const lastPaymentInfo = customer.lastPaymentDate 
+        ? `₹${customer.lastPaymentAmount} on ${customer.lastPaymentDate}` 
+        : "No payments";
+      
+      return [
+        customer.name,
+        customer.phone || "-",
+        customer.address || "-",
+        customer.email || "-",
+        customer.outstandingBalance || 0,
+        lastPaymentInfo
+      ];
+    });
+    
+    exportToExcel(
+      headers,
+      data,
+      `customer-directory-${format(new Date(), "yyyy-MM-dd")}.xlsx`
+    );
+    
+    toast.success("Customer directory exported to Excel");
   };
 
   const printDirectory = () => {
@@ -56,8 +123,16 @@ export default function CustomerDirectory() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={exportToCSV}>
-            <FileDown className="mr-2 h-4 w-4" />
-            Export
+            <Download className="mr-2 h-4 w-4" />
+            CSV
+          </Button>
+          <Button variant="outline" onClick={exportToExcelFile}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" onClick={exportToPdfFile}>
+            <FileText className="mr-2 h-4 w-4" />
+            PDF
           </Button>
           <Button variant="outline" onClick={printDirectory}>
             <Printer className="mr-2 h-4 w-4" />
