@@ -63,14 +63,9 @@ export const InvoiceProvider: React.FC<InvoiceProviderProps> = ({
       const savedInvoices = localStorage.getItem('invoices');
       if (savedInvoices) {
         setInvoices(JSON.parse(savedInvoices));
-      } else {
-        // Initialize with empty array if no invoices found
-        setInvoices([]);
       }
     } catch (error) {
       console.error('Error loading invoices from localStorage:', error);
-      // Ensure we still have an empty array if there was an error
-      setInvoices([]);
     }
   }, []);
   
