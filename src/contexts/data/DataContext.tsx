@@ -10,7 +10,6 @@ import { useStockState } from './useStockState';
 import { useProductRateState } from './useProductRateState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useUISettingsState } from './useUISettingsState';
-import { useInvoice } from '../InvoiceContext';
 
 // Create data context
 const DataContext = createContext<any>(undefined);
@@ -39,9 +38,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({
   const productRateState = useProductRateState(productState.products);
   const vehicleSalesmanState = useVehicleSalesmanState();
   const uiSettingsState = useUISettingsState();
-  
-  // Get invoice data from InvoiceContext
-  const invoiceState = useInvoice();
 
   // Combine all state into one object
   const dataContext = {
@@ -55,7 +51,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({
     ...productRateState,
     ...vehicleSalesmanState,
     ...uiSettingsState,
-    ...invoiceState,
     createInvoiceFunc
   };
 
