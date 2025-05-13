@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileDown, Printer, Search } from "lucide-react";
+import { DollarSign, FileDown, Printer, Filter, Users, RefreshCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
@@ -56,8 +56,8 @@ export default function Outstanding() {
         daysSincePayment
       };
     }).filter(customer => {
-      // Filter based on search query
-      if (!searchQuery) return customer.outstandingBalance > 0; // Only show customers with outstanding balance
+      // Filter based on search query and only show customers with outstanding balance
+      if (!searchQuery) return customer.outstandingBalance > 0; 
       
       const query = searchQuery.toLowerCase();
       return (
@@ -80,69 +80,82 @@ export default function Outstanding() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-indigo-400">Outstanding Amounts</h1>
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Outstanding Amounts
+        </h1>
         <p className="text-muted-foreground">
           Track and manage customer outstanding balances
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-purple-400">
-              <DollarSign className="h-5 w-5 text-purple-500" />
-              Outstanding Summary
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="hover:shadow-lg transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              Total Outstanding
             </CardTitle>
-            <CardDescription>
-              Overview of all outstanding balances
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-lg bg-gradient-to-br from-purple-900/80 to-indigo-900/80 p-4 text-white">
-                <div className="text-sm font-medium text-purple-200">Total Outstanding</div>
-                <div className="mt-2 text-2xl font-bold">₹{totalOutstanding.toFixed(2)}</div>
-              </div>
-              <div className="rounded-lg bg-gradient-to-br from-indigo-900/80 to-blue-900/80 p-4 text-white">
-                <div className="text-sm font-medium text-indigo-200">Customers with Balance</div>
-                <div className="mt-2 text-2xl font-bold">{outstandingData.length}</div>
-              </div>
-              <div className="rounded-lg bg-gradient-to-br from-blue-900/80 to-sky-900/80 p-4 text-white">
-                <div className="text-sm font-medium text-blue-200">Average Outstanding</div>
-                <div className="mt-2 text-2xl font-bold">
-                  ₹{outstandingData.length ? (totalOutstanding / outstandingData.length).toFixed(2) : "0.00"}
-                </div>
-              </div>
+            <div className="text-3xl font-bold">₹{totalOutstanding.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-lg transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Customers with Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{outstandingData.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="hover:shadow-lg transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCcw className="h-5 w-5 text-primary" />
+              Average Outstanding
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              ₹{outstandingData.length ? (totalOutstanding / outstandingData.length).toFixed(2) : "0.00"}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <Card className="hover:shadow-lg transition-all">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2">
           <div>
-            <CardTitle className="text-purple-400">Outstanding Balances</CardTitle>
+            <CardTitle>Outstanding Balances</CardTitle>
             <CardDescription>
               Customers with pending payments
             </CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
-            <Input
-              placeholder="Search customers..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full sm:w-[200px]"
-            />
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search customers..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-8 w-full sm:w-[200px]"
+              />
+            </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePrint} size="sm">
-                <Printer className="h-4 w-4 mr-2" />
-                Print
+              <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1">
+                <Printer className="h-4 w-4" />
+                <span className="hidden sm:inline">Print</span>
               </Button>
-              <Button variant="outline" onClick={handleExport} size="sm">
-                <FileDown className="h-4 w-4 mr-2" />
-                Export
+              <Button variant="outline" onClick={handleExport} size="sm" className="gap-1">
+                <FileDown className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
           </div>
@@ -164,12 +177,12 @@ export default function Outstanding() {
                 </TableHeader>
                 <TableBody>
                   {outstandingData.map((customer) => (
-                    <TableRow key={customer.id}>
+                    <TableRow key={customer.id} className="hover:bg-muted/50">
                       <TableCell className="font-medium">{customer.name}</TableCell>
                       <TableCell>{customer.phone || "-"}</TableCell>
                       <TableCell className="text-right">₹{customer.totalOrdered.toFixed(2)}</TableCell>
                       <TableCell className="text-right">₹{customer.totalPaid.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-bold text-purple-500">
+                      <TableCell className="text-right font-bold text-primary">
                         ₹{customer.outstandingBalance.toFixed(2)}
                       </TableCell>
                       <TableCell>
@@ -183,9 +196,9 @@ export default function Outstanding() {
                         ) : customer.daysSincePayment > 30 ? (
                           <Badge variant="destructive">Overdue</Badge>
                         ) : customer.daysSincePayment > 15 ? (
-                          <Badge variant="secondary">Follow up</Badge>
+                          <Badge variant="warning">Follow up</Badge>
                         ) : (
-                          <Badge variant="outline">Recent</Badge>
+                          <Badge variant="success">Recent</Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -194,8 +207,12 @@ export default function Outstanding() {
               </Table>
             </div>
           ) : (
-            <div className="py-12 text-center text-muted-foreground">
-              No outstanding balances found
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <Filter className="h-12 w-12 mb-4 text-muted" />
+              <h3 className="text-lg font-medium">No outstanding balances found</h3>
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your search or filters
+              </p>
             </div>
           )}
         </CardContent>
@@ -203,3 +220,5 @@ export default function Outstanding() {
     </div>
   );
 }
+
+import { Search } from "lucide-react";
