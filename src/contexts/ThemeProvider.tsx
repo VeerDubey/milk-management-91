@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "system";
 export type ThemeContextType = {
   theme: Theme;
   toggleTheme: () => void;
@@ -37,13 +37,25 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
+    // Handle system theme differently
+    if (theme === "system") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.classList.remove("light", "dark");
+      document.documentElement.classList.add(prefersDark ? "dark" : "light");
+    } else {
+      document.documentElement.classList.remove("light", "dark");
+      document.documentElement.classList.add(theme);
+    }
+    
     localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
+    setTheme((prevTheme) => {
+      if (prevTheme === "light") return "dark";
+      if (prevTheme === "dark") return "system";
+      return "light";
+    });
   };
 
   const applyTheme = (newTheme: Theme, accent?: string) => {
