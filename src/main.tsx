@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './index.css';
 import { ElectronDetector } from './components/ElectronDetector.tsx';
@@ -37,8 +38,10 @@ if (rootElement) {
     console.log('Rendering app to DOM');
     root.render(
       <React.StrictMode>
-        <ElectronDetector />
-        <App />
+        <BrowserRouter>
+          <ElectronDetector />
+          <App />
+        </BrowserRouter>
       </React.StrictMode>
     );
     console.log('React app successfully mounted');
