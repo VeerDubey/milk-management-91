@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -59,6 +58,7 @@ const OutstandingDues = () => {
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   // Calculate outstanding amount for each customer
   const customersWithOutstanding = useMemo(() => {
@@ -121,35 +121,23 @@ const OutstandingDues = () => {
     return filteredCustomers.reduce((total, customer) => total + customer.outstandingAmount, 0);
   }, [filteredCustomers]);
 
-  const handleAddPayment = () => {
-    if (!selectedCustomerId || !paymentAmount || isNaN(Number(paymentAmount)) || !paymentDate || !paymentMethod) {
-      toast.error("Please fill in all required payment details");
-      return;
-    }
+  const handleAddPayment = (customerId: string, customerName: string, amount: number) => {
+    const payment: Omit<Payment, "id"> = {
+      customerId,
+      customerName,
+      amount,
+      date: format(new Date(), "yyyy-MM-dd"),
+      paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
+      notes: paymentNotes
+    };
 
-    try {
-      // Create a new payment
-      addPayment({
-        customerId: selectedCustomerId,
-        amount: Number(paymentAmount),
-        date: paymentDate.toISOString(),
-        paymentMethod: paymentMethod,
-        notes: paymentNotes
-      });
-      
-      // Show success message
-      toast.success("Payment recorded successfully");
-      
-      // Reset form
-      setPaymentAmount('');
-      setPaymentMethod('cash');
-      setPaymentNotes('');
-      
-      // Close dialog (handled by DialogClose component)
-    } catch (error) {
-      console.error("Error adding payment:", error);
-      toast.error("Failed to record payment");
-    }
+    addPayment(payment);
+    toast.success(`Payment of ₹${amount.toFixed(2)} added for ${customerName}`);
+    setSelectedCustomerId("");
+    setPaymentAmount("");
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setPaymentDialogOpen(false);
   };
 
   return (
@@ -274,7 +262,7 @@ const OutstandingDues = () => {
                 <Button variant="outline">Cancel</Button>
               </DialogClose>
               <DialogClose asChild>
-                <Button onClick={handleAddPayment}>Record Payment</Button>
+                <Button onClick={() => handleAddPayment(selectedCustomerId, customers.find(c => c.id === selectedCustomerId)?.name || '', Number(paymentAmount))}>Record Payment</Button>
               </DialogClose>
             </DialogFooter>
           </DialogContent>

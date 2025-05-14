@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import { exportToPdf } from "@/utils/pdfUtils";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { DateRange } from "react-day-picker";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 // Define chart colors
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#0088fe", "#00C49F"];
@@ -44,13 +44,50 @@ export default function SalesReport() {
     to: today
   });
   const [activeTab, setActiveTab] = useState("overview");
+  const [customerFilter, setCustomerFilter] = useState("all");
+  const [productFilter, setProductFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   // Filter orders by date range
-  const filteredOrders = orders.filter(order => {
-    const orderDate = parseISO(order.date);
-    return dateRange.from && orderDate >= dateRange.from && 
-           dateRange.to && orderDate <= dateRange.to;
-  });
+  const filteredOrders = useMemo(() => {
+    return orders.filter(order => {
+      // Date filter
+      if (dateRange?.from && dateRange?.to) {
+        const orderDate = new Date(order.date);
+        if (orderDate < dateRange.from || orderDate > dateRange.to) {
+          return false;
+        }
+      }
+      
+      // Customer filter
+      if (customerFilter !== "all" && order.customerId !== customerFilter) {
+        return false;
+      }
+      
+      // Product filter
+      if (productFilter !== "all" && !order.items.some(item => item.productId === productFilter)) {
+        return false;
+      }
+      
+      // Status filter
+      if (statusFilter !== "all") {
+        if (statusFilter === "delivered" && order.status !== "delivered") {
+          return false;
+        }
+        if (statusFilter === "pending" && order.status !== "pending") {
+          return false;
+        }
+        if (statusFilter === "cancelled" && order.status !== "cancelled") {
+          return false;
+        }
+        if (statusFilter === "processing" && order.status !== "processing") {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [orders, dateRange, customerFilter, productFilter, statusFilter]);
 
   // Calculate total sales
   const totalSales = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
@@ -383,7 +420,25 @@ export default function SalesReport() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead className="text-right">Amount (₹)</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableRow>
+                      <TableCell>Status</TableCell>
+                      <TableCell>
+                        <Select
+                          value={statusFilter}
+                          onValueChange={setStatusFilter}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="delivered">Completed</SelectItem>
+                            <SelectItem value="pending">Processing</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

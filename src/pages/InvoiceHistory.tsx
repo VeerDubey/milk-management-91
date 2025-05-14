@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/data/DataContext";
@@ -46,7 +45,7 @@ import { DateRange } from "react-day-picker";
 
 export default function InvoiceHistory() {
   const { invoices } = useData();
-  const { downloadInvoice, generateInvoicePreview } = useInvoices();
+  const { downloadInvoice, generateInvoicePreview, deleteInvoice } = useInvoices();
   
   // State for date range filtering
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -179,6 +178,13 @@ export default function InvoiceHistory() {
   // Handle email invoice
   const handleEmailInvoice = (invoiceId: string) => {
     toast.info("Email functionality coming soon");
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this invoice? This action cannot be undone.")) {
+      deleteInvoice(id);
+      toast.success("Invoice deleted successfully");
+    }
   };
 
   return (
@@ -396,6 +402,14 @@ export default function InvoiceHistory() {
                               >
                                 <Mail className="h-4 w-4" />
                                 <span className="sr-only">Email</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(invoice.id)}
+                              >
+                                <Trash className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
                               </Button>
                             </div>
                           </TableCell>

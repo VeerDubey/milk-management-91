@@ -1,405 +1,569 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
-import { toast } from "sonner";
+import { Supplier, SupplierPayment } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Supplier, SupplierPayment } from "@/types";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Truck,
+  FileText,
+  Save,
+  Download,
+} from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
-export default function SupplierPayments() {
-  const { suppliers, addSupplier, supplierPayments, addSupplierPayment } = useData();
-  const [activeTab, setActiveTab] = useState("suppliers");
-  
-  // New supplier form state
-  const [newSupplier, setNewSupplier] = useState<Omit<Supplier, "id">>({
-    name: "",
-    phone: "",
-    address: "",
-    email: "",
-    category: "",
-    outstandingBalance: 0
-  });
-  
-  // New payment form state
-  const [newPayment, setNewPayment] = useState<Omit<SupplierPayment, "id">>({
-    supplierId: "",
-    date: format(new Date(), "yyyy-MM-dd"),
-    amount: 0,
-    paymentMethod: "cash",
-    invoiceNumber: "",
-    notes: ""
-  });
-  
-  // Filters
-  const [supplierFilter, setSupplierFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  
-  // Dialog states
-  const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+const SupplierPayments = () => {
+  const {
+    suppliers,
+    supplierPayments,
+    addSupplier,
+    updateSupplier,
+    deleteSupplier,
+    addSupplierPayment,
+    updateSupplierPayment,
+    deleteSupplierPayment,
+  } = useData();
 
-  const handleNewSupplier = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newSupplier.name || !newSupplier.phone) {
-      toast.error("Supplier name and phone are required");
-      return;
-    }
-    
+  // Supplier form state
+  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [supplierName, setSupplierName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [supplierPhone, setSupplierPhone] = useState("");
+  const [supplierEmail, setSupplierEmail] = useState("");
+  const [supplierAddress, setSupplierAddress] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
+  const [supplierNotes, setSupplierNotes] = useState("");
+
+  // Payment form state
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<SupplierPayment | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentDate, setPaymentDate] = useState(new Date());
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentNotes, setPaymentNotes] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState("");
+
+  // Get payments for the selected supplier
+  const payments = selectedSupplierId
+    ? supplierPayments.filter(
+        (payment) => payment.supplierId === selectedSupplierId
+      )
+    : supplierPayments;
+
+  // Supplier CRUD operations
+  const handleAddSupplier = () => {
+    const newSupplier = {
+      name: supplierName,
+      contactPerson: contactPerson,
+      phone: supplierPhone,
+      email: supplierEmail,
+      address: supplierAddress,
+      gstNumber: gstNumber,
+      outstandingBalance: 0,
+      notes: supplierNotes
+    };
+
     addSupplier(newSupplier);
-    setNewSupplier({
-      name: "",
-      phone: "",
-      address: "",
-      email: "",
-      category: "",
-      outstandingBalance: 0
-    });
-    
-    setSupplierDialogOpen(false);
     toast.success("Supplier added successfully");
+    
+    // Reset form
+    setSupplierName("");
+    setContactPerson("");
+    setSupplierPhone("");
+    setSupplierEmail("");
+    setSupplierAddress("");
+    setGstNumber("");
+    setSupplierNotes("");
   };
 
-  const handleNewPayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newPayment.supplierId || newPayment.amount <= 0) {
-      toast.error("Please select a supplier and enter a valid amount");
+  const handleEditSupplier = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setSupplierName(supplier.name);
+    setContactPerson(supplier.contactPerson || "");
+    setSupplierPhone(supplier.phone);
+    setSupplierEmail(supplier.email || "");
+    setSupplierAddress(supplier.address);
+    setGstNumber(supplier.gstNumber || "");
+    setSupplierNotes(supplier.notes || "");
+    setIsAddingSupplier(true);
+  };
+
+  const handleDeleteSupplier = (supplierId: string) => {
+    if (window.confirm("Are you sure you want to delete this supplier? This cannot be undone.")) {
+      deleteSupplier(supplierId);
+      toast.success("Supplier deleted successfully");
+    }
+  };
+
+  const resetSupplierForm = () => {
+    setIsAddingSupplier(false);
+    setEditingSupplier(null);
+    setSupplierName("");
+    setContactPerson("");
+    setSupplierPhone("");
+    setSupplierEmail("");
+    setSupplierAddress("");
+    setGstNumber("");
+    setSupplierNotes("");
+  };
+
+  // Payment CRUD operations
+  const handleAddPayment = () => {
+    if (!selectedSupplierId) {
+      toast.error("Please select a supplier");
       return;
     }
-    
+
+    const newPayment = {
+      supplierId: selectedSupplierId,
+      amount: parseFloat(paymentAmount),
+      date: format(paymentDate, "yyyy-MM-dd"),
+      paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
+      notes: paymentNotes,
+      referenceNumber: referenceNumber
+    };
+
     addSupplierPayment(newPayment);
-    setNewPayment({
-      supplierId: "",
-      date: format(new Date(), "yyyy-MM-dd"),
-      amount: 0,
-      paymentMethod: "cash",
-      invoiceNumber: "",
-      notes: ""
-    });
+    toast.success("Payment added successfully");
     
-    setPaymentDialogOpen(false);
-    toast.success("Payment recorded successfully");
+    // Reset form
+    setSelectedSupplierId("");
+    setPaymentAmount("");
+    setPaymentDate(new Date());
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setReferenceNumber("");
   };
-  
-  // Filter payments based on current filters
-  const filteredPayments = supplierPayments.filter(payment => {
-    const matchesSupplier = !supplierFilter || payment.supplierId === supplierFilter;
-    const matchesDate = !dateFilter || payment.date.includes(dateFilter);
-    return matchesSupplier && matchesDate;
-  });
-  
-  // Helper to get supplier name by ID
-  const getSupplierName = (id: string) => {
-    const supplier = suppliers.find(s => s.id === id);
-    return supplier ? supplier.name : "Unknown";
+
+  const handleEditPayment = (payment: SupplierPayment) => {
+    setEditingPayment(payment);
+    setSelectedSupplierId(payment.supplierId);
+    setPaymentAmount(payment.amount.toString());
+    setPaymentDate(new Date(payment.date));
+    setPaymentMethod(payment.paymentMethod);
+    setPaymentNotes(payment.notes || "");
+    setReferenceNumber(payment.referenceNumber || "");
+    setIsAddingPayment(true);
   };
-  
-  // Calculate total payments per supplier
-  const getSupplierTotalPayments = (supplierId: string) => {
-    return supplierPayments
-      .filter(payment => payment.supplierId === supplierId)
-      .reduce((total, payment) => total + payment.amount, 0);
+
+  const handleDeletePayment = (paymentId: string) => {
+    if (window.confirm("Are you sure you want to delete this payment? This cannot be undone.")) {
+      deleteSupplierPayment(paymentId);
+      toast.success("Payment deleted successfully");
+    }
+  };
+
+  const resetPaymentForm = () => {
+    setIsAddingPayment(false);
+    setEditingPayment(null);
+    setSelectedSupplierId("");
+    setPaymentAmount("");
+    setPaymentDate(new Date());
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    setReferenceNumber("");
+  };
+
+  // Update functions
+  const handleUpdateSupplier = () => {
+    if (!editingSupplier) return;
+
+    updateSupplier(editingSupplier.id, {
+      name: supplierName,
+      contactPerson: contactPerson,
+      phone: supplierPhone,
+      email: supplierEmail,
+      address: supplierAddress,
+      gstNumber: gstNumber,
+      notes: supplierNotes
+    });
+    toast.success("Supplier updated successfully");
+    resetSupplierForm();
+
+    setEditingSupplier(prevState => {
+      if (prevState) {
+        return {
+          ...prevState,
+          name: supplierName,
+          contactPerson: contactPerson,
+          phone: supplierPhone,
+          email: supplierEmail,
+          address: supplierAddress,
+          gstNumber: gstNumber,
+          notes: supplierNotes
+        };
+      }
+      return prevState;
+    });
+
+    setIsAddingSupplier(false);
+  };
+
+  const handleUpdatePayment = () => {
+    if (!editingPayment) return;
+
+    updateSupplierPayment(editingPayment.id, {
+      supplierId: selectedSupplierId,
+      amount: parseFloat(paymentAmount),
+      date: format(paymentDate, "yyyy-MM-dd"),
+      paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
+      notes: paymentNotes,
+      referenceNumber: referenceNumber
+    });
+    toast.success("Payment updated successfully");
+    resetPaymentForm();
+
+    setEditingPayment(prevState => {
+      if (prevState) {
+        return {
+          ...prevState,
+          amount: parseFloat(paymentAmount),
+          date: format(paymentDate, "yyyy-MM-dd"),
+          paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
+          notes: paymentNotes,
+          referenceNumber: referenceNumber
+        };
+      }
+      return prevState;
+    });
+
+    setIsAddingPayment(false);
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Supplier Payments</h1>
-        <p className="text-gray-500">Manage suppliers and their payment records</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Supplier Payments
+          </h1>
+          <p className="text-muted-foreground">
+            Manage supplier payments and records
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button onClick={() => setIsAddingPayment(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Payment
+          </Button>
+        </div>
       </div>
 
-      <div className="flex justify-end space-x-4">
-        <Dialog open={supplierDialogOpen} onOpenChange={setSupplierDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>Add New Supplier</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Supplier</DialogTitle>
-              <DialogDescription>
-                Enter the supplier details below
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleNewSupplier}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="col-span-1">Name</Label>
-                  <Input
-                    id="name"
-                    value={newSupplier.name}
-                    onChange={(e) => setNewSupplier({...newSupplier, name: e.target.value})}
-                    className="col-span-3"
-                    required
-                  />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Supplier Payments Management</CardTitle>
+            <Button variant="outline" onClick={() => setIsAddingSupplier(true)}>
+              <Truck className="mr-2 h-4 w-4" />
+              Add Supplier
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            {/* Add Supplier Dialog */}
+            <Dialog open={isAddingSupplier} onOpenChange={setIsAddingSupplier}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Truck className="mr-2 h-4 w-4" />
+                  Add Supplier
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingSupplier ? "Edit Supplier" : "Add New Supplier"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingSupplier
+                      ? "Update supplier details below"
+                      : "Add supplier details to create a new supplier."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplierName">Supplier Name</Label>
+                    <Input
+                      id="supplierName"
+                      value={supplierName}
+                      onChange={(e) => setSupplierName(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="contactPerson">Contact Person</Label>
+                    <Input
+                      id="contactPerson"
+                      value={contactPerson}
+                      onChange={(e) => setContactPerson(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplierPhone">Phone</Label>
+                    <Input
+                      id="supplierPhone"
+                      value={supplierPhone}
+                      onChange={(e) => setSupplierPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplierEmail">Email</Label>
+                    <Input
+                      id="supplierEmail"
+                      type="email"
+                      value={supplierEmail}
+                      onChange={(e) => setSupplierEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplierAddress">Address</Label>
+                    <Input
+                      id="supplierAddress"
+                      value={supplierAddress}
+                      onChange={(e) => setSupplierAddress(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gstNumber">GST Number</Label>
+                    <Input
+                      id="gstNumber"
+                      value={gstNumber}
+                      onChange={(e) => setGstNumber(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplierNotes">Notes</Label>
+                    <Textarea
+                      id="supplierNotes"
+                      value={supplierNotes}
+                      onChange={(e) => setSupplierNotes(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phone" className="col-span-1">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={newSupplier.phone}
-                    onChange={(e) => setNewSupplier({...newSupplier, phone: e.target.value})}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="address" className="col-span-1">Address</Label>
-                  <Input
-                    id="address"
-                    value={newSupplier.address}
-                    onChange={(e) => setNewSupplier({...newSupplier, address: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="col-span-1">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={newSupplier.email}
-                    onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="category" className="col-span-1">Category</Label>
-                  <Input
-                    id="category"
-                    value={newSupplier.category}
-                    onChange={(e) => setNewSupplier({...newSupplier, category: e.target.value})}
-                    placeholder="e.g. Amul, Gokul"
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Add Supplier</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>Record Payment</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Record Supplier Payment</DialogTitle>
-              <DialogDescription>
-                Enter the payment details below
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleNewPayment}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="supplier" className="col-span-1">Supplier</Label>
-                  <Select 
-                    value={newPayment.supplierId} 
-                    onValueChange={(value) => setNewPayment({...newPayment, supplierId: value})}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select supplier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.map(supplier => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="col-span-1">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={newPayment.date}
-                    onChange={(e) => setNewPayment({...newPayment, date: e.target.value})}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="amount" className="col-span-1">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newPayment.amount || ""}
-                    onChange={(e) => setNewPayment({...newPayment, amount: parseFloat(e.target.value)})}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="paymentMethod" className="col-span-1">Method</Label>
-                  <Select 
-                    value={newPayment.paymentMethod} 
-                    onValueChange={(value: "cash" | "bank" | "upi" | "other") => 
-                      setNewPayment({...newPayment, paymentMethod: value})
-                    }
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="bank">Bank</SelectItem>
-                      <SelectItem value="upi">UPI</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="invoiceNumber" className="col-span-1">Invoice #</Label>
-                  <Input
-                    id="invoiceNumber"
-                    value={newPayment.invoiceNumber}
-                    onChange={(e) => setNewPayment({...newPayment, invoiceNumber: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="notes" className="col-span-1">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={newPayment.notes}
-                    onChange={(e) => setNewPayment({...newPayment, notes: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Record Payment</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="secondary" onClick={resetSupplierForm}>
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  {editingSupplier ? (
+                    <Button onClick={handleUpdateSupplier}>Update Supplier</Button>
+                  ) : (
+                    <Button onClick={handleAddSupplier}>Add Supplier</Button>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-          <TabsTrigger value="payments">Payment Records</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="suppliers" className="mt-4">
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Total Payments</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {suppliers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-4">
-                      No suppliers found. Add your first supplier.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  suppliers.map(supplier => (
-                    <TableRow key={supplier.id}>
-                      <TableCell className="font-medium">{supplier.name}</TableCell>
-                      <TableCell>{supplier.category || "—"}</TableCell>
-                      <TableCell>
-                        {supplier.phone}
-                        {supplier.email && <div className="text-sm text-gray-500">{supplier.email}</div>}
-                      </TableCell>
-                      <TableCell>
-                        ₹{getSupplierTotalPayments(supplier.id).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="payments" className="mt-4">
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="w-64">
-              <Label htmlFor="supplier-filter">Filter by Supplier</Label>
-              <Select 
-                value={supplierFilter} 
-                onValueChange={setSupplierFilter}
-              >
-                <SelectTrigger id="supplier-filter">
-                  <SelectValue placeholder="All Suppliers" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Suppliers</SelectItem>
-                  {suppliers.map(supplier => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Add Payment Dialog */}
+            <Dialog open={isAddingPayment} onOpenChange={setIsAddingPayment}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingPayment ? "Edit Payment" : "Add New Payment"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingPayment
+                      ? "Update payment details below"
+                      : "Add payment details to create a new payment."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="supplier">Supplier</Label>
+                    <Select
+                      value={selectedSupplierId}
+                      onValueChange={setSelectedSupplierId}
+                    >
+                      <SelectTrigger id="supplier">
+                        <SelectValue placeholder="Select a supplier" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {suppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="paymentAmount">Payment Amount</Label>
+                    <Input
+                      id="paymentAmount"
+                      type="number"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="paymentDate">Payment Date</Label>
+                    <Input
+                      id="paymentDate"
+                      type="date"
+                      value={format(paymentDate, "yyyy-MM-dd")}
+                      onChange={(e) => setPaymentDate(new Date(e.target.value))}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Select
+                      value={paymentMethod}
+                      onValueChange={setPaymentMethod}
+                    >
+                      <SelectTrigger id="paymentMethod">
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="bank">Bank</SelectItem>
+                        <SelectItem value="upi">UPI</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="paymentNotes">Payment Notes</Label>
+                    <Textarea
+                      id="paymentNotes"
+                      value={paymentNotes}
+                      onChange={(e) => setPaymentNotes(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="referenceNumber">Reference Number</Label>
+                    <Input
+                      id="referenceNumber"
+                      value={referenceNumber}
+                      onChange={(e) => setReferenceNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="secondary" onClick={resetPaymentForm}>
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  {editingPayment ? (
+                    <Button onClick={handleUpdatePayment}>Update Payment</Button>
+                  ) : (
+                    <Button onClick={handleAddPayment}>Add Payment</Button>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Suppliers List */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Suppliers</h3>
+              {suppliers.map(supplier => (
+                <div key={supplier.id} className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h3 className="font-medium">{supplier.name}</h3>
+                    <p className="text-sm text-muted-foreground">{supplier.phone}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditSupplier(supplier)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => handleDeleteSupplier(supplier.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
-            
-            <div className="w-64">
-              <Label htmlFor="date-filter">Filter by Date</Label>
-              <Input
-                id="date-filter"
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-              />
+
+            {/* Payments List */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Payments</h3>
+              {payments.map(payment => (
+                <div key={payment.id} className="flex items-center justify-between p-4 border-b">
+                  <div>
+                    <h3 className="font-medium">
+                      ₹{payment.amount.toFixed(2)} - {format(new Date(payment.date), "dd/MM/yyyy")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Ref: {payment.referenceNumber || "N/A"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditPayment(payment)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      onClick={() => handleDeletePayment(payment.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      No payment records found. Record your first payment.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPayments.map(payment => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{payment.date}</TableCell>
-                      <TableCell>{getSupplierName(payment.supplierId)}</TableCell>
-                      <TableCell>₹{payment.amount.toFixed(2)}</TableCell>
-                      <TableCell className="capitalize">{payment.paymentMethod}</TableCell>
-                      <TableCell>{payment.invoiceNumber || "—"}</TableCell>
-                      <TableCell>{payment.notes || "—"}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default SupplierPayments;

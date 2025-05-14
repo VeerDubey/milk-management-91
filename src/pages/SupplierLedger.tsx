@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Supplier, SupplierPayment } from "@/types";
@@ -100,7 +99,7 @@ const SupplierLedger = () => {
     // Add payment table
     const tableData = filteredPayments.map((payment) => [
       format(new Date(payment.date), "dd/MM/yyyy"),
-      payment.invoiceNumber || "-",
+      payment.referenceNumber || "-",
       payment.paymentMethod,
       payment.notes || "-",
       `₹${payment.amount.toFixed(2)}`,
@@ -291,7 +290,7 @@ const SupplierLedger = () => {
                         <TableCell>
                           <div className="flex items-center">
                             <FileText className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {payment.invoiceNumber || "-"}
+                            {payment.referenceNumber || "-"}
                           </div>
                         </TableCell>
                         <TableCell className="capitalize">

@@ -44,7 +44,7 @@ export interface OrderItem {
   unitPrice: number;
   price?: number; // Total price for this item (quantity * unitPrice)
   unit: string;
-  customerId?: string; // Added this property as it's being used
+  customerId?: string; // Add customerId for backward compatibility
 }
 
 // Order type definition
@@ -106,6 +106,7 @@ export interface Supplier {
   outstandingBalance?: number;
   notes?: string;
   products?: string[];
+  category?: string; // Add category field
 }
 
 // Supplier Payment definition
@@ -118,6 +119,7 @@ export interface SupplierPayment {
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
   notes?: string;
   referenceNumber?: string;
+  invoiceNumber?: string; // Add invoiceNumber field
 }
 
 // Customer Product Rate definition
@@ -155,19 +157,24 @@ export interface StockRecord {
   notes?: string;
 }
 
-// Stock Entry (purchase) definition
+// Stock Entry items definition
+export interface StockEntryItem {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  rate?: number; // Add rate field for backward compatibility
+}
+
+// Update StockEntry to include invoiceNumber
 export interface StockEntry {
   id: string;
   date: string;
   supplierId: string;
   referenceNumber?: string;
+  invoiceNumber?: string; // Add invoiceNumber field
   totalAmount: number;
-  items: {
-    productId: string;
-    quantity: number;
-    unitPrice: number;
-    total: number;
-  }[];
+  items: StockEntryItem[];
   notes?: string;
 }
 
@@ -268,14 +275,14 @@ export interface StockTransaction {
 
 // Customer Ledger Entry
 export interface CustomerLedgerEntry {
-  id: string;
+  id?: string;
   customerId: string;
   date: string;
-  type: 'order' | 'payment' | 'adjustment';
-  description: string;
-  debit: number;
-  credit: number;
-  balance: number;
+  type?: 'order' | 'payment' | 'adjustment';
+  description?: string;
+  debit?: number;
+  credit?: number;
+  balance?: number;
   referenceId?: string; // Order ID or Payment ID
   orderId?: string;
   paymentId?: string;
@@ -284,6 +291,7 @@ export interface CustomerLedgerEntry {
   amountBilled?: number;
   paymentReceived?: number;
   closingBalance?: number;
+  reference?: string; // Allow reference field as used in CustomerLedgerReport
 }
 
 // Customer Ledger Report

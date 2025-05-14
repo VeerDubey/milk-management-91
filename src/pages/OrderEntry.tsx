@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
@@ -149,22 +148,49 @@ const OrderEntry = () => {
   
   const saveOrder = () => {
     // Filter out empty cells
-    const orderItems: OrderItem[] = orderGrid
-      .filter(cell => cell.quantity && !isNaN(Number(cell.quantity)) && Number(cell.quantity) > 0)
-      .map(cell => ({
-        customerId: cell.customerId,
-        productId: cell.productId,
-        quantity: Number(cell.quantity)
-      }));
+    const filledCells = orderGrid
+      .filter(cell => cell.quantity && !isNaN(Number(cell.quantity)) && Number(cell.quantity) > 0);
     
-    if (orderItems.length === 0) {
+    if (filledCells.length === 0) {
       toast.error("No order items to save");
       return;
     }
     
+    // Get the first customer for this order (we'll use the first one as the main customer)
+    const firstCell = filledCells[0];
+    const mainCustomer = customers.find(c => c.id === firstCell.customerId);
+    
+    if (!mainCustomer) {
+      toast.error("Customer not found");
+      return;
+    }
+    
+    // Create order items
+    const orderItems: OrderItem[] = filledCells.map(cell => {
+      const product = products.find(p => p.id === cell.productId);
+      const rate = getProductRateForDisplay(cell.customerId, cell.productId);
+      
+      return {
+        id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        productId: cell.productId,
+        productName: product?.name || "Unknown Product",
+        quantity: Number(cell.quantity),
+        unitPrice: rate,
+        unit: product?.unit || "unit",
+        customerId: cell.customerId
+      };
+    });
+    
+    // Calculate total
+    const totalAmount = orderItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    
     const newOrder: Omit<Order, "id"> = {
+      customerId: mainCustomer.id,
+      customerName: mainCustomer.name,
       date: format(orderDate, "yyyy-MM-dd"),
-      items: orderItems
+      items: orderItems,
+      total: totalAmount,
+      status: 'pending'
     };
     
     addOrder(newOrder);

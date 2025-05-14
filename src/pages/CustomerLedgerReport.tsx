@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { format, parse, isAfter, isBefore, addMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
@@ -99,13 +98,19 @@ const CustomerLedgerReport = () => {
       // Initialize entry if it doesn't exist
       if (!dateEntries.has(entryKey)) {
         dateEntries.set(entryKey, {
+          id: `order-${order.id}`,
           date: orderDate,
+          customerId: selectedCustomerId,
           orderId: order.id,
+          type: 'order',
+          description: `Order #${order.id}`,
           productQuantities: {},
           totalQuantity: 0,
           amountBilled: 0,
           paymentReceived: 0,
-          closingBalance: runningBalance
+          closingBalance: runningBalance,
+          debit: 0,
+          credit: 0
         });
       }
       
@@ -147,22 +152,30 @@ const CustomerLedgerReport = () => {
       // Initialize entry if it doesn't exist
       if (!dateEntries.has(entryKey)) {
         dateEntries.set(entryKey, {
+          id: `payment-${payment.id}`,
           date: paymentDate,
+          customerId: selectedCustomerId,
           paymentId: payment.id,
+          type: 'payment',
+          description: `Payment - ${payment.paymentMethod}`,
           productQuantities: {},
           totalQuantity: 0,
           amountBilled: 0,
           paymentReceived: 0,
-          closingBalance: runningBalance
+          closingBalance: runningBalance,
+          debit: 0,
+          credit: 0
         });
       }
       
       const entry = dateEntries.get(entryKey)!;
       
       entry.paymentReceived += payment.amount;
-      entry.reference = payment.paymentMethod.toUpperCase();
+      entry.referenceId = payment.id;
       if (payment.notes) {
-        entry.reference += ` - ${payment.notes}`;
+        entry.reference = `${payment.paymentMethod.toUpperCase()} - ${payment.notes}`;
+      } else {
+        entry.reference = payment.paymentMethod.toUpperCase();
       }
       
       runningBalance -= payment.amount;
@@ -179,8 +192,9 @@ const CustomerLedgerReport = () => {
     const totalPaymentReceived = entries.reduce((sum, entry) => sum + entry.paymentReceived, 0);
     
     // Set the ledger report
-    const report: CustomerLedgerReportType = {
+    const report: CustomerLedgerReport = {
       customerId: selectedCustomerId,
+      customerName: customer.name, // Add the required customerName field
       startDate: formattedStartDate,
       endDate: formattedEndDate,
       openingBalance,

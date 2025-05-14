@@ -18,47 +18,44 @@ export default function PaymentCreate() {
   const navigate = useNavigate();
   const { customers, addPayment } = useData();
   
-  const [customerId, setCustomerId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [notes, setNotes] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    try {
-      // Validate inputs
-      if (!customerId) throw new Error('Please select a customer');
-      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-        throw new Error('Please enter a valid amount');
-      }
-      if (!date) throw new Error('Please select a date');
-      
-      // Create payment object
-      const payment = {
-        customerId,
-        amount: parseFloat(amount),
-        date,
-        paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
-        notes,
-      };
-      
-      // Add payment
-      addPayment(payment);
-      
-      // Show success message
-      toast.success('Payment recorded successfully');
-      
-      // Navigate back to payments list
-      navigate('/payments');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to record payment');
-    } finally {
-      setIsSubmitting(false);
+    if (!selectedCustomer) {
+      toast.error("Please select a customer");
+      return;
     }
+    
+    // Convert Date object to string format
+    const formattedDate = format(paymentDate, "yyyy-MM-dd");
+    
+    const newPayment: Omit<Payment, "id"> = {
+      customerId: selectedCustomer.id,
+      amount: parseFloat(paymentAmount),
+      date: formattedDate, // Now using string format
+      paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
+      notes: paymentNotes
+    };
+    
+    addPayment(newPayment);
+    toast.success("Payment added successfully");
+    
+    // Clear form
+    setSelectedCustomer("");
+    setPaymentAmount("");
+    setPaymentDate(new Date());
+    setPaymentMethod("cash");
+    setPaymentNotes("");
+    
+    // Navigate back to payments list
+    navigate("/payments");
   };
   
   return (
@@ -82,7 +79,7 @@ export default function PaymentCreate() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="customer">Customer</Label>
-              <Select value={customerId} onValueChange={setCustomerId}>
+              <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
                 <SelectTrigger id="customer">
                   <SelectValue placeholder="Select a customer" />
                 </SelectTrigger>
@@ -105,8 +102,8 @@ export default function PaymentCreate() {
                   type="number"
                   className="pl-8"
                   placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
                 />
               </div>
             </div>
@@ -119,18 +116,18 @@ export default function PaymentCreate() {
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
+                      !paymentDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Select a date"}
+                    {paymentDate ? format(paymentDate, "PPP") : "Select a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={setDate}
+                    selected={paymentDate}
+                    onSelect={setPaymentDate}
                     initialFocus
                   />
                 </PopoverContent>
@@ -158,8 +155,8 @@ export default function PaymentCreate() {
               <Textarea
                 id="notes"
                 placeholder="Enter any additional notes about this payment"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                value={paymentNotes}
+                onChange={(e) => setPaymentNotes(e.target.value)}
                 className="min-h-[100px]"
               />
             </div>
