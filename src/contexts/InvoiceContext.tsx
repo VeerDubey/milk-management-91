@@ -1,7 +1,15 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Invoice, InvoiceTemplate } from '@/types';
+import { Invoice } from '@/types';
+
+interface InvoiceTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  fontFamily?: string;
+  primaryColor?: string;
+}
 
 interface CompanyInfo {
   companyName: string;
@@ -16,16 +24,18 @@ interface CompanyInfo {
 interface InvoiceContextType {
   invoices: Invoice[];
   templates: InvoiceTemplate[];
-  selectedTemplate: string;
+  selectedTemplateId: string;
   companyInfo: CompanyInfo;
   colorScheme: string;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   updateInvoice: (id: string, data: Partial<Invoice>) => void;
   deleteInvoice: (id: string) => void;
-  getInvoice: (id: string) => Invoice | undefined;
-  setSelectedTemplate: (templateId: string) => void;
+  getInvoiceById: (id: string) => Invoice | undefined;
+  setSelectedTemplateId: (templateId: string) => void;
   updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
   setColorScheme: (scheme: string) => void;
+  downloadInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
+  generateInvoicePreview: (invoice: Invoice, templateId?: string) => string;
 }
 
 const defaultCompanyInfo: CompanyInfo = {
@@ -35,12 +45,31 @@ const defaultCompanyInfo: CompanyInfo = {
   email: 'info@vikasmilkcentre.com',
   gstNumber: 'GSTIN12345678',
   bankDetails: 'Bank: SBI\nAccount: 123456789\nIFSC: SBIN0001234',
+  logoUrl: '/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png'
 };
 
 const defaultInvoiceTemplates: InvoiceTemplate[] = [
-  { id: 'standard', name: 'Standard', thumbnail: '/assets/invoice-standard.png' },
-  { id: 'modern', name: 'Modern', thumbnail: '/assets/invoice-modern.png' },
-  { id: 'professional', name: 'Professional', thumbnail: '/assets/invoice-professional.png'  },
+  { 
+    id: 'standard', 
+    name: 'Standard', 
+    description: 'A clean, professional invoice layout', 
+    fontFamily: 'Inter', 
+    primaryColor: '#3b82f6' 
+  },
+  { 
+    id: 'modern', 
+    name: 'Modern', 
+    description: 'A bold, contemporary design', 
+    fontFamily: 'Poppins', 
+    primaryColor: '#10b981' 
+  },
+  { 
+    id: 'professional', 
+    name: 'Professional', 
+    description: 'A formal, business-oriented template', 
+    fontFamily: 'Roboto', 
+    primaryColor: '#6366f1' 
+  },
 ];
 
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
@@ -48,7 +77,7 @@ const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [templates] = useState<InvoiceTemplate[]>(defaultInvoiceTemplates);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('standard');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('standard');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
   const [colorScheme, setColorScheme] = useState<string>('blue');
   
@@ -74,7 +103,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     
     const storedTemplate = localStorage.getItem('selectedInvoiceTemplate');
     if (storedTemplate) {
-      setSelectedTemplate(storedTemplate);
+      setSelectedTemplateId(storedTemplate);
     }
     
     const storedColorScheme = localStorage.getItem('invoiceColorScheme');
@@ -93,8 +122,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   }, [companyInfo]);
   
   useEffect(() => {
-    localStorage.setItem('selectedInvoiceTemplate', selectedTemplate);
-  }, [selectedTemplate]);
+    localStorage.setItem('selectedInvoiceTemplate', selectedTemplateId);
+  }, [selectedTemplateId]);
   
   useEffect(() => {
     localStorage.setItem('invoiceColorScheme', colorScheme);
@@ -120,7 +149,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setInvoices(prev => prev.filter(invoice => invoice.id !== id));
   };
   
-  const getInvoice = (id: string) => {
+  const getInvoiceById = (id: string) => {
     return invoices.find(invoice => invoice.id === id);
   };
   
@@ -128,21 +157,36 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfo(prev => ({ ...prev, ...info }));
   };
   
+  const downloadInvoice = async (invoiceId: string, templateId?: string) => {
+    // Mock function - in a real app, this would generate and download a PDF
+    console.log(`Downloading invoice ${invoiceId} with template ${templateId || selectedTemplateId}`);
+    // This would typically call a service to generate and download the PDF
+  };
+  
+  const generateInvoicePreview = (invoice: Invoice, templateId?: string): string => {
+    // Mock function - in a real app, this would generate a preview URL
+    console.log(`Generating preview for invoice using template ${templateId || selectedTemplateId}`);
+    // This would typically return a data URL or blob URL for preview
+    return '#preview-url';
+  };
+  
   return (
     <InvoiceContext.Provider
       value={{
         invoices,
         templates,
-        selectedTemplate,
+        selectedTemplateId,
         companyInfo,
         colorScheme,
         addInvoice,
         updateInvoice,
         deleteInvoice,
-        getInvoice,
-        setSelectedTemplate,
+        getInvoiceById,
+        setSelectedTemplateId,
         updateCompanyInfo,
         setColorScheme,
+        downloadInvoice,
+        generateInvoicePreview,
       }}
     >
       {children}

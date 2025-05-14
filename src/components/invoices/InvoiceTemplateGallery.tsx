@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Palette, EyeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { INVOICE_TEMPLATES } from '@/utils/invoiceUtils';
 import { useInvoices } from '@/contexts/InvoiceContext';
 import { 
   Dialog,
@@ -25,7 +24,7 @@ export default function InvoiceTemplateGallery({
   showPreviewOption = false,
   previewInvoiceId,
 }: InvoiceTemplateGalleryProps) {
-  const { selectedTemplateId, setSelectedTemplateId, generateInvoicePreview, getInvoiceById } = useInvoices();
+  const { selectedTemplateId, setSelectedTemplateId, generateInvoicePreview, getInvoiceById, templates } = useInvoices();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(selectedTemplateId);
@@ -57,7 +56,7 @@ export default function InvoiceTemplateGallery({
   return (
     <div className={className}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {INVOICE_TEMPLATES.map(template => (
+        {templates.map(template => (
           <Card 
             key={template.id}
             className={`cursor-pointer transition-all hover:shadow-md ${

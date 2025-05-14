@@ -14,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { INVOICE_TEMPLATES } from '@/utils/invoiceUtils';
 import { useInvoices } from '@/contexts/InvoiceContext';
 
 interface InvoiceDownloadButtonProps {
@@ -30,7 +29,7 @@ export default function InvoiceDownloadButton({
   size = "default",
   className = ""
 }: InvoiceDownloadButtonProps) {
-  const { downloadInvoice, selectedTemplateId } = useInvoices();
+  const { downloadInvoice, selectedTemplateId, templates } = useInvoices();
   const [isDownloading, setIsDownloading] = useState(false);
   
   const handleDownload = async (templateId?: string) => {
@@ -71,7 +70,7 @@ export default function InvoiceDownloadButton({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {/* Download with specific template */}
-          {INVOICE_TEMPLATES.map(template => (
+          {templates.map(template => (
             <DropdownMenuItem 
               key={template.id} 
               onClick={() => handleDownload(template.id)}

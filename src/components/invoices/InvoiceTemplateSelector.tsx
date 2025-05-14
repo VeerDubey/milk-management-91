@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, Palette } from 'lucide-react';
-import { INVOICE_TEMPLATES } from '@/utils/invoiceUtils';
 import { useInvoices } from '@/contexts/InvoiceContext';
 
 interface InvoiceTemplateSelectorProps {
@@ -11,7 +10,7 @@ interface InvoiceTemplateSelectorProps {
 }
 
 export default function InvoiceTemplateSelector({ onSelect, className = '' }: InvoiceTemplateSelectorProps) {
-  const { selectedTemplateId, setSelectedTemplateId } = useInvoices();
+  const { selectedTemplateId, setSelectedTemplateId, templates } = useInvoices();
   
   const handleSelect = (id: string) => {
     setSelectedTemplateId(id);
@@ -22,7 +21,7 @@ export default function InvoiceTemplateSelector({ onSelect, className = '' }: In
   
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
-      {INVOICE_TEMPLATES.map(template => (
+      {templates.map(template => (
         <Card 
           key={template.id}
           className={`cursor-pointer transition-all hover:shadow-md ${

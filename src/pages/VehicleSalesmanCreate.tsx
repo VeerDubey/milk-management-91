@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { toast } from 'sonner';
@@ -114,6 +113,7 @@ const VehicleSalesmanCreate = () => {
       toast.error("Failed to add salesman");
     }
   };
+  
   
   return (
     <div className="space-y-6">
