@@ -5,9 +5,11 @@ import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
+import { useData } from "@/contexts/DataContext";
 
 export function Layout() {
   const { theme, toggleTheme } = useTheme();
+  const { uiSettings } = useData();
   const isDarkTheme = theme === 'dark';
 
   const handleToggleTheme = () => {
@@ -20,8 +22,15 @@ export function Layout() {
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 shadow-sm">
-          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Vikas Milk Centre
+          <div className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png" 
+              alt="Vikas Milk Centre Logo" 
+              className="h-10 w-10"
+            />
+            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Vikas Milk Centre
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <Button 

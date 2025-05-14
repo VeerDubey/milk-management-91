@@ -1,568 +1,349 @@
-import { useState, useEffect } from "react";
-import { useData } from "@/contexts/DataContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { exportToPdf } from "@/utils/pdfUtils";
-import { exportToExcel } from "@/utils/excelUtils";
-import { 
-  Car,
-  User,
-  Plus,
-  Edit,
-  Trash2, 
-  FileText,
-  Download,
-  Save
-} from "lucide-react";
-import { toast } from "sonner";
-import { Vehicle, Salesman } from "@/types";
 
-export default function VehicleSalesmanCreate() {
-  const { vehicles, salesmen, addVehicle, updateVehicle, deleteVehicle, addSalesman, updateSalesman, deleteSalesman } = useData();
+import React, { useState } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { toast } from 'sonner';
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Car, Truck, Users } from 'lucide-react';
+import { 
+  Tabs, TabsContent, TabsList, TabsTrigger 
+} from '@/components/ui/tabs';
+
+const VehicleSalesmanCreate = () => {
+  const { vehicles, addVehicle, salesmen, addSalesman } = useData();
   
-  // State for vehicle form
+  // Vehicle state
   const [vehicleName, setVehicleName] = useState("");
-  const [vehicleRegNumber, setVehicleRegNumber] = useState("");
-  const [vehicleType, setVehicleType] = useState("");
-  const [vehicleDriver, setVehicleDriver] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
-  const [vehicleCapacity, setVehicleCapacity] = useState("");
+  const [vehicleType, setVehicleType] = useState("truck");
+  const [vehicleRegNumber, setVehicleRegNumber] = useState("");
+  const [vehicleCapacity, setVehicleCapacity] = useState<number>(0);
+  const [vehicleIsActive, setVehicleIsActive] = useState(true);
   const [vehicleNotes, setVehicleNotes] = useState("");
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   
-  // State for salesman form
+  // Salesman state
   const [salesmanName, setSalesmanName] = useState("");
   const [salesmanPhone, setSalesmanPhone] = useState("");
   const [salesmanAddress, setSalesmanAddress] = useState("");
-  const [selectedVehicleId, setSelectedVehicleId] = useState("");
-  const [editingSalesman, setEditingSalesman] = useState<Salesman | null>(null);
+  const [salesmanVehicleId, setSalesmanVehicleId] = useState("");
+  const [salesmanIsActive, setSalesmanIsActive] = useState(true);
   
-  // Reset form functions
-  const resetVehicleForm = () => {
-    setVehicleName("");
-    setVehicleRegNumber("");
-    setVehicleType("");
-    setVehicleDriver("");
-    setVehicleModel("");
-    setVehicleCapacity("");
-    setVehicleNotes("");
-    setEditingVehicle(null);
-  };
-  
-  const resetSalesmanForm = () => {
-    setSalesmanName("");
-    setSalesmanPhone("");
-    setSalesmanAddress("");
-    setSelectedVehicleId("");
-    setEditingSalesman(null);
-  };
-  
-  // Handle vehicle operations
-  const handleSubmitVehicle = (e: React.FormEvent) => {
+  const handleCreateVehicle = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!vehicleName || !vehicleRegNumber) {
-      toast({
-        title: "Error",
-        description: "Please fill all required fields",
-        variant: "destructive"
-      });
-      return;
+    try {
+      if (!vehicleName || !vehicleNumber || !vehicleRegNumber) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+      
+      const parsedCapacity = Number(vehicleCapacity);
+      if (isNaN(parsedCapacity) || parsedCapacity < 0) {
+        toast.error("Please enter a valid capacity");
+        return;
+      }
+      
+      const newVehicle = {
+        name: vehicleName,
+        number: vehicleNumber,
+        model: vehicleModel,
+        type: vehicleType,
+        regNumber: vehicleRegNumber,
+        capacity: parsedCapacity,
+        isActive: vehicleIsActive,
+        notes: vehicleNotes
+      };
+      
+      addVehicle(newVehicle);
+      
+      // Reset form
+      setVehicleName("");
+      setVehicleNumber("");
+      setVehicleModel("");
+      setVehicleType("truck");
+      setVehicleRegNumber("");
+      setVehicleCapacity(0);
+      setVehicleIsActive(true);
+      setVehicleNotes("");
+      
+      toast.success("Vehicle added successfully");
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      toast.error("Failed to add vehicle");
     }
-    
-    addVehicle({
-      name: vehicleName,
-      regNumber: vehicleRegNumber,
-      type: vehicleType || "delivery",
-      driver: vehicleDriver || "",
-      isActive: true,
-      number: vehicleRegNumber, // Set number to match regNumber
-      model: vehicleModel || "",
-      capacity: vehicleCapacity || 0,
-      notes: vehicleNotes || ""
-    });
-    
-    toast.success("Vehicle added successfully");
-    resetVehicleForm();
   };
   
-  const handleEditVehicle = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setVehicleName(vehicle.name);
-    setVehicleRegNumber(vehicle.number);
-    setVehicleType(vehicle.type || "");
-    setVehicleDriver(vehicle.driver || "");
-    setVehicleModel(vehicle.model || "");
-    setVehicleCapacity(vehicle.capacity ? vehicle.capacity.toString() : "");
-    setVehicleNotes(vehicle.notes || "");
-  };
-  
-  const handleDeleteVehicle = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this vehicle?")) {
-      deleteVehicle(id);
-      toast.success("Vehicle deleted successfully");
-    }
-  };
-  
-  // Handle salesman operations
-  const handleSubmitSalesman = (e: React.FormEvent) => {
+  const handleCreateSalesman = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!salesmanName || !salesmanPhone) {
-      toast({
-        title: "Error",
-        description: "Please fill all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    addSalesman({
-      name: salesmanName,
-      phone: salesmanPhone,
-      address: salesmanAddress || "",
-      vehicleId: selectedVehicleId || "",
-      isActive: true // Add the required isActive property
-    });
-    
-    toast.success("Salesman added successfully");
-    resetSalesmanForm();
-  };
-  
-  const handleEditSalesman = (salesman: Salesman) => {
-    setEditingSalesman(salesman);
-    setSalesmanName(salesman.name);
-    setSalesmanPhone(salesman.phone || "");
-    setSalesmanAddress(salesman.address || "");
-    setSelectedVehicleId(salesman.vehicleId || "");
-  };
-  
-  const handleDeleteSalesman = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this salesman?")) {
-      deleteSalesman(id);
-      toast.success("Salesman deleted successfully");
+    try {
+      if (!salesmanName || !salesmanPhone) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+      
+      const newSalesman = {
+        name: salesmanName,
+        phone: salesmanPhone,
+        address: salesmanAddress,
+        vehicleId: salesmanVehicleId,
+        isActive: salesmanIsActive
+      };
+      
+      addSalesman(newSalesman);
+      
+      // Reset form
+      setSalesmanName("");
+      setSalesmanPhone("");
+      setSalesmanAddress("");
+      setSalesmanVehicleId("");
+      setSalesmanIsActive(true);
+      
+      toast.success("Salesman added successfully");
+    } catch (error) {
+      console.error("Error adding salesman:", error);
+      toast.error("Failed to add salesman");
     }
   };
   
-  // Export functions
-  const exportVehiclesToPdf = () => {
-    const columns = ["Number", "Model", "Capacity", "Notes"];
-    const data = vehicles.map(vehicle => [
-      vehicle.number,
-      vehicle.model || "-",
-      vehicle.capacity || "-",
-      vehicle.notes || "-"
-    ]);
-    
-    exportToPdf(
-      columns,
-      data,
-      {
-        title: "Vehicles List",
-        subtitle: "All registered vehicles",
-        dateInfo: new Date().toLocaleDateString(),
-        filename: "vehicles-list.pdf"
-      }
-    );
-    
-    toast.success("Vehicles list exported to PDF");
-  };
-  
-  const exportVehiclesToExcel = () => {
-    const columns = ["Number", "Model", "Capacity", "Notes"];
-    const data = vehicles.map(vehicle => [
-      vehicle.number,
-      vehicle.model || "-",
-      vehicle.capacity || "-",
-      vehicle.notes || "-"
-    ]);
-    
-    exportToExcel(columns, data, "vehicles-list.xlsx");
-    toast.success("Vehicles list exported to Excel");
-  };
-  
-  const exportSalesmenToPdf = () => {
-    const columns = ["Name", "Phone", "Address", "Vehicle"];
-    const data = salesmen.map(salesman => {
-      const vehicle = vehicles.find(v => v.id === salesman.vehicleId);
-      return [
-        salesman.name,
-        salesman.phone || "-",
-        salesman.address || "-",
-        vehicle ? vehicle.number : "-"
-      ];
-    });
-    
-    exportToPdf(
-      columns,
-      data,
-      {
-        title: "Salesmen List",
-        subtitle: "All registered salesmen",
-        dateInfo: new Date().toLocaleDateString(),
-        filename: "salesmen-list.pdf"
-      }
-    );
-    
-    toast.success("Salesmen list exported to PDF");
-  };
-  
-  const exportSalesmenToExcel = () => {
-    const columns = ["Name", "Phone", "Address", "Vehicle"];
-    const data = salesmen.map(salesman => {
-      const vehicle = vehicles.find(v => v.id === salesman.vehicleId);
-      return [
-        salesman.name,
-        salesman.phone || "-",
-        salesman.address || "-",
-        vehicle ? vehicle.number : "-"
-      ];
-    });
-    
-    exportToExcel(columns, data, "salesmen-list.xlsx");
-    toast.success("Salesmen list exported to Excel");
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Vehicles & Salesmen</h1>
-          <p className="text-muted-foreground">Manage vehicles and salesmen details</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Vehicles & Salesmen</h1>
+        <p className="text-muted-foreground">
+          Manage your delivery vehicles and salesmen
+        </p>
       </div>
-
-      <Tabs defaultValue="vehicles" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="vehicles" className="flex items-center">
-            <Car className="mr-2 h-4 w-4" />
-            Vehicles
-          </TabsTrigger>
-          <TabsTrigger value="salesmen" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            Salesmen
-          </TabsTrigger>
+      
+      <Tabs defaultValue="vehicles" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
+          <TabsTrigger value="salesmen">Salesmen</TabsTrigger>
         </TabsList>
         
-        {/* Vehicles Tab */}
-        <TabsContent value="vehicles" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Vehicle Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4" onSubmit={handleSubmitVehicle}>
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleName">Vehicle Name *</Label>
+        <TabsContent value="vehicles" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Car className="h-5 w-5" />
+                Add New Vehicle
+              </CardTitle>
+              <CardDescription>
+                Register a new delivery vehicle to the system
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleCreateVehicle}>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-name">Vehicle Name</Label>
                     <Input 
-                      id="vehicleName" 
-                      value={vehicleName} 
+                      id="vehicle-name" 
+                      placeholder="Enter vehicle name" 
+                      value={vehicleName}
                       onChange={(e) => setVehicleName(e.target.value)}
-                      placeholder="Enter vehicle name"
                     />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleRegNumber">Registration Number *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-number">Vehicle Number</Label>
                     <Input 
-                      id="vehicleRegNumber" 
-                      value={vehicleRegNumber} 
+                      id="vehicle-number" 
+                      placeholder="Enter vehicle number" 
+                      value={vehicleNumber}
+                      onChange={(e) => setVehicleNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-reg-number">Registration Number</Label>
+                    <Input 
+                      id="vehicle-reg-number" 
+                      placeholder="E.g. MH02AB1234" 
+                      value={vehicleRegNumber}
                       onChange={(e) => setVehicleRegNumber(e.target.value)}
-                      placeholder="Enter registration number"
                     />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleType">Type</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-model">Model</Label>
                     <Input 
-                      id="vehicleType" 
-                      value={vehicleType} 
-                      onChange={(e) => setVehicleType(e.target.value)}
-                      placeholder="Enter vehicle type"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleDriver">Driver</Label>
-                    <Input 
-                      id="vehicleDriver" 
-                      value={vehicleDriver} 
-                      onChange={(e) => setVehicleDriver(e.target.value)}
-                      placeholder="Enter driver name"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleModel">Model</Label>
-                    <Input 
-                      id="vehicleModel" 
-                      value={vehicleModel} 
+                      id="vehicle-model" 
+                      placeholder="Enter model" 
+                      value={vehicleModel}
                       onChange={(e) => setVehicleModel(e.target.value)}
-                      placeholder="Enter vehicle model"
                     />
                   </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                    <Select 
+                      value={vehicleType} 
+                      onValueChange={setVehicleType}
+                    >
+                      <SelectTrigger id="vehicle-type">
+                        <SelectValue placeholder="Select vehicle type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="truck">Truck</SelectItem>
+                        <SelectItem value="van">Van</SelectItem>
+                        <SelectItem value="bike">Bike</SelectItem>
+                        <SelectItem value="car">Car</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleCapacity">Capacity (liters)</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicle-capacity">Capacity (Liters)</Label>
                     <Input 
-                      id="vehicleCapacity" 
-                      type="number"
-                      value={vehicleCapacity} 
-                      onChange={(e) => setVehicleCapacity(e.target.value)}
-                      placeholder="Enter capacity in liters"
+                      id="vehicle-capacity" 
+                      type="number" 
+                      min="0"
+                      placeholder="Enter capacity" 
+                      value={vehicleCapacity}
+                      onChange={(e) => setVehicleCapacity(Number(e.target.value))}
                     />
                   </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleNotes">Notes</Label>
-                    <Textarea 
-                      id="vehicleNotes" 
-                      value={vehicleNotes} 
-                      onChange={(e) => setVehicleNotes(e.target.value)}
-                      placeholder="Additional notes"
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="vehicle-active" className="cursor-pointer">Vehicle Active</Label>
+                    <Switch 
+                      id="vehicle-active" 
+                      checked={vehicleIsActive}
+                      onCheckedChange={setVehicleIsActive}
                     />
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1">
-                      <Save className="mr-2 h-4 w-4" />
-                      {editingVehicle ? "Update Vehicle" : "Add Vehicle"}
-                    </Button>
-                    {editingVehicle && (
-                      <Button type="button" variant="outline" onClick={resetVehicleForm}>
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-            
-            {/* Vehicles List */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Vehicles List</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={exportVehiclesToExcel}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Excel
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={exportVehiclesToPdf}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    PDF
-                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Inactive vehicles won't appear in assignment lists
+                  </p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Number</TableHead>
-                        <TableHead>Model</TableHead>
-                        <TableHead>Capacity</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vehicles.length > 0 ? (
-                        vehicles.map((vehicle) => (
-                          <TableRow key={vehicle.id}>
-                            <TableCell className="font-medium">{vehicle.number}</TableCell>
-                            <TableCell>{vehicle.model || "-"}</TableCell>
-                            <TableCell>{vehicle.capacity ? `${vehicle.capacity} L` : "-"}</TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditVehicle(vehicle)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive"
-                                  onClick={() => handleDeleteVehicle(vehicle.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
-                            No vehicles added yet
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle-notes">Notes</Label>
+                  <Textarea 
+                    id="vehicle-notes" 
+                    placeholder="Enter any additional notes about this vehicle"
+                    value={vehicleNotes}
+                    onChange={(e) => setVehicleNotes(e.target.value)} 
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="flex justify-end">
+                  <Button type="submit">Add Vehicle</Button>
                 </div>
               </CardContent>
-            </Card>
-          </div>
+            </form>
+          </Card>
         </TabsContent>
         
-        {/* Salesmen Tab */}
-        <TabsContent value="salesmen" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Salesman Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{editingSalesman ? "Edit Salesman" : "Add New Salesman"}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4" onSubmit={handleSubmitSalesman}>
-                  <div className="grid gap-2">
-                    <Label htmlFor="salesmanName">Name *</Label>
+        <TabsContent value="salesmen" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Add New Salesman
+              </CardTitle>
+              <CardDescription>
+                Register a new salesman or delivery person
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleCreateSalesman}>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="salesman-name">Name</Label>
                     <Input 
-                      id="salesmanName" 
-                      value={salesmanName} 
+                      id="salesman-name" 
+                      placeholder="Enter full name" 
+                      value={salesmanName}
                       onChange={(e) => setSalesmanName(e.target.value)}
-                      placeholder="Enter salesman name"
                     />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="salesmanPhone">Phone</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="salesman-phone">Phone</Label>
                     <Input 
-                      id="salesmanPhone" 
-                      value={salesmanPhone} 
+                      id="salesman-phone" 
+                      placeholder="Enter phone number" 
+                      value={salesmanPhone}
                       onChange={(e) => setSalesmanPhone(e.target.value)}
-                      placeholder="Enter contact number"
                     />
                   </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="salesmanAddress">Address</Label>
-                    <Textarea 
-                      id="salesmanAddress" 
-                      value={salesmanAddress} 
-                      onChange={(e) => setSalesmanAddress(e.target.value)}
-                      placeholder="Enter address"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="salesmanVehicle">Assigned Vehicle</Label>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="salesman-address">Address</Label>
+                  <Textarea 
+                    id="salesman-address" 
+                    placeholder="Enter address"
+                    value={salesmanAddress}
+                    onChange={(e) => setSalesmanAddress(e.target.value)}
+                  />
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="salesman-vehicle">Assigned Vehicle</Label>
                     <Select 
-                      value={selectedVehicleId} 
-                      onValueChange={setSelectedVehicleId}
+                      value={salesmanVehicleId} 
+                      onValueChange={setSalesmanVehicleId}
                     >
-                      <SelectTrigger id="salesmanVehicle">
-                        <SelectValue placeholder="Select a vehicle" />
+                      <SelectTrigger id="salesman-vehicle">
+                        <SelectValue placeholder="Select vehicle" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">None</SelectItem>
-                        {vehicles.map(vehicle => (
+                        {vehicles.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id}>
-                            {vehicle.number} - {vehicle.model || "No model"}
+                            {vehicle.name} ({vehicle.regNumber})
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1">
-                      <Save className="mr-2 h-4 w-4" />
-                      {editingSalesman ? "Update Salesman" : "Add Salesman"}
-                    </Button>
-                    {editingSalesman && (
-                      <Button type="button" variant="outline" onClick={resetSalesmanForm}>
-                        Cancel
-                      </Button>
-                    )}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mt-8">
+                      <Label htmlFor="salesman-active" className="cursor-pointer">Active</Label>
+                      <Switch 
+                        id="salesman-active" 
+                        checked={salesmanIsActive}
+                        onCheckedChange={setSalesmanIsActive}
+                      />
+                    </div>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-            
-            {/* Salesmen List */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Salesmen List</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={exportSalesmenToExcel}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Excel
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={exportSalesmenToPdf}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    PDF
-                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Vehicle</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {salesmen.length > 0 ? (
-                        salesmen.map((salesman) => {
-                          const vehicle = vehicles.find(v => v.id === salesman.vehicleId);
-                          
-                          return (
-                            <TableRow key={salesman.id}>
-                              <TableCell className="font-medium">{salesman.name}</TableCell>
-                              <TableCell>{salesman.phone || "-"}</TableCell>
-                              <TableCell>{vehicle ? vehicle.number : "-"}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditSalesman(salesman)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-destructive"
-                                    onClick={() => handleDeleteSalesman(salesman.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8">
-                            No salesmen added yet
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                
+                <Separator />
+                
+                <div className="flex justify-end">
+                  <Button type="submit">Add Salesman</Button>
                 </div>
               </CardContent>
-            </Card>
-          </div>
+            </form>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-}
+};
+
+export default VehicleSalesmanCreate;
