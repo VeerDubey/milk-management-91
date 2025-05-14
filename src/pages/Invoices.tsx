@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
+import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,14 +21,15 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("date");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const { invoices } = useInvoices();
 
-  // Sample invoices for demo (replace with actual data from context)
-  const invoices = [
-    { id: 'INV-2023-001', date: '2023-05-01', customer: 'Rahul Sharma', amount: 1200, status: 'paid' },
-    { id: 'INV-2023-002', date: '2023-05-03', customer: 'Priya Patel', amount: 850, status: 'unpaid' },
-    { id: 'INV-2023-003', date: '2023-05-05', customer: 'Amit Kumar', amount: 2100, status: 'paid' },
-    { id: 'INV-2023-004', date: '2023-05-08', customer: 'Sita Verma', amount: 950, status: 'overdue' },
-    { id: 'INV-2023-005', date: '2023-05-12', customer: 'Vikram Singh', amount: 1650, status: 'unpaid' },
+  // Sample invoices for demo if actual invoices are empty
+  const displayInvoices = invoices.length > 0 ? invoices : [
+    { id: 'INV-2023-001', date: '2023-05-01', customerName: 'Rahul Sharma', amount: 1200, status: 'paid' },
+    { id: 'INV-2023-002', date: '2023-05-03', customerName: 'Priya Patel', amount: 850, status: 'unpaid' },
+    { id: 'INV-2023-003', date: '2023-05-05', customerName: 'Amit Kumar', amount: 2100, status: 'paid' },
+    { id: 'INV-2023-004', date: '2023-05-08', customerName: 'Sita Verma', amount: 950, status: 'overdue' },
+    { id: 'INV-2023-005', date: '2023-05-12', customerName: 'Vikram Singh', amount: 1650, status: 'unpaid' },
   ];
 
   const handleSort = (field: string) => {
@@ -41,11 +42,11 @@ export default function Invoices() {
   };
 
   // Filter invoices based on search term
-  const filteredInvoices = invoices.filter(invoice => 
+  const filteredInvoices = displayInvoices.filter(invoice => 
     invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.date.includes(searchTerm) ||
-    invoice.status.toLowerCase().includes(searchTerm.toLowerCase())
+    invoice.customerName?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+    invoice.date?.includes(searchTerm) ||
+    invoice.status?.toLowerCase()?.includes(searchTerm.toLowerCase())
   );
 
   // Sort the filtered invoices
@@ -69,7 +70,7 @@ export default function Invoices() {
 
   // Get status badge color based on invoice status
   const getStatusBadge = (status: string) => {
-    switch(status.toLowerCase()) {
+    switch(status?.toLowerCase()) {
       case 'paid':
         return <Badge className="bg-green-500">Paid</Badge>;
       case 'unpaid':
@@ -145,11 +146,11 @@ export default function Invoices() {
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer"
-                    onClick={() => handleSort('customer')}
+                    onClick={() => handleSort('customerName')}
                   >
                     <div className="flex items-center">
                       Customer
-                      {sortBy === 'customer' && (
+                      {sortBy === 'customerName' && (
                         <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
                       )}
                     </div>
@@ -194,15 +195,15 @@ export default function Invoices() {
                         {invoice.id}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{invoice.customer}</TableCell>
-                    <TableCell className="text-right">₹{invoice.amount.toFixed(2)}</TableCell>
-                    <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                    <TableCell className="font-medium">{invoice.customerName}</TableCell>
+                    <TableCell className="text-right">₹{invoice.amount?.toFixed(2)}</TableCell>
+                    <TableCell>{getStatusBadge(invoice.status || 'Unknown')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => navigate(`/invoice/${invoice.id}`)}
+                          onClick={() => navigate(`/invoice-detail/${invoice.id}`)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

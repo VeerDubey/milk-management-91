@@ -54,8 +54,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <DataProvider>
-          <InvoiceProvider>
+        {/* Move InvoiceProvider outside of DataProvider to prevent circular dependency */}
+        <InvoiceProvider>
+          <DataProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<Login />} />
@@ -130,8 +131,8 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
-          </InvoiceProvider>
-        </DataProvider>
+          </DataProvider>
+        </InvoiceProvider>
       </AuthProvider>
       <Toaster position="top-right" />
     </ThemeProvider>
