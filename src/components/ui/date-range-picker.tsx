@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { addDays, format } from "date-fns"
+import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 
@@ -12,76 +12,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
-interface DateRangePickerProps {
+export interface DateRangePickerProps {
   date: DateRange | undefined
-  onDateChange: (date: DateRange | undefined) => void
+  onDateChange?: (date: DateRange | undefined) => void
+  setDate?: (date: DateRange | undefined) => void
   className?: string
-  align?: "center" | "start" | "end"
 }
 
-export function DateRangePicker({
+export function DatePickerWithRange({
   date,
   onDateChange,
+  setDate,
   className,
-  align = "start",
 }: DateRangePickerProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-
-  // Predefined date ranges
-  const handleRangeSelect = (value: string) => {
-    const today = new Date()
-    
-    switch (value) {
-      case "today":
-        onDateChange({ from: today, to: today })
-        break
-      case "yesterday": {
-        const yesterday = addDays(today, -1)
-        onDateChange({ from: yesterday, to: yesterday })
-        break
-      }
-      case "last7days":
-        onDateChange({ from: addDays(today, -6), to: today })
-        break
-      case "last30days":
-        onDateChange({ from: addDays(today, -29), to: today })
-        break
-      case "thismonth": {
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-        onDateChange({ from: firstDayOfMonth, to: today })
-        break
-      }
-      case "lastmonth": {
-        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
-        onDateChange({ from: firstDayLastMonth, to: lastDayLastMonth })
-        break
-      }
-      case "custom":
-        setIsOpen(true)
-        break
-      default:
-        break
-    }
-  }
+  const handleDateChange = (range: DateRange | undefined) => {
+    if (onDateChange) onDateChange(range);
+    if (setDate) setDate(range);
+  };
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover>
         <PopoverTrigger asChild>
           <Button
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[260px] justify-start text-left font-normal",
+              "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground"
             )}
           >
@@ -89,8 +47,7 @@ export function DateRangePicker({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
                 </>
               ) : (
                 format(date.from, "LLL dd, y")
@@ -100,32 +57,16 @@ export function DateRangePicker({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align={align}>
+        <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={onDateChange}
+            onSelect={handleDateChange}
             numberOfMonths={2}
-            className={cn("p-3 pointer-events-auto")}
+            className="pointer-events-auto"
           />
-          <div className="border-t border-border p-3">
-            <Select onValueChange={handleRangeSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="yesterday">Yesterday</SelectItem>
-                <SelectItem value="last7days">Last 7 days</SelectItem>
-                <SelectItem value="last30days">Last 30 days</SelectItem>
-                <SelectItem value="thismonth">This month</SelectItem>
-                <SelectItem value="lastmonth">Last month</SelectItem>
-                <SelectItem value="custom">Custom range</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </PopoverContent>
       </Popover>
     </div>

@@ -14,12 +14,20 @@ import {
 
 export interface DatePickerProps {
   date: Date
-  onDateChange: (date: Date) => void
+  onDateChange?: (date: Date) => void
+  setDate?: (date: Date) => void
   className?: string
   id?: string
 }
 
-export function DatePicker({ date, onDateChange, className, id }: DatePickerProps) {
+export function DatePicker({ date, onDateChange, setDate, className, id }: DatePickerProps) {
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      if (onDateChange) onDateChange(selectedDate);
+      if (setDate) setDate(selectedDate);
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -40,7 +48,7 @@ export function DatePicker({ date, onDateChange, className, id }: DatePickerProp
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(date) => date && onDateChange(date)}
+          onSelect={handleDateChange}
           initialFocus
           className={cn("p-3 pointer-events-auto")}
         />
