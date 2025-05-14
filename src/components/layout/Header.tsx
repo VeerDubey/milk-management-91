@@ -33,7 +33,7 @@ interface HeaderProps {
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { uiSettings } = useData();
@@ -54,12 +54,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   }, []);
 
   // Toggle theme
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
+  const handleToggleTheme = () => {
+    toggleTheme();
     toast({
-      title: `${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`,
-      description: `Application switched to ${newTheme} mode`,
+      title: `${theme === 'dark' ? 'Light' : 'Dark'} mode activated`,
+      description: `Application switched to ${theme === 'dark' ? 'light' : 'dark'} mode`,
     });
   };
 
@@ -83,7 +82,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             Offline Mode
           </Badge>
         )}
-        <Button variant="ghost" size="icon" onClick={toggleTheme}>
+        <Button variant="ghost" size="icon" onClick={handleToggleTheme}>
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
         <Button variant="ghost" size="icon">

@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils";
 import { 
   Home, 
   Users, 
-  ShoppingCart, 
-  FileText, 
-  Truck, 
   Settings, 
   ChevronRight, 
   ChevronLeft,
@@ -32,21 +29,7 @@ export function Sidebar() {
       icon: Users,
       path: "/customers",
     },
-    {
-      title: "Orders",
-      icon: ShoppingCart,
-      path: "/orders",
-    },
-    {
-      title: "Inventory",
-      icon: Truck,
-      path: "/inventory",
-    },
-    {
-      title: "Invoices",
-      icon: FileText,
-      path: "/invoices",
-    },
+    // Removed missing page routes
     {
       title: "Outstanding",
       icon: DollarSign,

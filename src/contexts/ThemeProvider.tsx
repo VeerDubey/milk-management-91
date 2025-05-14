@@ -1,46 +1,44 @@
 
-import { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type ThemeType = "light" | "dark";
-
-interface ThemeContextType {
-  theme: ThemeType;
+type Theme = "light" | "dark";
+export type ThemeContextType = {
+  theme: Theme;
   toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
+  setTheme: (theme: Theme) => void;
+  accentColor?: string;
+  applyTheme?: (theme: Theme, accent?: string) => void;
 };
 
-interface ThemeProviderProps {
-  children: ReactNode;
-}
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "light",
+  toggleTheme: () => {},
+  setTheme: () => {},
+});
 
-export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<ThemeType>(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem("theme");
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>("light");
+  const [accentColor, setAccentColor] = useState<string>("#0284c7");
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme") as Theme | null;
+    const storedAccent = localStorage.getItem("accentColor");
     
-    // Check system preference if no saved preference
-    if (!savedTheme) {
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      return prefersDark ? "dark" : "light";
+      setTheme(prefersDark ? "dark" : "light");
     }
     
-    return (savedTheme as ThemeType) || "light";
-  });
+    if (storedAccent) {
+      setAccentColor(storedAccent);
+    }
+  }, []);
 
-  // Update the className on the document element when theme changes
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
@@ -48,9 +46,29 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };
 
+  const applyTheme = (newTheme: Theme, accent?: string) => {
+    setTheme(newTheme);
+    
+    if (accent) {
+      setAccentColor(accent);
+      localStorage.setItem("accentColor", accent);
+      
+      // Apply accent color to CSS variables
+      document.documentElement.style.setProperty("--primary", accent);
+    }
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, accentColor, applyTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+};

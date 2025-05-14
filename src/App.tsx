@@ -8,9 +8,6 @@ import { Toaster } from "sonner";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
-import Orders from "@/pages/Orders";
-import Inventory from "@/pages/Inventory";
-import Invoices from "@/pages/Invoices";
 import Outstanding from "@/pages/Outstanding";
 import FinancialYear from "@/pages/FinancialYear";
 import Reports from "@/pages/Reports";
@@ -29,9 +26,10 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/customers" element={<Customers />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/invoices" element={<Invoices />} />
+                {/* Commented out routes for pages that don't exist yet */}
+                {/* <Route path="/orders" element={<Orders />} /> */}
+                {/* <Route path="/inventory" element={<Inventory />} /> */}
+                {/* <Route path="/invoices" element={<Invoices />} /> */}
                 <Route path="/outstanding" element={<Outstanding />} />
                 <Route path="/financial-year" element={<FinancialYear />} />
                 <Route path="/reports" element={<Reports />} />
