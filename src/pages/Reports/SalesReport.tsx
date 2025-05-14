@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { useData } from '@/contexts/data/DataContext';
+import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,38 +14,26 @@ import {
 } from "@/components/ui/select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { 
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip as ChartTooltip, 
-  Legend,
-  ArcElement,
-} from "chart.js";
-import { Bar, Pie } from "react-chartjs-2";
 import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { Calendar, Download, Filter, Loader2, RefreshCcw, BarChart as BarChartIcon, LineChart } from 'lucide-react';
+import { Calendar, Download, Filter, Loader2, RefreshCcw } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { exportToPdf } from '@/utils/pdfUtils';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  Title,
-  ChartTooltip,
+// Import Recharts components for better performance and TypeScript support
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   Legend,
-  ArcElement
-);
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer
+} from "recharts";
 
 // Define chart colors
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#0088fe", "#00C49F"];
@@ -185,6 +173,18 @@ export default function SalesReport() {
   // Convert to array for charts ensuring type safety
   const customerSalesData = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
 
+  // Create data for recharts
+  const barChartData = filteredOrders.map(order => ({
+    name: format(parseISO(order.date), "MMM dd"),
+    amount: order.totalAmount || 0
+  }));
+
+  // Create data for pie chart
+  const pieChartData = productSalesData.slice(0, 5).map(product => ({
+    name: product.name,
+    value: product.amount
+  }));
+
   // Function to handle PDF export
   const handleExportPdf = () => {
     try {
@@ -206,6 +206,13 @@ export default function SalesReport() {
         `Total: ${totalOrders} orders`,
         `₹${totalSales.toFixed(2)}`
       ]);
+      
+      // Create PDF export utility
+      const exportToPdf = (headers: string[], rows: string[][], options: any) => {
+        import('@/utils/pdfUtils').then(module => {
+          module.exportToPdf(headers, rows, options);
+        });
+      };
       
       exportToPdf(
         headers, 
@@ -242,29 +249,6 @@ export default function SalesReport() {
     if (range) {
       setDateRange(range);
     }
-  };
-
-  // Create chart data for bar chart
-  const barChartData = {
-    labels: filteredOrders.map(order => format(parseISO(order.date), "MMM dd")),
-    datasets: [
-      {
-        label: 'Sales Amount',
-        data: filteredOrders.map(order => order.totalAmount || 0),
-        backgroundColor: '#8884d8',
-      },
-    ],
-  };
-
-  // Create chart data for pie chart
-  const pieChartData = {
-    labels: productSalesData.slice(0, 5).map(product => product.name),
-    datasets: [
-      {
-        data: productSalesData.slice(0, 5).map(product => product.amount),
-        backgroundColor: COLORS.slice(0, 5),
-      },
-    ],
   };
 
   return (
@@ -346,9 +330,16 @@ export default function SalesReport() {
                 <CardDescription>Daily sales for selected period</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <div className="h-full w-full">
-                  <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="amount" name="Sales Amount" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
 
@@ -358,20 +349,27 @@ export default function SalesReport() {
                 <CardDescription>Best selling products by revenue</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <div className="h-full w-full">
-                  <Pie 
-                    data={pieChartData} 
-                    options={{ 
-                      responsive: true, 
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: 'bottom'
-                        }
-                      }
-                    }} 
-                  />
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      nameKey="name"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
@@ -473,7 +471,8 @@ export default function SalesReport() {
                         <Badge variant={
                           order.status === "delivered" ? "success" : 
                           order.status === "processing" ? "warning" : 
-                          "default"
+                          order.status === "pending" ? "default" :
+                          "outline"
                         }>
                           {order.status || "N/A"}
                         </Badge>

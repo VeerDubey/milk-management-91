@@ -340,3 +340,53 @@ export const generateDueDate = (invoiceDate: string, daysToAdd = 15): string => 
   date.setDate(date.getDate() + daysToAdd);
   return formatDateForInput(date);
 };
+
+// Partial update to fix status errors
+export const generateInvoiceFromData = (data: any) => {
+  return {
+    id: `INV-${Date.now()}`,
+    customerId: data.customerId || "",
+    customerName: data.customerName || "",
+    date: new Date().toISOString(),
+    items: data.items.map((item: any): OrderItem => ({
+      id: `ITEM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      productId: item.productId,
+      productName: item.productName || "Unknown Product",
+      quantity: item.quantity,
+      unitPrice: item.unitPrice || 0,
+      unit: item.unit || "unit"
+    })),
+    status: "draft", // Fix: Using valid status value
+    subtotal: data.subtotal || 0,
+    tax: data.tax || 0,
+    discount: data.discount || 0,
+    total: data.total || 0,
+    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
+  };
+};
+
+// Function to create a mock invoice
+export const createMockInvoice = () => {
+  return {
+    id: `INV-${Date.now()}`,
+    customerId: "CUST-001",
+    customerName: "Sample Customer",
+    date: new Date().toISOString(),
+    items: [
+      {
+        id: `ITEM-${Date.now()}-1`,
+        productId: "PROD-001",
+        productName: "Sample Product",
+        quantity: 5,
+        unitPrice: 100,
+        unit: "unit"
+      }
+    ],
+    status: "draft", // Fix: Using valid status value
+    subtotal: 500,
+    tax: 50,
+    discount: 0,
+    total: 550,
+    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
+  };
+};

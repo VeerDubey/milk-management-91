@@ -1,3 +1,4 @@
+
 // Add this to the existing types/index.ts file, we'll define/update types needed for the app
 
 // Customer type definition
@@ -311,3 +312,4 @@ export interface CustomerLedgerReport {
 
 // Export a CustomerLedgerReportType for clarity
 export type { CustomerLedgerReport as CustomerLedgerReportType };
+
