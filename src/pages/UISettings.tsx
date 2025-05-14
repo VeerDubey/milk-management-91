@@ -1,3 +1,5 @@
+
+// Fix property name from updateUiSettings to updateUISettings
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { toast } from '@/components/ui/use-toast';
@@ -14,7 +16,7 @@ import { Palette, Monitor, Sun, Moon, PanelLeft, Table2, Calendar, Bell } from '
 export default function UISettings() {
   const { 
     uiSettings, 
-    updateUiSettings 
+    updateUISettings 
   } = useData();
   
   const [activeTab, setActiveTab] = useState('appearance');
@@ -66,7 +68,7 @@ export default function UISettings() {
   };
   
   const handleSave = () => {
-    updateUiSettings(settings);
+    updateUISettings(settings);
     setHasChanges(false);
     toast({
       title: "Settings Saved",

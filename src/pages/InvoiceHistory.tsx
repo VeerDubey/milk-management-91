@@ -35,7 +35,8 @@ import {
   Search,
   Plus,
   Mail,
-  CalendarDays
+  CalendarDays,
+  Trash
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -124,13 +125,11 @@ export default function InvoiceHistory() {
     return filtered;
   }, [invoices, dateRange, statusFilter, searchQuery, selectedTab, sortBy, sortOrder]);
   
-  // Handle invoice download
+  // Fix the void cannot be tested for truthiness error
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
-      const success = await downloadInvoice(invoiceId);
-      if (success) {
-        toast.success("Invoice downloaded successfully");
-      }
+      await downloadInvoice(invoiceId);
+      toast.success("Invoice downloaded successfully");
     } catch (error) {
       console.error("Error downloading invoice:", error);
       toast.error("Failed to download invoice");

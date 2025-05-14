@@ -14,6 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import { Truck, MapPin, User, Plus, Check, X } from "lucide-react";
+import { Vehicle } from '@/types';
 
 const VehicleTracking = () => {
   const { 
@@ -31,7 +32,13 @@ const VehicleTracking = () => {
   } = useData();
   const { toast } = useToast();
   
-  const [newVehicle, setNewVehicle] = useState({
+  const [newVehicle, setNewVehicle] = useState<{
+    name: string;
+    regNumber: string;
+    type: string;
+    driver?: string; // Make driver optional to match interface
+    isActive: boolean;
+  }>({
     name: '',
     regNumber: '',
     type: 'truck',

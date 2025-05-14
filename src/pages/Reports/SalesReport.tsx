@@ -1,18 +1,47 @@
-import { useState } from "react";
-import { useData } from "@/contexts/data/DataContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import React, { useState, useMemo } from 'react';
+import { useData } from '@/contexts/data/DataContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { addDays, format, isAfter, isBefore, parseISO, subDays } from "date-fns";
-import { Download, FileText, Filter, Settings } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { exportToPdf } from "@/utils/pdfUtils";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { DateRange } from "react-day-picker";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar, Line } from "react-chartjs-2";
+import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { Calendar, Download, Filter, Loader2, RefreshCcw, BarChart, LineChart } from 'lucide-react';
+import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 // Define chart colors
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#0088fe", "#00C49F"];

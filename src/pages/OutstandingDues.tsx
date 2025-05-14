@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Payment } from '@/types';
 
 const OutstandingDues = () => {
   const navigate = useNavigate();

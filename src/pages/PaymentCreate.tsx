@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -13,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Check, CreditCard, Save, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Payment } from '@/types';
 
 export default function PaymentCreate() {
   const navigate = useNavigate();
@@ -34,10 +36,10 @@ export default function PaymentCreate() {
     }
     
     // Convert Date object to string format
-    const formattedDate = format(paymentDate, "yyyy-MM-dd");
+    const formattedDate = format(paymentDate!, "yyyy-MM-dd");
     
     const newPayment: Omit<Payment, "id"> = {
-      customerId: selectedCustomer.id,
+      customerId: selectedCustomer,
       amount: parseFloat(paymentAmount),
       date: formattedDate, // Now using string format
       paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',

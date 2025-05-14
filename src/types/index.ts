@@ -187,6 +187,7 @@ export interface Vehicle {
   regNumber: string;
   model?: string;
   capacity?: number;
+  driver?: string; // Add driver property as optional
   isActive: boolean;
   notes?: string;
 }
@@ -307,3 +308,6 @@ export interface CustomerLedgerReport {
   totalPaymentReceived?: number;
   totalProductQuantities?: { [productId: string]: number };
 }
+
+// Export a CustomerLedgerReportType for clarity
+export { CustomerLedgerReport as CustomerLedgerReportType };

@@ -1,4 +1,4 @@
-import { Invoice } from "@/types";
+import { Invoice, OrderItem } from "@/types";
 import { format } from "date-fns";
 import { generatePdfPreview } from "./pdfUtils";
 
@@ -256,13 +256,21 @@ export const createInvoiceFromFormData = (
     id: formData.invoiceNumber,
     orderId: `ORD-${Date.now().toString().substring(7)}`,
     customerName: formData.customerName,
+    customerId: formData.customerId,
     date: formData.invoiceDate,
     amount: total,
-    status: "Pending",
+    total: total,
+    subtotal: total - ((formData.taxRate || 0) * total / 100),
+    status: "draft", // Changed from "Pending" to "draft" to match type
+    invoiceNumber: formData.invoiceNumber,
     items: formData.items.map(item => ({
+      id: crypto.randomUUID(),
       customerId: formData.customerId,
       productId: item.productId,
-      quantity: item.quantity
+      quantity: item.quantity,
+      unitPrice: item.rate,
+      productName: "Product", // Add missing required property
+      unit: "unit" // Add missing required property
     }))
   };
 };
@@ -288,29 +296,36 @@ export const createInvoiceFromOrder = (
   customerName: string
 ): Invoice => {
   // Map order items to invoice items with calculated amounts
-  const invoiceItems = order.items.map(item => {
+  const invoiceItems: OrderItem[] = order.items.map(item => {
     const product = products.find(p => p.id === item.productId);
     const rate = product ? product.price : 0;
     
     return {
+      id: crypto.randomUUID(),
       productId: item.productId,
+      productName: product ? product.name : "Unknown Product",
+      customerId: item.customerId,
       quantity: item.quantity,
-      rate: rate,
-      amount: rate * item.quantity
+      unitPrice: rate,
+      unit: "unit" // Add a default unit
     };
   });
 
   // Calculate total amount
-  const { total } = calculateInvoiceAmounts(invoiceItems);
+  const total = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   
   return {
     id: generateInvoiceNumber(),
     orderId: order.id,
     customerName: customerName || order.customerName || "Unknown Customer",
+    customerId: customerId,
     date: order.date,
     amount: total,
-    status: "Pending",
-    items: order.items
+    total: total,
+    subtotal: total,
+    status: "draft", // Changed from "Pending" to "draft" to match type
+    invoiceNumber: generateInvoiceNumber(),
+    items: invoiceItems
   };
 };
 

@@ -1,304 +1,118 @@
+import { Invoice, Order } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
-import { ElectronService } from './ElectronService';
-import { Invoice } from '@/types';
-import { generateInvoicePreview, calculateInvoiceAmounts, INVOICE_TEMPLATES } from '@/utils/invoiceUtils';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+const MOCK_INVOICES: Invoice[] = [
+  {
+    id: uuidv4(),
+    orderId: 'ORD-20231115-1234',
+    customerId: 'cust001',
+    customerName: 'John Doe',
+    date: '2023-11-15',
+    subtotal: 200.00,
+    total: 220.00,
+    amount: 220.00, // Alias for total for backward compatibility
+    status: 'paid',
+    items: [
+      { id: uuidv4(), productId: 'prod001', productName: 'Product A', quantity: 2, unitPrice: 50.00, unit: 'pcs' },
+      { id: uuidv4(), productId: 'prod002', productName: 'Product B', quantity: 1, unitPrice: 100.00, unit: 'pcs' },
+    ],
+    invoiceNumber: 'INV-20231115-0001'
+  },
+  {
+    id: uuidv4(),
+    orderId: 'ORD-20231110-5678',
+    customerId: 'cust002',
+    customerName: 'Jane Smith',
+    date: '2023-11-10',
+    subtotal: 150.00,
+    total: 165.00,
+    amount: 165.00, // Alias for total for backward compatibility
+    status: 'pending',
+    items: [
+      { id: uuidv4(), productId: 'prod003', productName: 'Product C', quantity: 3, unitPrice: 50.00, unit: 'pcs' },
+    ],
+    invoiceNumber: 'INV-20231110-0002'
+  },
+  {
+    id: uuidv4(),
+    orderId: 'ORD-20231105-9012',
+    customerId: 'cust001',
+    customerName: 'John Doe',
+    date: '2023-11-05',
+    subtotal: 100.00,
+    total: 110.00,
+    amount: 110.00, // Alias for total for backward compatibility
+    status: 'cancelled',
+    items: [
+      { id: uuidv4(), productId: 'prod002', productName: 'Product B', quantity: 1, unitPrice: 100.00, unit: 'pcs' },
+    ],
+    invoiceNumber: 'INV-20231105-0003'
+  },
+];
 
-type CompanyInfo = {
-  companyName: string;
-  address: string;
-  contactNumber: string;
-  email: string;
-  gstNumber: string;
-  bankDetails: string;
-  logoUrl?: string;
+// Function to fetch all invoices
+export const getAllInvoices = (): Invoice[] => {
+  return MOCK_INVOICES;
 };
 
-/**
- * Service for handling invoice-related operations
- */
-export class InvoiceService {
-  /**
-   * Download an invoice as PDF
-   */
-  static async downloadInvoice(
-    invoice: Invoice, 
-    companyInfo: CompanyInfo, 
-    products: Array<{ id: string; name: string; price: number; description?: string }>,
-    templateId: string = "standard"
-  ): Promise<boolean> {
-    try {
-      // Map invoice items to the format expected by generateInvoicePreview
-      const items = invoice.items.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        const rate = product ? product.price : 0;
-        
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          rate,
-          amount: rate * item.quantity
-        };
-      });
+// Function to fetch a single invoice by ID
+export const getInvoiceById = (id: string): Invoice | undefined => {
+  return MOCK_INVOICES.find(invoice => invoice.id === id);
+};
 
-      // Create invoice data object
-      const invoiceData = {
-        id: invoice.id,
-        customerName: invoice.customerName,
-        date: invoice.date,
-        items,
-        totalAmount: invoice.amount,
-        status: invoice.status
-      };
+// Function to create a new invoice
+export const createInvoice = (invoice: Invoice): Invoice => {
+  const newInvoice = { ...invoice, id: uuidv4() };
+  MOCK_INVOICES.push(newInvoice);
+  return newInvoice;
+};
 
-      // Generate PDF preview
-      const pdfDataUrl = generateInvoicePreview(
-        invoiceData,
-        companyInfo,
-        products,
-        templateId
-      );
+// Function to update an existing invoice
+export const updateInvoice = (id: string, updatedInvoice: Invoice): Invoice | undefined => {
+  const index = MOCK_INVOICES.findIndex(invoice => invoice.id === id);
+  if (index !== -1) {
+    MOCK_INVOICES[index] = { ...updatedInvoice, id: id };
+    return MOCK_INVOICES[index];
+  }
+  return undefined;
+};
 
-      if (!pdfDataUrl) {
-        throw new Error("Failed to generate PDF");
-      }
+// Function to delete an invoice by ID
+export const deleteInvoice = (id: string): boolean => {
+  const index = MOCK_INVOICES.findIndex(invoice => invoice.id === id);
+  if (index !== -1) {
+    MOCK_INVOICES.splice(index, 1);
+    return true;
+  }
+  return false;
+};
 
-      // Convert data URL to base64 data
-      const base64Data = pdfDataUrl.split(',')[1];
+// Function to generate a PDF for an invoice (mock implementation)
+export const generateInvoicePDF = async (invoiceId: string): Promise<string> => {
+  // In a real application, this function would use a library like jsPDF
+  // to generate a PDF document from the invoice data.
+  // For this mock, we'll just return a dummy base64 string.
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const dummyPDF = 'data:application/pdf;base64,SGVsbG8gV29ybGQ=';
+      resolve(dummyPDF);
+    }, 500);
+  });
+};
 
-      // If running in Electron, use native save dialog
-      if (ElectronService.isElectron()) {
-        const fileName = `invoice-${invoice.id.replace(/[^\w-]/g, '_')}.pdf`;
-        const result = await ElectronService.exportData(base64Data);
-        
-        if (result.success) {
-          toast.success(`Invoice saved to ${result.filePath}`);
-          return true;
-        } else {
-          toast.error(`Failed to save invoice: ${result.error || 'Unknown error'}`);
-          return false;
-        }
-      } 
-      // In web browser, use download attribute
-      else {
-        // Create a Blob from the base64 data
-        const byteCharacters = atob(base64Data);
-        const byteNumbers = new Array(byteCharacters.length);
-        
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `invoice-${invoice.id}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-        
-        toast.success('Invoice download started');
-        return true;
-      }
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-      toast.error('Failed to download invoice');
-      return false;
-    }
-  }
-  
-  /**
-   * Get invoice templates
-   */
-  static getInvoiceTemplates() {
-    return INVOICE_TEMPLATES;
-  }
-  
-  /**
-   * Get company info from local storage or return default values
-   */
-  static getCompanyInfo(): CompanyInfo {
-    try {
-      const saved = localStorage.getItem("companyInfo");
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error("Error loading company info:", error);
-    }
-    
-    // Default company info
-    return {
-      companyName: "Milk Center",
-      address: "123 Dairy Lane, Milk City",
-      contactNumber: "+91 9876543210",
-      email: "info@milkcenter.com",
-      gstNumber: "29ABCDE1234F1Z5",
-      bankDetails: "Bank Name: ABC Bank\nAccount Number: 1234567890\nIFSC Code: ABCD0001234"
-    };
-  }
-  
-  /**
-   * Save company info to local storage
-   */
-  static saveCompanyInfo(companyInfo: CompanyInfo): void {
-    try {
-      localStorage.setItem("companyInfo", JSON.stringify(companyInfo));
-      toast.success("Company information saved successfully");
-    } catch (error) {
-      console.error("Error saving company info:", error);
-      toast.error("Failed to save company information");
-    }
-  }
-  
-  /**
-   * Generate invoice preview URL
-   */
-  static generatePreviewUrl(
-    invoice: Invoice, 
-    companyInfo: CompanyInfo, 
-    products: Array<{ id: string; name: string; price: number; description?: string }>,
-    templateId: string = "standard"
-  ): string {
-    try {
-      // Map invoice items to the format expected by generateInvoicePreview
-      const items = invoice.items.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        const rate = product ? product.price : 0;
-        
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          rate,
-          amount: rate * item.quantity
-        };
-      });
-
-      // Create invoice data object
-      const invoiceData = {
-        id: invoice.id,
-        customerName: invoice.customerName,
-        date: invoice.date,
-        items,
-        totalAmount: invoice.amount,
-        status: invoice.status
-      };
-
-      // Generate and return PDF preview URL
-      return generateInvoicePreview(
-        invoiceData,
-        companyInfo,
-        products,
-        templateId
-      );
-    } catch (error) {
-      console.error("Error generating invoice preview:", error);
-      return "";
-    }
-  }
-  
-  /**
-   * Create invoices from orders for a specific customer or all customers
-   */
-  static batchCreateInvoicesFromOrders(
-    orders: Array<any>, 
-    products: Array<any>,
-    customers: Array<any>,
-    customerId?: string
-  ): Invoice[] {
-    const invoices: Invoice[] = [];
-    
-    try {
-      // Fix: Add type check before using forEach
-      if (!Array.isArray(orders) || orders.length === 0) {
-        return [];
-      }
-      
-      // Filter orders by customer if customerId is provided
-      const filteredOrders = customerId 
-        ? orders.filter(order => order.items.some(item => item.customerId === customerId))
-        : orders;
-      
-      // Check if there are any orders to process
-      if (filteredOrders.length === 0) {
-        return [];
-      }
-      
-      // Group orders by customer
-      const ordersByCustomer = filteredOrders.reduce((acc, order) => {
-        // Get customer ID from the first item (assuming all items in an order belong to the same customer)
-        const customerId = order.items[0]?.customerId;
-        
-        if (!customerId) return acc;
-        
-        if (!acc[customerId]) {
-          acc[customerId] = [];
-        }
-        
-        acc[customerId].push(order);
-        return acc;
-      }, {} as Record<string, any[]>);
-      
-      // Process orders for each customer
-      if (ordersByCustomer && typeof ordersByCustomer === 'object') {
-        // Fix: Use type checking to ensure we can iterate over the object
-        Object.entries(ordersByCustomer).forEach(([custId, customerOrders]) => {
-          const customer = customers.find(c => c.id === custId);
-          
-          if (!customer) return;
-          
-          // Create invoice for each order
-          // Fix: Add type check for customerOrders before using forEach
-          if (Array.isArray(customerOrders)) {
-            customerOrders.forEach(order => {
-              // Skip if invoice already exists for this order
-              if (invoices.some(inv => inv.orderId === order.id)) {
-                return;
-              }
-              
-              const invoice = {
-                id: `INV-${Date.now().toString().substring(7)}-${Math.floor(1000 + Math.random() * 9000)}`,
-                orderId: order.id,
-                customerName: customer.name,
-                date: order.date,
-                amount: order.totalAmount || 0,
-                status: "Pending",
-                items: order.items
-              };
-              
-              invoices.push(invoice);
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error creating batch invoices:", error);
-    }
-    
-    return invoices;
-  }
-  
-  /**
-   * Get template by ID
-   */
-  static getTemplateById(templateId: string) {
-    return INVOICE_TEMPLATES.find(t => t.id === templateId) || INVOICE_TEMPLATES[0];
-  }
-  
-  /**
-   * Generate a unique invoice number
-   */
-  static generateInvoiceNumber() {
-    const prefix = "INV";
-    const timestamp = Date.now().toString().substring(7);
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}-${timestamp}-${randomNum}`;
-  }
-}
+// Function to create an invoice from an existing order
+export const createInvoiceFromOrder = (order: Order): Invoice => {
+  return {
+    id: uuidv4(),
+    orderId: order.id,
+    customerId: order.customerId,
+    customerName: order.customerName,
+    date: order.date,
+    subtotal: order.total,
+    total: order.total,
+    amount: order.total, // For backward compatibility
+    status: 'draft',
+    items: order.items,
+    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
+  };
+};
