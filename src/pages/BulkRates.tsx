@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,8 @@ export default function BulkRates() {
           customerId: selectedCustomerId,
           productId: product.id,
           rate: newRate,
-          effectiveDate: date
+          effectiveDate: date,
+          isActive: true // Adding the missing isActive property
         });
       }
       

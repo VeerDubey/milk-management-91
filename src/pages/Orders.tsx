@@ -148,11 +148,11 @@ export default function Orders() {
                   <TableHead className="text-right">Items</TableHead>
                   <TableHead 
                     className="cursor-pointer text-right"
-                    onClick={() => handleSort('totalAmount')}
+                    onClick={() => handleSort('total')}
                   >
                     <div className="flex items-center justify-end">
                       Amount
-                      {sortBy === 'totalAmount' && (
+                      {sortBy === 'total' && (
                         <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
                       )}
                     </div>
@@ -179,7 +179,7 @@ export default function Orders() {
                           {order.items?.length || 0}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">₹{order.totalAmount?.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">₹{order.total.toFixed(2)}</TableCell>
                       <TableCell>{getStatusBadge(order.status || 'Pending')}</TableCell>
                       <TableCell className="text-right">
                         <Button 

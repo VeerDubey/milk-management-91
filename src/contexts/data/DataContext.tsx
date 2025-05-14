@@ -12,6 +12,7 @@ import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 import { DataContextType } from './types';
+import { useInvoices } from '@/contexts/InvoiceContext';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -20,16 +21,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const customerState = useCustomerState();
   const productState = useProductState();
   const orderState = useOrderState();
-  const paymentState = usePaymentState();
+  const paymentState = usePaymentState(customerState.customers, customerState.updateCustomer);
   const productRateState = useProductRateState(productState.products);
   const supplierState = useSupplierState();
   const stockState = useStockState(supplierState.updateSupplier);
   const uiSettingsState = useUISettingsState();
   const vehicleSalesmanState = useVehicleSalesmanState();
   const expenseState = useExpenseState();
+  
+  // Get invoice data from InvoiceContext
+  const { invoices, addInvoice, updateInvoice, deleteInvoice } = useInvoices();
 
   // Combine all state objects into one
-  const contextValue = {
+  const contextValue: DataContextType = {
     ...customerState,
     ...productState,
     ...orderState,
@@ -40,6 +44,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...uiSettingsState,
     ...vehicleSalesmanState,
     ...expenseState,
+    invoices,
+    addInvoice,
+    updateInvoice,
+    deleteInvoice
   };
 
   return (
@@ -56,3 +64,5 @@ export function useData(): DataContextType {
   }
   return context;
 }
+
+export type { DataContextType };

@@ -1,11 +1,10 @@
-
 import { useState, useMemo } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DollarSign, FileDown, Printer, Filter, Users, RefreshCcw } from "lucide-react";
+import { DollarSign, FileDown, Printer, Filter, Users, RefreshCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
@@ -17,7 +16,7 @@ export default function Outstanding() {
     return customers.map(customer => {
       // Calculate total ordered
       const customerOrders = orders.filter(order => order.customerId === customer.id);
-      const totalOrdered = customerOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const totalOrdered = customerOrders.reduce((sum, order) => sum + order.total, 0);
       
       // Calculate total paid
       const customerPayments = payments.filter(payment => payment.customerId === customer.id);

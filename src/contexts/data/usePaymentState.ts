@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { Payment } from '@/types';
+import { Payment, Customer } from '@/types';
 import { initialPayments } from '@/data/initialData';
 
-export function usePaymentState(customers: any[], updateCustomer: Function) {
+export function usePaymentState(customers: Customer[], updateCustomer: Function) {
   const [payments, setPayments] = useState<Payment[]>(() => {
     const saved = localStorage.getItem("payments");
     return saved ? JSON.parse(saved) : initialPayments;

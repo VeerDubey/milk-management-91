@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Customer } from "@/types";
@@ -58,7 +57,8 @@ export default function CustomerRates() {
           customerId,
           productId,
           rate,
-          effectiveDate: new Date().toISOString()
+          effectiveDate: new Date().toISOString().split('T')[0],
+          isActive: true // Add the missing isActive property
         });
       }
     });

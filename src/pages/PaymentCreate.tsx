@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -41,9 +40,9 @@ export default function PaymentCreate() {
       // Create payment object
       const payment = {
         customerId,
-        amount: Number(amount),
-        date: date.toISOString(),
-        paymentMethod,
+        amount: parseFloat(amount),
+        date,
+        paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
         notes,
       };
       

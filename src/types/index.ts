@@ -28,6 +28,7 @@ export interface Product {
   category?: string;
   stock?: number;
   minStock?: number;
+  minStockLevel?: number;
   costPrice?: number;
   image?: string;
   barcode?: string;
@@ -44,6 +45,7 @@ export interface OrderItem {
   unitPrice: number;
   price?: number; // Total price for this item (quantity * unitPrice)
   unit: string;
+  customerId?: string; // Added this property as it's being used
 }
 
 // Order type definition
@@ -54,11 +56,14 @@ export interface Order {
   date: string;
   items: OrderItem[];
   total: number;
+  totalAmount?: number; // Added totalAmount as an alias for total
   status: 'pending' | 'delivered' | 'cancelled' | 'processing';
   paymentStatus?: 'unpaid' | 'partial' | 'paid';
   notes?: string;
   deliveryDate?: string;
   deliveryNotes?: string;
+  vehicleId?: string; // Added vehicleId
+  salesmanId?: string; // Added salesmanId
 }
 
 // Payment definition
@@ -206,10 +211,12 @@ export interface Invoice {
   tax?: number;
   discount?: number;
   total: number;
+  amount?: number; // Alias for total for backward compatibility
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   notes?: string;
   paymentTerms?: string;
   invoiceNumber: string;
+  orderId?: string; // Added for linking to orders
 }
 
 // Invoice Template definition
@@ -258,4 +265,28 @@ export interface StockTransaction {
   reference?: string;
   notes?: string;
   unitCost?: number;
+}
+
+// Customer Ledger Entry
+export interface CustomerLedgerEntry {
+  id: string;
+  customerId: string;
+  date: string;
+  type: 'order' | 'payment' | 'adjustment';
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  referenceId?: string; // Order ID or Payment ID
+}
+
+// Customer Ledger Report
+export interface CustomerLedgerReport {
+  customerId: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  entries: CustomerLedgerEntry[];
+  openingBalance: number;
+  closingBalance: number;
 }

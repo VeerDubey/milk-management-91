@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +24,7 @@ export default function CustomerLedger() {
   const getLedgerEntries = () => {
     if (!selectedCustomer) return [];
 
-    const customerOrders = orders.filter(order => 
-      order.items?.some(item => item.customerId === selectedCustomer)
-    );
+    const customerOrders = orders.filter(order => order.customerId === selectedCustomer);
     const customerPayments = payments.filter(payment => payment.customerId === selectedCustomer);
 
     const ledgerEntries = [
@@ -35,9 +32,9 @@ export default function CustomerLedger() {
         date: new Date(order.date),
         type: 'Order',
         description: `Order #${order.id}`,
-        debit: order.totalAmount || calculateOrderTotal(order),
+        debit: order.total, // Using total instead of totalAmount
         credit: 0,
-        balance: order.totalAmount || calculateOrderTotal(order)
+        balance: order.total // Using total instead of totalAmount
       })),
       ...customerPayments.map(payment => ({
         date: new Date(payment.date),

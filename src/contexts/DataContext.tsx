@@ -1,3 +1,3 @@
 
 // Re-export everything from the new location
-export { DataProvider, useData, type DataContextType } from './data/DataContext';
+export { DataProvider, useData, DataContextType } from './data/DataContext';
