@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -31,7 +30,7 @@ export default function UISettings() {
     updateUISettings({ highContrast: checked });
   };
   
-  const handleFontSizeChange = (value: string) => {
+  const handleFontSizeChange = (value: "small" | "medium" | "large" | "x-large") => {
     updateUISettings({ fontSize: value });
   };
 

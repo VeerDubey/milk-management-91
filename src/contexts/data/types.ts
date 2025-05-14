@@ -2,7 +2,7 @@
 import { 
   Customer, Product, Order, Payment, 
   Expense, Supplier, SupplierPayment, CustomerProductRate,
-  StockRecord, StockEntry, SupplierProductRate, Vehicle, Salesman, UISettings
+  StockRecord, StockEntry, SupplierProductRate, Vehicle, Salesman, UISettings, Invoice
 } from "@/types";
 
 export interface DataContextType {
@@ -20,6 +20,7 @@ export interface DataContextType {
   vehicles: Vehicle[];
   salesmen: Salesman[];
   uiSettings: UISettings;
+  invoices: Invoice[]; // Add invoices array
   
   addCustomer: (customer: Omit<Customer, "id">) => void;
   updateCustomer: (id: string, customerData: Partial<Customer>) => void;
@@ -80,4 +81,8 @@ export interface DataContextType {
   deleteSalesman: (id: string) => void;
   
   updateUISettings: (settings: Partial<UISettings>) => void;
+  
+  addInvoice: (invoice: Omit<Invoice, "id">) => void;
+  updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
+  deleteInvoice: (id: string) => void;
 }

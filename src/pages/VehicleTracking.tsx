@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Button } from "@/components/ui/button";
@@ -57,7 +56,10 @@ const VehicleTracking = () => {
       return;
     }
     
-    addVehicle(newVehicle);
+    addVehicle({
+      ...newVehicle,
+      number: newVehicle.regNumber, // Add the required number property
+    });
     setNewVehicle({
       name: '',
       regNumber: '',

@@ -27,7 +27,10 @@ export default function VehicleSalesmanCreate() {
   const { vehicles, salesmen, addVehicle, updateVehicle, deleteVehicle, addSalesman, updateSalesman, deleteSalesman } = useData();
   
   // State for vehicle form
-  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleName, setVehicleName] = useState("");
+  const [vehicleRegNumber, setVehicleRegNumber] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [vehicleDriver, setVehicleDriver] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleCapacity, setVehicleCapacity] = useState("");
   const [vehicleNotes, setVehicleNotes] = useState("");
@@ -37,12 +40,15 @@ export default function VehicleSalesmanCreate() {
   const [salesmanName, setSalesmanName] = useState("");
   const [salesmanPhone, setSalesmanPhone] = useState("");
   const [salesmanAddress, setSalesmanAddress] = useState("");
-  const [salesmanVehicle, setSalesmanVehicle] = useState("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [editingSalesman, setEditingSalesman] = useState<Salesman | null>(null);
   
   // Reset form functions
   const resetVehicleForm = () => {
-    setVehicleNumber("");
+    setVehicleName("");
+    setVehicleRegNumber("");
+    setVehicleType("");
+    setVehicleDriver("");
     setVehicleModel("");
     setVehicleCapacity("");
     setVehicleNotes("");
@@ -53,38 +59,45 @@ export default function VehicleSalesmanCreate() {
     setSalesmanName("");
     setSalesmanPhone("");
     setSalesmanAddress("");
-    setSalesmanVehicle("");
+    setSelectedVehicleId("");
     setEditingSalesman(null);
   };
   
   // Handle vehicle operations
-  const handleAddUpdateVehicle = () => {
-    if (!vehicleNumber) {
-      toast.error("Vehicle number is required");
+  const handleSubmitVehicle = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!vehicleName || !vehicleRegNumber) {
+      toast({
+        title: "Error",
+        description: "Please fill all required fields",
+        variant: "destructive"
+      });
       return;
     }
     
-    const vehicleData = {
-      number: vehicleNumber,
-      model: vehicleModel,
-      capacity: vehicleCapacity ? parseFloat(vehicleCapacity) : undefined,
-      notes: vehicleNotes,
-    };
+    addVehicle({
+      name: vehicleName,
+      regNumber: vehicleRegNumber,
+      type: vehicleType || "delivery",
+      driver: vehicleDriver || "",
+      isActive: true,
+      number: vehicleRegNumber, // Set number to match regNumber
+      model: vehicleModel || "",
+      capacity: vehicleCapacity || 0,
+      notes: vehicleNotes || ""
+    });
     
-    if (editingVehicle) {
-      updateVehicle(editingVehicle.id, vehicleData);
-      toast.success("Vehicle updated successfully");
-    } else {
-      addVehicle(vehicleData);
-      toast.success("Vehicle added successfully");
-    }
-    
+    toast.success("Vehicle added successfully");
     resetVehicleForm();
   };
   
   const handleEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
-    setVehicleNumber(vehicle.number);
+    setVehicleName(vehicle.name);
+    setVehicleRegNumber(vehicle.number);
+    setVehicleType(vehicle.type || "");
+    setVehicleDriver(vehicle.driver || "");
     setVehicleModel(vehicle.model || "");
     setVehicleCapacity(vehicle.capacity ? vehicle.capacity.toString() : "");
     setVehicleNotes(vehicle.notes || "");
@@ -98,27 +111,27 @@ export default function VehicleSalesmanCreate() {
   };
   
   // Handle salesman operations
-  const handleAddUpdateSalesman = () => {
-    if (!salesmanName) {
-      toast.error("Salesman name is required");
+  const handleSubmitSalesman = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!salesmanName || !salesmanPhone) {
+      toast({
+        title: "Error",
+        description: "Please fill all required fields",
+        variant: "destructive"
+      });
       return;
     }
     
-    const salesmanData = {
+    addSalesman({
       name: salesmanName,
       phone: salesmanPhone,
-      address: salesmanAddress,
-      vehicleId: salesmanVehicle || undefined,
-    };
+      address: salesmanAddress || "",
+      vehicleId: selectedVehicleId || "",
+      isActive: true // Add the required isActive property
+    });
     
-    if (editingSalesman) {
-      updateSalesman(editingSalesman.id, salesmanData);
-      toast.success("Salesman updated successfully");
-    } else {
-      addSalesman(salesmanData);
-      toast.success("Salesman added successfully");
-    }
-    
+    toast.success("Salesman added successfully");
     resetSalesmanForm();
   };
   
@@ -127,7 +140,7 @@ export default function VehicleSalesmanCreate() {
     setSalesmanName(salesman.name);
     setSalesmanPhone(salesman.phone || "");
     setSalesmanAddress(salesman.address || "");
-    setSalesmanVehicle(salesman.vehicleId || "");
+    setSelectedVehicleId(salesman.vehicleId || "");
   };
   
   const handleDeleteSalesman = (id: string) => {
@@ -246,14 +259,44 @@ export default function VehicleSalesmanCreate() {
                 <CardTitle>{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleSubmitVehicle}>
                   <div className="grid gap-2">
-                    <Label htmlFor="vehicleNumber">Vehicle Number *</Label>
+                    <Label htmlFor="vehicleName">Vehicle Name *</Label>
                     <Input 
-                      id="vehicleNumber" 
-                      value={vehicleNumber} 
-                      onChange={(e) => setVehicleNumber(e.target.value)}
-                      placeholder="Enter vehicle number"
+                      id="vehicleName" 
+                      value={vehicleName} 
+                      onChange={(e) => setVehicleName(e.target.value)}
+                      placeholder="Enter vehicle name"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="vehicleRegNumber">Registration Number *</Label>
+                    <Input 
+                      id="vehicleRegNumber" 
+                      value={vehicleRegNumber} 
+                      onChange={(e) => setVehicleRegNumber(e.target.value)}
+                      placeholder="Enter registration number"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="vehicleType">Type</Label>
+                    <Input 
+                      id="vehicleType" 
+                      value={vehicleType} 
+                      onChange={(e) => setVehicleType(e.target.value)}
+                      placeholder="Enter vehicle type"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="vehicleDriver">Driver</Label>
+                    <Input 
+                      id="vehicleDriver" 
+                      value={vehicleDriver} 
+                      onChange={(e) => setVehicleDriver(e.target.value)}
+                      placeholder="Enter driver name"
                     />
                   </div>
                   
@@ -289,7 +332,7 @@ export default function VehicleSalesmanCreate() {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button type="button" onClick={handleAddUpdateVehicle} className="flex-1">
+                    <Button type="submit" className="flex-1">
                       <Save className="mr-2 h-4 w-4" />
                       {editingVehicle ? "Update Vehicle" : "Add Vehicle"}
                     </Button>
@@ -381,7 +424,7 @@ export default function VehicleSalesmanCreate() {
                 <CardTitle>{editingSalesman ? "Edit Salesman" : "Add New Salesman"}</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleSubmitSalesman}>
                   <div className="grid gap-2">
                     <Label htmlFor="salesmanName">Name *</Label>
                     <Input 
@@ -415,8 +458,8 @@ export default function VehicleSalesmanCreate() {
                   <div className="grid gap-2">
                     <Label htmlFor="salesmanVehicle">Assigned Vehicle</Label>
                     <Select 
-                      value={salesmanVehicle} 
-                      onValueChange={setSalesmanVehicle}
+                      value={selectedVehicleId} 
+                      onValueChange={setSelectedVehicleId}
                     >
                       <SelectTrigger id="salesmanVehicle">
                         <SelectValue placeholder="Select a vehicle" />
@@ -433,7 +476,7 @@ export default function VehicleSalesmanCreate() {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Button type="button" onClick={handleAddUpdateSalesman} className="flex-1">
+                    <Button type="submit" className="flex-1">
                       <Save className="mr-2 h-4 w-4" />
                       {editingSalesman ? "Update Salesman" : "Add Salesman"}
                     </Button>

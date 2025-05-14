@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
 import { useOrderState } from './useOrderState';
@@ -10,6 +10,7 @@ import { useSupplierState } from './useSupplierState';
 import { useUISettingsState } from './useUISettingsState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
+import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 
 // This context type will dynamically build based on all the hooks
 type DataContextType = ReturnType<typeof useCustomerState> &
@@ -27,9 +28,9 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   // Initialize all the state hooks
-  const customerState = useCustomerState();
-  const productState = useProductState();
-  const orderState = useOrderState();
+  const customerState = useCustomerState(initialCustomers, { saveToLocalStorage: true });
+  const productState = useProductState(initialProducts);
+  const orderState = useOrderState(initialOrders);
   const paymentState = usePaymentState();
   const productRateState = useProductRateState();
   const stockState = useStockState();

@@ -1,12 +1,16 @@
+
 export interface Customer {
   id: string;
   name: string;
   phone: string;
   address: string;
   email?: string;
+  area?: string; // Add area field
   outstandingBalance: number;
+  outstandingAmount?: number; // Add for compatibility
   lastPaymentDate?: string;
   lastPaymentAmount?: number;
+  totalPaid?: number; // Add total paid amount
 }
 
 export interface Product {
@@ -18,6 +22,8 @@ export interface Product {
   sku: string;
   category: string;
   minStockLevel?: number;
+  stock?: number; // Add stock field
+  minStock?: number; // Add for compatibility
 }
 
 export interface OrderItem {
@@ -34,6 +40,8 @@ export interface Order {
   salesmanId?: string;
   totalAmount?: number;
   customerName?: string;
+  customerId?: string; // Add customer ID
+  status?: string; // Add status field
 }
 
 export interface Payment {
@@ -51,6 +59,7 @@ export interface Expense {
   amount: number;
   category: string;
   description: string;
+  title?: string; // Add title field
   paymentMethod: "cash" | "bank" | "upi" | "other";
 }
 
