@@ -310,4 +310,4 @@ export interface CustomerLedgerReport {
 }
 
 // Export a CustomerLedgerReportType for clarity
-export { CustomerLedgerReport as CustomerLedgerReportType };
+export type { CustomerLedgerReport as CustomerLedgerReportType };

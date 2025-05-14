@@ -132,7 +132,10 @@ const handleCreateDispatch = () => {
                 </div>
                 <div>
                   <Label htmlFor="date">Date</Label>
-                  <DatePicker onSelect={setSelectedDate} />
+                  <DatePicker
+                    date={selectedDate}
+                    setDate={setSelectedDate}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="vehicle">Vehicle</Label>

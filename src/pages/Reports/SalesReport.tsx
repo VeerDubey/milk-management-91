@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import {
+import { 
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -21,15 +22,17 @@ import {
   PointElement,
   LineElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip, 
   Legend,
+  ArcElement,
 } from "chart.js";
-import { Bar, Line } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { Calendar, Download, Filter, Loader2, RefreshCcw, BarChart, LineChart } from 'lucide-react';
-import { toast } from "sonner";
+import { Calendar, Download, Filter, Loader2, RefreshCcw, BarChart as BarChartIcon, LineChart } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { exportToPdf } from '@/utils/pdfUtils';
 
 // Register ChartJS components
 ChartJS.register(
@@ -39,8 +42,9 @@ ChartJS.register(
   PointElement,
   LineElement,
   Title,
-  Tooltip,
-  Legend
+  ChartTooltip,
+  Legend,
+  ArcElement
 );
 
 // Define chart colors
@@ -219,10 +223,17 @@ export default function SalesReport() {
         }
       );
       
-      toast.success("Sales report exported as PDF");
+      toast({
+        title: "Success",
+        description: "Sales report exported as PDF"
+      });
     } catch (error) {
       console.error("Error exporting sales report:", error);
-      toast.error("Failed to export sales report");
+      toast({
+        title: "Error",
+        description: "Failed to export sales report",
+        variant: "destructive"
+      });
     }
   };
 
@@ -233,11 +244,28 @@ export default function SalesReport() {
     }
   };
 
-  // Create daily sales data for the chart
-  const dailySalesData: DailySalesData[] = filteredOrders.map(order => ({
-    date: format(parseISO(order.date), "MMM dd"),
-    amount: order.totalAmount || 0
-  }));
+  // Create chart data for bar chart
+  const barChartData = {
+    labels: filteredOrders.map(order => format(parseISO(order.date), "MMM dd")),
+    datasets: [
+      {
+        label: 'Sales Amount',
+        data: filteredOrders.map(order => order.totalAmount || 0),
+        backgroundColor: '#8884d8',
+      },
+    ],
+  };
+
+  // Create chart data for pie chart
+  const pieChartData = {
+    labels: productSalesData.slice(0, 5).map(product => product.name),
+    datasets: [
+      {
+        data: productSalesData.slice(0, 5).map(product => product.amount),
+        backgroundColor: COLORS.slice(0, 5),
+      },
+    ],
+  };
 
   return (
     <div className="space-y-6">
@@ -318,19 +346,9 @@ export default function SalesReport() {
                 <CardDescription>Daily sales for selected period</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={dailySalesData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="amount" name="Sales Amount" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-full w-full">
+                  <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
               </CardContent>
             </Card>
 
@@ -340,29 +358,20 @@ export default function SalesReport() {
                 <CardDescription>Best selling products by revenue</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={productSalesData.slice(0, 5)}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="amount"
-                      nameKey="name"
-                      label={({ name, percent }) => 
-                        `${name}: ${(percent * 100).toFixed(0)}%`
+                <div className="h-full w-full">
+                  <Pie 
+                    data={pieChartData} 
+                    options={{ 
+                      responsive: true, 
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom'
+                        }
                       }
-                    >
-                      {productSalesData.slice(0, 5).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                    }} 
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -449,25 +458,7 @@ export default function SalesReport() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead className="text-right">Amount (₹)</TableHead>
-                    <TableRow>
-                      <TableCell>Status</TableCell>
-                      <TableCell>
-                        <Select
-                          value={statusFilter}
-                          onValueChange={setStatusFilter}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="delivered">Completed</SelectItem>
-                            <SelectItem value="pending">Processing</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -479,8 +470,11 @@ export default function SalesReport() {
                       <TableCell>{order.items.length}</TableCell>
                       <TableCell className="text-right">{order.totalAmount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
-                        <Badge variant={order.status === "Completed" ? "success" : 
-                                       order.status === "Processing" ? "warning" : "default"}>
+                        <Badge variant={
+                          order.status === "delivered" ? "success" : 
+                          order.status === "processing" ? "warning" : 
+                          "default"
+                        }>
                           {order.status || "N/A"}
                         </Badge>
                       </TableCell>

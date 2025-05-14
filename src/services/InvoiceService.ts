@@ -27,7 +27,7 @@ const MOCK_INVOICES: Invoice[] = [
     subtotal: 150.00,
     total: 165.00,
     amount: 165.00, // Alias for total for backward compatibility
-    status: 'pending',
+    status: 'draft', // Changed from 'pending' to 'draft' which is a valid status
     items: [
       { id: uuidv4(), productId: 'prod003', productName: 'Product C', quantity: 3, unitPrice: 50.00, unit: 'pcs' },
     ],

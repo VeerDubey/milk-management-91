@@ -1,3 +1,4 @@
+
 // Import the proper types
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -18,9 +19,8 @@ import {
 } from "@/components/ui/table";
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CustomerLedgerEntry, CustomerLedgerReport as CustomerLedgerReportType } from '@/types';
+import { CustomerLedgerEntry, CustomerLedgerReportType } from '@/types';
 
-// Fix the error: 'CustomerLedgerReport' refers to a value, but is being used as a type here
 export default function CustomerLedgerReport() {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
@@ -161,17 +161,17 @@ export default function CustomerLedgerReport() {
           <div className="space-y-2">
             <Label htmlFor="start-date">Start Date</Label>
             <DatePicker
-              id="start-date"
               date={startDate}
-              onDateChange={setStartDate}
+              setDate={setStartDate}
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="end-date">End Date</Label>
             <DatePicker
-              id="end-date"
               date={endDate}
-              onDateChange={setEndDate}
+              setDate={setEndDate}
+              className="w-full"
             />
           </div>
         </CardContent>
