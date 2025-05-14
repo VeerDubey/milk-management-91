@@ -1,4 +1,3 @@
-
 // Add this to the existing types/index.ts file, we'll define/update types needed for the app
 
 // Customer type definition
@@ -278,6 +277,13 @@ export interface CustomerLedgerEntry {
   credit: number;
   balance: number;
   referenceId?: string; // Order ID or Payment ID
+  orderId?: string;
+  paymentId?: string;
+  productQuantities?: { [productId: string]: number };
+  totalQuantity?: number;
+  amountBilled?: number;
+  paymentReceived?: number;
+  closingBalance?: number;
 }
 
 // Customer Ledger Report
@@ -289,4 +295,7 @@ export interface CustomerLedgerReport {
   entries: CustomerLedgerEntry[];
   openingBalance: number;
   closingBalance: number;
+  totalAmountBilled?: number;
+  totalPaymentReceived?: number;
+  totalProductQuantities?: { [productId: string]: number };
 }
