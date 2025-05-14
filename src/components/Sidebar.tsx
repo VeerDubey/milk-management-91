@@ -10,7 +10,11 @@ import {
   ChevronLeft,
   DollarSign,
   Calendar,
-  BarChart3
+  BarChart,
+  Package,
+  ShoppingCart,
+  FileText,
+  Database,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -29,15 +33,39 @@ export function Sidebar() {
       icon: Users,
       path: "/customers",
     },
-    // Removed missing page routes
+    {
+      title: "Orders",
+      icon: ShoppingCart,
+      path: "/orders",
+    },
+    {
+      title: "Inventory",
+      icon: Package,
+      path: "/inventory",
+    },
+    {
+      title: "Invoices",
+      icon: FileText,
+      path: "/invoices",
+    },
     {
       title: "Outstanding",
       icon: DollarSign,
       path: "/outstanding",
     },
     {
+      title: "Payments",
+      icon: DollarSign,
+      path: "/payments",
+    },
+    {
+      title: "Master",
+      icon: Database,
+      path: "/master",
+    },
+    {
       title: "Reports",
-      icon: BarChart3,
+      icon: BarChart,
       path: "/reports",
     },
     {

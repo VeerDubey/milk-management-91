@@ -4,70 +4,65 @@ import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
 import { useOrderState } from './useOrderState';
 import { usePaymentState } from './usePaymentState';
-import { useSupplierState } from './useSupplierState';
-import { useExpenseState } from './useExpenseState';
-import { useStockState } from './useStockState';
 import { useProductRateState } from './useProductRateState';
-import { useVehicleSalesmanState } from './useVehicleSalesmanState';
+import { useStockState } from './useStockState';
+import { useSupplierState } from './useSupplierState';
 import { useUISettingsState } from './useUISettingsState';
+import { useVehicleSalesmanState } from './useVehicleSalesmanState';
+import { useExpenseState } from './useExpenseState';
 
-// Create data context
-const DataContext = createContext<any>(undefined);
+// This context type will dynamically build based on all the hooks
+type DataContextType = ReturnType<typeof useCustomerState> &
+  ReturnType<typeof useProductState> &
+  ReturnType<typeof useOrderState> &
+  ReturnType<typeof usePaymentState> &
+  ReturnType<typeof useProductRateState> &
+  ReturnType<typeof useStockState> &
+  ReturnType<typeof useSupplierState> &
+  ReturnType<typeof useUISettingsState> &
+  ReturnType<typeof useVehicleSalesmanState> &
+  ReturnType<typeof useExpenseState>;
 
-interface DataProviderProps {
-  children: ReactNode;
-  createInvoiceFunc?: Function | null;
-}
+const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Provider component
-export const DataProvider: React.FC<DataProviderProps> = ({ 
-  children, 
-  createInvoiceFunc = null 
-}) => {
-  // All individual state hooks
+export function DataProvider({ children }: { children: ReactNode }) {
+  // Initialize all the state hooks
   const customerState = useCustomerState();
   const productState = useProductState();
-  
-  // Initialize orderState with the invoice creation function if available
-  const orderState = useOrderState(createInvoiceFunc);
-  
-  const paymentState = usePaymentState(customerState.customers, customerState.updateCustomer);
+  const orderState = useOrderState();
+  const paymentState = usePaymentState();
+  const productRateState = useProductRateState();
+  const stockState = useStockState();
   const supplierState = useSupplierState();
-  const expenseState = useExpenseState();
-  const stockState = useStockState(supplierState.updateSupplier);
-  const productRateState = useProductRateState(productState.products);
-  const vehicleSalesmanState = useVehicleSalesmanState();
   const uiSettingsState = useUISettingsState();
+  const vehicleSalesmanState = useVehicleSalesmanState();
+  const expenseState = useExpenseState();
 
-  // Combine all state into one object
-  const dataContext = {
+  // Combine all state objects into one
+  const contextValue = {
     ...customerState,
     ...productState,
     ...orderState,
     ...paymentState,
-    ...supplierState,
-    ...expenseState,
-    ...stockState,
     ...productRateState,
-    ...vehicleSalesmanState,
+    ...stockState,
+    ...supplierState,
     ...uiSettingsState,
-    createInvoiceFunc
+    ...vehicleSalesmanState,
+    ...expenseState,
   };
 
-  // Provide combined state to children
   return (
-    <DataContext.Provider value={dataContext}>
+    <DataContext.Provider value={contextValue}>
       {children}
     </DataContext.Provider>
   );
-};
+}
 
-// Hook for using the data context
-export const useData = () => {
+export function useData(): DataContextType {
   const context = useContext(DataContext);
   if (context === undefined) {
     throw new Error('useData must be used within a DataProvider');
   }
   return context;
-};
-
+}
