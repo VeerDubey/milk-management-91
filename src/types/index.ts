@@ -7,13 +7,13 @@ export interface Customer {
   name: string;
   phone: string;
   address: string;
-  area?: string; // Added area property
+  area?: string;
   email?: string;
   outstandingBalance: number;
-  outstandingAmount?: number; // Added for compatibility
+  outstandingAmount?: number;
   lastPaymentDate?: string;
   lastPaymentAmount?: number;
-  totalPaid?: number; // Added total paid tracking
+  totalPaid?: number;
   joinedDate?: string;
   notes?: string;
 }
@@ -26,11 +26,12 @@ export interface Product {
   price: number;
   unit: string;
   category?: string;
-  stock?: number; // Added stock property
-  minStock?: number; // Added minimum stock threshold
+  stock?: number;
+  minStock?: number;
   costPrice?: number;
   image?: string;
   barcode?: string;
+  sku?: string;
   isActive?: boolean;
 }
 
@@ -48,12 +49,12 @@ export interface OrderItem {
 // Order type definition
 export interface Order {
   id: string;
-  customerId: string; // Added customer ID
+  customerId: string;
   customerName: string;
   date: string;
   items: OrderItem[];
   total: number;
-  status: 'pending' | 'delivered' | 'cancelled' | 'processing'; // Added status
+  status: 'pending' | 'delivered' | 'cancelled' | 'processing';
   paymentStatus?: 'unpaid' | 'partial' | 'paid';
   notes?: string;
   deliveryDate?: string;
@@ -81,8 +82,8 @@ export interface Expense {
   category: string;
   description: string;
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-  paidTo?: string; // Added paidTo property
-  title?: string; // Added title property
+  paidTo?: string;
+  title?: string;
   notes?: string;
   receiptImage?: string;
   isRecurring?: boolean;
@@ -101,6 +102,69 @@ export interface Supplier {
   outstandingBalance?: number;
   notes?: string;
   products?: string[];
+}
+
+// Supplier Payment definition
+export interface SupplierPayment {
+  id: string;
+  supplierId: string;
+  supplierName?: string;
+  amount: number;
+  date: string;
+  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
+  notes?: string;
+  referenceNumber?: string;
+}
+
+// Customer Product Rate definition
+export interface CustomerProductRate {
+  id: string;
+  customerId: string;
+  productId: string;
+  rate: number;
+  effectiveDate: string;
+  isActive: boolean;
+  notes?: string;
+}
+
+// Supplier Product Rate definition
+export interface SupplierProductRate {
+  id: string;
+  supplierId: string;
+  productId: string;
+  rate: number;
+  effectiveDate: string;
+  isActive: boolean;
+  notes?: string;
+}
+
+// Stock Record definition
+export interface StockRecord {
+  id?: string;
+  date: string;
+  productId: string;
+  openingStock: number;
+  received: number;
+  dispatched: number;
+  closingStock: number;
+  minStockLevel?: number;
+  notes?: string;
+}
+
+// Stock Entry (purchase) definition
+export interface StockEntry {
+  id: string;
+  date: string;
+  supplierId: string;
+  referenceNumber?: string;
+  totalAmount: number;
+  items: {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }[];
+  notes?: string;
 }
 
 // Vehicle definition
@@ -167,6 +231,9 @@ export interface UISettings {
   dateFormat: string;
   colorScheme: string;
   notificationFrequency: 'weekly' | 'immediate' | 'hourly' | 'daily';
+  accentColor?: string;
+  compactMode?: boolean;
+  highContrast?: boolean;
 }
 
 // Product Rate definition

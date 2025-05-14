@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { Customer } from '@/types';
-import { initialCustomers } from '@/data/initialData';
 
 export function useCustomerState() {
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem("customers");
-    return saved ? JSON.parse(saved) : initialCustomers;
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {

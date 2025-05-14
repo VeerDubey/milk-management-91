@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { CustomerProductRate, SupplierProductRate } from '@/types';
+import { CustomerProductRate, SupplierProductRate, Product } from '@/types';
 
-export function useProductRateState(products: any[]) {
+export function useProductRateState(products: Product[]) {
   const [customerProductRates, setCustomerProductRates] = useState<CustomerProductRate[]>(() => {
     const saved = localStorage.getItem("customerProductRates");
     return saved ? JSON.parse(saved) : [];

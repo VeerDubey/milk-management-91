@@ -11,33 +11,22 @@ import { useUISettingsState } from './useUISettingsState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
-
-// Define the DataContextType to include all properties and methods from our state hooks
-export type DataContextType = ReturnType<typeof useCustomerState> &
-  ReturnType<typeof useProductState> &
-  ReturnType<typeof useOrderState> &
-  ReturnType<typeof usePaymentState> &
-  ReturnType<typeof useProductRateState> &
-  ReturnType<typeof useStockState> &
-  ReturnType<typeof useSupplierState> &
-  ReturnType<typeof useUISettingsState> &
-  ReturnType<typeof useVehicleSalesmanState> &
-  ReturnType<typeof useExpenseState>;
+import { DataContextType } from './types';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   // Initialize all the state hooks with proper arguments
-  const customerState = useCustomerState(initialCustomers);
-  const productState = useProductState(initialProducts);
-  const orderState = useOrderState(initialOrders);
-  const paymentState = usePaymentState(initialPayments);
-  const productRateState = useProductRateState();
-  const stockState = useStockState();
-  const supplierState = useSupplierState(initialSuppliers);
+  const customerState = useCustomerState();
+  const productState = useProductState();
+  const orderState = useOrderState();
+  const paymentState = usePaymentState();
+  const productRateState = useProductRateState(productState.products);
+  const supplierState = useSupplierState();
+  const stockState = useStockState(supplierState.updateSupplier);
   const uiSettingsState = useUISettingsState();
   const vehicleSalesmanState = useVehicleSalesmanState();
-  const expenseState = useExpenseState(initialExpenses);
+  const expenseState = useExpenseState();
 
   // Combine all state objects into one
   const contextValue = {

@@ -4,34 +4,16 @@ import { UISettings } from '@/types';
 
 const defaultUISettings: UISettings = {
   theme: "dark",
-  accentColor: "teal",
+  sidebarCollapsed: false,
   sidebarStyle: "gradient",
-  sidebarColor: "teal",
   tableStyle: "striped",
-  compactMode: false,
-  paymentReminders: true,
-  lowStockAlerts: true,
-  enableAnimations: true,
-  highContrast: false,
   fontSize: "medium",
-  showTips: true,
-  showQuickActions: true,
-  showRevenueChart: true,
-  showRecentActivities: true,
-  showCustomerStats: true,
   dateFormat: "MMM dd, yyyy",
-  currencyFormat: "₹#,###.##",
-  timezone: "Asia/Kolkata",
-  defaultView: "dashboard",
-  autoGenerateInvoices: false,
-  defaultInvoiceTemplate: "standard",
-  invoiceDueDays: 15,
-  invoicePrefix: "INV-",
-  invoiceStartNumber: 1000,
-  includeDateInInvoice: false,
+  colorScheme: "teal",
   notificationFrequency: "immediate",
-  orderNotifications: true,
-  invoiceNotifications: true
+  accentColor: "teal",
+  compactMode: false,
+  highContrast: false
 };
 
 export function useUISettingsState() {

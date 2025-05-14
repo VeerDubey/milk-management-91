@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { Supplier, SupplierPayment } from '@/types';
-import { initialSuppliers } from '@/data/initialData';
 
 export function useSupplierState() {
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
     const saved = localStorage.getItem("suppliers");
-    return saved ? JSON.parse(saved) : initialSuppliers;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>(() => {
