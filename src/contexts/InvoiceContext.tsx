@@ -76,8 +76,29 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [selectedTemplateId]);
 
   const addInvoice = (invoice: Invoice) => {
-    setInvoices(prev => [...prev, invoice]);
+    // Calculate total amount if it's not provided
+    const invoiceWithTotal = {
+      ...invoice,
+      totalAmount: invoice.totalAmount || calculateTotalAmount(invoice)
+    };
+    
+    setInvoices(prev => [...prev, invoiceWithTotal]);
     return invoice.id;
+  };
+
+  // Helper function to calculate total amount from items
+  const calculateTotalAmount = (invoice: Invoice) => {
+    const itemsTotal = invoice.items.reduce((sum, item) => sum + (item.amount || item.quantity * item.unitPrice), 0);
+    
+    // Apply discount if available
+    const discountedTotal = invoice.discountPercentage 
+      ? itemsTotal * (1 - invoice.discountPercentage / 100) 
+      : itemsTotal;
+    
+    // Apply tax if available
+    return invoice.taxRate 
+      ? discountedTotal * (1 + invoice.taxRate / 100) 
+      : discountedTotal;
   };
 
   const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {

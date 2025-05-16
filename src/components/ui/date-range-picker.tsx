@@ -15,15 +15,30 @@ import {
 
 interface DateRangePickerProps {
   className?: string
-  dateRange: DateRange | undefined
-  setDateRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>
+  dateRange?: DateRange | undefined
+  setDateRange?: React.Dispatch<React.SetStateAction<DateRange | undefined>>
+  date?: DateRange | undefined
+  onDateChange?: React.Dispatch<React.SetStateAction<DateRange | undefined>> | ((range: DateRange | undefined) => void)
 }
 
 export function DateRangePicker({
   className,
   dateRange,
-  setDateRange
+  setDateRange,
+  date,
+  onDateChange
 }: DateRangePickerProps) {
+  // Use either dateRange/setDateRange or date/onDateChange
+  const selectedDate = dateRange || date;
+  const handleDateChange = (newDate: DateRange | undefined) => {
+    if (setDateRange) {
+      setDateRange(newDate);
+    }
+    if (onDateChange) {
+      onDateChange(newDate);
+    }
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -33,18 +48,18 @@ export function DateRangePicker({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !dateRange && "text-muted-foreground"
+              !selectedDate && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
+            {selectedDate?.from ? (
+              selectedDate.to ? (
                 <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
+                  {format(selectedDate.from, "LLL dd, y")} -{" "}
+                  {format(selectedDate.to, "LLL dd, y")}
                 </>
               ) : (
-                format(dateRange.from, "LLL dd, y")
+                format(selectedDate.from, "LLL dd, y")
               )
             ) : (
               <span>Pick a date range</span>
@@ -55,9 +70,9 @@ export function DateRangePicker({
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
-            onSelect={setDateRange}
+            defaultMonth={selectedDate?.from}
+            selected={selectedDate}
+            onSelect={handleDateChange}
             numberOfMonths={2}
             className="pointer-events-auto"
           />

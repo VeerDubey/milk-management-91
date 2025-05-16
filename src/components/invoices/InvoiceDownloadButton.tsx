@@ -35,7 +35,7 @@ export default function InvoiceDownloadButton({
   const handleDownload = async (templateId?: string) => {
     setIsDownloading(true);
     try {
-      await downloadInvoice(invoiceId, templateId);
+      await downloadInvoice(invoiceId);
     } finally {
       setIsDownloading(false);
     }
