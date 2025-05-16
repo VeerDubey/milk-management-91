@@ -1,201 +1,174 @@
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Invoice } from "@/types";
-import { INVOICE_TEMPLATES, generateInvoicePreview as generatePreview } from "@/utils/invoiceUtils";
-import { toast } from "sonner";
+import React, { createContext, useContext, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+interface Invoice {
+  id: string;
+  customerName: string;
+  date: string;
+  items: OrderItem[];
+  totalAmount: number;
+  notes?: string;
+  terms?: string;
+  status?: string;
+  discountPercentage?: number;
+  taxRate?: number;
+  templateId?: string;
+}
 
 interface InvoiceContextType {
   invoices: Invoice[];
-  addInvoice: (invoice: Invoice) => void;
-  updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
+  currentInvoice: Invoice | null;
+  setCurrentInvoice: (invoice: Invoice | null) => void;
+  createInvoice: (invoiceData: Omit<Invoice, "id">) => void;
+  updateInvoice: (invoice: Invoice) => void;
   deleteInvoice: (id: string) => void;
-  getInvoiceById: (id: string) => Invoice | undefined;
-  generateInvoicePreview: (invoice: Invoice, templateId?: string) => string;
-  downloadInvoice: (invoiceId: string) => Promise<void>;
-  companyInfo: {
-    companyName: string;
-    address: string;
-    contactNumber: string;
-    email: string;
-    gstNumber: string;
-    bankDetails: string;
-    logoUrl?: string;
-  };
-  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
-  selectedTemplateId: string;
-  setSelectedTemplateId: (id: string) => void;
-  templates: typeof INVOICE_TEMPLATES;
+  calculateTotal: (items: OrderItem[]) => number;
+  generateInvoiceNumber: () => string;
+  templates: InvoiceTemplate[];
+  currentTemplate: InvoiceTemplate | null;
+  setCurrentTemplate: (template: InvoiceTemplate | null) => void;
 }
 
-interface CompanyInfo {
-  companyName: string;
-  address: string;
-  contactNumber: string;
-  email: string;
-  gstNumber: string;
-  bankDetails: string;
-  logoUrl?: string;
+interface InvoiceTemplate {
+  id: string;
+  name: string;
+  colorScheme: string;
+  headerStyle?: string;
+  bodyStyle?: string;
+  footerStyle?: string;
 }
 
-const defaultCompanyInfo: CompanyInfo = {
-  companyName: "Your Business Name",
-  address: "123 Business St, City, State, ZIP",
-  contactNumber: "+91 9876543210",
-  email: "contact@yourbusiness.com",
-  gstNumber: "29ABCDE1234F1Z5",
-  bankDetails: "Bank: HDFC Bank, Acc: 12345678901, IFSC: HDFC0001234"
+const defaultTemplates: InvoiceTemplate[] = [
+  {
+    id: "default",
+    name: "Default",
+    colorScheme: "blue",
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    colorScheme: "gray",
+  },
+  {
+    id: "modern",
+    name: "Modern",
+    colorScheme: "green",
+  },
+];
+
+const defaultInvoice: Invoice = {
+  id: "",
+  customerName: "",
+  date: new Date().toISOString().split("T")[0],
+  items: [],
+  totalAmount: 0,
+  notes: "",
+  terms: "Payment due within 30 days",
+  status: "draft",
+  discountPercentage: 0,
+  taxRate: 0,
 };
 
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
-export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [invoices, setInvoices] = useState<Invoice[]>(() => {
-    const savedInvoices = localStorage.getItem("invoices");
-    return savedInvoices ? JSON.parse(savedInvoices) : [];
-  });
-  
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(() => {
-    const savedInfo = localStorage.getItem("companyInfo");
-    return savedInfo ? JSON.parse(savedInfo) : defaultCompanyInfo;
-  });
-  
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(() => {
-    return localStorage.getItem("selectedInvoiceTemplate") || "standard";
-  });
+export const InvoiceProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
+  const [templates] = useState<InvoiceTemplate[]>(defaultTemplates);
+  const [currentTemplate, setCurrentTemplate] = useState<InvoiceTemplate | null>(defaultTemplates[0]);
 
-  React.useEffect(() => {
-    localStorage.setItem("invoices", JSON.stringify(invoices));
-  }, [invoices]);
-  
-  React.useEffect(() => {
-    localStorage.setItem("companyInfo", JSON.stringify(companyInfo));
-  }, [companyInfo]);
-  
-  React.useEffect(() => {
-    localStorage.setItem("selectedInvoiceTemplate", selectedTemplateId);
-  }, [selectedTemplateId]);
+  const calculateTotal = (items: OrderItem[]) => {
+    return items.reduce((sum, item) => sum + item.amount, 0);
+  };
 
-  const addInvoice = (invoice: Invoice) => {
-    // Calculate total amount if it's not provided
-    const invoiceWithTotal = {
-      ...invoice,
-      totalAmount: invoice.totalAmount || calculateTotalAmount(invoice)
+  const calculateFinalTotal = (invoice: Invoice) => {
+    const subtotal = calculateTotal(invoice.items);
+    
+    // Apply discount if present
+    const discountAmount = invoice.discountPercentage ? 
+      subtotal * (invoice.discountPercentage / 100) : 0;
+    
+    const afterDiscount = subtotal - discountAmount;
+    
+    // Apply tax if present
+    const taxAmount = invoice.taxRate ? 
+      afterDiscount * (invoice.taxRate / 100) : 0;
+    
+    return afterDiscount + taxAmount;
+  };
+
+  const createInvoice = (invoiceData: Omit<Invoice, "id">) => {
+    const newInvoice = {
+      ...invoiceData,
+      id: uuidv4(),
+      totalAmount: calculateFinalTotal({ ...invoiceData, id: "" })
     };
     
-    setInvoices(prev => [...prev, invoiceWithTotal]);
-    return invoice.id;
+    setInvoices((prev) => [...prev, newInvoice]);
+    return newInvoice;
   };
 
-  // Helper function to calculate total amount from items
-  const calculateTotalAmount = (invoice: Invoice) => {
-    const itemsTotal = invoice.items.reduce((sum, item) => sum + (item.amount || item.quantity * item.unitPrice), 0);
+  const updateInvoice = (invoice: Invoice) => {
+    const updatedInvoice = {
+      ...invoice,
+      totalAmount: calculateFinalTotal(invoice)
+    };
     
-    // Apply discount if available
-    const discountedTotal = invoice.discountPercentage 
-      ? itemsTotal * (1 - invoice.discountPercentage / 100) 
-      : itemsTotal;
-    
-    // Apply tax if available
-    return invoice.taxRate 
-      ? discountedTotal * (1 + invoice.taxRate / 100) 
-      : discountedTotal;
-  };
-
-  const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
-    setInvoices(prev => 
-      prev.map(invoice => 
-        invoice.id === id ? { ...invoice, ...invoiceData } : invoice
-      )
+    setInvoices((prev) =>
+      prev.map((i) => (i.id === invoice.id ? updatedInvoice : i))
     );
   };
 
   const deleteInvoice = (id: string) => {
-    setInvoices(prev => prev.filter(invoice => invoice.id !== id));
+    setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
   };
 
-  const getInvoiceById = (id: string) => {
-    return invoices.find(invoice => invoice.id === id);
-  };
-
-  const generateInvoicePreview = (invoice: Invoice, templateId?: string) => {
-    try {
-      const products = invoice.items.map(item => ({
-        id: item.productId,
-        name: item.productName,
-        price: item.unitPrice,
-        description: `${item.quantity} ${item.unit}` 
-      }));
-      
-      // Use the selected template or the provided template ID
-      const templateToUse = templateId || selectedTemplateId;
-      
-      return generatePreview(
-        invoice,
-        companyInfo,
-        products,
-        templateToUse
-      );
-    } catch (error) {
-      console.error("Error generating invoice preview:", error);
-      toast.error("Failed to generate invoice preview");
-      return "";
-    }
-  };
-
-  const downloadInvoice = async (invoiceId: string) => {
-    try {
-      const invoice = getInvoiceById(invoiceId);
-      if (!invoice) {
-        throw new Error("Invoice not found");
-      }
-      
-      const pdfUrl = generateInvoicePreview(invoice);
-      
-      // Create a temporary link to download the PDF
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = `Invoice-${invoice.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success("Invoice downloaded successfully");
-    } catch (error) {
-      console.error("Error downloading invoice:", error);
-      toast.error("Failed to download invoice");
-    }
-  };
-
-  const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
-    setCompanyInfo(prev => ({ ...prev, ...info }));
-  };
-
-  const value = {
-    invoices,
-    addInvoice,
-    updateInvoice,
-    deleteInvoice,
-    getInvoiceById,
-    generateInvoicePreview,
-    downloadInvoice,
-    companyInfo,
-    updateCompanyInfo,
-    selectedTemplateId,
-    setSelectedTemplateId,
-    templates: INVOICE_TEMPLATES
+  const generateInvoiceNumber = () => {
+    const prefix = "INV";
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
+    return `${prefix}-${year}${month}-${random}`;
   };
 
   return (
-    <InvoiceContext.Provider value={value}>
+    <InvoiceContext.Provider
+      value={{
+        invoices,
+        currentInvoice,
+        setCurrentInvoice,
+        createInvoice,
+        updateInvoice,
+        deleteInvoice,
+        calculateTotal,
+        generateInvoiceNumber,
+        templates,
+        currentTemplate,
+        setCurrentTemplate,
+      }}
+    >
       {children}
     </InvoiceContext.Provider>
   );
 };
 
-export const useInvoices = () => {
+export const useInvoice = () => {
   const context = useContext(InvoiceContext);
   if (context === undefined) {
-    throw new Error("useInvoices must be used within an InvoiceProvider");
+    throw new Error("useInvoice must be used within an InvoiceProvider");
   }
   return context;
 };
