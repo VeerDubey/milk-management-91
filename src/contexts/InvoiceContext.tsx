@@ -1,8 +1,9 @@
+
 import React, { createContext, useContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Invoice as TypesInvoice, OrderItem } from "@/types";
 
-// Define a local invoice type that extends the global one with what we need
+// Define a local invoice type with all the fields we need
 interface Invoice {
   id: string;
   customerId: string;
@@ -94,13 +95,13 @@ const defaultTemplates: InvoiceTemplate[] = [
 
 const defaultInvoice: Invoice = {
   id: "",
-  customerId: "", // Added missing required field
+  customerId: "", 
   customerName: "",
   date: new Date().toISOString().split("T")[0],
   items: [],
   totalAmount: 0,
-  subtotal: 0, // Added missing required field
-  invoiceNumber: "", // Added missing required field
+  subtotal: 0,
+  invoiceNumber: "",
   notes: "",
   terms: "Payment due within 30 days",
   status: "draft",

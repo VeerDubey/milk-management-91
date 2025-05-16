@@ -15,7 +15,9 @@ import {
   UserPlus,
   PackagePlus,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Printer,
+  Receipt
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -99,6 +101,16 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
               icon={ShoppingCart} 
               label="Order Entry" 
             />
+            <SidebarItem 
+              to="/track-sheet" 
+              icon={Printer} 
+              label="Track Sheet" 
+            />
+            <SidebarItem 
+              to="/invoices" 
+              icon={Receipt} 
+              label="Invoices" 
+            />
           </div>
           
           <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
@@ -125,8 +137,13 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             
             <SidebarGroup label="Products" icon={Package} defaultOpen>
               <SidebarItem
-                to="/product-rates"
+                to="/product-list"
                 icon={Package}
+                label="Product List"
+              />
+              <SidebarItem
+                to="/product-rates"
+                icon={CreditCard}
                 label="Product Rates"
               />
             </SidebarGroup>

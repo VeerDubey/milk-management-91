@@ -11,6 +11,7 @@ import ProductView from "@/pages/ProductView";
 import CustomerLedger from "@/pages/CustomerLedger";
 import SupplierList from "@/pages/SupplierList";
 import InvoiceCreate from "@/pages/InvoiceCreate";
+import Invoices from "@/pages/Invoices";
 import Layout from "@/components/Layout";
 
 function App() {
@@ -26,7 +27,9 @@ function App() {
               <Route path="/product/:id" element={<ProductView />} />
               <Route path="/customer-ledger" element={<CustomerLedger />} />
               <Route path="/supplier-list" element={<SupplierList />} />
-              <Route path="/invoice/create" element={<InvoiceCreate />} />
+              <Route path="/supplier-directory" element={<SupplierList />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/invoice-create" element={<InvoiceCreate />} />
             </Routes>
           </Layout>
           <Toaster position="top-right" />

@@ -1,122 +1,139 @@
 
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useData } from "@/contexts/data/DataContext";
-import { Product } from "@/types";
+import { useData } from "@/contexts/DataContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Edit, Package, Trash, AlertTriangle, History } from "lucide-react";
 import { toast } from "sonner";
-import { ArrowLeft, Edit, Trash, Save } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 export default function ProductView() {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { products, updateProduct, deleteProduct } = useData();
-  
-  const [product, setProduct] = useState<Product | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProduct, setEditedProduct] = useState<Partial<Product>>({});
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      const foundProduct = products.find((p) => p.id === id);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        setEditedProduct(foundProduct);
-      } else {
-        toast.error("Product not found");
-        navigate("/products");
-      }
-    }
-  }, [id, products, navigate]);
+  // Find the product by ID
+  const product = products.find((p) => p.id === id);
+
+  const [editForm, setEditForm] = useState({
+    name: product?.name || "",
+    description: product?.description || "",
+    price: product?.price?.toString() || "",
+    unit: product?.unit || "",
+    category: product?.category || "",
+    stock: product?.stock?.toString() || "",
+    costPrice: product?.costPrice?.toString() || "",
+    minStockLevel: product?.minStockLevel?.toString() || "",
+  });
 
   if (!product) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <p>Loading product...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Product Not Found</h1>
+        <p className="text-muted-foreground mb-6">
+          The product you're looking for doesn't exist or has been removed.
+        </p>
+        <Button onClick={() => navigate("/product-list")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Product List
+        </Button>
       </div>
     );
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    
-    // Handle numeric fields
-    if (type === 'number') {
-      setEditedProduct({
-        ...editedProduct,
-        [name]: parseFloat(value) || 0
-      });
-    } else {
-      setEditedProduct({
-        ...editedProduct,
-        [name]: value
-      });
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+      deleteProduct(product.id);
+      toast.success("Product deleted successfully!");
+      navigate("/product-list");
     }
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditForm({
+      name: product.name,
+      description: product.description || "",
+      price: product.price.toString(),
+      unit: product.unit,
+      category: product.category || "",
+      stock: product.stock?.toString() || "0",
+      costPrice: product.costPrice?.toString() || "0",
+      minStockLevel: product.minStockLevel?.toString() || "0",
+    });
   };
 
   const handleSave = () => {
-    if (id) {
-      updateProduct(id, editedProduct);
-      setProduct({ ...product, ...editedProduct });
+    if (!editForm.name || !editForm.price || !editForm.unit) {
+      toast.error("Name, price, and unit are required");
+      return;
+    }
+
+    try {
+      updateProduct(product.id, {
+        name: editForm.name,
+        description: editForm.description,
+        price: parseFloat(editForm.price),
+        unit: editForm.unit,
+        category: editForm.category,
+        stock: parseInt(editForm.stock),
+        costPrice: parseFloat(editForm.costPrice),
+        minStockLevel: parseInt(editForm.minStockLevel),
+      });
+
       setIsEditing(false);
-      toast.success("Product updated successfully");
+      toast.success("Product updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update product");
+      console.error(error);
     }
   };
 
-  const handleDelete = () => {
-    if (id) {
-      deleteProduct(id);
-      toast.success("Product deleted successfully");
-      navigate("/products");
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const getStockStatusBadge = () => {
+    const stock = product.stock || 0;
+    const minStock = product.minStockLevel || 0;
+    
+    if (stock <= 0) {
+      return <Badge variant="destructive">Out of Stock</Badge>;
+    } else if (stock < minStock) {
+      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Low Stock</Badge>;
+    } else {
+      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">In Stock</Badge>;
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate("/product-list")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/product-list")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">{isEditing ? "Edit Product" : product.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight ml-2">
+            Product Details
+          </h1>
         </div>
-        <div className="flex gap-2">
-          {!isEditing ? (
+        <div className="flex space-x-2">
+          {!isEditing && (
             <>
-              <Button onClick={() => setIsEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
+              <Button variant="outline" onClick={handleEdit}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Product
               </Button>
-              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-                <Trash className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Save
+              <Button variant="destructive" onClick={handleDelete}>
+                <Trash className="mr-2 h-4 w-4" />
+                Delete Product
               </Button>
             </>
           )}
@@ -124,166 +141,203 @@ export default function ProductView() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? "Edit Product Details" : "Product Details"}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label htmlFor="name">Name</Label>
-              {isEditing ? (
-                <Input
-                  id="name"
-                  name="name"
-                  value={editedProduct.name || ""}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.name}</p>
-              )}
-            </div>
+        {isEditing ? (
+          <>
+            <CardHeader>
+              <CardTitle>Edit Product</CardTitle>
+              <CardDescription>
+                Update the details for {product.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Product Name*</Label>
+                    <Input
+                      id="edit-name"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-category">Category</Label>
+                    <Input
+                      id="edit-category"
+                      value={editForm.category}
+                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="price">Price (₹)</Label>
-              {isEditing ? (
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  value={editedProduct.price || 0}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">₹{product.price.toFixed(2)}</p>
-              )}
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-price">Price per Unit*</Label>
+                    <Input
+                      id="edit-price"
+                      type="number"
+                      value={editForm.price}
+                      onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-unit">Unit*</Label>
+                    <Input
+                      id="edit-unit"
+                      value={editForm.unit}
+                      onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="category">Category</Label>
-              {isEditing ? (
-                <Input
-                  id="category"
-                  name="category"
-                  value={editedProduct.category || ""}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.category || "Uncategorized"}</p>
-              )}
-            </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-stock">Current Stock</Label>
+                    <Input
+                      id="edit-stock"
+                      type="number"
+                      value={editForm.stock}
+                      onChange={(e) => setEditForm({ ...editForm, stock: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-minStock">Minimum Stock Level</Label>
+                    <Input
+                      id="edit-minStock"
+                      type="number"
+                      value={editForm.minStockLevel}
+                      onChange={(e) => setEditForm({ ...editForm, minStockLevel: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-costPrice">Cost Price</Label>
+                    <Input
+                      id="edit-costPrice"
+                      type="number"
+                      value={editForm.costPrice}
+                      onChange={(e) => setEditForm({ ...editForm, costPrice: e.target.value })}
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="unit">Unit</Label>
-              {isEditing ? (
-                <Input
-                  id="unit"
-                  name="unit"
-                  value={editedProduct.unit || ""}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.unit}</p>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Input
+                    id="edit-description"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  />
+                </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="stock">Current Stock</Label>
-              {isEditing ? (
-                <Input
-                  id="stock"
-                  name="stock"
-                  type="number"
-                  value={editedProduct.stock || 0}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.stock || 0} {product.unit}</p>
-              )}
-            </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave}>Save Changes</Button>
+                </div>
+              </div>
+            </CardContent>
+          </>
+        ) : (
+          <>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl flex items-center">
+                    <Package className="mr-2 h-5 w-5" />
+                    {product.name}
+                  </CardTitle>
+                  <CardDescription>{product.description}</CardDescription>
+                </div>
+                <div>{getStockStatusBadge()}</div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Basic Information</h3>
+                    <Separator className="my-2" />
+                    <dl className="space-y-2">
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Category:</dt>
+                        <dd className="font-medium">{product.category || "General"}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Price:</dt>
+                        <dd className="font-medium">₹{product.price.toFixed(2)}/{product.unit}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Cost Price:</dt>
+                        <dd className="font-medium">₹{(product.costPrice || 0).toFixed(2)}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Profit Margin:</dt>
+                        <dd className="font-medium">
+                          {product.costPrice ? 
+                            `${(((product.price - (product.costPrice || 0)) / product.price) * 100).toFixed(2)}%` : 
+                            "N/A"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="minStockLevel">Minimum Stock Level</Label>
-              {isEditing ? (
-                <Input
-                  id="minStockLevel"
-                  name="minStockLevel"
-                  type="number"
-                  value={editedProduct.minStockLevel || 0}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.minStockLevel || 0} {product.unit}</p>
-              )}
-            </div>
+                  <div>
+                    <h3 className="text-lg font-medium">Stock Information</h3>
+                    <Separator className="my-2" />
+                    <dl className="space-y-2">
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Current Stock:</dt>
+                        <dd className="font-medium">{product.stock || 0} {product.unit}s</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Minimum Stock Level:</dt>
+                        <dd className="font-medium">{product.minStockLevel || 0} {product.unit}s</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Value in Stock:</dt>
+                        <dd className="font-medium">₹{((product.stock || 0) * product.price).toFixed(2)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="costPrice">Cost Price (₹)</Label>
-              {isEditing ? (
-                <Input
-                  id="costPrice"
-                  name="costPrice"
-                  type="number"
-                  value={editedProduct.costPrice || 0}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">₹{product.costPrice?.toFixed(2) || "0.00"}</p>
-              )}
-            </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Additional Details</h3>
+                    <Separator className="my-2" />
+                    <dl className="space-y-2">
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">ID:</dt>
+                        <dd className="font-medium text-sm">{product.id}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">SKU:</dt>
+                        <dd className="font-medium">{product.sku || "Not set"}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Status:</dt>
+                        <dd className="font-medium">{product.isActive !== false ? "Active" : "Inactive"}</dd>
+                      </div>
+                    </dl>
+                  </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="barcode">Barcode</Label>
-              {isEditing ? (
-                <Input
-                  id="barcode"
-                  name="barcode"
-                  value={editedProduct.barcode || ""}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <p className="p-2 bg-muted/50 rounded">{product.barcode || "N/A"}</p>
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <Label htmlFor="description">Description</Label>
-            {isEditing ? (
-              <Textarea
-                id="description"
-                name="description"
-                rows={4}
-                value={editedProduct.description || ""}
-                onChange={handleInputChange}
-              />
-            ) : (
-              <p className="p-2 bg-muted/50 rounded min-h-[100px]">
-                {product.description || "No description available"}
-              </p>
-            )}
-          </div>
-        </CardContent>
+                  <div>
+                    <h3 className="text-lg font-medium">Recent Activity</h3>
+                    <Separator className="my-2" />
+                    <div className="rounded-md bg-muted/50 p-4 text-center">
+                      <History className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground text-sm">
+                        Purchase history will be displayed here.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </>
+        )}
       </Card>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product
-              "{product.name}" from your catalog.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
