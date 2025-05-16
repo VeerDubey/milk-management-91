@@ -33,7 +33,7 @@ const VehicleSalesmanCreate = () => {
   const [salesmanName, setSalesmanName] = useState("");
   const [salesmanPhone, setSalesmanPhone] = useState("");
   const [salesmanAddress, setSalesmanAddress] = useState("");
-  const [salesmanVehicleId, setSalesmanVehicleId] = useState("");
+  const [salesmanVehicleId, setSalesmanVehicleId] = useState("none"); // Changed default from empty string to "none"
   const [salesmanIsActive, setSalesmanIsActive] = useState(true);
   
   const handleCreateVehicle = (e: React.FormEvent) => {
@@ -94,7 +94,7 @@ const VehicleSalesmanCreate = () => {
         name: salesmanName,
         phone: salesmanPhone,
         address: salesmanAddress,
-        vehicleId: salesmanVehicleId,
+        vehicleId: salesmanVehicleId === "none" ? "" : salesmanVehicleId, // Convert "none" back to empty string if needed
         isActive: salesmanIsActive
       };
       
@@ -104,7 +104,7 @@ const VehicleSalesmanCreate = () => {
       setSalesmanName("");
       setSalesmanPhone("");
       setSalesmanAddress("");
-      setSalesmanVehicleId("");
+      setSalesmanVehicleId("none"); // Reset to "none" instead of empty string
       setSalesmanIsActive(true);
       
       toast.success("Salesman added successfully");
@@ -310,7 +310,7 @@ const VehicleSalesmanCreate = () => {
                         <SelectValue placeholder="Select vehicle" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem> {/* Changed from empty string to "none" */}
                         {vehicles.map((vehicle) => (
                           <SelectItem key={vehicle.id} value={vehicle.id}>
                             {vehicle.name} ({vehicle.regNumber})

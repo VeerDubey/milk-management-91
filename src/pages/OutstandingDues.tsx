@@ -54,7 +54,7 @@ const OutstandingDues = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [minAmount, setMinAmount] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState('all'); // Changed from empty string to "all"
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -107,7 +107,7 @@ const OutstandingDues = () => {
         );
       })
       .filter(customer => {
-        if (!selectedCustomerId) return true;
+        if (selectedCustomerId === 'all') return true; // Changed from empty string to "all"
         return customer.id === selectedCustomerId;
       })
       .sort((a, b) => {
@@ -134,7 +134,7 @@ const OutstandingDues = () => {
 
     addPayment(payment);
     toast.success(`Payment of ₹${amount.toFixed(2)} added for ${customerName}`);
-    setSelectedCustomerId("");
+    setSelectedCustomerId("all"); // Changed from empty string to "all"
     setPaymentAmount("");
     setPaymentMethod("cash");
     setPaymentNotes("");
@@ -317,7 +317,7 @@ const OutstandingDues = () => {
                           <SelectValue placeholder="All Customers" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Customers</SelectItem>
+                          <SelectItem value="all">All Customers</SelectItem>
                           {customersWithOutstanding.map((customer) => (
                             <SelectItem key={customer.id} value={customer.id}>
                               {customer.name}
@@ -345,7 +345,7 @@ const OutstandingDues = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          setSelectedCustomerId('');
+                          setSelectedCustomerId('all'); // Changed from empty string to "all"
                           setMinAmount('');
                         }}
                       >
@@ -445,7 +445,7 @@ const OutstandingDues = () => {
                   variant="outline"
                   onClick={() => {
                     setSearchQuery('');
-                    setSelectedCustomerId('');
+                    setSelectedCustomerId('all'); // Changed from empty string to "all"
                     setMinAmount('');
                   }}
                 >
