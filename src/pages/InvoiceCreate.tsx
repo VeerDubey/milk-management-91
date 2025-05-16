@@ -198,23 +198,30 @@ export default function InvoiceCreate() {
     try {
       // Fix: Cast form values to the required type to ensure all required fields are present
       const invoiceData = form.getValues();
-      const invoice = createInvoiceFromFormData({
-        invoiceNumber: invoiceData.invoiceNumber,
-        invoiceDate: invoiceData.invoiceDate,
-        dueDate: invoiceData.dueDate,
-        customerId: invoiceData.customerId,
-        customerName: invoiceData.customerName,
-        notes: invoiceData.notes,
-        terms: invoiceData.terms,
-        taxRate: invoiceData.taxRate,
-        discountPercentage: invoiceData.discountPercentage,
-        items: invoiceData.items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount
-        }))
-      });
+      
+      // Create an invoice object that matches the expected structure in InvoiceContext
+      const invoice = {
+        ...createInvoiceFromFormData({
+          invoiceNumber: invoiceData.invoiceNumber,
+          invoiceDate: invoiceData.invoiceDate,
+          dueDate: invoiceData.dueDate,
+          customerId: invoiceData.customerId,
+          customerName: invoiceData.customerName,
+          notes: invoiceData.notes,
+          terms: invoiceData.terms,
+          taxRate: invoiceData.taxRate,
+          discountPercentage: invoiceData.discountPercentage,
+          items: invoiceData.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount
+          }))
+        }),
+        // Add totalAmount field to satisfy the InvoiceContext type
+        totalAmount: total
+      };
+      
       const url = generateInvoicePreview(invoice);
       setPreviewUrl(url);
       setShowPreview(true);
@@ -227,24 +234,28 @@ export default function InvoiceCreate() {
   // Handle form submission
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
-      // Fix: Cast form values to the required type to ensure all required fields are present
-      const invoice = createInvoiceFromFormData({
-        invoiceNumber: data.invoiceNumber,
-        invoiceDate: data.invoiceDate,
-        dueDate: data.dueDate,
-        customerId: data.customerId,
-        customerName: data.customerName,
-        notes: data.notes,
-        terms: data.terms,
-        taxRate: data.taxRate,
-        discountPercentage: data.discountPercentage,
-        items: data.items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          rate: item.rate,
-          amount: item.amount
-        }))
-      });
+      // Create an invoice object that matches the expected structure in InvoiceContext
+      const invoice = {
+        ...createInvoiceFromFormData({
+          invoiceNumber: data.invoiceNumber,
+          invoiceDate: data.invoiceDate,
+          dueDate: data.dueDate,
+          customerId: data.customerId,
+          customerName: data.customerName,
+          notes: data.notes,
+          terms: data.terms,
+          taxRate: data.taxRate,
+          discountPercentage: data.discountPercentage,
+          items: data.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            rate: item.rate,
+            amount: item.amount
+          }))
+        }),
+        // Add totalAmount field to satisfy the InvoiceContext type
+        totalAmount: total
+      };
       
       // Add to invoices
       addInvoice(invoice);

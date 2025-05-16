@@ -136,7 +136,7 @@ export default function InvoiceHistory() {
     }
   };
   
-  // Handle invoice preview
+  // Fix the handlePreviewInvoice function to correctly convert Invoice type
   const handlePreviewInvoice = (invoiceId: string) => {
     try {
       const invoice = invoices.find(inv => inv.id === invoiceId);
@@ -145,7 +145,13 @@ export default function InvoiceHistory() {
         return;
       }
       
-      const url = generateInvoicePreview(invoice);
+      // Add totalAmount property to match the expected Invoice type in InvoiceContext
+      const contextInvoice = {
+        ...invoice,
+        totalAmount: invoice.total || invoice.amount || 0
+      };
+      
+      const url = generateInvoicePreview(contextInvoice);
       setPreviewUrl(url);
       setPreviewInvoiceId(invoiceId);
     } catch (error) {

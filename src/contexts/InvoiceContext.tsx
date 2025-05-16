@@ -1,20 +1,15 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import type { Invoice as TypesInvoice, OrderItem } from "@/types";
 
-interface OrderItem {
-  productId: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-}
-
-interface Invoice {
+// Define a local invoice type that extends the global one with what we need
+interface Invoice extends Omit<TypesInvoice, 'total' | 'amount'> {
   id: string;
   customerName: string;
   date: string;
   items: OrderItem[];
-  totalAmount: number;
+  totalAmount: number; // Using totalAmount internally but mapping to total/amount when needed
   notes?: string;
   terms?: string;
   status?: string;
@@ -95,10 +90,13 @@ const defaultTemplates: InvoiceTemplate[] = [
 
 const defaultInvoice: Invoice = {
   id: "",
+  customerId: "", // Added missing required field
   customerName: "",
   date: new Date().toISOString().split("T")[0],
   items: [],
   totalAmount: 0,
+  subtotal: 0, // Added missing required field
+  invoiceNumber: "", // Added missing required field
   notes: "",
   terms: "Payment due within 30 days",
   status: "draft",
@@ -128,7 +126,7 @@ export const InvoiceProvider: React.FC<{ children: React.ReactNode }> = ({
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
 
   const calculateTotal = (items: OrderItem[]) => {
-    return items.reduce((sum, item) => sum + item.amount, 0);
+    return items.reduce((sum, item) => sum + (item.price || item.quantity * item.unitPrice), 0);
   };
 
   const calculateFinalTotal = (invoice: Invoice) => {

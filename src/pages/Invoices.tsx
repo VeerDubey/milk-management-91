@@ -196,7 +196,9 @@ export default function Invoices() {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{invoice.customerName}</TableCell>
-                    <TableCell className="text-right">₹{invoice.amount?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      ₹{(invoice.totalAmount || invoice.total || invoice.amount || 0).toFixed(2)}
+                    </TableCell>
                     <TableCell>{getStatusBadge(invoice.status || 'Unknown')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
