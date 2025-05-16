@@ -23,6 +23,16 @@ try {
   // Using all safety flags to maximize compatibility and avoid git
   execSync('npm install --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git', { stdio: 'inherit' });
   
+  // Explicitly handle problematic packages with special flags
+  console.log('Handling potentially problematic packages...');
+  try {
+    console.log('Installing react-colorful explicitly with --force flag...');
+    execSync('npm install --no-save react-colorful@latest --force --legacy-peer-deps --registry=https://registry.npmjs.org/', { stdio: 'inherit' });
+  } catch (packageError) {
+    console.warn('Warning: Could not install react-colorful. Will attempt to continue without it.');
+    console.warn(packageError.message);
+  }
+  
   console.log('Installing Electron-specific dependencies explicitly from npm registry...');
   // Explicitly fetch from npm registry with full safety flags and without git
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });

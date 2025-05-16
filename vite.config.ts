@@ -49,6 +49,21 @@ export default defineConfig(({ mode }) => ({
           'chart-vendor': ['recharts']
         }
       }
+    },
+    // Add better error handling for missing optional dependencies
+    commonjsOptions: {
+      esmExternals: true,
+      requireReturnsDefault: 'auto',
+      transformMixedEsModules: true,
     }
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Add a custom define to allow fallbacks for missing packages
+      define: {
+        'process.env.NODE_ENV': JSON.stringify(mode),
+        'process.env.VITE_ALLOW_MISSING_DEPENDENCIES': JSON.stringify('true'),
+      }
+    }
+  }
 }));
