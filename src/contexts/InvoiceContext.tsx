@@ -1,21 +1,25 @@
-
 import React, { createContext, useContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { Invoice as TypesInvoice, OrderItem } from "@/types";
 
 // Define a local invoice type that extends the global one with what we need
-interface Invoice extends Omit<TypesInvoice, 'total' | 'amount'> {
+interface Invoice {
   id: string;
+  customerId: string;
   customerName: string;
   date: string;
   items: OrderItem[];
-  totalAmount: number; // Using totalAmount internally but mapping to total/amount when needed
+  subtotal: number;
+  totalAmount: number; // Using totalAmount internally
+  total?: number; // For compatibility with TypesInvoice
+  amount?: number; // For compatibility with TypesInvoice
   notes?: string;
   terms?: string;
-  status?: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
   discountPercentage?: number;
   taxRate?: number;
   templateId?: string;
+  invoiceNumber: string;
 }
 
 interface InvoiceTemplate {

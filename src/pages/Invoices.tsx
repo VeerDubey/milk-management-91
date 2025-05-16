@@ -16,6 +16,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Calendar, ArrowUpDown, Download, FileText, Eye } from "lucide-react";
 
+// Define a type for our sample invoice data
+type DisplayInvoice = {
+  id: string;
+  date: string;
+  customerName: string;
+  amount?: number;
+  totalAmount?: number;
+  total?: number;
+  status?: string;
+};
+
 export default function Invoices() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,13 +35,15 @@ export default function Invoices() {
   const { invoices } = useInvoice();
 
   // Sample invoices for demo if actual invoices are empty
-  const displayInvoices = invoices.length > 0 ? invoices : [
+  const sampleInvoices: DisplayInvoice[] = [
     { id: 'INV-2023-001', date: '2023-05-01', customerName: 'Rahul Sharma', amount: 1200, status: 'paid' },
     { id: 'INV-2023-002', date: '2023-05-03', customerName: 'Priya Patel', amount: 850, status: 'unpaid' },
     { id: 'INV-2023-003', date: '2023-05-05', customerName: 'Amit Kumar', amount: 2100, status: 'paid' },
     { id: 'INV-2023-004', date: '2023-05-08', customerName: 'Sita Verma', amount: 950, status: 'overdue' },
     { id: 'INV-2023-005', date: '2023-05-12', customerName: 'Vikram Singh', amount: 1650, status: 'unpaid' },
   ];
+  
+  const displayInvoices: DisplayInvoice[] = invoices.length > 0 ? invoices : sampleInvoices;
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
