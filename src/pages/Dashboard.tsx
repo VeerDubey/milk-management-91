@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { 
@@ -266,7 +265,7 @@ export default function Dashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalSales.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₹{stats.totalSales?.toLocaleString() || '0'}</div>
             <div className="flex items-center space-x-1 text-xs text-muted-foreground">
               {stats.salesGrowth > 0 ? (
                 <>
@@ -313,7 +312,7 @@ export default function Dashboard() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.outstandingAmount.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₹{stats.outstandingAmount?.toLocaleString() || '0'}</div>
             <div className="flex items-center mt-1">
               <Progress 
                 value={100 - stats.paymentRatio} 
@@ -322,7 +321,7 @@ export default function Dashboard() {
               />
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.paymentRatio.toFixed(1)}% collected
+              {stats.paymentRatio?.toFixed(1) || '0'}% collected
             </p>
           </CardContent>
         </Card>
@@ -401,7 +400,7 @@ export default function Dashboard() {
                         <div className="font-medium">{order.customerName}</div>
                         <div className="text-xs text-muted-foreground">{format(new Date(order.date), 'MMM dd, yyyy')}</div>
                       </div>
-                      <div className="text-sm font-medium">₹{order.totalAmount.toLocaleString()}</div>
+                      <div className="text-sm font-medium">₹{order.totalAmount?.toLocaleString() || '0'}</div>
                     </div>
                   )) : (
                     <p className="text-muted-foreground text-sm">No recent orders found</p>
@@ -463,7 +462,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="text-3xl font-bold">₹{stats.todaySales.toLocaleString()}</div>
+                <div className="text-3xl font-bold">₹{stats.todaySales?.toLocaleString() || '0'}</div>
                 <div className="mt-4 h-1 w-full rounded-full bg-muted">
                   <div 
                     className="h-1 rounded-full bg-primary" 
@@ -471,7 +470,7 @@ export default function Dashboard() {
                   />
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {Math.round((stats.todaySales / (stats.mtdSales / 30)) * 100)}% of daily target
+                  {Math.round((stats.todaySales / (stats.mtdSales / 30)) * 100) || 0}% of daily target
                 </p>
               </CardContent>
             </Card>
@@ -491,13 +490,13 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm text-muted-foreground">Net Profit</p>
                     <h3 className={`text-2xl font-bold ${stats.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ₹{stats.netProfit.toLocaleString()}
+                      ₹{stats.netProfit?.toLocaleString() || '0'}
                     </h3>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Expenses</p>
                     <h3 className="text-2xl font-bold text-red-500">
-                      ₹{stats.totalExpenses.toLocaleString()}
+                      ₹{stats.totalExpenses?.toLocaleString() || '0'}
                     </h3>
                   </div>
                 </div>
@@ -570,7 +569,7 @@ export default function Dashboard() {
                 <CardDescription>Products with highest sales</CardDescription>
               </CardHeader>
               <CardContent>
-                {stats.topProducts.length > 0 ? (
+                {stats.topProducts && stats.topProducts.length > 0 ? (
                   <div className="space-y-4">
                     {stats.topProducts.map((product, index) => (
                       <div key={product.id} className="flex items-center justify-between">
@@ -586,7 +585,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">₹{product.sales.toLocaleString()}</p>
+                          <p className="font-medium">₹{product.sales?.toLocaleString() || '0'}</p>
                         </div>
                       </div>
                     ))}
@@ -615,7 +614,7 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Total Revenue</p>
-                      <p className="text-sm">₹{stats.totalSales.toLocaleString()}</p>
+                      <p className="text-sm">₹{stats.totalSales?.toLocaleString() || '0'}</p>
                     </div>
                     <Progress value={100} className="h-2" />
                   </div>
@@ -623,7 +622,7 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Expenses</p>
-                      <p className="text-sm">₹{stats.totalExpenses.toLocaleString()}</p>
+                      <p className="text-sm">₹{stats.totalExpenses?.toLocaleString() || '0'}</p>
                     </div>
                     <Progress 
                       value={(stats.totalExpenses / stats.totalSales) * 100} 
@@ -635,7 +634,7 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Net Profit</p>
-                      <p className="text-sm">₹{stats.netProfit.toLocaleString()}</p>
+                      <p className="text-sm">₹{stats.netProfit?.toLocaleString() || '0'}</p>
                     </div>
                     <Progress 
                       value={(stats.netProfit / stats.totalSales) * 100} 
@@ -647,7 +646,7 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium">Outstanding</p>
-                      <p className="text-sm">₹{stats.outstandingAmount.toLocaleString()}</p>
+                      <p className="text-sm">₹{stats.outstandingAmount?.toLocaleString() || '0'}</p>
                     </div>
                     <Progress 
                       value={(stats.outstandingAmount / stats.totalSales) * 100} 
@@ -798,7 +797,7 @@ export default function Dashboard() {
                                 <p className="text-xs text-muted-foreground">{customer.area || customer.address}</p>
                               </div>
                             </div>
-                            <div className="text-sm font-medium">₹{totalSpent.toLocaleString()}</div>
+                            <div className="text-sm font-medium">₹{totalSpent?.toLocaleString() || '0'}</div>
                           </div>
                         );
                       })
