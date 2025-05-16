@@ -156,7 +156,7 @@ export const generatePdfPreview = (
     headStyles: {
       fillColor: typeof primaryColor === 'string' 
         ? hexToRgb(primaryColor) 
-        : primaryColor,
+        : primaryColor as [number, number, number], // Fix type by explicitly casting to [number, number, number]
       textColor: 255,
       fontStyle: 'bold'
     },
@@ -188,7 +188,7 @@ export const generatePdfPreview = (
 };
 
 // Helper function to convert hex color to RGB array
-function hexToRgb(hex: string): number[] {
+function hexToRgb(hex: string): [number, number, number] {
   // Remove # if present
   hex = hex.replace(/^#/, '');
   

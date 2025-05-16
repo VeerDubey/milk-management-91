@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/data/DataContext";
@@ -39,7 +40,7 @@ import {
   Trash
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange as DateRangePicker } from "@/components/ui/date-picker-with-range";
 import { toast } from "sonner";
 import InvoiceDownloadButton from "@/components/invoices/InvoiceDownloadButton";
 import { DateRange } from "react-day-picker";

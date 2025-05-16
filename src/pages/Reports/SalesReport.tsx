@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange as DateRangePicker } from "@/components/ui/date-picker-with-range";
 import { DateRange } from "react-day-picker";
 import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { Calendar, Download, Filter, Loader2, RefreshCcw } from 'lucide-react';

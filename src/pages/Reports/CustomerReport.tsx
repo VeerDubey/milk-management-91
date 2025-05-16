@@ -4,7 +4,7 @@ import { useData } from "@/contexts/data/DataContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange as DateRangePicker } from "@/components/ui/date-picker-with-range";
 import { addDays, format, parseISO, subDays } from "date-fns";
 import { Download, Users, Phone, MapPin } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
