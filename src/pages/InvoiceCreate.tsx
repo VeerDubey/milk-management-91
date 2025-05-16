@@ -1,14 +1,31 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
-import { useInvoice } from '@/contexts/InvoiceContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useData } from "@/contexts/data/DataContext";
+import { useInvoices } from "@/contexts/InvoiceContext";
+import { format } from "date-fns";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -17,557 +34,626 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { ArrowLeft, Calendar, Download, Plus, Save, Trash, Eye } from 'lucide-react';
-import InvoiceTemplatePreview from '@/components/invoices/InvoiceTemplatePreview';
-import { OrderItem } from '@/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { createInvoiceFromFormData, generateInvoiceNumber, formatDateForInput, generateDueDate } from "@/utils/invoiceUtils";
+import { Download, Eye, Plus, Save, Trash, X } from "lucide-react";
+import { toast } from "sonner";
+
+// Define schema for invoice form
+const invoiceFormSchema = z.object({
+  invoiceNumber: z.string().min(3, { message: "Invoice number is required" }),
+  invoiceDate: z.string().min(1, { message: "Invoice date is required" }),
+  dueDate: z.string().min(1, { message: "Due date is required" }),
+  customerId: z.string().min(1, { message: "Customer is required" }),
+  customerName: z.string().min(1, { message: "Customer name is required" }),
+  notes: z.string().optional(),
+  terms: z.string().optional(),
+  taxRate: z.coerce.number().min(0).max(100).optional(),
+  discountPercentage: z.coerce.number().min(0).max(100).optional(),
+  items: z.array(
+    z.object({
+      productId: z.string().min(1, { message: "Product is required" }),
+      quantity: z.coerce.number().min(0.01, { message: "Quantity is required" }),
+      rate: z.coerce.number().min(0.01, { message: "Rate is required" }),
+      amount: z.coerce.number().min(0),
+    })
+  ).min(1, { message: "At least one item is required" }),
+});
+
+type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
 export default function InvoiceCreate() {
   const navigate = useNavigate();
-  const { customers, products } = useData();
-  const { 
-    createInvoice, 
-    generateInvoiceNumber, 
-    generateInvoicePreview,
-    downloadInvoice
-  } = useInvoice();
+  const { customers, products, addInvoice } = useData();
+  const { downloadInvoice, companyInfo, generateInvoicePreview } = useInvoices();
+  const today = new Date();
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [showPreview, setShowPreview] = useState(false);
   
-  // Initialize invoice data
-  const [invoiceData, setInvoiceData] = useState({
-    invoiceNumber: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    dueDate: format(new Date(new Date().setDate(new Date().getDate() + 15)), 'yyyy-MM-dd'),
-    customerId: '',
-    items: [{ id: '1', productId: '', productName: '', quantity: 1, unitPrice: 0, unit: '', price: 0 }],
-    notes: '',
-    terms: 'Payment due within 30 days',
-    discountPercentage: 0,
-    taxRate: 0,
-    subtotal: 0,
-    totalAmount: 0
+  // Initialize form with default values
+  const form = useForm<InvoiceFormValues>({
+    resolver: zodResolver(invoiceFormSchema),
+    defaultValues: {
+      invoiceNumber: generateInvoiceNumber(),
+      invoiceDate: formatDateForInput(today),
+      dueDate: generateDueDate(formatDateForInput(today), 15),
+      customerId: "",
+      customerName: "",
+      notes: "Thank you for your business.",
+      terms: "Payment due within 15 days of invoice date.",
+      taxRate: 5,
+      discountPercentage: 0,
+      items: [
+        {
+          productId: "",
+          quantity: 1,
+          rate: 0,
+          amount: 0,
+        },
+      ],
+    },
   });
   
-  // UI state
-  const [activeTab, setActiveTab] = useState('customer');
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState('');
+  // Setup watchers for form values
+  const watchCustomerId = form.watch("customerId");
+  const watchItems = form.watch("items");
   
-  // Generate invoice number on component mount
+  // Update customer name when customer ID changes
   useEffect(() => {
-    setInvoiceData(prev => ({
-      ...prev,
-      invoiceNumber: generateInvoiceNumber()
-    }));
-  }, [generateInvoiceNumber]);
+    if (watchCustomerId) {
+      const customer = customers.find(c => c.id === watchCustomerId);
+      if (customer) {
+        form.setValue("customerName", customer.name);
+      }
+    }
+  }, [watchCustomerId, customers, form]);
   
-  // Calculate subtotal whenever items change
+  // Calculate item amounts when quantity or rate changes
   useEffect(() => {
-    const subtotal = invoiceData.items.reduce(
-      (sum, item) => sum + (item.price || 0),
-      0
-    );
-    
-    // Apply discount
-    const afterDiscount = subtotal * (1 - (invoiceData.discountPercentage / 100));
-    
-    // Apply tax
-    const totalWithTax = afterDiscount * (1 + (invoiceData.taxRate / 100));
-    
-    setInvoiceData(prev => ({
-      ...prev,
-      subtotal,
-      totalAmount: totalWithTax
+    const updatedItems = watchItems.map(item => ({
+      ...item,
+      amount: item.quantity * item.rate
     }));
-  }, [invoiceData.items, invoiceData.discountPercentage, invoiceData.taxRate]);
+    
+    form.setValue("items", updatedItems);
+  }, [watchItems, form]);
   
-  // Handle customer selection
-  const handleCustomerChange = (customerId: string) => {
-    const customer = customers.find(c => c.id === customerId);
-    setInvoiceData(prev => ({
-      ...prev,
-      customerId,
-      customerName: customer?.name || ''
-    }));
-  };
+  // Calculate subtotal of all items
+  const subtotal = watchItems.reduce((sum, item) => sum + item.amount, 0);
   
-  // Handle product selection
-  const handleProductChange = (index: number, productId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    
-    const updatedItems = [...invoiceData.items];
-    const quantity = updatedItems[index].quantity || 1;
-    const price = product.price * quantity;
-    
-    updatedItems[index] = {
-      id: updatedItems[index].id,
-      productId,
-      productName: product.name,
-      quantity,
-      unitPrice: product.price,
-      unit: product.unit,
-      price
-    };
-    
-    setInvoiceData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
-  };
+  // Calculate discount amount
+  const discountPercentage = form.watch("discountPercentage") || 0;
+  const discountAmount = (subtotal * discountPercentage) / 100;
   
-  // Handle quantity change
-  const handleQuantityChange = (index: number, quantity: number) => {
-    const updatedItems = [...invoiceData.items];
-    const unitPrice = updatedItems[index].unitPrice;
-    
-    updatedItems[index] = {
-      ...updatedItems[index],
-      quantity,
-      price: unitPrice * quantity
-    };
-    
-    setInvoiceData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
-  };
+  // Calculate tax amount
+  const taxRate = form.watch("taxRate") || 0;
+  const afterDiscount = subtotal - discountAmount;
+  const taxAmount = (afterDiscount * taxRate) / 100;
   
-  // Add new item row
-  const addItemRow = () => {
-    setInvoiceData(prev => ({
-      ...prev,
-      items: [
-        ...prev.items,
-        { id: `${prev.items.length + 1}`, productId: '', productName: '', quantity: 1, unitPrice: 0, unit: '', price: 0 }
-      ]
-    }));
-  };
-  
-  // Remove item row
-  const removeItemRow = (index: number) => {
-    if (invoiceData.items.length <= 1) {
-      toast.error("Invoice must have at least one item");
-      return;
-    }
-    
-    const updatedItems = [...invoiceData.items];
-    updatedItems.splice(index, 1);
-    
-    setInvoiceData(prev => ({
-      ...prev,
-      items: updatedItems
-    }));
-  };
-  
-  // Preview invoice
-  const handlePreview = () => {
-    if (!invoiceData.customerId) {
-      toast.error("Please select a customer");
-      return;
-    }
+  // Calculate total
+  const total = afterDiscount + taxAmount;
 
-    if (invoiceData.items.some(item => !item.productId)) {
-      toast.error("Please select products for all items");
-      return;
+  // Handle adding a new item row
+  const addItem = () => {
+    const currentItems = form.getValues("items");
+    form.setValue("items", [
+      ...currentItems,
+      {
+        productId: "",
+        quantity: 1,
+        rate: 0,
+        amount: 0,
+      },
+    ]);
+  };
+
+  // Handle removing an item row
+  const removeItem = (index: number) => {
+    const currentItems = form.getValues("items");
+    if (currentItems.length > 1) {
+      const updatedItems = currentItems.filter((_, i) => i !== index);
+      form.setValue("items", updatedItems);
+    } else {
+      toast.error("Invoice must have at least one item");
     }
-    
-    try {
-      const customer = customers.find(c => c.id === invoiceData.customerId);
-      if (!customer) throw new Error("Customer not found");
-      
-      const previewData = {
-        ...invoiceData,
-        id: invoiceData.invoiceNumber,
-        customerName: customer.name,
-        status: "draft" as const
+  };
+  
+  // Handle product selection change
+  const handleProductChange = (productId: string, index: number) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      const currentItems = form.getValues("items");
+      const updatedItem = {
+        ...currentItems[index],
+        productId,
+        rate: product.price,
+        amount: currentItems[index].quantity * product.price
       };
       
-      const url = generateInvoicePreview(previewData);
-      setPreviewUrl(url);
-      setIsPreviewOpen(true);
-    } catch (error) {
-      toast.error("Failed to generate preview");
-      console.error(error);
+      const updatedItems = [...currentItems];
+      updatedItems[index] = updatedItem;
+      
+      form.setValue("items", updatedItems);
     }
   };
   
-  // Create and save invoice
-  const handleSave = () => {
-    if (!invoiceData.customerId) {
-      toast.error("Please select a customer");
-      return;
-    }
-
-    if (invoiceData.items.some(item => !item.productId)) {
-      toast.error("Please select products for all items");
-      return;
-    }
-    
+  // Generate invoice preview
+  const generatePreview = () => {
     try {
-      const customer = customers.find(c => c.id === invoiceData.customerId);
-      if (!customer) throw new Error("Customer not found");
-      
-      const newInvoice = {
-        id: invoiceData.invoiceNumber,
+      // Fix: Cast form values to the required type to ensure all required fields are present
+      const invoiceData = form.getValues();
+      const invoice = createInvoiceFromFormData({
+        invoiceNumber: invoiceData.invoiceNumber,
+        invoiceDate: invoiceData.invoiceDate,
+        dueDate: invoiceData.dueDate,
         customerId: invoiceData.customerId,
-        customerName: customer.name,
-        date: invoiceData.date,
-        items: invoiceData.items as OrderItem[],
-        subtotal: invoiceData.subtotal,
-        totalAmount: invoiceData.totalAmount,
+        customerName: invoiceData.customerName,
         notes: invoiceData.notes,
         terms: invoiceData.terms,
-        status: "draft" as const,
-        discountPercentage: invoiceData.discountPercentage,
         taxRate: invoiceData.taxRate,
-        invoiceNumber: invoiceData.invoiceNumber
-      };
-      
-      createInvoice(newInvoice);
-      toast.success("Invoice created successfully!");
-      navigate("/invoices");
+        discountPercentage: invoiceData.discountPercentage,
+        items: invoiceData.items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount
+        }))
+      });
+      const url = generateInvoicePreview(invoice);
+      setPreviewUrl(url);
+      setShowPreview(true);
     } catch (error) {
-      toast.error("Failed to create invoice");
-      console.error(error);
+      console.error("Error generating preview:", error);
+      toast.error("Failed to generate invoice preview");
     }
   };
   
-  // Navigate through tabs
-  const nextTab = () => {
-    if (activeTab === 'customer') setActiveTab('items');
-    else if (activeTab === 'items') setActiveTab('details');
-    else if (activeTab === 'details') setActiveTab('template');
+  // Handle form submission
+  const onSubmit = async (data: InvoiceFormValues) => {
+    try {
+      // Fix: Cast form values to the required type to ensure all required fields are present
+      const invoice = createInvoiceFromFormData({
+        invoiceNumber: data.invoiceNumber,
+        invoiceDate: data.invoiceDate,
+        dueDate: data.dueDate,
+        customerId: data.customerId,
+        customerName: data.customerName,
+        notes: data.notes,
+        terms: data.terms,
+        taxRate: data.taxRate,
+        discountPercentage: data.discountPercentage,
+        items: data.items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount
+        }))
+      });
+      
+      // Add to invoices
+      addInvoice(invoice);
+      
+      toast.success("Invoice created successfully");
+      navigate("/invoice-history");
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast.error("Failed to create invoice");
+    }
   };
-  
-  const prevTab = () => {
-    if (activeTab === 'template') setActiveTab('details');
-    else if (activeTab === 'details') setActiveTab('items');
-    else if (activeTab === 'items') setActiveTab('customer');
-  };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/invoices")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Invoices
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Create Invoice</h1>
+          <p className="text-muted-foreground">
+            Generate a new invoice for your customer
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={generatePreview}>
+            <Eye className="mr-2 h-4 w-4" />
+            Preview
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight ml-2">
-            Create New Invoice
-          </h1>
         </div>
       </div>
-      
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>New Invoice #{invoiceData.invoiceNumber}</CardTitle>
-          <CardDescription>
-            Fill in the details to create a new invoice
-          </CardDescription>
-        </CardHeader>
+
+      <Tabs defaultValue="details" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="details">Invoice Details</TabsTrigger>
+          <TabsTrigger value="items">Line Items</TabsTrigger>
+          <TabsTrigger value="options">Additional Options</TabsTrigger>
+        </TabsList>
         
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-6">
-              <TabsTrigger value="customer">Customer</TabsTrigger>
-              <TabsTrigger value="items">Items</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="template">Template</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="customer" className="space-y-4">
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="customer">Customer</Label>
-                  <Select
-                    value={invoiceData.customerId}
-                    onValueChange={handleCustomerChange}
-                  >
-                    <SelectTrigger id="customer">
-                      <SelectValue placeholder="Select a customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map(customer => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {invoiceData.customerId && (
-                  <div className="space-y-2">
-                    <Label>Customer Address</Label>
-                    <div className="p-4 bg-muted/30 rounded-md text-muted-foreground">
-                      {customers.find(c => c.id === invoiceData.customerId)?.address || 'No address available'}
-                    </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <TabsContent value="details">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Information</CardTitle>
+                  <CardDescription>
+                    Enter the basic details for this invoice
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="invoiceNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Invoice Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="INV-0001" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="invoiceDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Invoice Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Due Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="customerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a customer" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {customers.map((customer) => (
+                                <SelectItem key={customer.id} value={customer.id}>
+                                  {customer.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="invoiceDate">Invoice Date</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="invoiceDate"
-                        type="date"
-                        className="pl-9"
-                        value={invoiceData.date}
-                        onChange={(e) => setInvoiceData(prev => ({ ...prev, date: e.target.value }))}
-                      />
-                    </div>
+                  
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="discountPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Discount Percentage</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Apply a percentage discount to this invoice
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="taxRate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tax Rate (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Apply a tax percentage to this invoice
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dueDate">Due Date</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="dueDate"
-                        type="date"
-                        className="pl-9"
-                        value={invoiceData.dueDate}
-                        onChange={(e) => setInvoiceData(prev => ({ ...prev, dueDate: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end pt-4">
-                <Button onClick={nextTab}>
-                  Next: Items
-                </Button>
-              </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
-            <TabsContent value="items" className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex justify-end">
-                  <Button size="sm" onClick={addItemRow}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
-                
-                <div className="border rounded-md">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted/50">
-                        <th className="py-3 px-4 text-left font-medium">Product</th>
-                        <th className="py-3 px-4 text-center font-medium w-24">Quantity</th>
-                        <th className="py-3 px-4 text-center font-medium w-32">Unit Price</th>
-                        <th className="py-3 px-4 text-center font-medium w-24">Unit</th>
-                        <th className="py-3 px-4 text-right font-medium w-32">Price</th>
-                        <th className="py-3 px-4 text-right font-medium w-16">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoiceData.items.map((item, index) => (
-                        <tr key={item.id} className="border-t">
-                          <td className="py-3 px-4">
+            <TabsContent value="items">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Invoice Items</CardTitle>
+                  <CardDescription>
+                    Add the items included in this invoice
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="text-right">Quantity</TableHead>
+                        <TableHead className="text-right">Rate (₹)</TableHead>
+                        <TableHead className="text-right">Amount (₹)</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {form.getValues().items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
                             <Select
                               value={item.productId}
-                              onValueChange={(value) => handleProductChange(index, value)}
+                              onValueChange={(value) => handleProductChange(value, index)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-[200px]">
                                 <SelectValue placeholder="Select a product" />
                               </SelectTrigger>
                               <SelectContent>
-                                {products.map(product => (
+                                {products.map((product) => (
                                   <SelectItem key={product.id} value={product.id}>
                                     {product.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                          </td>
-                          <td className="py-3 px-4">
+                            {form.formState.errors.items?.[index]?.productId && (
+                              <p className="text-sm font-medium text-destructive">
+                                Product is required
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Input
                               type="number"
-                              min="1"
+                              min="0.01"
+                              step="0.01"
                               value={item.quantity}
-                              onChange={(e) => handleQuantityChange(index, parseInt(e.target.value) || 1)}
-                              className="text-center"
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                const currentItems = form.getValues().items;
+                                currentItems[index].quantity = value;
+                                currentItems[index].amount = value * currentItems[index].rate;
+                                form.setValue("items", [...currentItems]);
+                              }}
+                              className="w-[100px] text-right"
                             />
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {item.unitPrice ? `₹${item.unitPrice.toFixed(2)}` : '-'}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            {item.unit || '-'}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            {item.price ? `₹${item.price.toFixed(2)}` : '-'}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeItemRow(index)}
+                            {form.formState.errors.items?.[index]?.quantity && (
+                              <p className="text-sm font-medium text-destructive">
+                                Required
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              type="number"
+                              min="0.01"
+                              step="0.01"
+                              value={item.rate}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                const currentItems = form.getValues().items;
+                                currentItems[index].rate = value;
+                                currentItems[index].amount = value * currentItems[index].quantity;
+                                form.setValue("items", [...currentItems]);
+                              }}
+                              className="w-[100px] text-right"
+                            />
+                            {form.formState.errors.items?.[index]?.rate && (
+                              <p className="text-sm font-medium text-destructive">
+                                Required
+                              </p>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => removeItem(index)}
                             >
-                              <Trash className="h-4 w-4 text-destructive" />
+                              <Trash className="h-4 w-4" />
                             </Button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div className="space-y-2 border-t pt-4">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="discountPercentage">Discount (%)</Label>
-                    <Input
-                      id="discountPercentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      className="w-32 text-right"
-                      value={invoiceData.discountPercentage}
-                      onChange={(e) => setInvoiceData(prev => ({
-                        ...prev,
-                        discountPercentage: parseFloat(e.target.value) || 0
-                      }))}
-                    />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                    <Input
-                      id="taxRate"
-                      type="number"
-                      min="0"
-                      className="w-32 text-right"
-                      value={invoiceData.taxRate}
-                      onChange={(e) => setInvoiceData(prev => ({
-                        ...prev,
-                        taxRate: parseFloat(e.target.value) || 0
-                      }))}
-                    />
-                  </div>
+                    </TableBody>
+                  </Table>
                   
-                  <div className="flex justify-between items-center text-lg pt-2">
-                    <span className="font-medium">Total</span>
-                    <span className="font-bold">₹{invoiceData.totalAmount.toFixed(2)}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={addItem}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Item
+                  </Button>
+                  
+                  <div className="mt-8 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>₹{subtotal.toFixed(2)}</span>
+                    </div>
+                    {discountPercentage > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Discount ({discountPercentage}%)</span>
+                        <span>-₹{discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {taxRate > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Tax ({taxRate}%)</span>
+                        <span>₹{taxAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <Separator className="my-2" />
+                    <div className="flex items-center justify-between font-medium">
+                      <span>Total</span>
+                      <span>₹{total.toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={prevTab}>
-                  Previous
-                </Button>
-                <Button onClick={nextTab}>
-                  Next: Details
-                </Button>
-              </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
-            <TabsContent value="details" className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    rows={3}
-                    placeholder="Any additional notes for the customer"
-                    value={invoiceData.notes}
-                    onChange={(e) => setInvoiceData(prev => ({ ...prev, notes: e.target.value }))}
+            <TabsContent value="options">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Details</CardTitle>
+                  <CardDescription>
+                    Add notes, terms, and other details to your invoice
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter any notes for this invoice"
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          These notes will appear on the invoice
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="terms">Terms & Conditions</Label>
-                  <Textarea
-                    id="terms"
-                    rows={3}
-                    placeholder="Payment terms and conditions"
-                    value={invoiceData.terms}
-                    onChange={(e) => setInvoiceData(prev => ({ ...prev, terms: e.target.value }))}
+                  
+                  <FormField
+                    control={form.control}
+                    name="terms"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Terms & Conditions</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter your terms and conditions"
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Terms and conditions for this invoice
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-              </div>
-              
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={prevTab}>
-                  Previous
-                </Button>
-                <Button onClick={nextTab}>
-                  Next: Template
-                </Button>
-              </div>
+                </CardContent>
+              </Card>
             </TabsContent>
             
-            <TabsContent value="template" className="space-y-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Select Invoice Template</h3>
-                <InvoiceTemplatePreview />
-                
-                <div className="pt-4 space-y-4">
-                  <h3 className="text-lg font-medium">Company Information</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your company information will be displayed on the invoice.
-                    You can update your company details in the settings.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={prevTab}>
-                  Previous
-                </Button>
-                <div className="space-x-2">
-                  <Button variant="outline" onClick={handlePreview}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Preview
-                  </Button>
-                  <Button onClick={handleSave}>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Invoice
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      {/* Invoice Preview Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Invoice Preview</DialogTitle>
-            <DialogDescription>
-              This is a preview of how your invoice will look.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="h-[70vh] bg-muted/30 rounded-md overflow-auto">
-            <iframe
-              src={previewUrl}
-              className="w-full h-full border-0"
-              title="Invoice Preview"
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
-              Close
-            </Button>
-            <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Invoice
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="flex justify-end gap-4">
+              <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </Tabs>
+
+      {showPreview && (
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogContent className="max-w-4xl max-h-screen overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Invoice Preview</DialogTitle>
+              <DialogDescription>
+                Preview of how your invoice will look
+              </DialogDescription>
+            </DialogHeader>
+            <div className="aspect-[3/4] w-full border rounded overflow-auto">
+              <iframe 
+                src={previewUrl} 
+                className="w-full h-full" 
+                title="Invoice Preview"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                <X className="mr-2 h-4 w-4" />
+                Close
+              </Button>
+              <Button onClick={() => form.handleSubmit(onSubmit)()}>
+                <Save className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

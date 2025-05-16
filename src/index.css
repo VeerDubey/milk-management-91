@@ -42,13 +42,13 @@
   }
   
   .dark {
-    --background: 220 14% 10%;
+    --background: 225 14% 5%;
     --foreground: 210 40% 98%;
  
-    --card: 229 20% 15%;
+    --card: 229 20% 10%;
     --card-foreground: 210 40% 98%;
  
-    --popover: 229 20% 15%;
+    --popover: 229 20% 12%;
     --popover-foreground: 210 40% 98%;
  
     --primary: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
@@ -57,8 +57,8 @@
     --secondary: 217 91% 60%;
     --secondary-foreground: 0 0% 98%;
  
-    --muted: 225 14% 20%;
-    --muted-foreground: 215 20% 75%;
+    --muted: 225 14% 15%;
+    --muted-foreground: 215 20% 65%;
  
     --accent: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
     --accent-foreground: 0 0% 98%;
@@ -66,8 +66,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
  
-    --border: 225 14% 20%;
-    --input: 225 14% 20%;
+    --border: 225 14% 15%;
+    --input: 225 14% 15%;
     --ring: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
   }
 }
@@ -125,27 +125,6 @@
   
   .input-glow:focus {
     @apply border-primary/80 ring-2 ring-primary/20;
-  }
-
-  /* Dark mode specific adjustments */
-  .dark .table {
-    @apply bg-card text-card-foreground;
-  }
-  
-  .dark .badge {
-    @apply text-foreground border-foreground/20;
-  }
-  
-  .dark .text-muted-foreground {
-    @apply text-gray-300;
-  }
-  
-  .dark .bg-muted {
-    @apply bg-gray-800;
-  }
-  
-  .dark .card {
-    @apply shadow-xl shadow-black/20;
   }
 }
 

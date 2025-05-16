@@ -1,45 +1,21 @@
 
-import React, { createContext, useContext, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import type { Invoice as TypesInvoice, OrderItem } from "@/types";
-
-// Define a local invoice type with all the fields we need
-interface Invoice {
-  id: string;
-  customerId: string;
-  customerName: string;
-  date: string;
-  items: OrderItem[];
-  subtotal: number;
-  totalAmount: number; // Using totalAmount internally
-  total?: number; // For compatibility with TypesInvoice
-  amount?: number; // For compatibility with TypesInvoice
-  notes?: string;
-  terms?: string;
-  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
-  discountPercentage?: number;
-  taxRate?: number;
-  templateId?: string;
-  invoiceNumber: string;
-}
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { Invoice } from '@/types';
 
 interface InvoiceTemplate {
   id: string;
   name: string;
-  colorScheme: string;
-  primaryColor: string;
-  fontFamily: string;
   description?: string;
-  headerStyle?: string;
-  bodyStyle?: string;
-  footerStyle?: string;
+  fontFamily?: string;
+  primaryColor?: string;
 }
 
 interface CompanyInfo {
   companyName: string;
-  address?: string;
-  contactNumber?: string;
-  email?: string;
+  address: string;
+  contactNumber: string;
+  email: string;
   gstNumber?: string;
   bankDetails?: string;
   logoUrl?: string;
@@ -47,204 +23,181 @@ interface CompanyInfo {
 
 interface InvoiceContextType {
   invoices: Invoice[];
-  currentInvoice: Invoice | null;
-  setCurrentInvoice: (invoice: Invoice | null) => void;
-  createInvoice: (invoiceData: Omit<Invoice, "id">) => void;
-  updateInvoice: (invoice: Invoice) => void;
-  deleteInvoice: (id: string) => void;
-  calculateTotal: (items: OrderItem[]) => number;
-  generateInvoiceNumber: () => string;
   templates: InvoiceTemplate[];
-  currentTemplate: InvoiceTemplate | null;
-  setCurrentTemplate: (template: InvoiceTemplate | null) => void;
   selectedTemplateId: string;
-  setSelectedTemplateId: (id: string) => void;
-  downloadInvoice: (invoiceId: string) => Promise<void>;
-  generateInvoicePreview: (invoice: Invoice, templateId?: string) => string;
-  getInvoiceById: (id: string) => Invoice | undefined;
   companyInfo: CompanyInfo;
-  updateCompanyInfo: (info: CompanyInfo) => void;
+  colorScheme: string;
+  addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
+  updateInvoice: (id: string, data: Partial<Invoice>) => void;
+  deleteInvoice: (id: string) => void;
+  getInvoiceById: (id: string) => Invoice | undefined;
+  setSelectedTemplateId: (templateId: string) => void;
+  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
+  setColorScheme: (scheme: string) => void;
+  downloadInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
+  generateInvoicePreview: (invoice: Invoice, templateId?: string) => string;
 }
 
-const defaultTemplates: InvoiceTemplate[] = [
-  {
-    id: "default",
-    name: "Default",
-    colorScheme: "blue",
-    primaryColor: "#2563eb",
-    fontFamily: "Inter",
-    description: "Simple and clean invoice template",
+const defaultCompanyInfo: CompanyInfo = {
+  companyName: 'Vikas Milk Centre',
+  address: '123 Dairy Road, Mumbai, Maharashtra',
+  contactNumber: '+91 9876543210',
+  email: 'info@vikasmilkcentre.com',
+  gstNumber: 'GSTIN12345678',
+  bankDetails: 'Bank: SBI\nAccount: 123456789\nIFSC: SBIN0001234',
+  logoUrl: '/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png'
+};
+
+const defaultInvoiceTemplates: InvoiceTemplate[] = [
+  { 
+    id: 'standard', 
+    name: 'Standard', 
+    description: 'A clean, professional invoice layout', 
+    fontFamily: 'Inter', 
+    primaryColor: '#3b82f6' 
   },
-  {
-    id: "professional",
-    name: "Professional",
-    colorScheme: "gray",
-    primaryColor: "#4b5563",
-    fontFamily: "Montserrat",
-    description: "Elegant business invoice template",
+  { 
+    id: 'modern', 
+    name: 'Modern', 
+    description: 'A bold, contemporary design', 
+    fontFamily: 'Poppins', 
+    primaryColor: '#10b981' 
   },
-  {
-    id: "modern",
-    name: "Modern",
-    colorScheme: "green",
-    primaryColor: "#10b981",
-    fontFamily: "Poppins",
-    description: "Contemporary invoice design",
+  { 
+    id: 'professional', 
+    name: 'Professional', 
+    description: 'A formal, business-oriented template', 
+    fontFamily: 'Roboto', 
+    primaryColor: '#6366f1' 
   },
 ];
 
-const defaultInvoice: Invoice = {
-  id: "",
-  customerId: "", 
-  customerName: "",
-  date: new Date().toISOString().split("T")[0],
-  items: [],
-  totalAmount: 0,
-  subtotal: 0,
-  invoiceNumber: "",
-  notes: "",
-  terms: "Payment due within 30 days",
-  status: "draft",
-  discountPercentage: 0,
-  taxRate: 0,
-};
-
-const defaultCompanyInfo: CompanyInfo = {
-  companyName: "Your Company Name",
-  address: "",
-  contactNumber: "",
-  email: "",
-  gstNumber: "",
-  bankDetails: "",
-};
-
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
-export const InvoiceProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
-  const [templates] = useState<InvoiceTemplate[]>(defaultTemplates);
-  const [currentTemplate, setCurrentTemplate] = useState<InvoiceTemplate | null>(defaultTemplates[0]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(defaultTemplates[0].id);
+  const [templates] = useState<InvoiceTemplate[]>(defaultInvoiceTemplates);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('standard');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
-
-  const calculateTotal = (items: OrderItem[]) => {
-    return items.reduce((sum, item) => sum + (item.price || item.quantity * item.unitPrice), 0);
+  const [colorScheme, setColorScheme] = useState<string>('blue');
+  
+  // Load data from localStorage on initial load
+  useEffect(() => {
+    const storedInvoices = localStorage.getItem('invoices');
+    if (storedInvoices) {
+      try {
+        setInvoices(JSON.parse(storedInvoices));
+      } catch (e) {
+        console.error('Failed to parse stored invoices', e);
+      }
+    }
+    
+    const storedCompanyInfo = localStorage.getItem('companyInfo');
+    if (storedCompanyInfo) {
+      try {
+        setCompanyInfo(JSON.parse(storedCompanyInfo));
+      } catch (e) {
+        console.error('Failed to parse stored company info', e);
+      }
+    }
+    
+    const storedTemplate = localStorage.getItem('selectedInvoiceTemplate');
+    if (storedTemplate) {
+      setSelectedTemplateId(storedTemplate);
+    }
+    
+    const storedColorScheme = localStorage.getItem('invoiceColorScheme');
+    if (storedColorScheme) {
+      setColorScheme(storedColorScheme);
+    }
+  }, []);
+  
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+  }, [invoices]);
+  
+  useEffect(() => {
+    localStorage.setItem('companyInfo', JSON.stringify(companyInfo));
+  }, [companyInfo]);
+  
+  useEffect(() => {
+    localStorage.setItem('selectedInvoiceTemplate', selectedTemplateId);
+  }, [selectedTemplateId]);
+  
+  useEffect(() => {
+    localStorage.setItem('invoiceColorScheme', colorScheme);
+  }, [colorScheme]);
+  
+  // Invoice CRUD operations
+  const addInvoice = (invoice: Omit<Invoice, 'id'>): string => {
+    const id = uuidv4();
+    const newInvoice = { ...invoice, id };
+    setInvoices(prev => [...prev, newInvoice]);
+    return id;
   };
-
-  const calculateFinalTotal = (invoice: Invoice) => {
-    const subtotal = calculateTotal(invoice.items);
-    
-    // Apply discount if present
-    const discountAmount = invoice.discountPercentage ? 
-      subtotal * (invoice.discountPercentage / 100) : 0;
-    
-    const afterDiscount = subtotal - discountAmount;
-    
-    // Apply tax if present
-    const taxAmount = invoice.taxRate ? 
-      afterDiscount * (invoice.taxRate / 100) : 0;
-    
-    return afterDiscount + taxAmount;
-  };
-
-  const createInvoice = (invoiceData: Omit<Invoice, "id">) => {
-    const newInvoice = {
-      ...invoiceData,
-      id: uuidv4(),
-      totalAmount: calculateFinalTotal({ ...invoiceData, id: "" })
-    };
-    
-    setInvoices((prev) => [...prev, newInvoice]);
-    return newInvoice;
-  };
-
-  const updateInvoice = (invoice: Invoice) => {
-    const updatedInvoice = {
-      ...invoice,
-      totalAmount: calculateFinalTotal(invoice)
-    };
-    
-    setInvoices((prev) =>
-      prev.map((i) => (i.id === invoice.id ? updatedInvoice : i))
+  
+  const updateInvoice = (id: string, data: Partial<Invoice>) => {
+    setInvoices(prev => 
+      prev.map(invoice => 
+        invoice.id === id ? { ...invoice, ...data } : invoice
+      )
     );
   };
-
+  
   const deleteInvoice = (id: string) => {
-    setInvoices((prev) => prev.filter((invoice) => invoice.id !== id));
+    setInvoices(prev => prev.filter(invoice => invoice.id !== id));
   };
-
-  const generateInvoiceNumber = () => {
-    const prefix = "INV";
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `${prefix}-${year}${month}-${random}`;
-  };
-
-  const updateCompanyInfo = (info: CompanyInfo) => {
-    setCompanyInfo(info);
-  };
-
+  
   const getInvoiceById = (id: string) => {
-    return invoices.find((invoice) => invoice.id === id);
+    return invoices.find(invoice => invoice.id === id);
   };
-
-  // Mock function for downloading invoice
-  const downloadInvoice = async (invoiceId: string) => {
-    return new Promise<void>((resolve) => {
-      // Mock download delay
-      setTimeout(() => {
-        console.log(`Downloading invoice ${invoiceId}`);
-        resolve();
-      }, 1000);
-    });
+  
+  const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
+    setCompanyInfo(prev => ({ ...prev, ...info }));
   };
-
-  // Mock function for generating invoice preview
-  const generateInvoicePreview = (invoice: Invoice, templateId?: string) => {
-    // This would normally generate an HTML preview or PDF data URL
-    // For now just return a placeholder
-    return `data:text/html,<html><body><h1>Invoice Preview for ${invoice.id}</h1><p>Using template: ${templateId || selectedTemplateId}</p></body></html>`;
+  
+  const downloadInvoice = async (invoiceId: string, templateId?: string) => {
+    // Mock function - in a real app, this would generate and download a PDF
+    console.log(`Downloading invoice ${invoiceId} with template ${templateId || selectedTemplateId}`);
+    // This would typically call a service to generate and download the PDF
   };
-
+  
+  const generateInvoicePreview = (invoice: Invoice, templateId?: string): string => {
+    // Mock function - in a real app, this would generate a preview URL
+    console.log(`Generating preview for invoice using template ${templateId || selectedTemplateId}`);
+    // This would typically return a data URL or blob URL for preview
+    return '#preview-url';
+  };
+  
   return (
     <InvoiceContext.Provider
       value={{
         invoices,
-        currentInvoice,
-        setCurrentInvoice,
-        createInvoice,
+        templates,
+        selectedTemplateId,
+        companyInfo,
+        colorScheme,
+        addInvoice,
         updateInvoice,
         deleteInvoice,
-        calculateTotal,
-        generateInvoiceNumber,
-        templates,
-        currentTemplate,
-        setCurrentTemplate,
-        selectedTemplateId,
+        getInvoiceById,
         setSelectedTemplateId,
+        updateCompanyInfo,
+        setColorScheme,
         downloadInvoice,
         generateInvoicePreview,
-        getInvoiceById,
-        companyInfo,
-        updateCompanyInfo,
       }}
     >
       {children}
     </InvoiceContext.Provider>
   );
-};
+}
 
-export const useInvoice = () => {
+export function useInvoices() {
   const context = useContext(InvoiceContext);
   if (context === undefined) {
-    throw new Error("useInvoice must be used within an InvoiceProvider");
+    throw new Error('useInvoices must be used within an InvoiceProvider');
   }
   return context;
-};
+}

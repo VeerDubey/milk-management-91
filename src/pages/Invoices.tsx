@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
-import { useInvoice } from "@/contexts/InvoiceContext";
+import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,34 +16,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Calendar, ArrowUpDown, Download, FileText, Eye } from "lucide-react";
 
-// Define a type for our sample invoice data
-type DisplayInvoice = {
-  id: string;
-  date: string;
-  customerName: string;
-  amount?: number;
-  totalAmount?: number;
-  total?: number;
-  status?: string;
-};
-
 export default function Invoices() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("date");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const { invoices } = useInvoice();
+  const { invoices } = useInvoices();
 
   // Sample invoices for demo if actual invoices are empty
-  const sampleInvoices: DisplayInvoice[] = [
+  const displayInvoices = invoices.length > 0 ? invoices : [
     { id: 'INV-2023-001', date: '2023-05-01', customerName: 'Rahul Sharma', amount: 1200, status: 'paid' },
     { id: 'INV-2023-002', date: '2023-05-03', customerName: 'Priya Patel', amount: 850, status: 'unpaid' },
     { id: 'INV-2023-003', date: '2023-05-05', customerName: 'Amit Kumar', amount: 2100, status: 'paid' },
     { id: 'INV-2023-004', date: '2023-05-08', customerName: 'Sita Verma', amount: 950, status: 'overdue' },
     { id: 'INV-2023-005', date: '2023-05-12', customerName: 'Vikram Singh', amount: 1650, status: 'unpaid' },
   ];
-  
-  const displayInvoices: DisplayInvoice[] = invoices.length > 0 ? invoices : sampleInvoices;
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -210,9 +196,7 @@ export default function Invoices() {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{invoice.customerName}</TableCell>
-                    <TableCell className="text-right">
-                      ₹{(invoice.totalAmount || invoice.total || invoice.amount || 0).toFixed(2)}
-                    </TableCell>
+                    <TableCell className="text-right">₹{invoice.amount?.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(invoice.status || 'Unknown')}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

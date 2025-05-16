@@ -1,7 +1,8 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/data/DataContext";
-import { useInvoice } from "@/contexts/InvoiceContext";
+import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,7 @@ import { DateRange } from "react-day-picker";
 
 export default function InvoiceHistory() {
   const { invoices } = useData();
-  const { downloadInvoice, generateInvoicePreview, deleteInvoice } = useInvoice();
+  const { downloadInvoice, generateInvoicePreview, deleteInvoice } = useInvoices();
   
   // State for date range filtering
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -136,7 +137,7 @@ export default function InvoiceHistory() {
     }
   };
   
-  // Fix the handlePreviewInvoice function to correctly convert Invoice type
+  // Handle invoice preview
   const handlePreviewInvoice = (invoiceId: string) => {
     try {
       const invoice = invoices.find(inv => inv.id === invoiceId);
@@ -145,13 +146,7 @@ export default function InvoiceHistory() {
         return;
       }
       
-      // Add totalAmount property to match the expected Invoice type in InvoiceContext
-      const contextInvoice = {
-        ...invoice,
-        totalAmount: invoice.total || invoice.amount || 0
-      };
-      
-      const url = generateInvoicePreview(contextInvoice);
+      const url = generateInvoicePreview(invoice);
       setPreviewUrl(url);
       setPreviewInvoiceId(invoiceId);
     } catch (error) {

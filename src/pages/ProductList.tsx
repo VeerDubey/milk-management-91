@@ -1,10 +1,7 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useData } from "@/contexts/DataContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -12,33 +9,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/table';
 import { 
-  Edit, Eye, Package, Plus, Search, Trash, ArrowUpDown, AlertTriangle
-} from "lucide-react";
-import { toast } from "sonner";
+  Plus, 
+  Search, 
+  Filter, 
+  ArrowUpDown,
+  Trash2,
+  Edit,
+  Eye,
+} from 'lucide-react';
+import { useData } from '@/contexts/data/DataContext';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { OfflineStorageService } from '@/services/OfflineStorageService';
 
 export default function ProductList() {
+  const { products, deleteProduct } = useData();
   const navigate = useNavigate();
-  const { products, addProduct, updateProduct, deleteProduct } = useData();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<string | null>("name");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [isNewProductDialogOpen, setIsNewProductDialogOpen] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    price: "",
-    unit: "",
-    category: "",
-    stock: "",
-    costPrice: "",
-    minStockLevel: "",
-  });
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -49,122 +48,69 @@ export default function ProductList() {
     }
   };
 
-  // Filter products based on search term
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      deleteProduct(id);
+      
+      // Queue action for offline sync
+      if (!OfflineStorageService.isOnline()) {
+        OfflineStorageService.queueOfflineAction({
+          type: 'DELETE',
+          entity: 'product',
+          data: { id },
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+  };
 
-  // Sort the filtered products
+  const filteredProducts = products
+    ? products.filter(
+        (product) =>
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : [];
+
+  // Sort products if sortBy is set
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (!sortBy) return 0;
     
     const fieldA = a[sortBy as keyof typeof a];
     const fieldB = b[sortBy as keyof typeof b];
     
+    if (fieldA === fieldB) return 0;
+    
+    // Handle null/undefined values
+    if (fieldA == null) return sortDirection === 'asc' ? -1 : 1;
+    if (fieldB == null) return sortDirection === 'asc' ? 1 : -1;
+    
     if (typeof fieldA === 'string' && typeof fieldB === 'string') {
       return sortDirection === 'asc' 
         ? fieldA.localeCompare(fieldB)
         : fieldB.localeCompare(fieldA);
-    } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
+    } else {
       return sortDirection === 'asc'
-        ? fieldA - fieldB
-        : fieldB - fieldA;
+        ? Number(fieldA) - Number(fieldB)
+        : Number(fieldB) - Number(fieldA);
     }
-    return 0;
   });
 
-  const resetNewProductForm = () => {
-    setNewProduct({
-      name: "",
-      description: "",
-      price: "",
-      unit: "",
-      category: "",
-      stock: "",
-      costPrice: "",
-      minStockLevel: "",
-    });
-  };
-
-  const handleNewProductSubmit = () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.unit) {
-      toast.error("Name, price, and unit are required");
-      return;
-    }
-
-    try {
-      addProduct({
-        name: newProduct.name,
-        description: newProduct.description,
-        price: parseFloat(newProduct.price),
-        unit: newProduct.unit,
-        category: newProduct.category || "General",
-        stock: parseInt(newProduct.stock || "0"),
-        costPrice: parseFloat(newProduct.costPrice || "0"),
-        minStockLevel: parseInt(newProduct.minStockLevel || "0"),
-        isActive: true,
-      });
-
-      toast.success("Product added successfully!");
-      resetNewProductForm();
-      setIsNewProductDialogOpen(false);
-    } catch (error) {
-      toast.error("Failed to add product");
-      console.error(error);
-    }
-  };
-
-  const handleViewProduct = (productId: string) => {
-    navigate(`/product/${productId}`);
-  };
-
-  const handleDeleteProduct = (productId: string) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      deleteProduct(productId);
-      toast.success("Product deleted successfully!");
-    }
-  };
-
-  const getStockStatusBadge = (product: any) => {
-    const stock = product.stock || 0;
-    const minStock = product.minStockLevel || 0;
-    
-    if (stock <= 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>;
-    } else if (stock < minStock) {
-      return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Low Stock</Badge>;
-    } else {
-      return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">In Stock</Badge>;
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground">
-            Manage your product inventory
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Product List</h1>
+          <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        <Button onClick={() => setIsNewProductDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
+        <Button onClick={() => navigate('/product/new')}>
+          <Plus className="mr-2 h-4 w-4" /> Add Product
         </Button>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center">
-          <div className="space-y-1">
-            <CardTitle>Product Inventory</CardTitle>
-            <CardDescription>
-              View and manage your product catalog
-            </CardDescription>
-          </div>
-          <div className="ml-auto w-64 relative">
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
@@ -173,243 +119,157 @@ export default function ProductList() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('name')}
-                  >
-                    <div className="flex items-center">
-                      Product Name
-                      {sortBy === 'name' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('category')}
-                  >
-                    <div className="flex items-center">
-                      Category
-                      {sortBy === 'category' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer text-right"
-                    onClick={() => handleSort('price')}
-                  >
-                    <div className="flex items-center justify-end">
-                      Price
-                      {sortBy === 'price' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead 
-                    className="cursor-pointer text-center"
-                    onClick={() => handleSort('stock')}
-                  >
-                    <div className="flex items-center justify-center">
-                      Stock
-                      {sortBy === 'stock' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedProducts.length > 0 ? (
-                  sortedProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Package className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{product.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{product.category || "General"}</TableCell>
-                      <TableCell className="text-right">₹{product.price.toFixed(2)}/{product.unit}</TableCell>
-                      <TableCell className="text-center">{product.stock || 0}</TableCell>
-                      <TableCell>{getStockStatusBadge(product)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewProduct(product.id)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => navigate(`/product-edit/${product.id}`)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            <Trash className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      No products found. Add some products to get started.
-                    </TableCell>
-                  </TableRow>
-                )}
-                
-                {filteredProducts.length === 0 && products.length > 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4">
-                      No products match your search criteria.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="mr-2 h-4 w-4" />
+                Filter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setSearchTerm('')}>
+                All Categories
+              </DropdownMenuItem>
+              {Array.from(
+                new Set(products?.map((product) => product.category).filter(Boolean))
+              ).map((category) => (
+                <DropdownMenuItem 
+                  key={category as string} 
+                  onClick={() => setSearchTerm(category as string)}
+                >
+                  {String(category)}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {searchTerm && (
+            <Badge variant="outline" className="gap-1">
+              {searchTerm}
+              <button 
+                className="ml-1 rounded-full hover:bg-muted p-0.5"
+                onClick={() => setSearchTerm('')}
+              >
+                ×
+              </button>
+            </Badge>
+          )}
+          
+          <div className="ml-auto text-sm text-muted-foreground">
+            {sortedProducts.length} items
           </div>
-        </CardContent>
+        </div>
       </Card>
-
-      {/* New Product Dialog */}
-      <Dialog open={isNewProductDialogOpen} onOpenChange={setIsNewProductDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add New Product</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Product Name*</Label>
-                <Input
-                  id="name"
-                  value={newProduct.name}
-                  onChange={(e) => 
-                    setNewProduct({ ...newProduct, name: e.target.value })
-                  }
-                  placeholder="Enter product name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  value={newProduct.category}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, category: e.target.value })
-                  }
-                  placeholder="e.g., Dairy, Vegetables, etc."
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Price per Unit*</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, price: e.target.value })
-                  }
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit*</Label>
-                <Input
-                  id="unit"
-                  value={newProduct.unit}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, unit: e.target.value })
-                  }
-                  placeholder="e.g., kg, litre, piece"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="stock">Current Stock</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={newProduct.stock}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, stock: e.target.value })
-                  }
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minStock">Minimum Stock Level</Label>
-                <Input
-                  id="minStock"
-                  type="number"
-                  value={newProduct.minStockLevel}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, minStockLevel: e.target.value })
-                  }
-                  placeholder="0"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="costPrice">Cost Price</Label>
-              <Input
-                id="costPrice"
-                type="number"
-                value={newProduct.costPrice}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, costPrice: e.target.value })
-                }
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newProduct.description}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, description: e.target.value })
-                }
-                placeholder="Enter product description"
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                resetNewProductForm();
-                setIsNewProductDialogOpen(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleNewProductSubmit}>Add Product</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center">
+                  Name
+                  {sortBy === 'name' && (
+                    <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('category')}
+              >
+                <div className="flex items-center">
+                  Category
+                  {sortBy === 'category' && (
+                    <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('price')}
+              >
+                <div className="flex items-center">
+                  Unit Price
+                  {sortBy === 'price' && (
+                    <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort('stock')}
+              >
+                <div className="flex items-center">
+                  Stock
+                  {sortBy === 'stock' && (
+                    <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedProducts.length > 0 ? (
+              sortedProducts.map((product) => (
+                <TableRow key={product.id} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.category || 'Uncategorized'}</TableCell>
+                  <TableCell>₹{product.price?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <span>{product.stock || 0} units</span>
+                      {(product.stock || 0) < 10 && (
+                        <Badge variant="destructive" className="ml-2 px-1.5 py-0 text-xs">Low</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/product/${product.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/product/${product.id}`)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-24">
+                  {searchTerm 
+                    ? "No products match your search criteria."
+                    : "No products found. Add your first product to get started."}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
