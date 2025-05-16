@@ -1,86 +1,56 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "system";
-export type ThemeContextType = {
+type Theme = "light" | "dark";
+
+interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
-  accentColor?: string;
-  applyTheme?: (theme: Theme, accent?: string) => void;
-};
+}
 
-const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
-  toggleTheme: () => {},
-  setTheme: () => {},
-});
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [accentColor, setAccentColor] = useState<string>("#0284c7");
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Check if user has previously chosen a theme
+    const savedTheme = localStorage.getItem("theme") as Theme | null;
+    
+    // Check user's system preference if no saved theme
+    if (!savedTheme) {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    
+    return savedTheme;
+  });
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as Theme | null;
-    const storedAccent = localStorage.getItem("accentColor");
+    // Apply theme class to html element
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
     
-    if (storedTheme) {
-      setTheme(storedTheme);
-    } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? "dark" : "light");
-    }
-    
-    if (storedAccent) {
-      setAccentColor(storedAccent);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Handle system theme differently
-    if (theme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(prefersDark ? "dark" : "light");
-    } else {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme);
-    }
-    
+    // Save theme preference
     localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      if (prevTheme === "light") return "dark";
-      if (prevTheme === "dark") return "system";
-      return "light";
-    });
-  };
-
-  const applyTheme = (newTheme: Theme, accent?: string) => {
-    setTheme(newTheme);
-    
-    if (accent) {
-      setAccentColor(accent);
-      localStorage.setItem("accentColor", accent);
-      
-      // Apply accent color to CSS variables
-      document.documentElement.style.setProperty("--primary", accent);
-    }
+    setTheme(prev => (prev === "light" ? "dark" : "light"));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, accentColor, applyTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export const useTheme = () => {
+export function useTheme() {
   const context = useContext(ThemeContext);
+  
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider");
   }
+  
   return context;
-};
+}

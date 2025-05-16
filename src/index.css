@@ -126,6 +126,23 @@
   .input-glow:focus {
     @apply border-primary/80 ring-2 ring-primary/20;
   }
+
+  /* Dark mode specific improvements */
+  .dark .table-header {
+    @apply bg-muted/50 text-foreground font-medium;
+  }
+  
+  .dark .table-cell {
+    @apply text-foreground/90;
+  }
+  
+  .dark .form-label {
+    @apply text-foreground font-medium;
+  }
+  
+  .dark .form-input {
+    @apply bg-muted/30 border-muted text-foreground;
+  }
 }
 
 /* Custom global styles */
@@ -193,6 +210,17 @@
 .track-sheet-compact td,
 .track-sheet-compact th {
   @apply py-0.5 px-1 text-xs;
+}
+
+/* Dark mode specific form styles */
+.dark input, 
+.dark select, 
+.dark textarea {
+  @apply bg-muted/30 text-foreground border-input;
+}
+
+.dark .card {
+  @apply bg-card text-card-foreground;
 }
 
 /* Add special styles for printed track sheets */

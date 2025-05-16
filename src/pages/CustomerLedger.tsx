@@ -1,280 +1,461 @@
 
-import { useState } from "react";
-import { useData } from "@/contexts/data/DataContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRange } from "react-day-picker";
-import { DatePickerWithRange } from "@/components/ui/date-picker-with-range";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Printer, Search, Download } from "lucide-react";
-import { format } from "date-fns";
-import { exportToPdf } from "@/utils/pdfUtils";
-import { exportToExcel } from "@/utils/excelUtils";
-import { toast } from "sonner";
+import React, { useState, useMemo } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { DatePickerWithRange } from '@/components/ui/date-picker-with-range';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format, subDays, isWithinInterval } from 'date-fns';
+import { DownloadIcon, FileTextIcon, ArrowUpDown, FileIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
+import { DateRange } from 'react-day-picker';
 
 export default function CustomerLedger() {
-  const { customers, payments, orders } = useData();
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const { customers, orders, payments } = useData();
+  
+  // State variables
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState<string>('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    from: subDays(new Date(), 30),
     to: new Date()
   });
-
-  // Combine orders and payments for ledger entries
-  const getLedgerEntries = () => {
-    if (!selectedCustomer) return [];
-
-    const customerOrders = orders.filter(order => order.customerId === selectedCustomer);
-    const customerPayments = payments.filter(payment => payment.customerId === selectedCustomer);
-
-    const ledgerEntries = [
-      ...customerOrders.map(order => ({
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  }>({
+    key: 'date',
+    direction: 'descending'
+  });
+  
+  // Filter customers based on search
+  const filteredCustomers = useMemo(() => {
+    return customerSearch
+      ? customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()))
+      : customers;
+  }, [customers, customerSearch]);
+  
+  // Get selected customer data
+  const selectedCustomer = useMemo(() => {
+    return customers.find(c => c.id === selectedCustomerId);
+  }, [customers, selectedCustomerId]);
+  
+  // Get transactions for the selected customer
+  const customerTransactions = useMemo(() => {
+    if (!selectedCustomerId || !dateRange?.from) return [];
+    
+    // Get customer orders
+    const customerOrders = orders
+      .filter(order => order.customerId === selectedCustomerId)
+      .map(order => ({
+        id: order.id,
         date: new Date(order.date),
-        type: 'Order',
         description: `Order #${order.id}`,
-        debit: order.total, // Using total instead of totalAmount
+        debit: order.total,
         credit: 0,
-        balance: order.total // Using total instead of totalAmount
-      })),
-      ...customerPayments.map(payment => ({
+        balance: 0,
+        type: 'order'
+      }));
+    
+    // Get customer payments
+    const customerPayments = payments
+      .filter(payment => payment.customerId === selectedCustomerId)
+      .map(payment => ({
+        id: payment.id,
         date: new Date(payment.date),
-        type: 'Payment',
-        description: `Payment - ${payment.paymentMethod}`,
+        description: `Payment #${payment.id}`,
         debit: 0,
         credit: payment.amount,
-        balance: -payment.amount
-      }))
-    ];
-
-    // Sort by date
-    ledgerEntries.sort((a, b) => a.date.getTime() - b.date.getTime());
-
+        balance: 0,
+        type: 'payment'
+      }));
+    
+    // Combine and filter by date range
+    let allTransactions = [...customerOrders, ...customerPayments]
+      .filter(transaction => 
+        dateRange.to 
+          ? isWithinInterval(transaction.date, { start: dateRange.from, end: dateRange.to })
+          : transaction.date >= dateRange.from
+      );
+    
+    // Sort transactions
+    allTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+    
     // Calculate running balance
     let runningBalance = 0;
-    ledgerEntries.forEach(entry => {
-      runningBalance = runningBalance + entry.debit - entry.credit;
-      entry.balance = runningBalance;
+    allTransactions = allTransactions.map(transaction => {
+      runningBalance += transaction.debit - transaction.credit;
+      return { ...transaction, balance: runningBalance };
     });
-
-    // Filter by date range if set
-    if (dateRange?.from && dateRange?.to) {
-      return ledgerEntries.filter(entry => 
-        entry.date >= dateRange.from! && 
-        entry.date <= dateRange.to!
-      );
-    }
-
-    return ledgerEntries;
-  };
-  
-  // Helper function to calculate order total if not already available
-  const calculateOrderTotal = (order: any) => {
-    if (order.totalAmount) return order.totalAmount;
     
-    let total = 0;
-    if (order.items && Array.isArray(order.items)) {
-      order.items.forEach((item: any) => {
-        if (item.price && item.quantity) {
-          total += item.price * item.quantity;
+    // Apply sorting if needed
+    if (sortConfig.key) {
+      allTransactions.sort((a, b) => {
+        if (a[sortConfig.key as keyof typeof a] < b[sortConfig.key as keyof typeof b]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
         }
+        if (a[sortConfig.key as keyof typeof a] > b[sortConfig.key as keyof typeof b]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
       });
     }
-    return total;
-  };
-
-  const ledgerEntries = getLedgerEntries();
-  const customer = customers.find(c => c.id === selectedCustomer);
+    
+    return allTransactions;
+  }, [selectedCustomerId, dateRange, orders, payments, sortConfig]);
   
-  const handlePrint = () => {
-    window.print();
-  };
+  // Calculate summary data
+  const summary = useMemo(() => {
+    const totalDebit = customerTransactions.reduce((sum, t) => sum + t.debit, 0);
+    const totalCredit = customerTransactions.reduce((sum, t) => sum + t.credit, 0);
+    const finalBalance = totalDebit - totalCredit;
+    
+    return {
+      totalDebit,
+      totalCredit,
+      balance: finalBalance
+    };
+  }, [customerTransactions]);
   
-  const handleExportToPdf = () => {
-    if (!customer) {
-      toast.error("Please select a customer first");
-      return;
+  // Handle sorting
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
     }
-    
-    const headers = [
-      "Date", "Description", "Type", "Debit (₹)", "Credit (₹)", "Balance (₹)"
-    ];
-    
-    const data = ledgerEntries.map(entry => [
-      format(entry.date, "dd/MM/yyyy"),
-      entry.description,
-      entry.type,
-      entry.debit.toFixed(2),
-      entry.credit.toFixed(2),
-      entry.balance.toFixed(2)
-    ]);
-    
-    const dateInfo = dateRange?.from && dateRange?.to
-      ? `Period: ${format(dateRange.from, "dd/MM/yyyy")} to ${format(dateRange.to, "dd/MM/yyyy")}`
-      : "All transactions";
-    
-    exportToPdf(
-      headers,
-      data,
-      {
-        title: `Customer Ledger: ${customer.name}`,
-        subtitle: dateInfo,
-        dateInfo: `Generated on ${format(new Date(), "dd/MM/yyyy")}`,
-        additionalInfo: [
-          { label: "Phone", value: customer.phone || "N/A" },
-          { label: "Address", value: customer.address || "N/A" },
-          { label: "Current Balance", value: `₹${ledgerEntries.length > 0 ? ledgerEntries[ledgerEntries.length - 1].balance.toFixed(2) : "0.00"}` }
-        ],
-        filename: `customer-ledger-${customer.name.replace(/\s+/g, '-').toLowerCase()}.pdf`
-      }
-    );
-    
-    toast.success("Ledger exported to PDF");
+    setSortConfig({ key, direction });
   };
   
-  const handleExportToExcel = () => {
-    if (!customer) {
-      toast.error("Please select a customer first");
-      return;
-    }
+  // Helper function to format currency
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toFixed(2)}`;
+  };
+  
+  // Handle print ledger
+  const handlePrintLedger = () => {
+    if (!selectedCustomer) return;
     
-    const headers = [
-      "Date", "Description", "Type", "Debit (₹)", "Credit (₹)", "Balance (₹)"
-    ];
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
     
-    const data = ledgerEntries.map(entry => [
-      format(entry.date, "dd/MM/yyyy"),
-      entry.description,
-      entry.type,
-      entry.debit.toFixed(2),
-      entry.credit.toFixed(2),
-      entry.balance.toFixed(2)
-    ]);
+    const dateRangeText = dateRange?.from 
+      ? `${format(dateRange.from, 'dd/MM/yyyy')} to ${dateRange.to ? format(dateRange.to, 'dd/MM/yyyy') : 'Present'}`
+      : 'All time';
     
-    exportToExcel(
-      headers,
-      data,
-      `customer-ledger-${customer.name.replace(/\s+/g, '-').toLowerCase()}.xlsx`
-    );
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Customer Ledger - ${selectedCustomer.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+            h2 { text-align: center; margin-bottom: 10px; }
+            .header { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .debit { color: #d32f2f; }
+            .credit { color: #388e3c; }
+            .total-row { font-weight: bold; background-color: #f5f5f5; }
+            .summary { margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h2>Customer Ledger</h2>
+          <div class="header">
+            <p><strong>Customer:</strong> ${selectedCustomer.name}</p>
+            <p><strong>Period:</strong> ${dateRangeText}</p>
+            <p><strong>Balance:</strong> ${formatCurrency(summary.balance)}</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Debit (₹)</th>
+                <th>Credit (₹)</th>
+                <th>Balance (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${customerTransactions.map(transaction => `
+                <tr>
+                  <td>${format(transaction.date, 'dd/MM/yyyy')}</td>
+                  <td>${transaction.description}</td>
+                  <td class="debit">${transaction.debit > 0 ? formatCurrency(transaction.debit) : ''}</td>
+                  <td class="credit">${transaction.credit > 0 ? formatCurrency(transaction.credit) : ''}</td>
+                  <td>${formatCurrency(transaction.balance)}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td colspan="2">Total</td>
+                <td class="debit">${formatCurrency(summary.totalDebit)}</td>
+                <td class="credit">${formatCurrency(summary.totalCredit)}</td>
+                <td>${formatCurrency(summary.balance)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="summary">
+            <p><strong>Summary:</strong></p>
+            <p>Total Debit: ${formatCurrency(summary.totalDebit)}</p>
+            <p>Total Credit: ${formatCurrency(summary.totalCredit)}</p>
+            <p>Balance: ${formatCurrency(summary.balance)}</p>
+          </div>
+        </body>
+      </html>
+    `);
     
-    toast.success("Ledger exported to Excel");
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Customer Ledger</h1>
-        <p className="text-muted-foreground">
-          View transaction history and balance for individual customers
-        </p>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Customer Ledger</h1>
+          <p className="text-muted-foreground">
+            View and manage customer transactions and balances
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0 flex gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handlePrintLedger}
+            disabled={!selectedCustomerId}
+          >
+            <FileTextIcon className="h-4 w-4" />
+            Print Ledger
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            disabled={!selectedCustomerId}
+          >
+            <DownloadIcon className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
-
-      <div className="flex flex-col gap-4 md:flex-row">
-        <Card className="w-full md:w-1/3">
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
           <CardHeader>
-            <CardTitle>Filters</CardTitle>
+            <CardTitle>Select Customer</CardTitle>
             <CardDescription>
-              Select a customer and date range
+              Choose a customer to view their ledger
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Customer</label>
-              <Select 
-                value={selectedCustomer} 
-                onValueChange={setSelectedCustomer}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select customer" />
+              <Label htmlFor="customerSearch">Search Customer</Label>
+              <Input
+                id="customerSearch"
+                placeholder="Search customers..."
+                value={customerSearch}
+                onChange={(e) => setCustomerSearch(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customerSelect">Customer</Label>
+              <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
+                <SelectTrigger id="customerSelect">
+                  <SelectValue placeholder="Select a customer" />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map(customer => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </SelectItem>
-                  ))}
+                  <ScrollArea className="h-72">
+                    {filteredCustomers.length > 0 ? (
+                      filteredCustomers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-center text-muted-foreground">No customers found</div>
+                    )}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium">Date Range</label>
-              <DatePickerWithRange
+              <Label htmlFor="dateRange">Date Range</Label>
+              <DatePickerWithRange 
                 date={dateRange}
-                onDateChange={setDateRange}
+                setDate={setDateRange}
               />
             </div>
-
-            <Button className="w-full gap-2">
-              <Search className="h-4 w-4" />
-              Apply Filters
-            </Button>
           </CardContent>
+          
+          {selectedCustomer && (
+            <CardFooter className="flex-col items-start gap-2 border-t p-4">
+              <div className="w-full">
+                <h3 className="font-semibold mb-2">Customer Details</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Name:</span>
+                    <span>{selectedCustomer.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span>{selectedCustomer.phone || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span>{selectedCustomer.email || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Balance:</span>
+                    <span className={summary.balance > 0 ? "text-red-500 font-semibold" : "text-green-500 font-semibold"}>
+                      {formatCurrency(summary.balance)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardFooter>
+          )}
         </Card>
-
-        <Card className="w-full md:w-2/3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Ledger Entries</CardTitle>
-              <CardDescription>
-                {customer ? `${customer.name}'s transaction history` : 'Select a customer to view ledger'}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
-              <Button variant="outline" onClick={handleExportToExcel}>
-                <Download className="h-4 w-4 mr-2" />
-                Excel
-              </Button>
-              <Button variant="outline" onClick={handleExportToPdf}>
-                <FileText className="h-4 w-4 mr-2" />
-                PDF
-              </Button>
-            </div>
+        
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>
+              Showing all transactions for the selected customer
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {selectedCustomer ? (
-              ledgerEntries.length > 0 ? (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Debit</TableHead>
-                        <TableHead className="text-right">Credit</TableHead>
-                        <TableHead className="text-right">Balance</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ledgerEntries.map((entry, i) => (
-                        <TableRow key={i}>
-                          <TableCell>{format(entry.date, "dd/MM/yyyy")}</TableCell>
-                          <TableCell>{entry.description}</TableCell>
-                          <TableCell>{entry.type}</TableCell>
-                          <TableCell className="text-right">{entry.debit.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">{entry.credit.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-medium">{entry.balance.toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  No transactions found for the selected criteria
-                </div>
-              )
+            {!selectedCustomerId ? (
+              <div className="text-center p-8 border rounded-lg bg-muted/10">
+                <FileIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <h3 className="font-medium mb-1">No Customer Selected</h3>
+                <p className="text-muted-foreground text-sm">
+                  Please select a customer to view their ledger details
+                </p>
+              </div>
+            ) : customerTransactions.length === 0 ? (
+              <div className="text-center p-8 border rounded-lg bg-muted/10">
+                <FileTextIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <h3 className="font-medium mb-1">No Transactions</h3>
+                <p className="text-muted-foreground text-sm">
+                  No transactions found for this customer in the selected date range
+                </p>
+              </div>
             ) : (
-              <div className="text-center py-10 text-muted-foreground">
-                Select a customer to view their ledger
+              <div className="rounded-md border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-32">
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center gap-1 p-0 h-auto font-medium"
+                          onClick={() => requestSort('date')}
+                        >
+                          Date
+                          <ArrowUpDown className="h-3 w-3" />
+                        </Button>
+                      </TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center gap-1 p-0 h-auto font-medium justify-end w-full"
+                          onClick={() => requestSort('debit')}
+                        >
+                          Debit (₹)
+                          <ArrowUpDown className="h-3 w-3" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center gap-1 p-0 h-auto font-medium justify-end w-full"
+                          onClick={() => requestSort('credit')}
+                        >
+                          Credit (₹)
+                          <ArrowUpDown className="h-3 w-3" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          className="flex items-center gap-1 p-0 h-auto font-medium justify-end w-full"
+                          onClick={() => requestSort('balance')}
+                        >
+                          Balance (₹)
+                          <ArrowUpDown className="h-3 w-3" />
+                        </Button>
+                      </TableHead>
+                      <TableHead className="w-24 text-center">Type</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customerTransactions.map((transaction) => (
+                      <TableRow key={`${transaction.id}-${transaction.type}`}>
+                        <TableCell className="font-medium">
+                          {format(transaction.date, 'dd/MM/yyyy')}
+                        </TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell className="text-right text-red-500">
+                          {transaction.debit > 0 ? formatCurrency(transaction.debit) : ''}
+                        </TableCell>
+                        <TableCell className="text-right text-green-500">
+                          {transaction.credit > 0 ? formatCurrency(transaction.credit) : ''}
+                        </TableCell>
+                        <TableCell className={`text-right ${transaction.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {formatCurrency(transaction.balance)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={transaction.type === 'order' ? 'outline' : 'secondary'} className="text-xs">
+                            {transaction.type === 'order' ? 'Order' : 'Payment'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/20 font-semibold">
+                      <TableCell colSpan={2} className="text-right">
+                        Total
+                      </TableCell>
+                      <TableCell className="text-right text-red-500">
+                        {formatCurrency(summary.totalDebit)}
+                      </TableCell>
+                      <TableCell className="text-right text-green-500">
+                        {formatCurrency(summary.totalCredit)}
+                      </TableCell>
+                      <TableCell className={`text-right ${summary.balance > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        {formatCurrency(summary.balance)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
+          <CardFooter className="flex justify-between border-t p-4">
+            {selectedCustomerId && (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  Showing {customerTransactions.length} transactions
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="text-xs">Debit</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-xs">Credit</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </div>

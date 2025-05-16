@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
 import CustomerList from "@/pages/CustomerList";
 import CustomerDetail from "@/pages/CustomerDetail";
+import CustomerLedger from "@/pages/CustomerLedger";
 import Orders from "@/pages/Orders";
 import OrderList from "@/pages/OrderList";
 import OrderEntry from "@/pages/OrderEntry";
@@ -54,7 +55,6 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        {/* Move InvoiceProvider outside of DataProvider to prevent circular dependency */}
         <InvoiceProvider>
           <DataProvider>
             <Routes>
@@ -67,6 +67,7 @@ function App() {
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customer-directory" element={<CustomerList />} />
                 <Route path="/customer-detail/:id" element={<CustomerDetail />} />
+                <Route path="/customer-ledger" element={<CustomerLedger />} />
                 <Route path="/customer-rates" element={<CustomerRates />} />
                 
                 {/* Order routes */}

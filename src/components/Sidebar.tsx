@@ -1,269 +1,180 @@
 
-import { useState, useMemo } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  Home, 
-  Users, 
-  Settings, 
-  ChevronRight, 
-  ChevronLeft,
-  DollarSign,
-  Calendar,
-  BarChart,
-  Package,
+import {
+  Home,
+  Users,
   ShoppingCart,
+  Package,
   FileText,
   CreditCard,
-  Database,
   Truck,
-  Banknote,
-  Layers,
-  Receipt
+  Clock,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  BarChart3,
+  Database,
+  Calendar,
+  Newspaper,
+  Store,
+  User
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { useData } from "@/contexts/data/DataContext";
-import { Separator } from "./ui/separator";
-import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface SidebarProps {
+  collapsed?: boolean;
+}
+
+interface SidebarItemProps {
+  icon: React.ElementType;
+  title: string;
+  to: string;
+  children?: React.ReactNode;
+  collapsed?: boolean;
+}
+
+const SidebarItem = ({ icon: Icon, title, to, children, collapsed }: SidebarItemProps) => {
   const location = useLocation();
-  const { uiSettings } = useData();
-  
-  const navItems = useMemo(() => [
-    {
-      title: "Dashboard",
-      icon: Home,
-      path: "/dashboard",
-    },
-    {
-      title: "Customers",
-      icon: Users,
-      path: "/customers",
-      children: [
-        { title: "Customer Directory", path: "/customer-directory" },
-        { title: "Customer Ledger", path: "/customer-ledger" },
-        { title: "Customer Rates", path: "/customer-rates" }
-      ]
-    },
-    {
-      title: "Orders",
-      icon: ShoppingCart,
-      path: "/orders",
-      children: [
-        { title: "Order Entry", path: "/order-entry" },
-        { title: "Order List", path: "/order-list" },
-      ]
-    },
-    {
-      title: "Inventory",
-      icon: Package,
-      path: "/inventory",
-      children: [
-        { title: "Product List", path: "/product-list" },
-        { title: "Product Rates", path: "/product-rates" },
-        { title: "Stock Management", path: "/stock-management" },
-        { title: "Stock Settings", path: "/stock-settings" },
-      ]
-    },
-    {
-      title: "Invoices",
-      icon: FileText,
-      path: "/invoices",
-      children: [
-        { title: "Create Invoice", path: "/invoice-create" },
-        { title: "Invoice History", path: "/invoice-history" },
-      ]
-    },
-    {
-      title: "Payments",
-      icon: CreditCard,
-      path: "/payments",
-      children: [
-        { title: "Record Payment", path: "/payment-create" },
-        { title: "Payment List", path: "/payments" },
-      ]
-    },
-    {
-      title: "Outstanding",
-      icon: DollarSign,
-      path: "/outstanding",
-      children: [
-        { title: "Due Amounts", path: "/outstanding-dues" },
-        { title: "Outstanding Summary", path: "/outstanding-amounts" },
-      ]
-    },
-    {
-      title: "Suppliers",
-      icon: Truck,
-      path: "/suppliers",
-      children: [
-        { title: "Supplier Directory", path: "/supplier-directory" },
-        { title: "Supplier Ledger", path: "/supplier-ledger" },
-        { title: "Supplier Payments", path: "/supplier-payments" },
-        { title: "Supplier Rates", path: "/supplier-rates" },
-      ]
-    },
-    {
-      title: "Expenses",
-      icon: Banknote,
-      path: "/expenses",
-    },
-    {
-      title: "Reports",
-      icon: BarChart,
-      path: "/reports",
-      children: [
-        { title: "Customer Report", path: "/customer-report" },
-        { title: "Sales Report", path: "/sales-report" },
-      ]
-    },
-    {
-      title: "Track Sheet",
-      icon: Truck,
-      path: "/track-sheet",
-    },
-    {
-      title: "Master",
-      icon: Database,
-      path: "/master",
-      children: [
-        { title: "Vehicle & Salesman", path: "/vehicle-salesman-create" },
-        { title: "Vehicle Tracking", path: "/vehicle-tracking" },
-      ]
-    },
-    {
-      title: "Financial Year",
-      icon: Calendar,
-      path: "/financial-year",
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/settings",
-      children: [
-        { title: "UI Settings", path: "/ui-settings" },
-        { title: "User Access", path: "/user-access" },
-        { title: "Company Profile", path: "/company-profile" },
-      ]
-    },
-  ], []);
+  const isActive = location.pathname === to;
+  const [open, setOpen] = useState(false);
 
-  // Helper to check if a path or its children are active
-  const isPathActive = (item: any) => {
-    if (location.pathname === item.path) return true;
-    if (item.children) {
-      return item.children.some((child: any) => location.pathname === child.path);
-    }
-    return false;
-  };
+  // If there are children and the current location is part of this section, open by default
+  const isSection = children && (location.pathname.startsWith(to) || open);
 
+  return children ? (
+    <div className="space-y-1">
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full justify-start gap-3 font-normal",
+          isSection ? "bg-muted/50 text-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+        onClick={() => setOpen(!open)}
+      >
+        <Icon className="h-4 w-4" />
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-left">{title}</span>
+            {open ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </>
+        )}
+      </Button>
+      {(open || isSection) && !collapsed && (
+        <div className="pl-9 space-y-1">{children}</div>
+      )}
+    </div>
+  ) : (
+    <Button
+      asChild
+      variant="ghost"
+      className={cn(
+        "w-full justify-start gap-3 font-normal",
+        isActive ? "bg-muted/50 text-primary" : "text-muted-foreground hover:text-foreground",
+        isActive && "font-medium"
+      )}
+    >
+      <Link to={to}>
+        <Icon className="h-4 w-4" />
+        {!collapsed && <span>{title}</span>}
+      </Link>
+    </Button>
+  );
+};
+
+export function Sidebar({ collapsed = false }: SidebarProps) {
   return (
     <div
       className={cn(
-        "group relative flex h-screen flex-col border-r bg-card transition-all duration-300",
+        "border-r bg-card flex-shrink-0 transition-all duration-300 ease-in-out",
         collapsed ? "w-16" : "w-64"
       )}
-      style={uiSettings.sidebarStyle === "gradient" 
-        ? { backgroundImage: `linear-gradient(to bottom, hsl(var(--card)), hsl(var(--background)))` } 
-        : {}
-      }
     >
-      <div className="flex h-16 items-center justify-between border-b px-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png" 
+      <div className="flex flex-col h-full">
+        <div className="p-4 flex items-center justify-center">
+          {collapsed ? (
+            <img
+              src="/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png"
               alt="Logo"
               className="h-8 w-8"
             />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              VMC
-            </span>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("", collapsed ? "ml-auto" : "")}
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <div className="font-bold text-xl">Vikas Milk Centre</div>
           )}
-        </Button>
-      </div>
-
-      <ScrollArea className="flex-1 overflow-auto py-2">
-        <nav className="grid gap-1 px-2">
-          {navItems.map((item) => {
-            const active = isPathActive(item);
+        </div>
+        <ScrollArea className="flex-1 px-3">
+          <div className="space-y-1 py-2">
+            <SidebarItem icon={Home} title="Dashboard" to="/dashboard" collapsed={collapsed} />
             
-            return (
-              <div key={item.path} className="relative">
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1">{item.title}</span>
-                      {item.children && (
-                        <ChevronRight 
-                          className={cn(
-                            "h-4 w-4 transition-transform", 
-                            active && "rotate-90"
-                          )} 
-                        />
-                      )}
-                    </>
-                  )}
-                </NavLink>
-                
-                {/* Render children if not collapsed and either active or hovering */}
-                {!collapsed && item.children && active && (
-                  <div className="ml-6 mt-1 space-y-1 border-l pl-2">
-                    {item.children.map((child: any) => (
-                      <NavLink
-                        key={child.path}
-                        to={child.path}
-                        className={({ isActive }) =>
-                          cn(
-                            "flex items-center text-sm py-1.5 px-3 rounded-md transition-all",
-                            isActive
-                              ? "bg-muted font-medium text-foreground"
-                              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                          )
-                        }
-                      >
-                        {child.title}
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-      </ScrollArea>
-
-      <div className="mt-auto border-t p-4">
-        {!collapsed && (
-          <div className="rounded-md bg-muted p-2 text-xs text-muted-foreground">
-            <p className="font-semibold">Vikas Milk Centre</p>
-            <p>Dashboard v2.0</p>
+            <SidebarItem icon={Users} title="Customers" to="/customers" collapsed={collapsed}>
+              <SidebarItem icon={Users} title="Customer Directory" to="/customer-directory" collapsed={false} />
+              <SidebarItem icon={CreditCard} title="Customer Ledger" to="/customer-ledger" collapsed={false} />
+              <SidebarItem icon={FileText} title="Customer Rates" to="/customer-rates" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={ShoppingCart} title="Orders" to="/orders" collapsed={collapsed}>
+              <SidebarItem icon={ShoppingCart} title="Order List" to="/order-list" collapsed={false} />
+              <SidebarItem icon={FileText} title="Order Entry" to="/order-entry" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Package} title="Inventory" to="/inventory" collapsed={collapsed}>
+              <SidebarItem icon={Package} title="Product List" to="/product-list" collapsed={false} />
+              <SidebarItem icon={FileText} title="Product Rates" to="/product-rates" collapsed={false} />
+              <SidebarItem icon={Database} title="Stock Management" to="/stock-management" collapsed={false} />
+              <SidebarItem icon={Settings} title="Stock Settings" to="/stock-settings" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={FileText} title="Invoices" to="/invoices" collapsed={collapsed}>
+              <SidebarItem icon={FileText} title="Create Invoice" to="/invoice-create" collapsed={false} />
+              <SidebarItem icon={Clock} title="Invoice History" to="/invoice-history" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={CreditCard} title="Payments" to="/payments" collapsed={collapsed}>
+              <SidebarItem icon={CreditCard} title="Payment List" to="/payments" collapsed={false} />
+              <SidebarItem icon={FileText} title="Create Payment" to="/payment-create" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Store} title="Suppliers" to="/suppliers" collapsed={collapsed}>
+              <SidebarItem icon={Users} title="Supplier Directory" to="/supplier-directory" collapsed={false} />
+              <SidebarItem icon={CreditCard} title="Supplier Ledger" to="/supplier-ledger" collapsed={false} />
+              <SidebarItem icon={CreditCard} title="Supplier Payments" to="/supplier-payments" collapsed={false} />
+              <SidebarItem icon={FileText} title="Supplier Rates" to="/supplier-rates" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Clock} title="Outstanding" to="/outstanding" collapsed={collapsed}>
+              <SidebarItem icon={Clock} title="Outstanding Dues" to="/outstanding-dues" collapsed={false} />
+              <SidebarItem icon={CreditCard} title="Outstanding Amounts" to="/outstanding-amounts" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Truck} title="Delivery" to="/vehicle-tracking" collapsed={collapsed}>
+              <SidebarItem icon={User} title="Vehicle & Salesman" to="/vehicle-salesman-create" collapsed={false} />
+              <SidebarItem icon={Truck} title="Vehicle Tracking" to="/vehicle-tracking" collapsed={false} />
+              <SidebarItem icon={Newspaper} title="Track Sheet" to="/track-sheet" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={BarChart3} title="Reports" to="/reports" collapsed={collapsed}>
+              <SidebarItem icon={Users} title="Customer Report" to="/customer-report" collapsed={false} />
+              <SidebarItem icon={BarChart3} title="Sales Report" to="/sales-report" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Calendar} title="Financial Year" to="/financial-year" collapsed={collapsed} />
+            <SidebarItem icon={CreditCard} title="Expenses" to="/expenses" collapsed={false} />
+            
+            <SidebarItem icon={Settings} title="Settings" to="/settings" collapsed={collapsed}>
+              <SidebarItem icon={Settings} title="UI Settings" to="/ui-settings" collapsed={false} />
+              <SidebarItem icon={Users} title="User Access" to="/user-access" collapsed={false} />
+              <SidebarItem icon={Store} title="Company Profile" to="/company-profile" collapsed={false} />
+            </SidebarItem>
+            
+            <SidebarItem icon={Database} title="Master Data" to="/master" collapsed={collapsed} />
           </div>
-        )}
+        </ScrollArea>
       </div>
     </div>
   );
