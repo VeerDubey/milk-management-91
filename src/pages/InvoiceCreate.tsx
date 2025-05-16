@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useData } from "@/contexts/data/DataContext";
-import { useInvoices } from "@/contexts/InvoiceContext";
+import { useInvoice } from "@/contexts/InvoiceContext";
 import { format } from "date-fns";
 import {
   Card,
@@ -82,7 +81,7 @@ type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 export default function InvoiceCreate() {
   const navigate = useNavigate();
   const { customers, products, addInvoice } = useData();
-  const { downloadInvoice, companyInfo, generateInvoicePreview } = useInvoices();
+  const { downloadInvoice, companyInfo, generateInvoicePreview } = useInvoice();
   const today = new Date();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);

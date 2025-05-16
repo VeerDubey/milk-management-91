@@ -1,8 +1,7 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useData } from "@/contexts/data/DataContext";
-import { useInvoices } from "@/contexts/InvoiceContext";
+import { useInvoice } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +46,7 @@ import { DateRange } from "react-day-picker";
 
 export default function InvoiceHistory() {
   const { invoices } = useData();
-  const { downloadInvoice, generateInvoicePreview, deleteInvoice } = useInvoices();
+  const { downloadInvoice, generateInvoicePreview, deleteInvoice } = useInvoice();
   
   // State for date range filtering
   const [dateRange, setDateRange] = useState<DateRange>({

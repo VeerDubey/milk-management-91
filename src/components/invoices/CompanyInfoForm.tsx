@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, Upload } from 'lucide-react';
-import { useInvoices } from '@/contexts/InvoiceContext';
+import { useInvoice } from '@/contexts/InvoiceContext';
 import { toast } from 'sonner';
 
 interface CompanyInfoFormProps {
@@ -14,7 +13,7 @@ interface CompanyInfoFormProps {
 }
 
 export default function CompanyInfoForm({ onSave }: CompanyInfoFormProps) {
-  const { companyInfo, updateCompanyInfo } = useInvoices();
+  const { companyInfo, updateCompanyInfo } = useInvoice();
   
   const { register, handleSubmit, formState: { isDirty, isValid } } = useForm({
     defaultValues: companyInfo

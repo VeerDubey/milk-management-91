@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Palette, EyeIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useInvoices } from '@/contexts/InvoiceContext';
+import { useInvoice } from '@/contexts/InvoiceContext';
 import { 
   Dialog,
   DialogContent,
@@ -24,7 +23,7 @@ export default function InvoiceTemplateGallery({
   showPreviewOption = false,
   previewInvoiceId,
 }: InvoiceTemplateGalleryProps) {
-  const { selectedTemplateId, setSelectedTemplateId, generateInvoicePreview, getInvoiceById, templates } = useInvoices();
+  const { selectedTemplateId, setSelectedTemplateId, generateInvoicePreview, getInvoiceById, templates } = useInvoice();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>(selectedTemplateId);

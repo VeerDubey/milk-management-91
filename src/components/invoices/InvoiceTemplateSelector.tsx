@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, Palette } from 'lucide-react';
-import { useInvoices } from '@/contexts/InvoiceContext';
+import { useInvoice } from '@/contexts/InvoiceContext';
 
 interface InvoiceTemplateSelectorProps {
   onSelect?: (templateId: string) => void;
@@ -10,7 +9,7 @@ interface InvoiceTemplateSelectorProps {
 }
 
 export default function InvoiceTemplateSelector({ onSelect, className = '' }: InvoiceTemplateSelectorProps) {
-  const { selectedTemplateId, setSelectedTemplateId, templates } = useInvoices();
+  const { selectedTemplateId, setSelectedTemplateId, templates } = useInvoice();
   
   const handleSelect = (id: string) => {
     setSelectedTemplateId(id);

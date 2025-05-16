@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useData } from "@/contexts/DataContext";
-import { useInvoices } from "@/contexts/InvoiceContext";
+import { useInvoice } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("date");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const { invoices } = useInvoices();
+  const { invoices } = useInvoice();
 
   // Sample invoices for demo if actual invoices are empty
   const displayInvoices = invoices.length > 0 ? invoices : [

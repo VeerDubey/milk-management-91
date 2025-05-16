@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { useInvoices } from '@/contexts/InvoiceContext';
+import { useInvoice } from '@/contexts/InvoiceContext';
 
 interface InvoiceDownloadButtonProps {
   invoiceId: string;
@@ -29,7 +28,7 @@ export default function InvoiceDownloadButton({
   size = "default",
   className = ""
 }: InvoiceDownloadButtonProps) {
-  const { downloadInvoice, selectedTemplateId, templates } = useInvoices();
+  const { downloadInvoice, selectedTemplateId, templates } = useInvoice();
   const [isDownloading, setIsDownloading] = useState(false);
   
   const handleDownload = async (templateId?: string) => {
