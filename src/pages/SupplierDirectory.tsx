@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,9 +118,9 @@ const SupplierDirectory = () => {
     } else {
       // Make sure to pass all required fields from the Supplier type
       addSupplier({
-        name: data.name, // Explicitly required
-        phone: data.phone, // Explicitly required
-        address: data.address, // Explicitly required
+        name: data.name, // Required
+        phone: data.phone, // Required
+        address: data.address, // Required
         contactPerson: data.contactPerson,
         email: data.email || '',
         gstNumber: data.gstNumber,
