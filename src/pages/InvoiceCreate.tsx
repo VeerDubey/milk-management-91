@@ -47,13 +47,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { createInvoiceFromFormData, generateInvoiceNumber, formatDateForInput, generateDueDate } from "@/utils/invoiceUtils";
 import { Download, Eye, Plus, Save, Trash, X } from "lucide-react";
 import { toast } from "sonner";
+import InvoiceTemplateGallery from "@/components/invoices/InvoiceTemplateGallery";
 
 // Define schema for invoice form
 const invoiceFormSchema = z.object({
@@ -81,10 +81,11 @@ type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 export default function InvoiceCreate() {
   const navigate = useNavigate();
   const { customers, products, addInvoice } = useData();
-  const { downloadInvoice, companyInfo, generateInvoicePreview } = useInvoices();
+  const { downloadInvoice, companyInfo, generateInvoicePreview, selectedTemplateId, templates } = useInvoices();
   const today = new Date();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   
   // Initialize form with default values
   const form = useForm<InvoiceFormValues>({
@@ -193,10 +194,9 @@ export default function InvoiceCreate() {
     }
   };
   
-  // Generate invoice preview
+  // Generate invoice preview - Fix Promise handling
   const generatePreview = () => {
     try {
-      // Fix: Cast form values to the required type to ensure all required fields are present
       const invoiceData = form.getValues();
       const invoice = createInvoiceFromFormData({
         invoiceNumber: invoiceData.invoiceNumber,
@@ -235,7 +235,6 @@ export default function InvoiceCreate() {
   // Handle form submission
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
-      // Fix: Cast form values to the required type to ensure all required fields are present
       const invoice = createInvoiceFromFormData({
         invoiceNumber: data.invoiceNumber,
         invoiceDate: data.invoiceDate,
@@ -254,7 +253,6 @@ export default function InvoiceCreate() {
         }))
       });
       
-      // Add to invoices
       addInvoice(invoice);
       
       toast.success("Invoice created successfully");
@@ -264,6 +262,27 @@ export default function InvoiceCreate() {
       toast.error("Failed to create invoice");
     }
   };
+
+  // Add a section for the template selection
+  const templateSection = (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Invoice Template</CardTitle>
+        <CardDescription>
+          Choose a template for your invoice
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button 
+          variant="outline" 
+          className="w-full" 
+          onClick={() => setShowTemplates(true)}
+        >
+          {templates.find(t => t.id === selectedTemplateId)?.name || "Select Template"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -281,6 +300,8 @@ export default function InvoiceCreate() {
           </Button>
         </div>
       </div>
+
+      {templateSection}
 
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
@@ -661,6 +682,18 @@ export default function InvoiceCreate() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+        <DialogContent className="max-w-4xl max-h-screen overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select Invoice Template</DialogTitle>
+            <DialogDescription>
+              Choose a template for your invoice
+            </DialogDescription>
+          </DialogHeader>
+          <InvoiceTemplateGallery onSelect={() => setShowTemplates(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

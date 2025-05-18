@@ -114,7 +114,9 @@ export default function InvoiceHistory() {
         const dateB = new Date(b.date).getTime();
         return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
       } else if (sortBy === "amount") {
-        return sortOrder === "desc" ? b.amount - a.amount : a.amount - b.amount;
+        const amountA = a.total || a.amount || 0;
+        const amountB = b.total || b.amount || 0;
+        return sortOrder === "desc" ? amountB - amountA : amountA - amountB;
       } else if (sortBy === "id") {
         return sortOrder === "desc" 
           ? b.id.localeCompare(a.id) 
@@ -137,7 +139,7 @@ export default function InvoiceHistory() {
     }
   };
   
-  // Handle invoice preview
+  // Handle invoice preview - Fix Promise handling
   const handlePreviewInvoice = (invoiceId: string) => {
     try {
       const invoice = invoices.find(inv => inv.id === invoiceId);
@@ -164,20 +166,20 @@ export default function InvoiceHistory() {
   
   // Calculate summary data
   const summaryData = useMemo(() => {
-    const total = filteredInvoices.reduce((acc, inv) => acc + inv.amount, 0);
+    const total = filteredInvoices.reduce((acc, inv) => acc + (inv.total || inv.amount || 0), 0);
     const paid = filteredInvoices
       .filter(inv => inv.status.toLowerCase() === "paid")
-      .reduce((acc, inv) => acc + inv.amount, 0);
+      .reduce((acc, inv) => acc + (inv.total || inv.amount || 0), 0);
     const pending = filteredInvoices
       .filter(inv => inv.status.toLowerCase() === "pending")
-      .reduce((acc, inv) => acc + inv.amount, 0);
+      .reduce((acc, inv) => acc + (inv.total || inv.amount || 0), 0);
     const overdue = filteredInvoices
       .filter(inv => {
         const dueDate = new Date(inv.date);
         dueDate.setDate(dueDate.getDate() + 15); // Assuming 15 days due date
         return inv.status.toLowerCase() !== "paid" && dueDate < new Date();
       })
-      .reduce((acc, inv) => acc + inv.amount, 0);
+      .reduce((acc, inv) => acc + (inv.total || inv.amount || 0), 0);
       
     return { total, paid, pending, overdue };
   }, [filteredInvoices]);

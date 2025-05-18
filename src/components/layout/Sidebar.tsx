@@ -13,9 +13,16 @@ import {
   Truck,
   BarChart,
   UserPlus,
-  PackagePlus,
+  Calendar,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Users,
+  ReceiptText,
+  History,
+  Clipboard,
+  List,
+  Database,
+  FileCheck
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -99,6 +106,32 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
               icon={ShoppingCart} 
               label="Order Entry" 
             />
+            <SidebarItem 
+              to="/track-sheet-history" 
+              icon={History} 
+              label="TrackSheet History" 
+            />
+          </div>
+          
+          <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
+            Finance
+          </h2>
+          <div className="space-y-1">
+            <SidebarItem 
+              to="/outstanding-dues" 
+              icon={CreditCard} 
+              label="Outstanding Dues" 
+            />
+            <SidebarItem 
+              to="/invoice-history" 
+              icon={ReceiptText} 
+              label="Invoice History" 
+            />
+            <SidebarItem 
+              to="/invoice-create" 
+              icon={FileText} 
+              label="Create Invoice" 
+            />
           </div>
           
           <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
@@ -108,7 +141,7 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             <SidebarGroup label="Customers" icon={User} defaultOpen>
               <SidebarItem
                 to="/customer-directory"
-                icon={User}
+                icon={Users}
                 label="Directory"
               />
               <SidebarItem
@@ -125,9 +158,19 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             
             <SidebarGroup label="Products" icon={Package} defaultOpen>
               <SidebarItem
-                to="/product-rates"
+                to="/product-directory"
                 icon={Package}
+                label="Directory"
+              />
+              <SidebarItem
+                to="/product-rates"
+                icon={CreditCard}
                 label="Product Rates"
+              />
+              <SidebarItem
+                to="/stock-management"
+                icon={Database}
+                label="Stock Management"
               />
             </SidebarGroup>
             
@@ -169,10 +212,22 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
           </div>
           
           <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
+            Master Data
+          </h2>
+          <div className="space-y-1">
+            <SidebarItem to="/master-customers" icon={Users} label="Customers" />
+            <SidebarItem to="/master-products" icon={Package} label="Products" />
+            <SidebarItem to="/master-suppliers" icon={Truck} label="Suppliers" />
+            <SidebarItem to="/master-vehicles" icon={Car} label="Vehicles" />
+            <SidebarItem to="/master-salesmen" icon={User} label="Salesmen" />
+          </div>
+          
+          <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
             Settings
           </h2>
           <div className="space-y-1">
             <SidebarItem to="/settings" icon={Settings} label="App Settings" />
+            <SidebarItem to="/invoice-templates" icon={FileCheck} label="Invoice Templates" />
           </div>
         </div>
       </div>
