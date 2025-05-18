@@ -1,8 +1,8 @@
 
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { DataProvider } from "@/contexts/DataContext";
 import { InvoiceProvider } from "@/contexts/InvoiceContext";
+import { DataProvider } from "@/contexts/data/DataContext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import Login from "@/pages/Login";
@@ -45,11 +45,14 @@ import SupplierRates from "@/pages/SupplierRates";
 import VehicleSalesmanCreate from "@/pages/VehicleSalesmanCreate";
 import VehicleTracking from "@/pages/VehicleTracking";
 import TrackSheet from "@/pages/TrackSheet";
+import TrackSheetHistory from "@/pages/TrackSheetHistory";
 import Expenses from "@/pages/Expenses";
 import PaymentList from "@/pages/PaymentList";
 import PaymentCreate from "@/pages/PaymentCreate";
+import ProductCategories from "@/pages/ProductCategories";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/NotFound";
+import Index from "@/pages/Index";
 
 function App() {
   return (
@@ -58,7 +61,7 @@ function App() {
         <InvoiceProvider>
           <DataProvider>
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -114,6 +117,7 @@ function App() {
                 <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
                 <Route path="/vehicle-tracking" element={<VehicleTracking />} />
                 <Route path="/track-sheet" element={<TrackSheet />} />
+                <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
                 
                 {/* Financial routes */}
                 <Route path="/financial-year" element={<FinancialYear />} />
@@ -127,6 +131,7 @@ function App() {
                 
                 {/* Master data */}
                 <Route path="/master" element={<Master />} />
+                <Route path="/product-categories" element={<ProductCategories />} />
                 
                 {/* Catch all */}
                 <Route path="*" element={<NotFound />} />

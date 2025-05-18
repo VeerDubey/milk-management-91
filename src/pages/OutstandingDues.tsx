@@ -1,12 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
+import { useState, useEffect } from "react";
+import { useData } from "@/contexts/data/DataContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,458 +27,453 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from 'sonner';
-import { 
-  AlertCircle, 
-  Check, 
-  CreditCard, 
-  DollarSign, 
-  Filter, 
-  Search, 
-  Plus,
-  SortDesc,
-  SortAsc,
-  Users,
-  Calendar
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogClose
-} from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { Payment } from '@/types';
+import {
+  MessageSquare,
+  FileText,
+  Calendar,
+  Search,
+  Filter,
+  Phone,
+  UserCircle,
+} from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const OutstandingDues = () => {
-  const navigate = useNavigate();
-  const { customers, orders, payments, addPayment } = useData();
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [minAmount, setMinAmount] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState('all'); // Changed from empty string to "all"
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [paymentNotes, setPaymentNotes] = useState('');
+const DUE_CATEGORIES = {
+  ALL: "all",
+  OVERDUE: "overdue",
+  UPCOMING: "upcoming",
+  CRITICAL: "critical",
+};
+
+export default function OutstandingDues() {
+  const { customers, payments, updateCustomer } = useData();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState(DUE_CATEGORIES.ALL);
+  const [reminderMessage, setReminderMessage] = useState("");
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
-  // Calculate outstanding amount for each customer
-  const customersWithOutstanding = useMemo(() => {
-    return customers.map(customer => {
-      // Get all orders for this customer
-      const customerOrders = orders.filter(order => order.customerId === customer.id);
-      const totalOrdered = customerOrders.reduce((total, order) => total + order.totalAmount, 0);
+  const handleSendReminder = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setReminderDialogOpen(true);
+    
+    // Pre-populate message based on customer details
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      const daysOverdue = customer.lastPaymentDate 
+        ? differenceInDays(new Date(), new Date(customer.lastPaymentDate))
+        : 0;
       
-      // Get all payments for this customer
-      const customerPayments = payments.filter(payment => payment.customerId === customer.id);
-      const totalPaid = customerPayments.reduce((total, payment) => total + payment.amount, 0);
-      
-      // Calculate outstanding
-      const outstandingAmount = totalOrdered - totalPaid;
-      
-      // Get last payment info if available
-      const lastPayment = customerPayments.length > 0
-        ? customerPayments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
-        : null;
-      
-      return {
-        ...customer,
-        totalOrdered,
-        totalPaid,
-        outstandingAmount,
-        lastPaymentDate: lastPayment?.date,
-        lastPaymentAmount: lastPayment?.amount,
-      };
-    }).filter(customer => {
-      // Filter out customers with no outstanding amount
-      const minAmountValue = minAmount ? parseFloat(minAmount) : 0;
-      return customer.outstandingAmount > minAmountValue;
-    });
-  }, [customers, orders, payments, minAmount]);
-
-  // Apply search and filters
-  const filteredCustomers = useMemo(() => {
-    return customersWithOutstanding
-      .filter(customer => {
-        if (!searchQuery) return true;
-        return (
-          customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (customer.phone && customer.phone.includes(searchQuery)) ||
-          (customer.address && customer.address.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      })
-      .filter(customer => {
-        if (selectedCustomerId === 'all') return true; // Changed from empty string to "all"
-        return customer.id === selectedCustomerId;
-      })
-      .sort((a, b) => {
-        return sortOrder === 'asc' 
-          ? a.outstandingAmount - b.outstandingAmount 
-          : b.outstandingAmount - a.outstandingAmount;
-      });
-  }, [customersWithOutstanding, searchQuery, selectedCustomerId, sortOrder]);
-
-  // Calculate total outstanding
-  const totalOutstanding = useMemo(() => {
-    return filteredCustomers.reduce((total, customer) => total + customer.outstandingAmount, 0);
-  }, [filteredCustomers]);
-
-  const handleAddPayment = (customerId: string, customerName: string, amount: number) => {
-    const payment: Omit<Payment, "id"> = {
-      customerId,
-      customerName,
-      amount,
-      date: format(new Date(), "yyyy-MM-dd"),
-      paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
-      notes: paymentNotes
-    };
-
-    addPayment(payment);
-    toast.success(`Payment of ₹${amount.toFixed(2)} added for ${customerName}`);
-    setSelectedCustomerId("all"); // Changed from empty string to "all"
-    setPaymentAmount("");
-    setPaymentMethod("cash");
-    setPaymentNotes("");
-    setPaymentDialogOpen(false);
+      setReminderMessage(
+        `Dear ${customer.name},\n\nThis is a friendly reminder that your payment of ₹${
+          customer.outstandingBalance
+        } is ${daysOverdue > 0 ? `overdue by ${daysOverdue} days` : "due"}.\n\nPlease arrange for payment at your earliest convenience.\n\nRegards,\nVikas Milk Centre`
+      );
+    }
   };
+
+  const handleMarkAsPaid = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setPaymentDialogOpen(true);
+    
+    // Pre-fill payment amount with outstanding balance
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      setPaymentAmount(customer.outstandingBalance?.toString() || "0");
+    }
+  };
+
+  const submitPayment = () => {
+    if (!selectedCustomerId || !paymentAmount || parseFloat(paymentAmount) <= 0) {
+      toast.error("Please enter a valid payment amount");
+      return;
+    }
+    
+    try {
+      const customer = customers.find(c => c.id === selectedCustomerId);
+      if (customer) {
+        const amount = parseFloat(paymentAmount);
+        
+        // Update customer outstanding balance
+        const newBalance = Math.max(0, (customer.outstandingBalance || 0) - amount);
+        
+        updateCustomer(selectedCustomerId, {
+          outstandingBalance: newBalance,
+          lastPaymentDate: new Date().toISOString()
+        });
+        
+        toast.success(`Payment of ₹${amount} recorded for ${customer.name}`);
+        setPaymentDialogOpen(false);
+        setPaymentAmount("");
+        setSelectedCustomerId(null);
+      }
+    } catch (error) {
+      toast.error("Failed to record payment");
+      console.error(error);
+    }
+  };
+
+  const submitReminder = () => {
+    if (!selectedCustomerId || !reminderMessage.trim()) {
+      toast.error("Please enter a reminder message");
+      return;
+    }
+    
+    try {
+      const customer = customers.find(c => c.id === selectedCustomerId);
+      if (customer) {
+        // In a real app, this would send an SMS or email
+        toast.success(`Reminder sent to ${customer.name}`);
+        setReminderDialogOpen(false);
+        setReminderMessage("");
+        setSelectedCustomerId(null);
+      }
+    } catch (error) {
+      toast.error("Failed to send reminder");
+      console.error(error);
+    }
+  };
+
+  const filterCustomersByCategory = (customers: any[]) => {
+    switch(selectedCategory) {
+      case DUE_CATEGORIES.OVERDUE:
+        return customers.filter(c => {
+          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
+          return lastPayment && differenceInDays(new Date(), lastPayment) > 30;
+        });
+      case DUE_CATEGORIES.UPCOMING:
+        return customers.filter(c => {
+          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
+          const days = lastPayment ? differenceInDays(new Date(), lastPayment) : 0;
+          return days >= 15 && days <= 30;
+        });
+      case DUE_CATEGORIES.CRITICAL:
+        return customers.filter(c => {
+          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
+          return lastPayment && differenceInDays(new Date(), lastPayment) > 60;
+        });
+      case DUE_CATEGORIES.ALL:
+      default:
+        return customers;
+    }
+  };
+
+  // Filter customers with outstanding balances
+  const customersWithDues = customers
+    .filter(customer => (customer.outstandingBalance || 0) > 0)
+    .filter(customer => 
+      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone.includes(searchQuery)
+    );
+  
+  const filteredCustomers = filterCustomersByCategory(customersWithDues);
+  
+  // Calculate statistics
+  const totalOutstanding = filteredCustomers.reduce(
+    (total, customer) => total + (customer.outstandingBalance || 0),
+    0
+  );
+  
+  const criticalDues = customers.filter(c => {
+    const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
+    return (
+      (c.outstandingBalance || 0) > 0 && 
+      lastPayment && 
+      differenceInDays(new Date(), lastPayment) > 60
+    );
+  }).length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Outstanding Dues</h1>
-          <p className="text-muted-foreground">
-            Manage and track customer outstanding balances
-          </p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Record Payment
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Record New Payment</DialogTitle>
-              <DialogDescription>
-                Add a payment to reduce outstanding balance
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="customer">Customer</Label>
-                <Select 
-                  value={selectedCustomerId} 
-                  onValueChange={setSelectedCustomerId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customersWithOutstanding
-                      .filter(c => c.outstandingAmount > 0)
-                      .map(customer => (
-                        <SelectItem 
-                          key={customer.id} 
-                          value={customer.id}
-                        >
-                          {customer.name} (₹{customer.outstandingAmount.toLocaleString()})
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                  <Input
-                    id="amount"
-                    type="number"
-                    className="pl-8"
-                    placeholder="0.00"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Payment Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !paymentDate && "text-muted-foreground"
-                      )}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {paymentDate ? format(paymentDate, "PPP") : "Select a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <CalendarComponent
-                      mode="single"
-                      selected={paymentDate}
-                      onSelect={setPaymentDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="payment-method">Payment Method</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="cheque">Cheque</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Enter any additional notes about this payment"
-                  value={paymentNotes}
-                  onChange={(e) => setPaymentNotes(e.target.value)}
-                />
-              </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Outstanding Dues</h1>
+        <p className="text-muted-foreground">
+          Track and manage your customer payment dues
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{totalOutstanding.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              From {filteredCustomers.length} customers
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Critical Dues</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{criticalDues}</div>
+            <p className="text-xs text-muted-foreground">
+              Over 60 days past due
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Due Period</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {
+                filteredCustomers.length > 0
+                  ? Math.round(
+                      filteredCustomers.reduce((sum, customer) => {
+                        const lastPayment = customer.lastPaymentDate
+                          ? new Date(customer.lastPaymentDate)
+                          : new Date();
+                        return sum + differenceInDays(new Date(), lastPayment);
+                      }, 0) / filteredCustomers.length
+                    )
+                  : 0
+              } days
             </div>
-            
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                <Button onClick={() => handleAddPayment(selectedCustomerId, customers.find(c => c.id === selectedCustomerId)?.name || '', Number(paymentAmount))}>Record Payment</Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <p className="text-xs text-muted-foreground">
+              Average time since last payment
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle>Outstanding Balances</CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search customers..."
-                  className="pl-8 w-full sm:w-[200px]"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-              >
-                {sortOrder === 'asc' ? (
-                  <SortAsc className="mr-2 h-4 w-4" />
-                ) : (
-                  <SortDesc className="mr-2 h-4 w-4" />
-                )}
-                Amount
-              </Button>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Filter
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-4">
-                  <div className="space-y-4">
-                    <h4 className="font-medium leading-none">Filter Options</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="customer-filter">Customer</Label>
-                      <Select
-                        value={selectedCustomerId}
-                        onValueChange={setSelectedCustomerId}
-                      >
-                        <SelectTrigger id="customer-filter">
-                          <SelectValue placeholder="All Customers" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Customers</SelectItem>
-                          {customersWithOutstanding.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="min-amount">Minimum Amount</Label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input
-                          id="min-amount"
-                          type="number"
-                          className="pl-8"
-                          placeholder="0.00"
-                          value={minAmount}
-                          onChange={(e) => setMinAmount(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCustomerId('all'); // Changed from empty string to "all"
-                          setMinAmount('');
-                        }}
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <Separator />
-          <CardDescription className="flex justify-between">
-            <span>Showing {filteredCustomers.length} customers with outstanding balance</span>
-            <span className="font-medium">
-              Total Outstanding: ₹{totalOutstanding.toLocaleString()}
-            </span>
-          </CardDescription>
+          <CardTitle>Due Collection</CardTitle>
+          <CardDescription>View and manage customer dues</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer) => (
-                <Card key={customer.id} className="overflow-hidden">
-                  <div className="bg-muted h-1">
-                    <div
-                      className="h-full bg-primary"
-                      style={{
-                        width: `${Math.min(
-                          (customer.totalPaid / (customer.totalOrdered || 1)) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{customer.name}</h3>
-                        {customer.phone && (
-                          <span className="text-sm text-muted-foreground">
-                            ({customer.phone})
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {customer.address}
-                      </p>
-                      {customer.lastPaymentDate && (
-                        <p className="text-xs text-muted-foreground">
-                          Last payment: ₹{customer.lastPaymentAmount?.toLocaleString()} on{' '}
-                          {format(new Date(customer.lastPaymentDate), 'MMM dd, yyyy')}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col sm:items-end gap-2">
-                      <span className="font-bold text-lg">
-                        ₹{customer.outstandingAmount.toLocaleString()}
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedCustomerId(customer.id);
-                            setPaymentAmount(customer.outstandingAmount.toString());
-                            const dialogTrigger = document.querySelector('[data-state="closed"]');
-                            if (dialogTrigger instanceof HTMLButtonElement) {
-                              dialogTrigger.click();
-                            }
-                          }}
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          Pay
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/customer-detail/${customer.id}`)}
-                        >
-                          <Users className="mr-2 h-4 w-4" />
-                          Details
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-1">No outstanding balances found</h3>
-                <p className="text-muted-foreground mb-4">
-                  There are no customers with outstanding balance matching your filters.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCustomerId('all'); // Changed from empty string to "all"
-                    setMinAmount('');
-                  }}
-                >
-                  Clear Filters
-                </Button>
+            <div className="flex flex-col gap-4 md:flex-row justify-between">
+              <div className="flex flex-col gap-4 md:flex-row">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">From:</span>
+                  <DatePicker date={startDate} setDate={setStartDate} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">To:</span>
+                  <DatePicker date={endDate} setDate={setEndDate} />
+                </div>
               </div>
-            )}
+              <div className="flex gap-2">
+                <div className="relative flex-1 md:w-[200px]">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search customers..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-[160px]">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Filter by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={DUE_CATEGORIES.ALL}>All Dues</SelectItem>
+                    <SelectItem value={DUE_CATEGORIES.OVERDUE}>Overdue (30+ days)</SelectItem>
+                    <SelectItem value={DUE_CATEGORIES.UPCOMING}>Upcoming (15-30 days)</SelectItem>
+                    <SelectItem value={DUE_CATEGORIES.CRITICAL}>Critical (60+ days)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead className="text-right">Amount Due (₹)</TableHead>
+                    <TableHead>Last Payment</TableHead>
+                    <TableHead className="text-right">Days Overdue</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4">
+                        No outstanding dues found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCustomers.map((customer) => {
+                      const lastPaymentDate = customer.lastPaymentDate
+                        ? new Date(customer.lastPaymentDate)
+                        : null;
+                      const daysOverdue = lastPaymentDate
+                        ? differenceInDays(new Date(), lastPaymentDate)
+                        : 0;
+                      
+                      let statusBadge;
+                      if (daysOverdue > 60) {
+                        statusBadge = <Badge variant="destructive">Critical</Badge>;
+                      } else if (daysOverdue > 30) {
+                        statusBadge = <Badge variant="destructive">Overdue</Badge>;
+                      } else if (daysOverdue > 15) {
+                        statusBadge = <Badge variant="warning">Due Soon</Badge>;
+                      } else {
+                        statusBadge = <Badge variant="outline">Current</Badge>;
+                      }
+                      
+                      return (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <UserCircle className="h-5 w-5 text-muted-foreground" />
+                              {customer.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              {customer.phone}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            ₹{customer.outstandingBalance?.toLocaleString() || "0"}
+                          </TableCell>
+                          <TableCell>
+                            {lastPaymentDate
+                              ? format(lastPaymentDate, "MMM dd, yyyy")
+                              : "No payments"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span 
+                              className={`font-medium ${
+                                daysOverdue > 30 ? "text-red-600" : 
+                                daysOverdue > 15 ? "text-amber-600" : 
+                                "text-green-600"
+                              }`}
+                            >
+                              {daysOverdue}
+                            </span>
+                          </TableCell>
+                          <TableCell>{statusBadge}</TableCell>
+                          <TableCell>
+                            <div className="flex justify-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendReminder(customer.id)}
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMarkAsPaid(customer.id)}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => navigate('/outstanding')}>
-            Back to Overview
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/payments')}>
-            View All Payments
-          </Button>
-        </CardFooter>
       </Card>
+      
+      {/* Reminder Dialog */}
+      <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Payment Reminder</DialogTitle>
+            <DialogDescription>
+              Send a payment reminder to the customer via SMS or email
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="message" className="text-sm font-medium">
+                Message
+              </label>
+              <textarea
+                id="message"
+                className="w-full min-h-[150px] p-3 rounded-md border border-input"
+                value={reminderMessage}
+                onChange={(e) => setReminderMessage(e.target.value)}
+              ></textarea>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReminderDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitReminder}>Send Reminder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>
+              Record a payment for this outstanding balance
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label htmlFor="paymentAmount" className="text-sm font-medium">
+                Payment Amount (₹)
+              </label>
+              <Input
+                id="paymentAmount"
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="paymentDate" className="text-sm font-medium">
+                Payment Date
+              </label>
+              <Input
+                id="paymentDate"
+                type="date"
+                defaultValue={format(new Date(), "yyyy-MM-dd")}
+                readOnly
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={submitPayment}>Record Payment</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default OutstandingDues;
+}

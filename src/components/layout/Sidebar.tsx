@@ -15,7 +15,14 @@ import {
   UserPlus,
   PackagePlus,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Database,
+  ListFilter,
+  Home,
+  Layers,
+  Map,
+  History,
+  Users
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -74,7 +81,7 @@ const SidebarGroup = ({ label, icon: Icon, children, defaultOpen = false }: Side
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
-      {isOpen && <div className="pl-4">{children}</div>}
+      {isOpen && <div className="pl-9">{children}</div>}
     </div>
   );
 };
@@ -90,7 +97,7 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
           <div className="space-y-1">
             <SidebarItem
               to="/"
-              icon={BarChart}
+              icon={Home}
               label="Dashboard"
               end
             />
@@ -125,9 +132,19 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
             
             <SidebarGroup label="Products" icon={Package} defaultOpen>
               <SidebarItem
-                to="/product-rates"
+                to="/product-list"
                 icon={Package}
+                label="Product List"
+              />
+              <SidebarItem
+                to="/product-rates"
+                icon={CreditCard}
                 label="Product Rates"
+              />
+              <SidebarItem
+                to="/product-categories"
+                icon={ListFilter}
+                label="Categories"
               />
             </SidebarGroup>
             
@@ -162,17 +179,95 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
               />
               <SidebarItem
                 to="/vehicle-tracking"
-                icon={Car}
+                icon={Map}
                 label="Tracking"
+              />
+              <SidebarItem
+                to="/track-sheet"
+                icon={FileText}
+                label="Track Sheet"
+              />
+              <SidebarItem
+                to="/track-sheet-history"
+                icon={History}
+                label="Track Sheet History"
+              />
+            </SidebarGroup>
+
+            <SidebarGroup label="Invoices & Payments" icon={FileText} defaultOpen>
+              <SidebarItem
+                to="/invoices"
+                icon={FileText}
+                label="All Invoices"
+              />
+              <SidebarItem
+                to="/invoice-create"
+                icon={FileText}
+                label="Create Invoice"
+              />
+              <SidebarItem
+                to="/invoice-history"
+                icon={History}
+                label="Invoice History"
+              />
+              <SidebarItem
+                to="/payments"
+                icon={CreditCard}
+                label="Payments List"
+              />
+              <SidebarItem
+                to="/payment-create"
+                icon={CreditCard}
+                label="Create Payment"
+              />
+            </SidebarGroup>
+
+            <SidebarGroup label="Outstanding" icon={CreditCard} defaultOpen>
+              <SidebarItem
+                to="/outstanding-dues"
+                icon={FileText}
+                label="Outstanding Dues"
+              />
+              <SidebarItem
+                to="/outstanding-amounts"
+                icon={CreditCard}
+                label="Outstanding Amounts"
               />
             </SidebarGroup>
           </div>
           
           <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
-            Settings
+            Reports & Settings
           </h2>
           <div className="space-y-1">
-            <SidebarItem to="/settings" icon={Settings} label="App Settings" />
+            <SidebarItem to="/reports" icon={BarChart} label="Reports" />
+            <SidebarItem to="/expenses" icon={CreditCard} label="Expenses" />
+            <SidebarItem to="/financial-year" icon={Database} label="Financial Year" />
+
+            <SidebarGroup label="Master Data" icon={Database} defaultOpen>
+              <SidebarItem
+                to="/product-categories"
+                icon={Package}
+                label="Product Categories"
+              />
+              <SidebarItem
+                to="/areas"
+                icon={Map}
+                label="Area Management"
+              />
+              <SidebarItem
+                to="/bulk-rates"
+                icon={Layers}
+                label="Bulk Rates"
+              />
+              <SidebarItem
+                to="/user-access"
+                icon={Users}
+                label="User Access"
+              />
+            </SidebarGroup>
+            
+            <SidebarItem to="/settings" icon={Settings} label="Settings" />
           </div>
         </div>
       </div>

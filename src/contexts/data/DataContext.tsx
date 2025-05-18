@@ -11,9 +11,8 @@ import { useUISettingsState } from './useUISettingsState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
+import { useInvoice } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
-// Remove the import of useInvoices to break the circular dependency
-// import { useInvoices } from '@/contexts/InvoiceContext';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -30,14 +29,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const vehicleSalesmanState = useVehicleSalesmanState();
   const expenseState = useExpenseState();
   
-  // Remove getting invoice data from InvoiceContext
-  // Instead, we'll provide local empty state functions
-  const mockInvoiceState = {
-    invoices: [],
-    addInvoice: (invoice: any) => '',
-    updateInvoice: (id: string, data: any) => {},
-    deleteInvoice: (id: string) => {}
-  };
+  // Use the actual invoice context data
+  const invoiceState = useInvoice();
 
   // Combine all state objects into one
   const contextValue: DataContextType = {
@@ -51,8 +44,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...uiSettingsState,
     ...vehicleSalesmanState,
     ...expenseState,
-    // Use the mock data instead of the actual invoice context
-    ...mockInvoiceState
+    // Use the actual invoice data
+    ...invoiceState
   };
 
   return (
