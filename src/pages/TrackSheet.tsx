@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
@@ -37,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const TrackSheet = () => {
+  
   const { customers, products, orders, addOrder, vehicles, salesmen } = useData();
   const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -143,8 +143,7 @@ const TrackSheet = () => {
         }),
         vehicleId,
         salesmanId,
-        notes,
-        createdAt: new Date().toISOString()
+        notes
       });
       
       toast.success("Dispatch created successfully");
@@ -155,6 +154,7 @@ const TrackSheet = () => {
     }
   };
 
+  
   const handleResetForm = () => {
     setItems([]);
     setSelectedCustomerId('');
