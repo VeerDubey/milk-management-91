@@ -120,8 +120,10 @@ const TrackSheet = () => {
       // Find the chosen customer name
       const customerName = customers.find(c => c.id === selectedCustomerId)?.name || "Unknown Customer";
       
+      // Fix: Remove the id field from the object passed to addOrder
+      // since it's defined as Omit<Order, "id"> and will generate the ID internally
       addOrder({
-        id: trackSheetNo,
+        // Don't include 'id' here as it's not in the type
         date: format(selectedDate || new Date(), "yyyy-MM-dd"),
         customerName,
         customerId: selectedCustomerId,

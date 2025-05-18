@@ -146,9 +146,16 @@ export default function InvoiceHistory() {
         return;
       }
       
-      const url = generateInvoicePreview(invoice);
-      setPreviewUrl(url);
-      setPreviewInvoiceId(invoiceId);
+      // Fix: Use Promise.then to handle the async result
+      generateInvoicePreview(invoice)
+        .then(url => {
+          setPreviewUrl(url);
+          setPreviewInvoiceId(invoiceId);
+        })
+        .catch(error => {
+          console.error("Error generating invoice preview:", error);
+          toast.error("Failed to generate invoice preview");
+        });
     } catch (error) {
       console.error("Error generating invoice preview:", error);
       toast.error("Failed to generate invoice preview");

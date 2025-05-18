@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -216,9 +215,17 @@ export default function InvoiceCreate() {
           amount: item.amount
         }))
       });
-      const url = generateInvoicePreview(invoice);
-      setPreviewUrl(url);
-      setShowPreview(true);
+      
+      // Fix: Use Promise.then to handle the async result
+      generateInvoicePreview(invoice)
+        .then(url => {
+          setPreviewUrl(url);
+          setShowPreview(true);
+        })
+        .catch(error => {
+          console.error("Error generating preview:", error);
+          toast.error("Failed to generate invoice preview");
+        });
     } catch (error) {
       console.error("Error generating preview:", error);
       toast.error("Failed to generate invoice preview");
