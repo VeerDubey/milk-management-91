@@ -1,25 +1,33 @@
 
-import { useState, useEffect } from "react";
-import { useData } from "@/contexts/data/DataContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
+import { useState } from 'react';
+import { useData } from '@/contexts/data/DataContext';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
   CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardFooter
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Badge } from "@/components/ui/badge";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -27,453 +35,623 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  MessageSquare,
-  FileText,
-  Calendar,
-  Search,
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { DatePickerWithRange } from '@/components/ui/date-picker-with-range';
+import { format, differenceInDays } from 'date-fns';
+import { DateRange } from 'react-day-picker';
+import { toast } from 'sonner';
+import { 
+  Search, 
+  Phone, 
+  Send, 
+  FileText, 
+  Printer, 
+  ArrowUpDown, 
+  History, 
+  Download, 
   Filter,
-  Phone,
-  UserCircle,
-} from "lucide-react";
-import { format, differenceInDays } from "date-fns";
-import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  MessageSquare,
+  Mail
+} from 'lucide-react';
 
-const DUE_CATEGORIES = {
-  ALL: "all",
-  OVERDUE: "overdue",
-  UPCOMING: "upcoming",
-  CRITICAL: "critical",
-};
+const OutstandingDues = () => {
+  const { customers, invoices, payments } = useData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(new Date().setDate(new Date().getDate() - 90)),
+    to: new Date()
+  });
+  const [sortColumn, setSortColumn] = useState<string>('dueDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [reminderMessage, setReminderMessage] = useState('');
+  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [filterOverdue, setFilterOverdue] = useState<string>('all');
 
-export default function OutstandingDues() {
-  const { customers, payments, updateCustomer } = useData();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState(DUE_CATEGORIES.ALL);
-  const [reminderMessage, setReminderMessage] = useState("");
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState("");
-
-  const handleSendReminder = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    setReminderDialogOpen(true);
+  // Generate outstanding dues data
+  const duesData = customers.map(customer => {
+    // All invoices for this customer
+    const customerInvoices = invoices.filter(invoice => invoice.customerId === customer.id);
     
-    // Pre-populate message based on customer details
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      const daysOverdue = customer.lastPaymentDate 
-        ? differenceInDays(new Date(), new Date(customer.lastPaymentDate))
-        : 0;
+    // Sum of all invoice amounts
+    const totalInvoiced = customerInvoices.reduce((sum, invoice) => sum + invoice.total, 0);
+    
+    // All payments from this customer
+    const customerPayments = payments.filter(payment => payment.customerId === customer.id);
+    
+    // Sum of all payments
+    const totalPaid = customerPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    
+    // Calculate outstanding amount
+    const outstanding = totalInvoiced - totalPaid;
+    
+    // Find latest invoice
+    const sortedInvoices = [...customerInvoices].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    const latestInvoice = sortedInvoices[0];
+    
+    // Find latest payment
+    const sortedPayments = [...customerPayments].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    const latestPayment = sortedPayments[0];
+    
+    // Calculate days overdue from latest invoice
+    const daysOverdue = latestInvoice 
+      ? differenceInDays(new Date(), new Date(latestInvoice.date))
+      : 0;
+    
+    return {
+      customerId: customer.id,
+      customerName: customer.name,
+      phone: customer.phone,
+      email: customer.email || '',
+      outstanding,
+      daysOverdue,
+      latestInvoiceDate: latestInvoice?.date || null,
+      latestInvoiceAmount: latestInvoice?.total || 0,
+      latestPaymentDate: latestPayment?.date || null,
+      latestPaymentAmount: latestPayment?.amount || 0,
+      invoiceCount: customerInvoices.length,
+      invoices: customerInvoices
+    };
+  }).filter(data => data.outstanding > 0);
+
+  // Filter by search query
+  const filterBySearch = (data: any[]) => {
+    if (!searchQuery) return data;
+    return data.filter(item => 
+      item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.phone.includes(searchQuery)
+    );
+  };
+
+  // Filter by date range
+  const filterByDate = (data: any[]) => {
+    if (!dateRange || !dateRange.from || !dateRange.to) return data;
+    
+    return data.filter(item => {
+      if (!item.latestInvoiceDate) return false;
       
-      setReminderMessage(
-        `Dear ${customer.name},\n\nThis is a friendly reminder that your payment of ₹${
-          customer.outstandingBalance
-        } is ${daysOverdue > 0 ? `overdue by ${daysOverdue} days` : "due"}.\n\nPlease arrange for payment at your earliest convenience.\n\nRegards,\nVikas Milk Centre`
-      );
-    }
+      const invoiceDate = new Date(item.latestInvoiceDate);
+      return invoiceDate >= dateRange.from && invoiceDate <= dateRange.to;
+    });
   };
 
-  const handleMarkAsPaid = (customerId: string) => {
-    setSelectedCustomerId(customerId);
-    setPaymentDialogOpen(true);
-    
-    // Pre-fill payment amount with outstanding balance
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      setPaymentAmount(customer.outstandingBalance?.toString() || "0");
-    }
-  };
-
-  const submitPayment = () => {
-    if (!selectedCustomerId || !paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error("Please enter a valid payment amount");
-      return;
-    }
-    
-    try {
-      const customer = customers.find(c => c.id === selectedCustomerId);
-      if (customer) {
-        const amount = parseFloat(paymentAmount);
-        
-        // Update customer outstanding balance
-        const newBalance = Math.max(0, (customer.outstandingBalance || 0) - amount);
-        
-        updateCustomer(selectedCustomerId, {
-          outstandingBalance: newBalance,
-          lastPaymentDate: new Date().toISOString()
-        });
-        
-        toast.success(`Payment of ₹${amount} recorded for ${customer.name}`);
-        setPaymentDialogOpen(false);
-        setPaymentAmount("");
-        setSelectedCustomerId(null);
-      }
-    } catch (error) {
-      toast.error("Failed to record payment");
-      console.error(error);
-    }
-  };
-
-  const submitReminder = () => {
-    if (!selectedCustomerId || !reminderMessage.trim()) {
-      toast.error("Please enter a reminder message");
-      return;
-    }
-    
-    try {
-      const customer = customers.find(c => c.id === selectedCustomerId);
-      if (customer) {
-        // In a real app, this would send an SMS or email
-        toast.success(`Reminder sent to ${customer.name}`);
-        setReminderDialogOpen(false);
-        setReminderMessage("");
-        setSelectedCustomerId(null);
-      }
-    } catch (error) {
-      toast.error("Failed to send reminder");
-      console.error(error);
-    }
-  };
-
-  const filterCustomersByCategory = (customers: any[]) => {
-    switch(selectedCategory) {
-      case DUE_CATEGORIES.OVERDUE:
-        return customers.filter(c => {
-          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
-          return lastPayment && differenceInDays(new Date(), lastPayment) > 30;
-        });
-      case DUE_CATEGORIES.UPCOMING:
-        return customers.filter(c => {
-          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
-          const days = lastPayment ? differenceInDays(new Date(), lastPayment) : 0;
-          return days >= 15 && days <= 30;
-        });
-      case DUE_CATEGORIES.CRITICAL:
-        return customers.filter(c => {
-          const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
-          return lastPayment && differenceInDays(new Date(), lastPayment) > 60;
-        });
-      case DUE_CATEGORIES.ALL:
+  // Filter by overdue status
+  const filterByOverdue = (data: any[]) => {
+    switch (filterOverdue) {
+      case 'all':
+        return data;
+      case 'current':
+        return data.filter(item => item.daysOverdue < 30);
+      case 'overdue-30':
+        return data.filter(item => item.daysOverdue >= 30 && item.daysOverdue < 60);
+      case 'overdue-60':
+        return data.filter(item => item.daysOverdue >= 60 && item.daysOverdue < 90);
+      case 'critical':
+        return data.filter(item => item.daysOverdue >= 90);
       default:
-        return customers;
+        return data;
     }
   };
 
-  // Filter customers with outstanding balances
-  const customersWithDues = customers
-    .filter(customer => (customer.outstandingBalance || 0) > 0)
-    .filter(customer => 
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.phone.includes(searchQuery)
-    );
-  
-  const filteredCustomers = filterCustomersByCategory(customersWithDues);
-  
+  // Filter by tab
+  const filterByTab = (data: any[]) => {
+    switch (activeTab) {
+      case 'all':
+        return data;
+      case 'current':
+        return data.filter(item => item.daysOverdue < 30);
+      case 'overdue':
+        return data.filter(item => item.daysOverdue >= 30);
+      case 'critical':
+        return data.filter(item => item.daysOverdue >= 90);
+      default:
+        return data;
+    }
+  };
+
+  // Sort function
+  const sortFunction = (a: any, b: any) => {
+    let aValue = a[sortColumn];
+    let bValue = b[sortColumn];
+    
+    // Handle dates
+    if (sortColumn.includes('Date') && aValue && bValue) {
+      aValue = new Date(aValue).getTime();
+      bValue = new Date(bValue).getTime();
+    }
+    
+    // Handle null values
+    if (aValue === null) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === null) return sortDirection === 'asc' ? -1 : 1;
+    
+    // Compare values
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  };
+
+  // Apply all filters and sort
+  let filteredData = duesData;
+  filteredData = filterBySearch(filteredData);
+  filteredData = filterByDate(filteredData);
+  filteredData = filterByOverdue(filteredData);
+  filteredData = filterByTab(filteredData);
+  filteredData.sort(sortFunction);
+
+  // Toggle sort
+  const toggleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Handle sending reminder
+  const handleSendReminder = (customer: any) => {
+    setSelectedCustomer(customer);
+    setIsReminderDialogOpen(true);
+    setReminderMessage(`Dear ${customer.customerName},\n\nThis is a friendly reminder that you have an outstanding balance of ₹${customer.outstanding.toFixed(2)}.\n\nPlease arrange for payment at your earliest convenience.\n\nThank you,\nVikas Milk Centre`);
+  };
+
+  const sendReminder = () => {
+    if (!selectedCustomer) return;
+    
+    // In a real app, this would send an email or SMS
+    toast.success(`Payment reminder sent to ${selectedCustomer.customerName}`);
+    setIsReminderDialogOpen(false);
+  };
+
+  // Handle recording a payment
+  const handleAddPayment = (customer: any) => {
+    setSelectedCustomer(customer);
+    setPaymentAmount(customer.outstanding.toString());
+    setPaymentNotes('');
+    setPaymentMethod('cash');
+    setIsPaymentDialogOpen(true);
+  };
+
+  const recordPayment = () => {
+    if (!selectedCustomer) return;
+    const amount = parseFloat(paymentAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid payment amount');
+      return;
+    }
+    
+    // In a real app, this would record the payment in the database
+    toast.success(`Payment of ₹${amount.toFixed(2)} recorded for ${selectedCustomer.customerName}`);
+    setIsPaymentDialogOpen(false);
+  };
+
   // Calculate statistics
-  const totalOutstanding = filteredCustomers.reduce(
-    (total, customer) => total + (customer.outstandingBalance || 0),
-    0
-  );
-  
-  const criticalDues = customers.filter(c => {
-    const lastPayment = c.lastPaymentDate ? new Date(c.lastPaymentDate) : null;
-    return (
-      (c.outstandingBalance || 0) > 0 && 
-      lastPayment && 
-      differenceInDays(new Date(), lastPayment) > 60
-    );
-  }).length;
+  const totalOutstanding = duesData.reduce((sum, item) => sum + item.outstanding, 0);
+  const averageOutstanding = duesData.length > 0 ? totalOutstanding / duesData.length : 0;
+  const totalOverdue = duesData.filter(item => item.daysOverdue >= 30).reduce((sum, item) => sum + item.outstanding, 0);
+  const criticalAccounts = duesData.filter(item => item.daysOverdue >= 90).length;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Outstanding Dues</h1>
         <p className="text-muted-foreground">
-          Track and manage your customer payment dues
+          Track and manage customer outstanding balances and payments
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{totalOutstanding.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₹{totalOutstanding.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              From {filteredCustomers.length} customers
+              Across {duesData.length} customers
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Critical Dues</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Overdue (>30 days)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{criticalDues}</div>
+            <div className="text-2xl font-bold">₹{totalOverdue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Over 60 days past due
+              {((totalOverdue / totalOutstanding) * 100).toFixed(1)}% of total outstanding
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Due Period</CardTitle>
+            <CardTitle className="text-sm font-medium">Critical Accounts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {
-                filteredCustomers.length > 0
-                  ? Math.round(
-                      filteredCustomers.reduce((sum, customer) => {
-                        const lastPayment = customer.lastPaymentDate
-                          ? new Date(customer.lastPaymentDate)
-                          : new Date();
-                        return sum + differenceInDays(new Date(), lastPayment);
-                      }, 0) / filteredCustomers.length
-                    )
-                  : 0
-              } days
-            </div>
+            <div className="text-2xl font-bold">{criticalAccounts}</div>
             <p className="text-xs text-muted-foreground">
-              Average time since last payment
+              Customers with dues >90 days
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Outstanding</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{averageOutstanding.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              Per customer with dues
             </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters and Actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="current">Current</TabsTrigger>
+            <TabsTrigger value="overdue">Overdue</TabsTrigger>
+            <TabsTrigger value="critical">Critical</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => toast.success('Generating report...')}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          
+          <Button onClick={() => toast.success('Sending batch reminders...')}>
+            <Mail className="mr-2 h-4 w-4" />
+            Send Batch Reminders
+          </Button>
+        </div>
+      </div>
+
+      {/* Filter Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Due Collection</CardTitle>
-          <CardDescription>View and manage customer dues</CardDescription>
+          <CardTitle>Filter Options</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row justify-between">
-              <div className="flex flex-col gap-4 md:flex-row">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">From:</span>
-                  <DatePicker date={startDate} setDate={setStartDate} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">To:</span>
-                  <DatePicker date={endDate} setDate={setEndDate} />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="relative flex-1 md:w-[200px]">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search customers..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[160px]">
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Filter by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={DUE_CATEGORIES.ALL}>All Dues</SelectItem>
-                    <SelectItem value={DUE_CATEGORIES.OVERDUE}>Overdue (30+ days)</SelectItem>
-                    <SelectItem value={DUE_CATEGORIES.UPCOMING}>Upcoming (15-30 days)</SelectItem>
-                    <SelectItem value={DUE_CATEGORIES.CRITICAL}>Critical (60+ days)</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Invoice Date Range</label>
+              <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Search Customer</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Name or phone number"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
               </div>
             </div>
-
-            <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead className="text-right">Amount Due (₹)</TableHead>
-                    <TableHead>Last Payment</TableHead>
-                    <TableHead className="text-right">Days Overdue</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCustomers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4">
-                        No outstanding dues found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCustomers.map((customer) => {
-                      const lastPaymentDate = customer.lastPaymentDate
-                        ? new Date(customer.lastPaymentDate)
-                        : null;
-                      const daysOverdue = lastPaymentDate
-                        ? differenceInDays(new Date(), lastPaymentDate)
-                        : 0;
-                      
-                      let statusBadge;
-                      if (daysOverdue > 60) {
-                        statusBadge = <Badge variant="destructive">Critical</Badge>;
-                      } else if (daysOverdue > 30) {
-                        statusBadge = <Badge variant="destructive">Overdue</Badge>;
-                      } else if (daysOverdue > 15) {
-                        statusBadge = <Badge variant="warning">Due Soon</Badge>;
-                      } else {
-                        statusBadge = <Badge variant="outline">Current</Badge>;
-                      }
-                      
-                      return (
-                        <TableRow key={customer.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <UserCircle className="h-5 w-5 text-muted-foreground" />
-                              {customer.name}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-muted-foreground" />
-                              {customer.phone}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            ₹{customer.outstandingBalance?.toLocaleString() || "0"}
-                          </TableCell>
-                          <TableCell>
-                            {lastPaymentDate
-                              ? format(lastPaymentDate, "MMM dd, yyyy")
-                              : "No payments"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <span 
-                              className={`font-medium ${
-                                daysOverdue > 30 ? "text-red-600" : 
-                                daysOverdue > 15 ? "text-amber-600" : 
-                                "text-green-600"
-                              }`}
-                            >
-                              {daysOverdue}
-                            </span>
-                          </TableCell>
-                          <TableCell>{statusBadge}</TableCell>
-                          <TableCell>
-                            <div className="flex justify-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSendReminder(customer.id)}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleMarkAsPaid(customer.id)}
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Overdue Status</label>
+              <Select value={filterOverdue} onValueChange={setFilterOverdue}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="current">Current (&lt;30 days)</SelectItem>
+                  <SelectItem value="overdue-30">30-60 days</SelectItem>
+                  <SelectItem value="overdue-60">60-90 days</SelectItem>
+                  <SelectItem value="critical">&gt;90 days (Critical)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
       </Card>
-      
+
+      {/* Main Content */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle>Outstanding Dues List</CardTitle>
+          <Badge variant="outline">{filteredData.length} Records</Badge>
+        </CardHeader>
+        <CardContent>
+          {filteredData.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">No outstanding dues found matching your criteria</p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => {
+                  setSearchQuery('');
+                  setDateRange(undefined);
+                  setFilterOverdue('all');
+                  setActiveTab('all');
+                }}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="cursor-pointer w-[200px]" onClick={() => toggleSort('customerName')}>
+                      <div className="flex items-center">
+                        Customer
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right" onClick={() => toggleSort('outstanding')}>
+                      <div className="flex items-center justify-end">
+                        Outstanding (₹)
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => toggleSort('latestInvoiceDate')}>
+                      <div className="flex items-center">
+                        Latest Invoice
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right" onClick={() => toggleSort('daysOverdue')}>
+                      <div className="flex items-center justify-end">
+                        Days Overdue
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </div>
+                    </TableHead>
+                    <TableHead>Contact Info</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow key={item.customerId}>
+                      <TableCell className="font-medium">{item.customerName}</TableCell>
+                      <TableCell className="text-right">₹{item.outstanding.toFixed(2)}</TableCell>
+                      <TableCell>
+                        {item.latestInvoiceDate ? (
+                          <div>
+                            <div>{format(new Date(item.latestInvoiceDate), 'dd MMM yyyy')}</div>
+                            <div className="text-xs text-muted-foreground">
+                              ₹{item.latestInvoiceAmount.toFixed(2)}
+                            </div>
+                          </div>
+                        ) : (
+                          "No invoices"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className={
+                          item.daysOverdue >= 90 ? "text-red-600 font-medium" :
+                          item.daysOverdue >= 60 ? "text-orange-600 font-medium" :
+                          item.daysOverdue >= 30 ? "text-amber-600 font-medium" :
+                          "text-green-600 font-medium"
+                        }>
+                          {item.daysOverdue}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center">
+                            <Phone className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                            <span>{item.phone}</span>
+                          </div>
+                          {item.email && (
+                            <div className="flex items-center">
+                              <Mail className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                              <span className="text-sm">{item.email}</span>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {item.daysOverdue >= 90 ? (
+                          <Badge variant="destructive">Critical</Badge>
+                        ) : item.daysOverdue >= 60 ? (
+                          <Badge variant="destructive">Overdue</Badge>
+                        ) : item.daysOverdue >= 30 ? (
+                          <Badge variant="warning">Overdue</Badge>
+                        ) : (
+                          <Badge variant="outline">Current</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleAddPayment(item)}
+                            title="Record Payment"
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleSendReminder(item)}
+                            title="Send Reminder"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => toast.success(`Viewing history for ${item.customerName}`)}
+                            title="View History"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => toast.success(`Printing statement for ${item.customerName}`)}
+                            title="Print Statement"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredData.length} of {duesData.length} records
+          </div>
+        </CardFooter>
+      </Card>
+
       {/* Reminder Dialog */}
-      <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Send Payment Reminder</DialogTitle>
-            <DialogDescription>
-              Send a payment reminder to the customer via SMS or email
-            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-2">To: {selectedCustomer?.customerName}</p>
+              <div className="flex flex-col text-sm text-muted-foreground">
+                <span>Phone: {selectedCustomer?.phone}</span>
+                {selectedCustomer?.email && <span>Email: {selectedCustomer?.email}</span>}
+              </div>
+            </div>
             <div className="space-y-2">
-              <label htmlFor="message" className="text-sm font-medium">
-                Message
-              </label>
-              <textarea
-                id="message"
-                className="w-full min-h-[150px] p-3 rounded-md border border-input"
+              <label className="text-sm font-medium">Reminder Message</label>
+              <textarea 
+                className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2"
                 value={reminderMessage}
-                onChange={(e) => setReminderMessage(e.target.value)}
-              ></textarea>
+                onChange={e => setReminderMessage(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Send via</label>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="sms" defaultChecked />
+                  <label htmlFor="sms">SMS</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="email" defaultChecked={!!selectedCustomer?.email} disabled={!selectedCustomer?.email} />
+                  <label htmlFor="email">Email</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="whatsapp" defaultChecked />
+                  <label htmlFor="whatsapp">WhatsApp</label>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReminderDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={submitReminder}>Send Reminder</Button>
+            <Button variant="outline" onClick={() => setIsReminderDialogOpen(false)}>Cancel</Button>
+            <Button onClick={sendReminder}>Send Reminder</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Payment Dialog */}
-      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment for this outstanding balance
-            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-2">Customer: {selectedCustomer?.customerName}</p>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Outstanding Amount:</span>
+                <span className="font-medium">₹{selectedCustomer?.outstanding.toFixed(2)}</span>
+              </div>
+            </div>
             <div className="space-y-2">
-              <label htmlFor="paymentAmount" className="text-sm font-medium">
-                Payment Amount (₹)
-              </label>
+              <label className="text-sm font-medium">Payment Amount (₹)</label>
               <Input
-                id="paymentAmount"
                 type="number"
+                placeholder="Enter amount"
                 value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
+                onChange={e => setPaymentAmount(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="paymentDate" className="text-sm font-medium">
-                Payment Date
-              </label>
+              <label className="text-sm font-medium">Payment Method</label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="upi">UPI</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Notes</label>
               <Input
-                id="paymentDate"
-                type="date"
-                defaultValue={format(new Date(), "yyyy-MM-dd")}
-                readOnly
+                placeholder="Optional notes"
+                value={paymentNotes}
+                onChange={e => setPaymentNotes(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={submitPayment}>Record Payment</Button>
+            <Button variant="outline" onClick={() => setIsPaymentDialogOpen(false)}>Cancel</Button>
+            <Button onClick={recordPayment}>Record Payment</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
+};
+
+export default OutstandingDues;

@@ -1,3 +1,4 @@
+
 // Add this to the existing types/index.ts file, we'll define/update types needed for the app
 
 // Customer type definition
@@ -63,6 +64,7 @@ export interface Order {
   deliveryNotes?: string;
   vehicleId?: string; // Added vehicleId
   salesmanId?: string; // Added salesmanId
+  customerAddress?: string; // Added customerAddress for track sheets
 }
 
 // Payment definition
@@ -99,7 +101,7 @@ export interface Supplier {
   id: string;
   name: string;
   contactPerson?: string;
-  contact?: string; // Added for backward compatibility
+  contact?: string; // For backward compatibility
   phone: string;
   email?: string;
   address: string;
@@ -313,3 +315,54 @@ export interface CustomerLedgerReport {
 
 // Export a CustomerLedgerReportType for clarity
 export type { CustomerLedgerReport as CustomerLedgerReportType };
+
+// Tax Settings
+export interface TaxSetting {
+  id: string;
+  name: string;
+  rate: number;
+  isActive: boolean;
+  applicableOn: string[]; // product categories it applies to
+}
+
+// Area definition
+export interface Area {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  salesmanId?: string;
+  vehicleId?: string;
+}
+
+// Track Sheet definition
+export interface TrackSheet {
+  id: string;
+  date: string;
+  vehicleId: string;
+  salesmanId: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  orders: string[]; // Order IDs
+  notes?: string;
+  totalAmount: number;
+  totalCustomers: number;
+}
+
+// Company Profile definition
+export interface CompanyProfile {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  website?: string;
+  gstNumber?: string;
+  panNumber?: string;
+  bankDetails?: {
+    accountName: string;
+    accountNumber: string;
+    bankName: string;
+    ifscCode: string;
+    branchName?: string;
+  };
+  logo?: string;
+}

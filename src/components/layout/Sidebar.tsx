@@ -22,7 +22,12 @@ import {
   Layers,
   Map,
   History,
-  Users
+  Users,
+  Store,
+  Building2,
+  CalendarDays,
+  BookOpen,
+  DollarSign
 } from 'lucide-react';
 
 interface SidebarItemProps {
@@ -242,7 +247,7 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
           <div className="space-y-1">
             <SidebarItem to="/reports" icon={BarChart} label="Reports" />
             <SidebarItem to="/expenses" icon={CreditCard} label="Expenses" />
-            <SidebarItem to="/financial-year" icon={Database} label="Financial Year" />
+            <SidebarItem to="/financial-year" icon={CalendarDays} label="Financial Year" />
 
             <SidebarGroup label="Master Data" icon={Database} defaultOpen>
               <SidebarItem
@@ -264,6 +269,21 @@ export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
                 to="/user-access"
                 icon={Users}
                 label="User Access"
+              />
+              <SidebarItem
+                to="/company-profile"
+                icon={Building2}
+                label="Company Profile"
+              />
+              <SidebarItem
+                to="/tax-settings"
+                icon={DollarSign}
+                label="Tax Settings"
+              />
+              <SidebarItem
+                to="/invoice-templates"
+                icon={BookOpen}
+                label="Invoice Templates"
               />
             </SidebarGroup>
             

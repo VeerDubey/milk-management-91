@@ -50,6 +50,8 @@ import Expenses from "@/pages/Expenses";
 import PaymentList from "@/pages/PaymentList";
 import PaymentCreate from "@/pages/PaymentCreate";
 import ProductCategories from "@/pages/ProductCategories";
+import TaxSettings from "@/pages/TaxSettings";
+import InvoiceTemplates from "@/pages/InvoiceTemplates";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
@@ -91,6 +93,7 @@ function App() {
                 <Route path="/invoice-create" element={<InvoiceCreate />} />
                 <Route path="/invoice-detail/:id" element={<InvoiceDetail />} />
                 <Route path="/invoice-history" element={<InvoiceHistory />} />
+                <Route path="/invoice-templates" element={<InvoiceTemplates />} />
                 
                 {/* Payment routes */}
                 <Route path="/payments" element={<PaymentList />} />
@@ -122,6 +125,7 @@ function App() {
                 {/* Financial routes */}
                 <Route path="/financial-year" element={<FinancialYear />} />
                 <Route path="/expenses" element={<Expenses />} />
+                <Route path="/tax-settings" element={<TaxSettings />} />
                 
                 {/* Settings routes */}
                 <Route path="/settings" element={<Settings />} />
@@ -132,6 +136,8 @@ function App() {
                 {/* Master data */}
                 <Route path="/master" element={<Master />} />
                 <Route path="/product-categories" element={<ProductCategories />} />
+                <Route path="/areas" element={<Master />} />
+                <Route path="/bulk-rates" element={<Master />} />
                 
                 {/* Catch all */}
                 <Route path="*" element={<NotFound />} />

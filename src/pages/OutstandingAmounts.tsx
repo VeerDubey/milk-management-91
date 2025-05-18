@@ -261,10 +261,10 @@ export default function OutstandingAmounts() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Severities</SelectItem>
-                      <SelectItem value="low">Low (&lt; 15 days)</SelectItem>
+                      <SelectItem value="low">{`Low (< 15 days)`}</SelectItem>
                       <SelectItem value="medium">Medium (15-30 days)</SelectItem>
                       <SelectItem value="high">High (30-60 days)</SelectItem>
-                      <SelectItem value="critical">Critical (&gt; 60 days)</SelectItem>
+                      <SelectItem value="critical">{`Critical (> 60 days)`}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -423,124 +423,120 @@ export default function OutstandingAmounts() {
                           : 0;
                         
                         return (
-                          <div key={index} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{category.label}</span>
-                              <span>{count} customers ({percentage.toFixed(1)}%)</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div key={index} className="flex items-center">
+                            <div className="w-32 text-sm">{category.label}</div>
+                            <div className="flex-1 h-5 bg-gray-200 rounded-full overflow-hidden">
                               <div 
-                                className={`h-full ${category.color} rounded-full`} 
+                                className={`h-full ${category.color}`} 
                                 style={{ width: `${percentage}%` }}
-                              ></div>
+                              />
+                            </div>
+                            <div className="w-16 text-sm text-right ml-2">
+                              {count} ({percentage.toFixed(0)}%)
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   </div>
-                  
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Outstanding by Amount</h3>
-                    <div className="space-y-3">
-                      {[
-                        { label: "₹0 - ₹1,000", color: "bg-blue-500" },
-                        { label: "₹1,000 - ₹5,000", color: "bg-indigo-500" },
-                        { label: "₹5,000 - ₹10,000", color: "bg-purple-500" },
-                        { label: "₹10,000+", color: "bg-pink-500" }
-                      ].map((category, index) => {
-                        // Calculate customers in each category
-                        const count = filteredCustomers.filter(customer => {
-                          const amount = customer.outstandingBalance || 0;
-                          
-                          if (category.label === "₹0 - ₹1,000") return amount > 0 && amount <= 1000;
-                          if (category.label === "₹1,000 - ₹5,000") return amount > 1000 && amount <= 5000;
-                          if (category.label === "₹5,000 - ₹10,000") return amount > 5000 && amount <= 10000;
-                          return amount > 10000;
-                        }).length;
-                        
-                        const percentage = filteredCustomers.length > 0
-                          ? (count / filteredCustomers.length) * 100
-                          : 0;
-                        
-                        return (
-                          <div key={index} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{category.label}</span>
-                              <span>{count} customers ({percentage.toFixed(1)}%)</span>
+                    <h3 className="text-lg font-medium mb-4">Top Overdue Customers</h3>
+                    <div className="space-y-2">
+                      {filteredCustomers
+                        .sort((a, b) => (b.outstandingBalance || 0) - (a.outstandingBalance || 0))
+                        .slice(0, 5)
+                        .map(customer => {
+                          const daysOverdue = customer.lastPaymentDate
+                            ? differenceInDays(new Date(), new Date(customer.lastPaymentDate))
+                            : 0;
+
+                          return (
+                            <div key={customer.id} className="flex justify-between items-center p-2 border-b">
+                              <div>
+                                <div className="font-medium">{customer.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {daysOverdue} days overdue
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-medium">₹{customer.outstandingBalance?.toLocaleString()}</div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleSendReminder(customer)}
+                                  className="h-7 text-xs"
+                                >
+                                  Send Reminder
+                                </Button>
+                              </div>
                             </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full ${category.color} rounded-full`} 
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   </div>
                 </div>
                 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Top 5 Customers with Highest Outstanding</h3>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Customer Name</TableHead>
-                          <TableHead className="text-right">Outstanding Amount (₹)</TableHead>
-                          <TableHead className="text-right">Days Overdue</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredCustomers
-                          .sort((a, b) => 
-                            (b.outstandingBalance || 0) - (a.outstandingBalance || 0)
-                          )
-                          .slice(0, 5)
-                          .map(customer => {
+                  <h3 className="text-lg font-medium mb-4">Actions Required</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Critical Accounts</CardTitle>
+                          <AlertCircle className="h-5 w-5 text-red-500" />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="text-2xl font-bold">{criticalCount}</div>
+                        <Button className="w-full mt-2 bg-red-500 hover:bg-red-600" size="sm">
+                          Send Urgent Reminders
+                        </Button>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Due This Week</CardTitle>
+                          <Calendar className="h-5 w-5 text-yellow-500" />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="text-2xl font-bold">
+                          {filteredCustomers.filter(customer => {
                             const daysOverdue = customer.lastPaymentDate
                               ? differenceInDays(new Date(), new Date(customer.lastPaymentDate))
                               : 0;
-                              
-                            let statusBadge;
-                            if (daysOverdue > 60) {
-                              statusBadge = <Badge variant="destructive">Critical</Badge>;
-                            } else if (daysOverdue > 30) {
-                              statusBadge = <Badge variant="destructive">Overdue</Badge>;
-                            } else if (daysOverdue > 15) {
-                              statusBadge = <Badge variant="warning">Due Soon</Badge>;
-                            } else {
-                              statusBadge = <Badge variant="outline">Current</Badge>;
-                            }
-                            
-                            return (
-                              <TableRow key={customer.id}>
-                                <TableCell>{customer.name}</TableCell>
-                                <TableCell className="text-right font-medium">
-                                  ₹{customer.outstandingBalance?.toLocaleString() || "0"}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <span 
-                                    className={`font-medium ${
-                                      daysOverdue > 60 ? "text-red-600" : 
-                                      daysOverdue > 30 ? "text-red-500" :
-                                      daysOverdue > 15 ? "text-amber-600" : 
-                                      "text-green-600"
-                                    }`}
-                                  >
-                                    {daysOverdue}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{statusBadge}</TableCell>
-                              </TableRow>
-                            );
-                          })
-                        }
-                      </TableBody>
-                    </Table>
+                            return daysOverdue >= 10 && daysOverdue < 15;
+                          }).length}
+                        </div>
+                        <Button className="w-full mt-2" variant="outline" size="sm">
+                          Send Reminders
+                        </Button>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Follow-up Required</CardTitle>
+                          <Phone className="h-5 w-5 text-blue-500" />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="text-2xl font-bold">
+                          {filteredCustomers.filter(customer => {
+                            const daysOverdue = customer.lastPaymentDate
+                              ? differenceInDays(new Date(), new Date(customer.lastPaymentDate))
+                              : 0;
+                            return daysOverdue > 30 && daysOverdue < 60;
+                          }).length}
+                        </div>
+                        <Button className="w-full mt-2" size="sm">
+                          Generate Call List
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </div>
@@ -548,127 +544,6 @@ export default function OutstandingAmounts() {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      {/* View Statement Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Customer Statement</DialogTitle>
-            <DialogDescription>
-              {selectedCustomer?.name} - Outstanding Balance: ₹{selectedCustomer?.outstandingBalance || 0}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="flex justify-between">
-              <div>
-                <h4 className="font-semibold">Customer Details</h4>
-                <p className="text-sm">{selectedCustomer?.name}</p>
-                <p className="text-sm">{selectedCustomer?.phone}</p>
-                {selectedCustomer?.email && <p className="text-sm">{selectedCustomer.email}</p>}
-              </div>
-              <div className="text-right">
-                <h4 className="font-semibold">Statement Date</h4>
-                <p className="text-sm">{format(new Date(), "MMM dd, yyyy")}</p>
-                <p className="text-sm">Vikas Milk Centre</p>
-              </div>
-            </div>
-            
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Amount (₹)</TableHead>
-                    <TableHead className="text-right">Balance (₹)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      Transaction history will appear here
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Please settle your outstanding balance at your earliest convenience.
-                </p>
-              </div>
-              <div className="text-right space-y-2">
-                <div className="flex justify-end gap-2">
-                  <span className="text-sm font-medium">Total Outstanding:</span>
-                  <span className="text-sm font-bold">₹{selectedCustomer?.outstandingBalance || 0}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="flex justify-between sm:justify-between">
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleSendReminder(selectedCustomer)}>
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Send Reminder
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => toast.success("Statement printed")}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
-              <Button onClick={() => setIsViewDialogOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Reminder Dialog */}
-      <Dialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Send Payment Reminder</DialogTitle>
-            <DialogDescription>
-              Send a payment reminder to {selectedCustomer?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <label htmlFor="reminderMessage" className="text-sm font-medium">
-                Message
-              </label>
-              <textarea
-                id="reminderMessage"
-                className="w-full min-h-[150px] p-3 rounded-md border border-input bg-background"
-                value={reminderMessage}
-                onChange={(e) => setReminderMessage(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                This message will be sent via SMS or email to the customer.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-amber-500">
-                Ensure the contact information is correct before sending.
-              </span>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsReminderDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={sendReminder}>
-              <Mail className="mr-2 h-4 w-4" />
-              Send Reminder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
-}
+};
