@@ -1,4 +1,3 @@
-
 // Add this to the existing types/index.ts file, we'll define/update types needed for the app
 
 // Customer type definition
@@ -100,6 +99,7 @@ export interface Supplier {
   id: string;
   name: string;
   contactPerson?: string;
+  contact?: string; // Added for backward compatibility
   phone: string;
   email?: string;
   address: string;
@@ -107,7 +107,8 @@ export interface Supplier {
   outstandingBalance?: number;
   notes?: string;
   products?: string[];
-  category?: string; // Add category field
+  category?: string;
+  status?: string; // Added status property
 }
 
 // Supplier Payment definition
@@ -312,4 +313,3 @@ export interface CustomerLedgerReport {
 
 // Export a CustomerLedgerReportType for clarity
 export type { CustomerLedgerReport as CustomerLedgerReportType };
-

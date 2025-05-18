@@ -23,11 +23,12 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { Supplier } from "@/types";
 
 interface SupplierFormData {
   id?: string;
   name: string;
-  contact: string;
+  contactPerson: string;
   phone: string;
   email: string;
   address: string;
@@ -42,7 +43,7 @@ const SupplierDirectory = () => {
   const [editingSupplier, setEditingSupplier] = useState<string | null>(null);
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
-    contact: '',
+    contactPerson: '',
     phone: '',
     email: '',
     address: '',
@@ -77,12 +78,12 @@ const SupplierDirectory = () => {
     }
   };
 
-  const handleEdit = (supplier: any) => {
+  const handleEdit = (supplier: Supplier) => {
     setFormData({
       name: supplier.name,
-      contact: supplier.contact,
+      contactPerson: supplier.contactPerson || supplier.contact || '',
       phone: supplier.phone,
-      email: supplier.email,
+      email: supplier.email || '',
       address: supplier.address,
       status: supplier.status || 'Active',
       outstandingBalance: supplier.outstandingBalance || 0
@@ -106,7 +107,7 @@ const SupplierDirectory = () => {
   const handleCloseDialog = () => {
     setFormData({
       name: '',
-      contact: '',
+      contactPerson: '',
       phone: '',
       email: '',
       address: '',
@@ -122,7 +123,7 @@ const SupplierDirectory = () => {
     : suppliers.filter(supplier => 
         supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         supplier.phone.includes(searchQuery) ||
-        supplier.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (supplier.email && supplier.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
 
   return (
@@ -141,7 +142,7 @@ const SupplierDirectory = () => {
               setEditingSupplier(null);
               setFormData({
                 name: '',
-                contact: '',
+                contactPerson: '',
                 phone: '',
                 email: '',
                 address: '',
@@ -172,11 +173,11 @@ const SupplierDirectory = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contact">Contact Person</Label>
+                  <Label htmlFor="contactPerson">Contact Person</Label>
                   <Input
-                    id="contact"
-                    name="contact"
-                    value={formData.contact}
+                    id="contactPerson"
+                    name="contactPerson"
+                    value={formData.contactPerson}
                     onChange={handleInputChange}
                     required
                   />
@@ -299,14 +300,14 @@ const SupplierDirectory = () => {
                   {filteredSuppliers.map((supplier) => (
                     <TableRow key={supplier.id}>
                       <TableCell className="font-medium">{supplier.name}</TableCell>
-                      <TableCell>{supplier.contact}</TableCell>
+                      <TableCell>{supplier.contactPerson || supplier.contact || '-'}</TableCell>
                       <TableCell>{supplier.phone}</TableCell>
-                      <TableCell>{supplier.email}</TableCell>
+                      <TableCell>{supplier.email || '-'}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           supplier.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {supplier.status}
+                          {supplier.status || 'Active'}
                         </span>
                       </TableCell>
                       <TableCell>₹{supplier.outstandingBalance?.toFixed(2) || '0.00'}</TableCell>
@@ -337,12 +338,12 @@ const SupplierDirectory = () => {
                 <span>{supplier.name}</span>
                 <Truck className="h-5 w-5" />
               </CardTitle>
-              <p className="text-sm text-gray-200">{supplier.status}</p>
+              <p className="text-sm text-gray-200">{supplier.status || 'Active'}</p>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
                 <p className="font-medium">Contact Person</p>
-                <p className="text-sm text-muted-foreground">{supplier.contact}</p>
+                <p className="text-sm text-muted-foreground">{supplier.contactPerson || supplier.contact || '-'}</p>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex items-center gap-2">
@@ -351,7 +352,7 @@ const SupplierDirectory = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{supplier.email}</span>
+                  <span className="text-sm">{supplier.email || '-'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
