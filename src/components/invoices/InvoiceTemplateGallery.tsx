@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Palette, EyeIcon, CheckCircle, Loader2 } from 'lucide-react';
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
