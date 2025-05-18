@@ -261,10 +261,10 @@ export default function OutstandingAmounts() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Severities</SelectItem>
-                      <SelectItem value="low">Low (< 15 days)</SelectItem>
+                      <SelectItem value="low">Low (&lt; 15 days)</SelectItem>
                       <SelectItem value="medium">Medium (15-30 days)</SelectItem>
                       <SelectItem value="high">High (30-60 days)</SelectItem>
-                      <SelectItem value="critical">Critical (> 60 days)</SelectItem>
+                      <SelectItem value="critical">Critical (&gt; 60 days)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
