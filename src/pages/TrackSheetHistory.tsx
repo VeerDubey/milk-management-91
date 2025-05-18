@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -240,7 +239,6 @@ const TrackSheetHistory = () => {
           <DatePickerWithRange
             date={dateRange}
             onDateChange={setDateRange}
-            align="end"
             className="min-w-[300px]"
           />
         </div>

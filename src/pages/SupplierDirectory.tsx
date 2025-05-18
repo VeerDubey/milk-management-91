@@ -117,9 +117,17 @@ const SupplierDirectory = () => {
       updateSupplier(editingSupplier.id, data);
       toast.success('Supplier updated successfully');
     } else {
+      // Make sure to pass all required fields from the Supplier type
       addSupplier({
-        ...data,
-        outstandingBalance: 0
+        name: data.name, // Explicitly required
+        phone: data.phone, // Explicitly required
+        address: data.address, // Explicitly required
+        contactPerson: data.contactPerson,
+        email: data.email || '',
+        gstNumber: data.gstNumber,
+        notes: data.notes,
+        category: data.category,
+        outstandingBalance: 0 // Required field with default value
       });
       toast.success('Supplier added successfully');
     }
