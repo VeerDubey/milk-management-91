@@ -196,7 +196,7 @@ const Analytics = () => {
           <CardContent>
             <div className="text-2xl font-bold">{customers.length}</div>
             <p className="text-xs text-muted-foreground">
-              {customers.filter(c => c.isActive).length} active customers
+              {customers.filter(c => c.isActive !== false).length} active customers
             </p>
           </CardContent>
         </Card>
@@ -490,7 +490,7 @@ const Analytics = () => {
                   />
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip 
-                    formatter={(value) => [`₹${parseFloat(value).toFixed(2)}`, "Amount"]}
+                    formatter={(value) => [`₹${parseFloat(value.toString()).toFixed(2)}`, "Amount"]}
                     labelFormatter={(label) => format(new Date(label), "dd MMM yyyy")}
                   />
                   <Legend />

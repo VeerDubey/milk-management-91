@@ -52,7 +52,7 @@ const BulkCommunication = () => {
     if (filter === "all") return true;
     if (filter === "withEmail") return !!customer.email;
     if (filter === "withPhone") return !!customer.phone;
-    if (filter === "active") return customer.isActive;
+    if (filter === "active") return customer.isActive !== false;
     
     return true;
   });
