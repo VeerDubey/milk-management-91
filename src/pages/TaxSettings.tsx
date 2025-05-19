@@ -47,21 +47,27 @@ const TaxSettings = () => {
       name: "CGST",
       rate: 9,
       isActive: true,
-      applicableOn: ["all"]
+      applicableOn: ["all"],
+      isDefault: true,
+      appliedTo: ["all"]
     },
     {
       id: "2",
       name: "SGST",
       rate: 9,
       isActive: true,
-      applicableOn: ["all"]
+      applicableOn: ["all"],
+      isDefault: false,
+      appliedTo: ["all"]
     },
     {
       id: "3",
       name: "IGST",
       rate: 18,
       isActive: false,
-      applicableOn: ["all"]
+      applicableOn: ["all"],
+      isDefault: false,
+      appliedTo: ["all"]
     }
   ]);
 
@@ -73,15 +79,19 @@ const TaxSettings = () => {
     name: "",
     rate: 0,
     isActive: true,
-    applicableOn: ["all"]
+    applicableOn: ["all"],
+    isDefault: false,
+    appliedTo: ["all"]
   });
 
   const handleEdit = (tax: TaxSetting) => {
     setFormData({
       name: tax.name,
       rate: tax.rate,
-      isActive: tax.isActive,
-      applicableOn: tax.applicableOn
+      isActive: tax.isActive || false,
+      applicableOn: tax.applicableOn || ["all"],
+      isDefault: tax.isDefault,
+      appliedTo: tax.appliedTo
     });
     setEditingTax(tax.id);
     setIsDialogOpen(true);
@@ -125,7 +135,7 @@ const TaxSettings = () => {
       toast.success("Tax setting updated successfully");
     } else {
       // Add new tax
-      const newTax = {
+      const newTax: TaxSetting = {
         id: `tax-${Date.now()}`,
         ...formData
       };
@@ -141,7 +151,9 @@ const TaxSettings = () => {
       name: "",
       rate: 0,
       isActive: true,
-      applicableOn: ["all"]
+      applicableOn: ["all"],
+      isDefault: false,
+      appliedTo: ["all"]
     });
     setEditingTax(null);
     setIsDialogOpen(false);

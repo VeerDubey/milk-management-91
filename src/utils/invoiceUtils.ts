@@ -258,6 +258,7 @@ export const createInvoiceFromFormData = (
     customerName: formData.customerName,
     customerId: formData.customerId,
     date: formData.invoiceDate,
+    dueDate: formData.dueDate,
     amount: total,
     total: total,
     subtotal: total - ((formData.taxRate || 0) * total / 100),
@@ -306,7 +307,8 @@ export const createInvoiceFromOrder = (
       customerId: item.customerId,
       quantity: item.quantity,
       unitPrice: rate,
-      // Don't include productName as it's not in the OrderItem interface
+      productName: "Product", // Include required property
+      unit: "unit" // Include required property
     };
   });
 
@@ -362,17 +364,16 @@ export const generateInvoiceFromData = (data: any) => {
     customerId: data.customerId || "",
     customerName: data.customerName || "",
     date: currentDate,
-    dueDate: formattedDueDate, // Add the due date
+    dueDate: formattedDueDate, // Added dueDate property
     items: data.items.map((item: any) => ({
       productId: item.productId,
       quantity: item.quantity,
       unitPrice: item.unitPrice || 0,
-      // Don't include productName as it's not in the OrderItem interface
+      productName: "Product", // Include required property
+      unit: "unit" // Include required property
     })),
     status: "draft", // Fix: Using valid status value
     subtotal: data.subtotal || 0,
-    tax: data.tax || 0,
-    discount: data.discount || 0,
     total: data.total || 0,
     invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
   };
