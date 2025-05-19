@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useData } from "@/contexts/data/DataContext";
@@ -88,7 +87,7 @@ export default function TrackSheet() {
     toast.success("Sample template generated");
   };
 
-  // Handle quantity change
+  // Handle quantity change - Fixed TypeScript issues
   const handleQuantityChange = (rowIndex: number, productName: string, value: string) => {
     const newRows = [...rows];
     
@@ -107,7 +106,6 @@ export default function TrackSheet() {
     });
     
     // Calculate amount (assuming a simple calculation for now)
-    // You can replace this with your actual pricing logic
     amount = total * 50; // Assuming ₹50 per unit
     
     newRows[rowIndex].total = total;
@@ -147,7 +145,7 @@ export default function TrackSheet() {
     setRows(newRows);
   };
 
-  // Export to Excel
+  // Export to Excel - Fixed TypeScript issues
   const exportAsExcel = () => {
     const headers = ["Customer", ...productNames, "Total", "Amount"];
     
@@ -155,10 +153,13 @@ export default function TrackSheet() {
       const rowData = [row.name];
       
       productNames.forEach(product => {
-        rowData.push(row.quantities[product] !== "" ? row.quantities[product] : "");
+        // Convert any number values to strings for Excel export
+        const value = row.quantities[product];
+        rowData.push(value === "" ? "" : String(value));
       });
       
-      rowData.push(row.total);
+      // Convert numeric values to strings
+      rowData.push(String(row.total));
       rowData.push(`₹${row.amount}`);
       
       return rowData;
