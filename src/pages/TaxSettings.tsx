@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { 
@@ -177,7 +176,9 @@ const TaxSettings = () => {
                 name: "",
                 rate: 0,
                 isActive: true,
-                applicableOn: ["all"]
+                applicableOn: ["all"],
+                isDefault: false,
+                appliedTo: ["all"]
               });
             }}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -220,6 +221,15 @@ const TaxSettings = () => {
                   onCheckedChange={checked => setFormData({ ...formData, isActive: checked })}
                 />
                 <Label htmlFor="isActive">Active</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isDefault"
+                  checked={formData.isDefault}
+                  onCheckedChange={checked => setFormData({ ...formData, isDefault: checked })}
+                />
+                <Label htmlFor="isDefault">Set as Default</Label>
               </div>
               
               <DialogFooter>
