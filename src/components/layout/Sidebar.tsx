@@ -50,11 +50,7 @@ export function Sidebar({ className }: SidebarProps) {
     { name: "Customers", href: "/customers", icon: Users },
     { name: "Products", href: "/products", icon: Package },
     { name: "Invoices", href: "/invoices", icon: Receipt },
-    { 
-      name: "Messaging",
-      href: "/messaging",
-      icon: MessageSquare
-    },
+    { name: "Messaging", href: "/messaging", icon: MessageSquare },
   ];
 
   const ledgerLinks: NavLink[] = [
@@ -66,6 +62,7 @@ export function Sidebar({ className }: SidebarProps) {
     { name: "Sales Report", href: "/sales-report", icon: BarChart },
     { name: "Outstanding Dues", href: "/outstanding-dues", icon: Coins },
     { name: "Daily Track Sheet", href: "/track-sheet", icon: Calendar },
+    { name: "Track Sheet History", href: "/track-sheet-history", icon: FileText },
   ];
 
   const settingsLinks: NavLink[] = [

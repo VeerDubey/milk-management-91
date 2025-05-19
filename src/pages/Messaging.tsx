@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TemplateManager } from "@/components/messaging/TemplateManager";
 import { MessageSender } from "@/components/messaging/MessageSender";
+import { MessageScheduler } from "@/components/messaging/MessageScheduler";
 import { useData } from '@/contexts/data/DataContext';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ const Messaging = () => {
         <Tabs defaultValue="messages" className="space-y-4">
           <TabsList>
             <TabsTrigger value="messages">Send Messages</TabsTrigger>
+            <TabsTrigger value="scheduler">Schedule Messages</TabsTrigger>
             <TabsTrigger value="templates">Manage Templates</TabsTrigger>
           </TabsList>
           
@@ -139,6 +141,10 @@ const Messaging = () => {
                 )}
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="scheduler">
+            <MessageScheduler />
           </TabsContent>
           
           <TabsContent value="templates">

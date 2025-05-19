@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useData } from "@/contexts/data/DataContext";
@@ -15,6 +16,11 @@ import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { generateTrackSheetPdf, createTrackSheetTemplate, TrackSheetRow, createEmptyTrackSheetRows } from "@/utils/trackSheetUtils";
 import { exportToExcel } from "@/utils/excelUtils";
+import { useLocation, useNavigate } from "react-router-dom";
+import { TrackSheetAnalytics } from "@/components/track-sheet/TrackSheetAnalytics";
+import { TrackSheetHeader } from "@/components/track-sheet/TrackSheetHeader";
+import { TrackSheetDetails } from "@/components/track-sheet/TrackSheetDetails";
+import { SaveTemplateDialog } from "@/components/track-sheet/SaveTemplateDialog";
 
 interface SavedTrackSheet {
   id: string;
@@ -26,6 +32,8 @@ interface SavedTrackSheet {
 }
 
 export default function TrackSheet() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { products, customers } = useData();
   const [date, setDate] = useState<Date>(new Date());
   const [routeName, setRouteName] = useState<string>("");
@@ -36,6 +44,7 @@ export default function TrackSheet() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [newTemplateName, setNewTemplateName] = useState<string>("");
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("editor");
 
   // Get product names for column headers
   useEffect(() => {
@@ -48,6 +57,21 @@ export default function TrackSheet() {
       setRows(emptyRows);
     }
   }, [products]);
+
+  // Handle incoming template data from history page
+  useEffect(() => {
+    if (location.state?.templateData) {
+      const template = location.state.templateData;
+      setDate(new Date(template.date));
+      setRouteName(template.routeName);
+      setRows([...template.rows]);
+      setSelectedTemplate(template.id);
+      setNewTemplateName(template.name);
+      
+      // Clear the location state to prevent reapplying on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Load saved templates from local storage
   useEffect(() => {
@@ -194,19 +218,39 @@ export default function TrackSheet() {
       return;
     }
 
-    const newTemplate: SavedTrackSheet = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newTemplateName,
-      date: date,
-      routeName: routeName,
-      rows: [...rows],
-      createdAt: new Date()
-    };
+    // Check if we're updating an existing template
+    if (selectedTemplate) {
+      const updatedTemplates = savedTemplates.map(t => 
+        t.id === selectedTemplate 
+          ? {
+              ...t,
+              name: newTemplateName,
+              date: date,
+              routeName: routeName,
+              rows: [...rows],
+            }
+          : t
+      );
+      
+      setSavedTemplates(updatedTemplates);
+      toast.success(`Template "${newTemplateName}" updated`);
+    } else {
+      // Create new template
+      const newTemplate: SavedTrackSheet = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newTemplateName,
+        date: date,
+        routeName: routeName,
+        rows: [...rows],
+        createdAt: new Date()
+      };
 
-    setSavedTemplates([...savedTemplates, newTemplate]);
-    setNewTemplateName("");
+      setSavedTemplates([...savedTemplates, newTemplate]);
+      setSelectedTemplate(newTemplate.id);
+      toast.success(`Template "${newTemplateName}" saved`);
+    }
+    
     setIsSaveDialogOpen(false);
-    toast.success(`Template "${newTemplateName}" saved successfully`);
   };
 
   // Load a saved template
@@ -217,6 +261,7 @@ export default function TrackSheet() {
       setRouteName(template.routeName);
       setRows([...template.rows]);
       setSelectedTemplate(templateId);
+      setNewTemplateName(template.name);
       toast.success(`Template "${template.name}" loaded`);
     }
   };
@@ -227,124 +272,36 @@ export default function TrackSheet() {
     setSavedTemplates(updatedTemplates);
     if (selectedTemplate === templateId) {
       setSelectedTemplate(null);
+      setNewTemplateName("");
     }
     toast.success("Template deleted");
   };
 
   return (
     <div className="space-y-6 print:p-4">
-      <div className="flex items-center justify-between print:hidden">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Daily Track Sheet</h1>
-          <p className="text-muted-foreground">
-            Manage delivery routes and track daily sales
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Save className="mr-2 h-4 w-4" />
-                Save Template
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Save Track Sheet Template</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="template-name">Template Name</Label>
-                  <Input
-                    id="template-name"
-                    placeholder="Morning Route Sheet"
-                    value={newTemplateName}
-                    onChange={(e) => setNewTemplateName(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>Cancel</Button>
-                <Button onClick={saveTemplate}>Save</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Button variant="outline" onClick={exportAsExcel}>
-            <Download className="mr-2 h-4 w-4" />
-            Excel
-          </Button>
-          <Button variant="outline" onClick={exportAsPdf}>
-            <FileText className="mr-2 h-4 w-4" />
-            PDF
-          </Button>
-          <Button variant="outline" onClick={printTrackSheet}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-        </div>
-      </div>
+      <TrackSheetHeader 
+        selectedTemplate={selectedTemplate}
+        onOpenSaveDialog={() => setIsSaveDialogOpen(true)}
+        onExportExcel={exportAsExcel}
+        onExportPdf={exportAsPdf}
+        onPrint={printTrackSheet}
+      />
 
-      <Tabs defaultValue="editor" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="print:hidden">
           <TabsTrigger value="editor">Editor</TabsTrigger>
           <TabsTrigger value="templates">Saved Templates</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         
         <TabsContent value="editor" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Track Sheet Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {format(date, "PPP")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(date) => date && setDate(date)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="route">Route Name</Label>
-                  <Input
-                    id="route"
-                    placeholder="Morning Route"
-                    value={routeName}
-                    onChange={(e) => setRouteName(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Actions</Label>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="secondary" 
-                      className="flex-1"
-                      onClick={generateTemplate}
-                    >
-                      Generate Sample
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TrackSheetDetails
+            date={date}
+            routeName={routeName}
+            onDateChange={(date) => date && setDate(date)}
+            onRouteNameChange={setRouteName}
+            onGenerateTemplate={generateTemplate}
+          />
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -473,7 +430,7 @@ export default function TrackSheet() {
                     </TableHeader>
                     <TableBody>
                       {savedTemplates.map((template) => (
-                        <TableRow key={template.id}>
+                        <TableRow key={template.id} className={selectedTemplate === template.id ? "bg-muted" : ""}>
                           <TableCell className="font-medium">{template.name}</TableCell>
                           <TableCell>{format(new Date(template.date), "PPP")}</TableCell>
                           <TableCell>{template.routeName || "—"}</TableCell>
@@ -510,7 +467,20 @@ export default function TrackSheet() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <TrackSheetAnalytics rows={rows} products={productNames} />
+        </TabsContent>
       </Tabs>
+
+      <SaveTemplateDialog
+        open={isSaveDialogOpen}
+        onOpenChange={setIsSaveDialogOpen}
+        templateName={newTemplateName}
+        onTemplateNameChange={setNewTemplateName}
+        onSave={saveTemplate}
+        isUpdate={Boolean(selectedTemplate)}
+      />
     </div>
   );
 }
