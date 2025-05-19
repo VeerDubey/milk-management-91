@@ -27,7 +27,7 @@ import { generateTrackSheetPdf } from '@/utils/trackSheetUtils';
 interface TrackSheetHistoryProps {}
 
 const TrackSheetHistory: React.FC<TrackSheetHistoryProps> = () => {
-  const { trackSheets, vehicles, salesmen } = useData();
+  const { trackSheets = [], vehicles, salesmen } = useData();
   
   // State for filters
   const [filters, setFilters] = useState({
@@ -136,7 +136,7 @@ const TrackSheetHistory: React.FC<TrackSheetHistoryProps> = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Vehicles</SelectItem>
+                <SelectItem value="all">All Vehicles</SelectItem>
                 {vehicles.map(vehicle => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
                     {vehicle.name}
@@ -159,7 +159,7 @@ const TrackSheetHistory: React.FC<TrackSheetHistoryProps> = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Salesmen</SelectItem>
+                <SelectItem value="all">All Salesmen</SelectItem>
                 {salesmen.map(salesman => (
                   <SelectItem key={salesman.id} value={salesman.id}>
                     {salesman.name}
@@ -184,7 +184,7 @@ const TrackSheetHistory: React.FC<TrackSheetHistoryProps> = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Time</SelectItem>
+                <SelectItem value="all-time">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">This Week</SelectItem>
                 <SelectItem value="month">This Month</SelectItem>

@@ -10,6 +10,7 @@ import { useSupplierState } from './useSupplierState';
 import { useUISettingsState } from './useUISettingsState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
+import { useTrackSheetState } from './useTrackSheetState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 import { useInvoice } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
@@ -28,6 +29,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const uiSettingsState = useUISettingsState();
   const vehicleSalesmanState = useVehicleSalesmanState();
   const expenseState = useExpenseState();
+  const trackSheetState = useTrackSheetState();
   
   // Use the actual invoice context data
   const invoiceState = useInvoice();
@@ -44,6 +46,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...uiSettingsState,
     ...vehicleSalesmanState,
     ...expenseState,
+    ...trackSheetState,
     // Use the actual invoice data
     ...invoiceState
   };
