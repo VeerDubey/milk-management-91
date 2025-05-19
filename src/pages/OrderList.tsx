@@ -29,8 +29,10 @@ import {
   MapPin, 
   Package, 
   ClipboardList,
-  Search
+  Search,
+  FileSpreadsheet
 } from "lucide-react";
+import { TrackSheetConverter } from '@/components/track-sheet/TrackSheetConverter';
 
 export default function OrderList() {
   const { orders, customers, products, vehicles, salesmen, updateOrder } = useData();
@@ -47,6 +49,8 @@ export default function OrderList() {
   
   // State for expanded order details
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  // State to control the visibility of TrackSheet conversion UI
+  const [showTrackSheetConverter, setShowTrackSheetConverter] = useState(false);
 
   // Filter orders based on criteria
   const filteredOrders = useMemo(() => {
@@ -160,12 +164,25 @@ export default function OrderList() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Order List</h1>
-        <p className="text-muted-foreground">
-          Manage and assign orders to vehicles and salesmen
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Order List</h1>
+          <p className="text-muted-foreground">
+            Manage and assign orders to vehicles and salesmen
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowTrackSheetConverter(!showTrackSheetConverter)}
+          className="flex items-center"
+        >
+          <FileSpreadsheet className="mr-2 h-4 w-4" />
+          {showTrackSheetConverter ? "Hide Track Sheet Converter" : "Convert to Track Sheet"}
+        </Button>
       </div>
+      
+      {showTrackSheetConverter && (
+        <TrackSheetConverter onConvert={() => setShowTrackSheetConverter(false)} />
+      )}
       
       {/* Filters Section */}
       <Card>
@@ -198,7 +215,7 @@ export default function OrderList() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Vehicles</SelectItem>
+                <SelectItem value="">All Vehicles</SelectItem>
                 {vehicles.map(vehicle => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
                     {vehicle.name} ({vehicle.regNumber})
@@ -218,7 +235,7 @@ export default function OrderList() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Salesmen</SelectItem>
+                <SelectItem value="">All Salesmen</SelectItem>
                 {salesmen.map(salesman => (
                   <SelectItem key={salesman.id} value={salesman.id}>
                     {salesman.name}
@@ -241,7 +258,7 @@ export default function OrderList() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">This Week</SelectItem>
                 <SelectItem value="month">This Month</SelectItem>
@@ -328,6 +345,21 @@ export default function OrderList() {
                           >
                             {expandedOrder === order.id ? 'Hide Details' : 'View Details'}
                           </Button>
+                          
+                          {assignmentStatus === 'fully-assigned' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center"
+                              onClick={() => {
+                                setShowTrackSheetConverter(true);
+                                setExpandedOrder(order.id);
+                              }}
+                            >
+                              <FileSpreadsheet className="mr-1 h-3 w-3" />
+                              To Sheet
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -361,6 +393,17 @@ export default function OrderList() {
                                 </TableBody>
                               </Table>
                             </div>
+                            
+                            {/* Track Sheet Conversion for expanded order */}
+                            {expandedOrder === order.id && showTrackSheetConverter && (
+                              <TrackSheetConverter 
+                                orderId={order.id} 
+                                onConvert={() => {
+                                  setExpandedOrder(null);
+                                  setShowTrackSheetConverter(false);
+                                }}
+                              />
+                            )}
                             
                             {/* Assignment Section */}
                             <div className="grid md:grid-cols-2 gap-4">

@@ -54,6 +54,11 @@ import ProductCategories from "@/pages/ProductCategories";
 import TaxSettings from "@/pages/TaxSettings";
 import InvoiceTemplates from "@/pages/InvoiceTemplates";
 import Messaging from "./pages/Messaging";
+import Communication from "./pages/Communication";
+import EmailTemplates from "./pages/EmailTemplates";
+import SMSTemplates from "./pages/SMSTemplates";
+import BulkCommunication from "./pages/BulkCommunication";
+import Analytics from "./pages/Analytics";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
@@ -118,6 +123,7 @@ function App() {
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/customer-report" element={<CustomerReport />} />
                   <Route path="/sales-report" element={<SalesReport />} />
+                  <Route path="/analytics" element={<Analytics />} />
                   
                   {/* Vehicle/Logistics routes */}
                   <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
@@ -142,8 +148,12 @@ function App() {
                   <Route path="/areas" element={<Master />} />
                   <Route path="/bulk-rates" element={<Master />} />
                   
-                  {/* Messaging */}
+                  {/* Communication routes */}
                   <Route path="/messaging" element={<Messaging />} />
+                  <Route path="/communication" element={<Communication />} />
+                  <Route path="/email-templates" element={<EmailTemplates />} />
+                  <Route path="/sms-templates" element={<SMSTemplates />} />
+                  <Route path="/bulk-communication" element={<BulkCommunication />} />
                   
                   {/* Catch all */}
                   <Route path="*" element={<NotFound />} />

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,8 @@ import {
   BarChart,
   Calendar,
   MessageSquare,
+  Phone,
+  Mail,
 } from "lucide-react";
 
 interface NavLink {
@@ -51,6 +54,7 @@ export function Sidebar({ className }: SidebarProps) {
     { name: "Products", href: "/products", icon: Package },
     { name: "Invoices", href: "/invoices", icon: Receipt },
     { name: "Messaging", href: "/messaging", icon: MessageSquare },
+    { name: "Communication", href: "/communication", icon: Phone },
   ];
 
   const ledgerLinks: NavLink[] = [
@@ -63,6 +67,12 @@ export function Sidebar({ className }: SidebarProps) {
     { name: "Outstanding Dues", href: "/outstanding-dues", icon: Coins },
     { name: "Daily Track Sheet", href: "/track-sheet", icon: Calendar },
     { name: "Track Sheet History", href: "/track-sheet-history", icon: FileText },
+  ];
+
+  const communicationLinks: NavLink[] = [
+    { name: "Email Templates", href: "/email-templates", icon: Mail },
+    { name: "SMS Templates", href: "/sms-templates", icon: MessageSquare },
+    { name: "Bulk Communication", href: "/bulk-communication", icon: Users },
   ];
 
   const settingsLinks: NavLink[] = [
@@ -139,6 +149,35 @@ export function Sidebar({ className }: SidebarProps) {
               <AccordionContent>
                 <div className="space-y-2">
                   {reportsLinks.map((link) => (
+                    <Button
+                      key={link.href}
+                      variant="ghost"
+                      className={cn(
+                        "justify-start w-full pl-8",
+                        location.pathname === link.href
+                          ? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+                          : "hover:bg-secondary-foreground hover:text-secondary-foreground"
+                      )}
+                      onClick={() => navigate(link.href)}
+                    >
+                      <link.icon className="mr-2 h-4 w-4" />
+                      {link.name}
+                    </Button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="communication">
+              <AccordionTrigger className="hover:bg-secondary-foreground hover:text-secondary-foreground">
+                Communication
+                <ChevronsDown className="mr-2 h-4 w-4" />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {communicationLinks.map((link) => (
                     <Button
                       key={link.href}
                       variant="ghost"

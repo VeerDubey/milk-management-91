@@ -14,8 +14,7 @@ import {
   Clock, 
   Calendar, 
   Bell, 
-  UploadCloud, 
-  Search
+  UploadCloud
 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -28,29 +27,23 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useData } from "@/contexts/data/DataContext";
 
 const Communication = () => {
+  const { customers } = useData();
   const [emailSubject, setEmailSubject] = useState("");
   const [emailContent, setEmailContent] = useState("");
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [emailTemplate, setEmailTemplate] = useState("");
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState("");
 
-  // Dummy customer data
-  const customers = [
-    { id: "1", name: "John Doe", email: "john@example.com", phone: "+1234567890" },
-    { id: "2", name: "Jane Smith", email: "jane@example.com", phone: "+1234567891" },
-    { id: "3", name: "Robert Johnson", email: "robert@example.com", phone: "+1234567892" },
-    { id: "4", name: "Emily Davis", email: "emily@example.com", phone: "+1234567893" },
-    { id: "5", name: "Michael Wilson", email: "michael@example.com", phone: "+1234567894" },
-  ];
-
-  // Dummy email templates
+  // Email templates
   const emailTemplates = [
     { id: "1", name: "Payment Reminder", subject: "Payment Reminder for Invoice #[INVOICE_NUMBER]" },
-    { id: "2", name: "Order Confirmation", subject: "Your Order #[ORDER_NUMBER] has been confirmed" },
-    { id: "3", name: "Monthly Statement", subject: "Your Monthly Statement for [MONTH]" },
-    { id: "4", name: "Seasonal Greetings", subject: "Season's Greetings from Fresh Milk Network" },
+    { id: "2", name: "Order Confirmation", subject: "Your Order has been confirmed" },
+    { id: "3", name: "Monthly Statement", subject: "Your Monthly Statement" },
+    { id: "4", name: "Seasonal Greetings", subject: "Season's Greetings from Vikas Milk Center" },
   ];
 
   const handleSelectAll = () => {
@@ -74,6 +67,25 @@ const Communication = () => {
     if (template) {
       setEmailSubject(template.subject);
       setEmailTemplate(templateId);
+      
+      // Set template content based on which template was selected
+      switch(templateId) {
+        case "1":
+          setEmailContent("Dear [Customer Name],\n\nThis is a reminder that invoice #[INVOICE_NUMBER] for Rs.[AMOUNT] is due on [DUE_DATE].\n\nPlease arrange for payment at your earliest convenience.\n\nThank you,\nVikas Milk Center");
+          break;
+        case "2":
+          setEmailContent("Dear [Customer Name],\n\nYour order #[ORDER_NUMBER] has been confirmed and will be delivered on [DELIVERY_DATE].\n\nOrder Details:\n[ORDER_DETAILS]\n\nThank you for your business.\n\nRegards,\nVikas Milk Center");
+          break;
+        case "3":
+          setEmailContent("Dear [Customer Name],\n\nPlease find attached your monthly statement for the period of [START_DATE] to [END_DATE].\n\nTotal amount: Rs.[TOTAL_AMOUNT]\nPaid: Rs.[PAID_AMOUNT]\nOutstanding: Rs.[OUTSTANDING_AMOUNT]\n\nPlease contact us if you have any questions.\n\nRegards,\nVikas Milk Center");
+          break;
+        case "4":
+          setEmailContent("Dear [Customer Name],\n\nWe would like to wish you and your family a joyous and prosperous festival season.\n\nThank you for your continued support.\n\nWarm Regards,\nVikas Milk Center");
+          break;
+        default:
+          setEmailContent("");
+      }
+      
       toast.success(`Template "${template.name}" loaded`);
     }
   };
@@ -94,13 +106,29 @@ const Communication = () => {
       return;
     }
 
-    toast.success(`Email sent to ${selectedCustomers.length} customer(s)`);
+    if (scheduleEnabled && !scheduledDate) {
+      toast.error("Please select a date and time for the scheduled email");
+      return;
+    }
+
+    const selectedCustomerNames = customers
+      .filter(c => selectedCustomers.includes(c.id))
+      .map(c => c.name)
+      .join(", ");
+
+    if (scheduleEnabled) {
+      toast.success(`Email scheduled to be sent to ${selectedCustomers.length} customer(s) on ${new Date(scheduledDate).toLocaleString()}`);
+    } else {
+      toast.success(`Email sent to ${selectedCustomers.length} customer(s)`);
+    }
+    
     // Reset form
     setEmailContent("");
     setEmailSubject("");
     setSelectedCustomers([]);
     setEmailTemplate("");
     setScheduleEnabled(false);
+    setScheduledDate("");
   };
 
   const handleSendSMS = () => {
@@ -142,7 +170,7 @@ const Communication = () => {
 
         <TabsContent value="email" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="md:col-span-2 card-gradient">
+            <Card className="md:col-span-2 bg-gradient-to-br from-blue-900 to-indigo-800 text-white border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Mail className="h-5 w-5" /> 
@@ -239,6 +267,8 @@ const Communication = () => {
                       <div className="flex items-center ml-4 space-x-2">
                         <Input
                           type="datetime-local"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
                           className="bg-white/10 text-white border-gray-600"
                         />
                       </div>
@@ -277,11 +307,6 @@ const Communication = () => {
                     >
                       {selectedCustomers.length === customers.length ? "Deselect All" : "Select All"}
                     </Button>
-                    
-                    <div className="relative w-28">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search" className="pl-8 bg-white/10 border-gray-600 text-white" />
-                    </div>
                   </div>
                   
                   <div className="bg-black/20 rounded-md p-2 max-h-[300px] overflow-y-auto scrollbar-thin">
@@ -301,7 +326,7 @@ const Communication = () => {
                           </div>
                           <div className="ml-3">
                             <p className="font-medium">{customer.name}</p>
-                            <p className="text-xs text-gray-400">{customer.email}</p>
+                            <p className="text-xs text-gray-400">{customer.email || 'No email'}</p>
                           </div>
                         </div>
                         
@@ -310,6 +335,12 @@ const Communication = () => {
                         )}
                       </div>
                     ))}
+
+                    {customers.length === 0 && (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No customers found
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mt-4 pt-2 border-t border-gray-700">
@@ -386,11 +417,6 @@ const Communication = () => {
                     >
                       {selectedCustomers.length === customers.length ? "Deselect All" : "Select All"}
                     </Button>
-                    
-                    <div className="relative w-28">
-                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search" className="pl-8 bg-white/10 border-gray-600 text-white" />
-                    </div>
                   </div>
                   
                   <div className="bg-black/20 rounded-md p-2 max-h-[300px] overflow-y-auto scrollbar-thin">
@@ -410,7 +436,7 @@ const Communication = () => {
                           </div>
                           <div className="ml-3">
                             <p className="font-medium">{customer.name}</p>
-                            <p className="text-xs text-gray-400">{customer.phone}</p>
+                            <p className="text-xs text-gray-400">{customer.phone || 'No phone'}</p>
                           </div>
                         </div>
                         
@@ -419,6 +445,12 @@ const Communication = () => {
                         )}
                       </div>
                     ))}
+
+                    {customers.length === 0 && (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No customers found
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mt-4 pt-2 border-t border-gray-700">
@@ -457,11 +489,6 @@ const Communication = () => {
                       SMS
                     </Button>
                   </div>
-                  
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search history" className="pl-8 w-[200px] bg-white/10 border-gray-600 text-white" />
-                  </div>
                 </div>
                 
                 <div className="rounded-md overflow-hidden">
@@ -477,14 +504,14 @@ const Communication = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-700">
                       <tr className="bg-white/5 hover:bg-white/10">
-                        <td className="py-3 px-4 text-sm text-white">2025-04-15 09:30</td>
+                        <td className="py-3 px-4 text-sm text-white">2025-05-15 09:30</td>
                         <td className="py-3 px-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
                             <Mail className="h-3 w-3 mr-1" /> Email
                           </span>
                         </td>
                         <td className="py-3 px-4 text-sm text-white">12 customers</td>
-                        <td className="py-3 px-4 text-sm text-white">Payment Reminder - April</td>
+                        <td className="py-3 px-4 text-sm text-white">Payment Reminder - May</td>
                         <td className="py-3 px-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
                             <CheckCircle className="h-3 w-3 mr-1" /> Sent
@@ -492,7 +519,7 @@ const Communication = () => {
                         </td>
                       </tr>
                       <tr className="bg-white/5 hover:bg-white/10">
-                        <td className="py-3 px-4 text-sm text-white">2025-04-14 14:15</td>
+                        <td className="py-3 px-4 text-sm text-white">2025-05-14 14:15</td>
                         <td className="py-3 px-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
                             <MessageSquare className="h-3 w-3 mr-1" /> SMS
@@ -507,7 +534,7 @@ const Communication = () => {
                         </td>
                       </tr>
                       <tr className="bg-white/5 hover:bg-white/10">
-                        <td className="py-3 px-4 text-sm text-white">2025-04-10 11:45</td>
+                        <td className="py-3 px-4 text-sm text-white">2025-05-20 11:45</td>
                         <td className="py-3 px-4">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
                             <Mail className="h-3 w-3 mr-1" /> Email
