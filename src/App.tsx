@@ -1,4 +1,3 @@
-
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { InvoiceProvider } from "@/contexts/InvoiceContext";
@@ -52,6 +51,7 @@ import PaymentCreate from "@/pages/PaymentCreate";
 import ProductCategories from "@/pages/ProductCategories";
 import TaxSettings from "@/pages/TaxSettings";
 import InvoiceTemplates from "@/pages/InvoiceTemplates";
+import Messaging from "./pages/Messaging";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
@@ -138,6 +138,9 @@ function App() {
                 <Route path="/product-categories" element={<ProductCategories />} />
                 <Route path="/areas" element={<Master />} />
                 <Route path="/bulk-rates" element={<Master />} />
+                
+                {/* Messaging */}
+                <Route path="/messaging" element={<Messaging />} />
                 
                 {/* Catch all */}
                 <Route path="*" element={<NotFound />} />

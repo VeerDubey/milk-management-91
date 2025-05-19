@@ -1,294 +1,185 @@
-
-import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
-  Car,
-  FileText,
-  User,
-  Settings,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import {
+  Home,
+  LayoutDashboard,
   Package,
   ShoppingCart,
-  CreditCard,
+  Users,
+  Settings,
+  ChevronsDown,
+  Coins,
+  Receipt,
+  FileText,
   Truck,
   BarChart,
-  UserPlus,
-  PackagePlus,
-  ChevronDown,
-  ChevronRight,
-  Database,
-  ListFilter,
-  Home,
-  Layers,
-  Map,
-  History,
-  Users,
-  Store,
-  Building2,
-  CalendarDays,
-  BookOpen,
-  DollarSign
-} from 'lucide-react';
+  Calendar,
+  MessageSquare,
+} from "lucide-react";
 
-interface SidebarItemProps {
-  to: string;
+interface NavLink {
+  name: string;
+  href: string;
   icon: any;
-  label: string;
-  end?: boolean;
-}
-
-interface SidebarGroupProps {
-  label: string;
-  icon: any;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
 }
 
 interface SidebarProps {
-  collapsed: boolean;
-  toggleSidebar: () => void;
+  className?: string;
 }
 
-const SidebarItem = ({ to, icon: Icon, label, end = false }: SidebarItemProps) => (
-  <NavLink
-    to={to}
-    end={end}
-    className={({ isActive }) =>
-      cn(
-        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all',
-        isActive
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:bg-muted'
-      )
-    }
-  >
-    <Icon className="h-4 w-4" />
-    <span>{label}</span>
-  </NavLink>
-);
+export function Sidebar({ className }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-const SidebarGroup = ({ label, icon: Icon, children, defaultOpen = false }: SidebarGroupProps) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const toggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
+  };
+
+  const mainNavLinks: NavLink[] = [
+    { name: "Dashboard", href: "/", icon: Home },
+    { name: "Orders", href: "/orders", icon: ShoppingCart },
+    { name: "Customers", href: "/customers", icon: Users },
+    { name: "Products", href: "/products", icon: Package },
+    { name: "Invoices", href: "/invoices", icon: Receipt },
+    { 
+      name: "Messaging",
+      href: "/messaging",
+      icon: MessageSquare  // Make sure MessageSquare is imported from lucide-react
+    },
+  ];
+
+  const ledgerLinks: NavLink[] = [
+    { name: "Customer Ledger", href: "/customer-ledger", icon: FileText },
+    { name: "Supplier Ledger", href: "/supplier-ledger", icon: Truck },
+  ];
+
+  const reportsLinks: NavLink[] = [
+    { name: "Sales Report", href: "/sales-report", icon: BarChart },
+    { name: "Outstanding Dues", href: "/outstanding-dues", icon: Coins },
+    { name: "Daily Track Sheet", href: "/track-sheet", icon: Calendar },
+  ];
+
+  const settingsLinks: NavLink[] = [
+    { name: "Settings", href: "/settings", icon: Settings },
+  ];
 
   return (
-    <div className="space-y-1">
-      <button
-        className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{label}</span>
+    <div
+      className={cn(
+        "flex flex-col w-64 border-r bg-secondary h-screen fixed top-0 left-0",
+        className
+      )}
+    >
+      <div className="p-4">
+        <Button variant="ghost" className="justify-start w-full p-0">
+          <LayoutDashboard className="mr-2 h-4 w-4" />
+          Vikas Milk Center
+        </Button>
+      </div>
+      <div className="flex-grow p-4 flex flex-col justify-between">
+        <div className="space-y-2">
+          {mainNavLinks.map((link) => (
+            <Button
+              key={link.href}
+              variant="ghost"
+              className={cn(
+                "justify-start w-full",
+                location.pathname === link.href
+                  ? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+                  : "hover:bg-secondary-foreground hover:text-secondary-foreground"
+              )}
+              onClick={() => navigate(link.href)}
+            >
+              <link.icon className="mr-2 h-4 w-4" />
+              {link.name}
+            </Button>
+          ))}
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="ledgers">
+              <AccordionTrigger className="hover:bg-secondary-foreground hover:text-secondary-foreground">
+                Ledgers
+                <ChevronsDown className="mr-2 h-4 w-4" />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {ledgerLinks.map((link) => (
+                    <Button
+                      key={link.href}
+                      variant="ghost"
+                      className={cn(
+                        "justify-start w-full pl-8",
+                        location.pathname === link.href
+                          ? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+                          : "hover:bg-secondary-foreground hover:text-secondary-foreground"
+                      )}
+                      onClick={() => navigate(link.href)}
+                    >
+                      <link.icon className="mr-2 h-4 w-4" />
+                      {link.name}
+                    </Button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="reports">
+              <AccordionTrigger className="hover:bg-secondary-foreground hover:text-secondary-foreground">
+                Reports
+                <ChevronsDown className="mr-2 h-4 w-4" />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {reportsLinks.map((link) => (
+                    <Button
+                      key={link.href}
+                      variant="ghost"
+                      className={cn(
+                        "justify-start w-full pl-8",
+                        location.pathname === link.href
+                          ? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+                          : "hover:bg-secondary-foreground hover:text-secondary-foreground"
+                      )}
+                      onClick={() => navigate(link.href)}
+                    >
+                      <link.icon className="mr-2 h-4 w-4" />
+                      {link.name}
+                    </Button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
-        {isOpen ? (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-      {isOpen && <div className="pl-9">{children}</div>}
-    </div>
-  );
-};
 
-export function Sidebar({ collapsed, toggleSidebar }: SidebarProps) {
-  return (
-    <div className="flex h-full flex-col overflow-y-auto border-r bg-background">
-      <div className="flex-1 py-4">
-        <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Main Menu
-          </h2>
-          <div className="space-y-1">
-            <SidebarItem
-              to="/"
-              icon={Home}
-              label="Dashboard"
-              end
-            />
-            <SidebarItem 
-              to="/order-entry" 
-              icon={ShoppingCart} 
-              label="Order Entry" 
-            />
-          </div>
-          
-          <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
-            Management
-          </h2>
-          <div className="space-y-1">
-            <SidebarGroup label="Customers" icon={User} defaultOpen>
-              <SidebarItem
-                to="/customer-directory"
-                icon={User}
-                label="Directory"
-              />
-              <SidebarItem
-                to="/customer-ledger"
-                icon={FileText}
-                label="Ledger"
-              />
-              <SidebarItem
-                to="/customer-rates"
-                icon={CreditCard}
-                label="Rates"
-              />
-            </SidebarGroup>
-            
-            <SidebarGroup label="Products" icon={Package} defaultOpen>
-              <SidebarItem
-                to="/product-list"
-                icon={Package}
-                label="Product List"
-              />
-              <SidebarItem
-                to="/product-rates"
-                icon={CreditCard}
-                label="Product Rates"
-              />
-              <SidebarItem
-                to="/product-categories"
-                icon={ListFilter}
-                label="Categories"
-              />
-            </SidebarGroup>
-            
-            <SidebarGroup label="Suppliers" icon={Truck} defaultOpen>
-              <SidebarItem
-                to="/supplier-directory"
-                icon={Truck}
-                label="Directory"
-              />
-              <SidebarItem
-                to="/supplier-ledger"
-                icon={FileText}
-                label="Ledger"
-              />
-              <SidebarItem
-                to="/supplier-rates"
-                icon={CreditCard}
-                label="Rates"
-              />
-              <SidebarItem
-                to="/supplier-payments"
-                icon={CreditCard}
-                label="Payments"
-              />
-            </SidebarGroup>
-            
-            <SidebarGroup label="Logistics" icon={Car} defaultOpen>
-              <SidebarItem
-                to="/vehicle-salesman-create"
-                icon={Car}
-                label="Vehicle & Salesmen"
-              />
-              <SidebarItem
-                to="/vehicle-tracking"
-                icon={Map}
-                label="Tracking"
-              />
-              <SidebarItem
-                to="/track-sheet"
-                icon={FileText}
-                label="Track Sheet"
-              />
-              <SidebarItem
-                to="/track-sheet-history"
-                icon={History}
-                label="Track Sheet History"
-              />
-            </SidebarGroup>
-
-            <SidebarGroup label="Invoices & Payments" icon={FileText} defaultOpen>
-              <SidebarItem
-                to="/invoices"
-                icon={FileText}
-                label="All Invoices"
-              />
-              <SidebarItem
-                to="/invoice-create"
-                icon={FileText}
-                label="Create Invoice"
-              />
-              <SidebarItem
-                to="/invoice-history"
-                icon={History}
-                label="Invoice History"
-              />
-              <SidebarItem
-                to="/payments"
-                icon={CreditCard}
-                label="Payments List"
-              />
-              <SidebarItem
-                to="/payment-create"
-                icon={CreditCard}
-                label="Create Payment"
-              />
-            </SidebarGroup>
-
-            <SidebarGroup label="Outstanding" icon={CreditCard} defaultOpen>
-              <SidebarItem
-                to="/outstanding-dues"
-                icon={FileText}
-                label="Outstanding Dues"
-              />
-              <SidebarItem
-                to="/outstanding-amounts"
-                icon={CreditCard}
-                label="Outstanding Amounts"
-              />
-            </SidebarGroup>
-          </div>
-          
-          <h2 className="mt-6 mb-2 px-4 text-lg font-semibold tracking-tight">
-            Reports & Settings
-          </h2>
-          <div className="space-y-1">
-            <SidebarItem to="/reports" icon={BarChart} label="Reports" />
-            <SidebarItem to="/expenses" icon={CreditCard} label="Expenses" />
-            <SidebarItem to="/financial-year" icon={CalendarDays} label="Financial Year" />
-
-            <SidebarGroup label="Master Data" icon={Database} defaultOpen>
-              <SidebarItem
-                to="/product-categories"
-                icon={Package}
-                label="Product Categories"
-              />
-              <SidebarItem
-                to="/areas"
-                icon={Map}
-                label="Area Management"
-              />
-              <SidebarItem
-                to="/bulk-rates"
-                icon={Layers}
-                label="Bulk Rates"
-              />
-              <SidebarItem
-                to="/user-access"
-                icon={Users}
-                label="User Access"
-              />
-              <SidebarItem
-                to="/company-profile"
-                icon={Building2}
-                label="Company Profile"
-              />
-              <SidebarItem
-                to="/tax-settings"
-                icon={DollarSign}
-                label="Tax Settings"
-              />
-              <SidebarItem
-                to="/invoice-templates"
-                icon={BookOpen}
-                label="Invoice Templates"
-              />
-            </SidebarGroup>
-            
-            <SidebarItem to="/settings" icon={Settings} label="Settings" />
-          </div>
+        <div>
+          {settingsLinks.map((link) => (
+            <Button
+              key={link.href}
+              variant="ghost"
+              className={cn(
+                "justify-start w-full",
+                location.pathname === link.href
+                  ? "bg-accent text-accent-foreground"
+                  : ""
+              )}
+              onClick={() => navigate(link.href)}
+            >
+              <link.icon className="mr-2 h-4 w-4" />
+              {link.name}
+            </Button>
+          ))}
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { MessagingService } from '@/services/MessagingService';
 
 type CustomerType = {
   customerId: string;
@@ -30,20 +31,73 @@ export const ReminderDialog = ({
   selectedCustomer 
 }: ReminderDialogProps) => {
   const [reminderMessage, setReminderMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [channels, setChannels] = useState<string[]>([]);
 
   useEffect(() => {
     if (selectedCustomer) {
       setReminderMessage(
         `Dear ${selectedCustomer.customerName},\n\nThis is a friendly reminder that you have an outstanding balance of ₹${selectedCustomer.outstanding.toFixed(2)}.\n\nPlease arrange for payment at your earliest convenience.\n\nThank you,\nVikas Milk Centre`
       );
+      
+      // Set default channels based on available contact info
+      const availableChannels = [];
+      if (selectedCustomer.phone) {
+        availableChannels.push('sms', 'whatsapp');
+      }
+      if (selectedCustomer.email) {
+        availableChannels.push('email');
+      }
+      setChannels(availableChannels);
     }
   }, [selectedCustomer]);
 
-  const sendReminder = () => {
-    if (!selectedCustomer) return;
+  const toggleChannel = (channel: string) => {
+    setChannels(prev => 
+      prev.includes(channel) 
+        ? prev.filter(c => c !== channel) 
+        : [...prev, channel]
+    );
+  };
+
+  const sendReminder = async () => {
+    if (!selectedCustomer || channels.length === 0) return;
     
-    toast.success(`Payment reminder sent to ${selectedCustomer.customerName}`);
-    onOpenChange(false);
+    setIsSending(true);
+    try {
+      let success = false;
+      
+      for (const channel of channels) {
+        if ((channel === 'email' && !selectedCustomer.email) || 
+            ((channel === 'sms' || channel === 'whatsapp') && !selectedCustomer.phone)) {
+          continue;
+        }
+        
+        const result = await MessagingService.sendMessage({
+          recipient: {
+            name: selectedCustomer.customerName,
+            phone: selectedCustomer.phone,
+            email: selectedCustomer.email,
+          },
+          content: reminderMessage,
+          channel: channel as any
+        });
+        
+        if (result) success = true;
+      }
+      
+      if (success) {
+        toast.success(`Payment reminder sent to ${selectedCustomer.customerName}`);
+        onOpenChange(false);
+      } else {
+        toast.error("Failed to send reminder through any channel");
+      }
+    } catch (error) {
+      console.error("Error sending reminder:", error);
+      toast.error("Failed to send reminder");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -72,28 +126,51 @@ export const ReminderDialog = ({
             <label className="text-sm font-medium">Send via</label>
             <div className="flex gap-4">
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="sms" defaultChecked />
+                <input 
+                  type="checkbox" 
+                  id="sms" 
+                  checked={channels.includes('sms')} 
+                  onChange={() => toggleChannel('sms')}
+                  disabled={!selectedCustomer?.phone}
+                />
                 <label htmlFor="sms">SMS</label>
               </div>
               <div className="flex items-center space-x-2">
                 <input 
                   type="checkbox" 
                   id="email" 
-                  defaultChecked={!!selectedCustomer?.email} 
+                  checked={channels.includes('email')} 
+                  onChange={() => toggleChannel('email')}
                   disabled={!selectedCustomer?.email} 
                 />
                 <label htmlFor="email">Email</label>
               </div>
               <div className="flex items-center space-x-2">
-                <input type="checkbox" id="whatsapp" defaultChecked />
+                <input 
+                  type="checkbox" 
+                  id="whatsapp" 
+                  checked={channels.includes('whatsapp')}
+                  onChange={() => toggleChannel('whatsapp')}
+                  disabled={!selectedCustomer?.phone}
+                />
                 <label htmlFor="whatsapp">WhatsApp</label>
               </div>
             </div>
+            {channels.length === 0 && (
+              <p className="text-sm text-amber-500">
+                Please select at least one delivery method
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={sendReminder}>Send Reminder</Button>
+          <Button 
+            onClick={sendReminder} 
+            disabled={isSending || channels.length === 0}
+          >
+            {isSending ? 'Sending...' : 'Send Reminder'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

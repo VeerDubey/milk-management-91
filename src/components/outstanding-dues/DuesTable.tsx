@@ -19,6 +19,7 @@ import {
   CardContent,
   CardFooter
 } from '@/components/ui/card';
+import { exportToExcel } from '@/utils/excelUtils';
 
 type DuesItemType = {
   customerId: string;
@@ -69,11 +70,46 @@ export const DuesTable = ({
     setActiveTab('all');
   };
 
+  const handleExportToExcel = () => {
+    try {
+      // Prepare data for export
+      const headers = ["Customer Name", "Phone", "Email", "Outstanding (₹)", "Days Overdue", 
+                      "Latest Invoice Date", "Latest Invoice Amount (₹)"];
+      
+      const data = filteredData.map(item => [
+        item.customerName,
+        item.phone || "",
+        item.email || "",
+        item.outstanding,
+        item.daysOverdue,
+        item.latestInvoiceDate ? format(new Date(item.latestInvoiceDate), "dd/MM/yyyy") : "N/A",
+        item.latestInvoiceAmount
+      ]);
+      
+      // Export to Excel
+      exportToExcel(headers, data, "Outstanding_Dues.xlsx");
+      toast.success("Exported to Excel successfully!");
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast.error("Failed to export to Excel");
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>Outstanding Dues List</CardTitle>
-        <Badge variant="outline">{filteredData.length} Records</Badge>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleExportToExcel}
+            disabled={filteredData.length === 0}
+          >
+            Export to Excel
+          </Button>
+          <Badge variant="outline">{filteredData.length} Records</Badge>
+        </div>
       </CardHeader>
       <CardContent>
         {filteredData.length === 0 ? (
