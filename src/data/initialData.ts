@@ -10,7 +10,8 @@ export const initialCustomers: Customer[] = [
     lastPaymentDate: "2025-04-05",
     lastPaymentAmount: 2500,
     isActive: true,
-    email: "ganesh@example.com"
+    email: "ganesh@example.com",
+    area: "North Zone"
   },
   {
     id: "c2",
@@ -21,7 +22,8 @@ export const initialCustomers: Customer[] = [
     lastPaymentDate: "2025-04-07",
     lastPaymentAmount: 1800,
     isActive: true,
-    email: "sharma@example.com"
+    email: "sharma@example.com",
+    area: "South Zone"
   },
   {
     id: "c3",
@@ -32,7 +34,8 @@ export const initialCustomers: Customer[] = [
     lastPaymentDate: "2025-04-08",
     lastPaymentAmount: 1500,
     isActive: true,
-    email: "patel@example.com"
+    email: "patel@example.com",
+    area: "East Zone"
   },
   {
     id: "c4",
@@ -43,7 +46,8 @@ export const initialCustomers: Customer[] = [
     lastPaymentDate: "2025-04-09",
     lastPaymentAmount: 1200,
     isActive: true,
-    email: "sunrise@example.com"
+    email: "sunrise@example.com",
+    area: "West Zone"
   },
   {
     id: "c5",
@@ -54,7 +58,8 @@ export const initialCustomers: Customer[] = [
     lastPaymentDate: "2025-04-10",
     lastPaymentAmount: 2000,
     isActive: true,
-    email: "greenvalley@example.com"
+    email: "greenvalley@example.com",
+    area: "Central Zone"
   },
 ];
 
@@ -86,7 +91,8 @@ export const initialProducts: Product[] = [
     description: "A2 milk",
     unit: "Liter",
     sku: "AMUL-A2-01",
-    category: "Amul"
+    category: "Amul",
+    isActive: true
   },
   {
     id: "p4",
@@ -95,7 +101,8 @@ export const initialProducts: Product[] = [
     description: "Pasteurized milk",
     unit: "Liter",
     sku: "MAHA-01",
-    category: "Mahananda"
+    category: "Mahananda",
+    isActive: true
   },
   {
     id: "p5",
@@ -104,7 +111,8 @@ export const initialProducts: Product[] = [
     description: "Full cream milk",
     unit: "Liter",
     sku: "GOKUL-CH-01",
-    category: "Gokul"
+    category: "Gokul",
+    isActive: true
   },
   {
     id: "p6",
@@ -113,7 +121,8 @@ export const initialProducts: Product[] = [
     description: "Full cream milk",
     unit: "Liter",
     sku: "GOKUL-CF-01",
-    category: "Gokul"
+    category: "Gokul",
+    isActive: true
   },
   {
     id: "p7",
@@ -122,7 +131,8 @@ export const initialProducts: Product[] = [
     description: "Special milk",
     unit: "Liter",
     sku: "GOKUL-SH-01",
-    category: "Gokul"
+    category: "Gokul",
+    isActive: true
   },
   {
     id: "p8",
@@ -131,7 +141,8 @@ export const initialProducts: Product[] = [
     description: "Special milk",
     unit: "Liter",
     sku: "GOKUL-SF-01",
-    category: "Gokul"
+    category: "Gokul",
+    isActive: true
   },
   {
     id: "p9",
@@ -140,7 +151,8 @@ export const initialProducts: Product[] = [
     description: "High protein milk",
     unit: "Liter",
     sku: "GOKUL-SK-01",
-    category: "Gokul"
+    category: "Gokul",
+    isActive: true
   },
   {
     id: "p10",
@@ -149,7 +161,8 @@ export const initialProducts: Product[] = [
     description: "Curd - half kg",
     unit: "Pack",
     sku: "GOKUL-DH-01",
-    category: "Curd"
+    category: "Curd",
+    isActive: true
   },
   {
     id: "p11",
@@ -158,7 +171,8 @@ export const initialProducts: Product[] = [
     description: "Curd - full kg",
     unit: "Pack",
     sku: "GOKUL-DF-01",
-    category: "Curd"
+    category: "Curd",
+    isActive: true
   },
   {
     id: "p12",
@@ -167,7 +181,8 @@ export const initialProducts: Product[] = [
     description: "Toned milk - half liter",
     unit: "Pack",
     sku: "TONE-H-01",
-    category: "Toned Milk"
+    category: "Toned Milk",
+    isActive: true
   },
   {
     id: "p13",
@@ -176,7 +191,8 @@ export const initialProducts: Product[] = [
     description: "Toned milk - full liter",
     unit: "Pack",
     sku: "TONE-F-01",
-    category: "Toned Milk"
+    category: "Toned Milk",
+    isActive: true
   },
   {
     id: "p14",
@@ -185,7 +201,8 @@ export const initialProducts: Product[] = [
     description: "Special milk - half liter",
     unit: "Pack",
     sku: "SPL-H-01",
-    category: "Special Milk"
+    category: "Special Milk",
+    isActive: true
   },
   {
     id: "p15",
@@ -194,7 +211,8 @@ export const initialProducts: Product[] = [
     description: "Special milk - full liter",
     unit: "Pack",
     sku: "SPL-F-01",
-    category: "Special Milk"
+    category: "Special Milk",
+    isActive: true
   },
   {
     id: "p16",
@@ -203,7 +221,8 @@ export const initialProducts: Product[] = [
     description: "Special milk - jar",
     unit: "Jar",
     sku: "SPL-J-01",
-    category: "Special Milk"
+    category: "Special Milk",
+    isActive: true
   },
   {
     id: "p17",
@@ -212,7 +231,8 @@ export const initialProducts: Product[] = [
     description: "Akshara milk",
     unit: "Liter",
     sku: "AKSH-01",
-    category: "Akshara"
+    category: "Akshara",
+    isActive: true
   },
   {
     id: "p18",
@@ -221,7 +241,8 @@ export const initialProducts: Product[] = [
     description: "Sarthi milk",
     unit: "Liter",
     sku: "SARTHI-01",
-    category: "Sarthi"
+    category: "Sarthi",
+    isActive: true
   },
   {
     id: "p19",
@@ -230,7 +251,8 @@ export const initialProducts: Product[] = [
     description: "Warna special milk",
     unit: "Liter",
     sku: "WARNA-SPL-01",
-    category: "Warna"
+    category: "Warna",
+    isActive: true
   },
   {
     id: "p20",
@@ -239,7 +261,8 @@ export const initialProducts: Product[] = [
     description: "Warna cow milk",
     unit: "Liter",
     sku: "WARNA-COW-01",
-    category: "Warna"
+    category: "Warna",
+    isActive: true
   },
   {
     id: "p21",
@@ -248,7 +271,8 @@ export const initialProducts: Product[] = [
     description: "Warna tazza milk",
     unit: "Liter",
     sku: "WARNA-TZ-01",
-    category: "Warna"
+    category: "Warna",
+    isActive: true
   },
   {
     id: "p22",
@@ -257,7 +281,8 @@ export const initialProducts: Product[] = [
     description: "Amul buttermilk",
     unit: "Bottle",
     sku: "AMUL-TAAK-01",
-    category: "Buttermilk"
+    category: "Buttermilk",
+    isActive: true
   },
   {
     id: "p23",
@@ -266,7 +291,8 @@ export const initialProducts: Product[] = [
     description: "Warna buttermilk",
     unit: "Bottle",
     sku: "WARNA-TAAK-01",
-    category: "Buttermilk"
+    category: "Buttermilk",
+    isActive: true
   },
   {
     id: "p24",
@@ -275,7 +301,8 @@ export const initialProducts: Product[] = [
     description: "Warna curd",
     unit: "Pack",
     sku: "WARNA-DAHI-01",
-    category: "Curd"
+    category: "Curd",
+    isActive: true
   },
   {
     id: "p25",
@@ -284,7 +311,8 @@ export const initialProducts: Product[] = [
     description: "100ml cream",
     unit: "Pack",
     sku: "CREAM-100-01",
-    category: "Cream"
+    category: "Cream",
+    isActive: true
   },
   {
     id: "p26",
@@ -293,7 +321,8 @@ export const initialProducts: Product[] = [
     description: "150ml cream",
     unit: "Pack",
     sku: "CREAM-150-01",
-    category: "Cream"
+    category: "Cream",
+    isActive: true
   },
   {
     id: "p27",
@@ -302,7 +331,8 @@ export const initialProducts: Product[] = [
     description: "80ml Amul cream",
     unit: "Pack",
     sku: "AMUL-CREAM-80-01",
-    category: "Cream"
+    category: "Cream",
+    isActive: true
   },
   {
     id: "p28",
@@ -311,7 +341,8 @@ export const initialProducts: Product[] = [
     description: "200ml Amul cream",
     unit: "Pack",
     sku: "AMUL-CREAM-200-01",
-    category: "Cream"
+    category: "Cream",
+    isActive: true
   }
 ];
 

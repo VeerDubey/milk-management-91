@@ -4,10 +4,10 @@ import {
   CustomerProductRate, SupplierProductRate, 
   Supplier, UISettings, Vehicle, Salesman, 
   Expense, TrackSheet, Invoice, SupplierPayment,
-  StockRecord, StockEntry
+  StockRecord, StockEntry, StockEntryItem
 } from '@/types';
 
-// Define these types directly since they're not in the imported modules
+// Define these types directly
 export interface OrderData {
   customerId: string;
   items: { productId: string; quantity: number; unitPrice: number }[];
@@ -72,6 +72,14 @@ export interface DataContextType {
   deleteSupplierPayment: (id: string) => void;
   
   // Stock state
+  stockRecords: StockRecord[];
+  stockEntries: StockEntry[];
+  addStockRecord: (record: Omit<StockRecord, "id">) => void;
+  updateStockRecord: (id: string, recordData: Partial<StockRecord>) => void;
+  deleteStockRecord: (id: string) => void;
+  addStockEntry: (entry: StockEntry) => void;
+  updateStockEntry: (id: string, entryData: Partial<StockEntry>) => void;
+  deleteStockEntry: (id: string) => void;
   addStock: (supplierId: string, productId: string, quantity: number, pricePerUnit: number, date: string) => void;
   
   // UI Settings state
@@ -101,15 +109,8 @@ export interface DataContextType {
   deleteTrackSheet: (id: string) => void;
   
   // Invoice context data
-  invoices?: Invoice[];
-  orderData?: OrderData;
-  paymentAmounts?: PaymentAmount[];
-  setOrderData?: (orderData: OrderData) => void;
-  addPaymentAmount?: (paymentAmount: PaymentAmount) => void;
-  removePaymentAmount?: (index: number) => void;
-  updatePaymentAmount?: (index: number, paymentAmount: Partial<PaymentAmount>) => void;
-  clearPaymentAmounts?: () => void;
-  addInvoice?: (invoice: Omit<Invoice, "id">) => string;
-  updateInvoice?: (id: string, invoiceData: Partial<Invoice>) => void;
-  deleteInvoice?: (id: string) => void;
+  invoices: Invoice[];
+  addInvoice: (invoice: Omit<Invoice, "id">) => string;
+  updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
+  deleteInvoice: (id: string) => void;
 }

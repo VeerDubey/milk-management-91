@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useData } from "@/contexts/DataContext";
-// Change import to use StockEntryItem instead of StockEntry
 import { Product, StockEntry, StockEntryItem, Supplier } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,21 +98,21 @@ const StockManagement = () => {
       return;
     }
 
-    if (products.length === 0) {
+    if (stockItems.length === 0) {
       toast.error("Please add at least one product");
       return;
     }
 
     // Convert stockItems with rate to items with unitPrice and total
-    const convertedItems = stockItems.map(item => ({
+    const convertedItems: StockEntryItem[] = stockItems.map(item => ({
       productId: item.productId,
       quantity: item.quantity,
       unitPrice: item.rate, // Use rate as unitPrice
       total: item.quantity * item.rate
     }));
 
-    const entry: Omit<StockEntry, "id"> = {
-      date: format(entryDate, "yyyy-MM-dd"),
+    const entry: StockEntry = {
+      date: format(entryDate || new Date(), "yyyy-MM-dd"),
       supplierId: selectedSupplierId,
       totalAmount: calculateTotal(),
       items: convertedItems,
@@ -121,7 +120,7 @@ const StockManagement = () => {
       notes: notes
     };
 
-    addStockEntry(entry as StockEntry);
+    addStockEntry(entry);
     toast.success("Stock entry added successfully");
     resetForm();
   };

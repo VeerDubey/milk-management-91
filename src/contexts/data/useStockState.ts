@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { StockRecord, StockEntry } from '@/types';
+import { StockRecord, StockEntry, StockEntryItem } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export function useStockState(updateSupplier: Function) {
   const [stockRecords, setStockRecords] = useState<StockRecord[]>(() => {
@@ -42,41 +43,52 @@ export function useStockState(updateSupplier: Function) {
   };
   
   const addStockEntry = (entry: StockEntry) => {
-    setStockEntries([...stockEntries, entry]);
+    const newEntry = {
+      ...entry,
+      id: entry.id || `se${Date.now()}`
+    };
     
-    entry.items.forEach(item => {
-      const latestRecord = [...stockRecords]
-        .filter(record => record.productId === item.productId)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-      
-      if (latestRecord) {
-        const closingStock = latestRecord.closingStock + item.quantity;
-        addStockRecord({
-          date: entry.date,
-          productId: item.productId,
-          openingStock: latestRecord.closingStock,
-          received: item.quantity,
-          dispatched: 0,
-          closingStock: closingStock,
-          minStockLevel: latestRecord.minStockLevel
-        });
-      } else {
-        addStockRecord({
-          date: entry.date,
-          productId: item.productId,
-          openingStock: 0,
-          received: item.quantity,
-          dispatched: 0,
-          closingStock: item.quantity
-        });
-      }
-    });
+    setStockEntries([...stockEntries, newEntry]);
     
-    const supplier = { id: entry.supplierId, outstandingBalance: 0 }; // Using dummy object with required props
-    const newBalance = (supplier.outstandingBalance || 0) + entry.totalAmount;
-    updateSupplier(supplier.id, {
-      outstandingBalance: newBalance
-    });
+    // Update stock records based on stock entry
+    if (entry.items && entry.items.length > 0) {
+      entry.items.forEach(item => {
+        const latestRecord = [...stockRecords]
+          .filter(record => record.productId === item.productId)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        
+        if (latestRecord) {
+          const closingStock = latestRecord.closingStock + item.quantity;
+          addStockRecord({
+            date: entry.date,
+            productId: item.productId,
+            openingStock: latestRecord.closingStock,
+            received: item.quantity,
+            dispatched: 0,
+            closingStock: closingStock,
+            minStockLevel: latestRecord.minStockLevel
+          });
+        } else {
+          addStockRecord({
+            date: entry.date,
+            productId: item.productId,
+            openingStock: 0,
+            received: item.quantity,
+            dispatched: 0,
+            closingStock: item.quantity
+          });
+        }
+      });
+    }
+    
+    // Update supplier outstanding balance
+    if (entry.supplierId) {
+      const supplier = { id: entry.supplierId, outstandingBalance: 0 }; // Using dummy object with required props
+      const newBalance = (supplier.outstandingBalance || 0) + entry.totalAmount;
+      updateSupplier(supplier.id, {
+        outstandingBalance: newBalance
+      });
+    }
   };
 
   const updateStockEntry = (id: string, entryData: Partial<StockEntry>) => {
@@ -91,6 +103,25 @@ export function useStockState(updateSupplier: Function) {
     setStockEntries(stockEntries.filter((entry) => entry.id !== id));
   };
 
+  // Simple addStock function to satisfy the interface
+  const addStock = (supplierId: string, productId: string, quantity: number, pricePerUnit: number, date: string) => {
+    const stockItem: StockEntryItem = {
+      productId,
+      quantity,
+      unitPrice: pricePerUnit,
+      total: quantity * pricePerUnit
+    };
+    
+    const entry: StockEntry = {
+      date,
+      supplierId,
+      items: [stockItem],
+      totalAmount: stockItem.total,
+    };
+    
+    addStockEntry(entry);
+  };
+
   return {
     stockRecords,
     stockEntries,
@@ -99,6 +130,7 @@ export function useStockState(updateSupplier: Function) {
     deleteStockRecord,
     addStockEntry,
     updateStockEntry,
-    deleteStockEntry
+    deleteStockEntry,
+    addStock
   };
 }

@@ -9,6 +9,7 @@ export interface Customer {
   lastPaymentDate?: string;
   lastPaymentAmount?: number;
   email?: string;
+  area?: string;
 }
 
 export interface Product {
@@ -39,6 +40,8 @@ export interface Order {
   salesmanId: string;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'partial';
+  customerId?: string; // Added for CustomerLedger
+  total?: number; // Added for CustomerLedger
 }
 
 export interface Payment {
@@ -90,25 +93,32 @@ export interface SupplierPayment {
   notes?: string;
 }
 
-export interface Stock {
-  id: string;
-  supplierId: string;
+export interface StockEntryItem {
   productId: string;
   quantity: number;
-  pricePerUnit: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface StockEntry {
+  id?: string;
   date: string;
+  supplierId: string;
+  items: StockEntryItem[];
+  totalAmount: number;
+  referenceNumber?: string;
+  notes?: string;
 }
 
 export interface StockRecord {
   id: string;
   date: string;
-  entries: StockEntry[];
-}
-
-export interface StockEntry {
   productId: string;
-  quantity: number;
-  price: number;
+  openingStock: number;
+  received: number;
+  dispatched: number;
+  closingStock: number;
+  minStockLevel?: number;
 }
 
 export interface UISettings {
@@ -174,4 +184,24 @@ export interface Invoice {
   taxRate?: number;
   discount?: number;
   shipping?: number;
+}
+
+export interface CustomerLedgerEntry {
+  id: string;
+  date: string;
+  type: 'order' | 'payment';
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  reference: string;
+}
+
+export interface CustomerLedgerReportType {
+  customer: Customer;
+  entries: CustomerLedgerEntry[];
+  startingBalance: number;
+  endingBalance: number;
+  totalDebit: number;
+  totalCredit: number;
 }
