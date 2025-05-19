@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -5,7 +6,6 @@ import App from './App.tsx';
 import './index.css';
 import { ElectronDetector } from './components/ElectronDetector.tsx';
 import { OfflineStorageService } from './services/OfflineStorageService';
-import { MessagingProvider } from './contexts/MessagingContext';
 
 // Enhanced global error handler with more details
 window.addEventListener('error', (event) => {
@@ -40,9 +40,7 @@ if (rootElement) {
       <React.StrictMode>
         <BrowserRouter>
           <ElectronDetector />
-          <MessagingProvider>
-            <App />
-          </MessagingProvider>
+          <App />
         </BrowserRouter>
       </React.StrictMode>
     );

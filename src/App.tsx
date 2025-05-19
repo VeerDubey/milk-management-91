@@ -1,7 +1,9 @@
+
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { InvoiceProvider } from "@/contexts/InvoiceContext";
 import { DataProvider } from "@/contexts/data/DataContext";
+import { MessagingProvider } from "@/contexts/MessagingContext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import Login from "@/pages/Login";
@@ -60,96 +62,98 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <InvoiceProvider>
-          <DataProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                
-                {/* Customer routes */}
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/customer-directory" element={<CustomerList />} />
-                <Route path="/customer-detail/:id" element={<CustomerDetail />} />
-                <Route path="/customer-ledger" element={<CustomerLedger />} />
-                <Route path="/customer-rates" element={<CustomerRates />} />
-                
-                {/* Order routes */}
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/order-list" element={<OrderList />} />
-                <Route path="/order-entry" element={<OrderEntry />} />
-                
-                {/* Inventory routes */}
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/product-list" element={<ProductList />} />
-                <Route path="/product-detail/:id" element={<ProductDetail />} />
-                <Route path="/product-rates" element={<ProductRates />} />
-                <Route path="/stock-management" element={<StockManagement />} />
-                <Route path="/stock-settings" element={<StockSettings />} />
-                
-                {/* Invoice routes */}
-                <Route path="/invoices" element={<Invoices />} />
-                <Route path="/invoice-create" element={<InvoiceCreate />} />
-                <Route path="/invoice-detail/:id" element={<InvoiceDetail />} />
-                <Route path="/invoice-history" element={<InvoiceHistory />} />
-                <Route path="/invoice-templates" element={<InvoiceTemplates />} />
-                
-                {/* Payment routes */}
-                <Route path="/payments" element={<PaymentList />} />
-                <Route path="/payment-create" element={<PaymentCreate />} />
-                
-                {/* Supplier routes */}
-                <Route path="/suppliers" element={<Suppliers />} />
-                <Route path="/supplier-directory" element={<SupplierDirectory />} />
-                <Route path="/supplier-ledger" element={<SupplierLedger />} />
-                <Route path="/supplier-payments" element={<SupplierPayments />} />
-                <Route path="/supplier-rates" element={<SupplierRates />} />
-                
-                {/* Outstanding routes */}
-                <Route path="/outstanding" element={<Outstanding />} />
-                <Route path="/outstanding-dues" element={<OutstandingDues />} />
-                <Route path="/outstanding-amounts" element={<OutstandingAmounts />} />
-                
-                {/* Reports routes */}
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/customer-report" element={<CustomerReport />} />
-                <Route path="/sales-report" element={<SalesReport />} />
-                
-                {/* Vehicle/Logistics routes */}
-                <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
-                <Route path="/vehicle-tracking" element={<VehicleTracking />} />
-                <Route path="/track-sheet" element={<TrackSheet />} />
-                <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
-                
-                {/* Financial routes */}
-                <Route path="/financial-year" element={<FinancialYear />} />
-                <Route path="/expenses" element={<Expenses />} />
-                <Route path="/tax-settings" element={<TaxSettings />} />
-                
-                {/* Settings routes */}
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/ui-settings" element={<UISettings />} />
-                <Route path="/user-access" element={<UserAccess />} />
-                <Route path="/company-profile" element={<CompanyProfile />} />
-                
-                {/* Master data */}
-                <Route path="/master" element={<Master />} />
-                <Route path="/product-categories" element={<ProductCategories />} />
-                <Route path="/areas" element={<Master />} />
-                <Route path="/bulk-rates" element={<Master />} />
-                
-                {/* Messaging */}
-                <Route path="/messaging" element={<Messaging />} />
-                
-                {/* Catch all */}
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </DataProvider>
-        </InvoiceProvider>
+        <DataProvider>
+          <InvoiceProvider>
+            <MessagingProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route element={<Layout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  
+                  {/* Customer routes */}
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/customer-directory" element={<CustomerList />} />
+                  <Route path="/customer-detail/:id" element={<CustomerDetail />} />
+                  <Route path="/customer-ledger" element={<CustomerLedger />} />
+                  <Route path="/customer-rates" element={<CustomerRates />} />
+                  
+                  {/* Order routes */}
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/order-list" element={<OrderList />} />
+                  <Route path="/order-entry" element={<OrderEntry />} />
+                  
+                  {/* Inventory routes */}
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/product-list" element={<ProductList />} />
+                  <Route path="/product-detail/:id" element={<ProductDetail />} />
+                  <Route path="/product-rates" element={<ProductRates />} />
+                  <Route path="/stock-management" element={<StockManagement />} />
+                  <Route path="/stock-settings" element={<StockSettings />} />
+                  
+                  {/* Invoice routes */}
+                  <Route path="/invoices" element={<Invoices />} />
+                  <Route path="/invoice-create" element={<InvoiceCreate />} />
+                  <Route path="/invoice-detail/:id" element={<InvoiceDetail />} />
+                  <Route path="/invoice-history" element={<InvoiceHistory />} />
+                  <Route path="/invoice-templates" element={<InvoiceTemplates />} />
+                  
+                  {/* Payment routes */}
+                  <Route path="/payments" element={<PaymentList />} />
+                  <Route path="/payment-create" element={<PaymentCreate />} />
+                  
+                  {/* Supplier routes */}
+                  <Route path="/suppliers" element={<Suppliers />} />
+                  <Route path="/supplier-directory" element={<SupplierDirectory />} />
+                  <Route path="/supplier-ledger" element={<SupplierLedger />} />
+                  <Route path="/supplier-payments" element={<SupplierPayments />} />
+                  <Route path="/supplier-rates" element={<SupplierRates />} />
+                  
+                  {/* Outstanding routes */}
+                  <Route path="/outstanding" element={<Outstanding />} />
+                  <Route path="/outstanding-dues" element={<OutstandingDues />} />
+                  <Route path="/outstanding-amounts" element={<OutstandingAmounts />} />
+                  
+                  {/* Reports routes */}
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/customer-report" element={<CustomerReport />} />
+                  <Route path="/sales-report" element={<SalesReport />} />
+                  
+                  {/* Vehicle/Logistics routes */}
+                  <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
+                  <Route path="/vehicle-tracking" element={<VehicleTracking />} />
+                  <Route path="/track-sheet" element={<TrackSheet />} />
+                  <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
+                  
+                  {/* Financial routes */}
+                  <Route path="/financial-year" element={<FinancialYear />} />
+                  <Route path="/expenses" element={<Expenses />} />
+                  <Route path="/tax-settings" element={<TaxSettings />} />
+                  
+                  {/* Settings routes */}
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/ui-settings" element={<UISettings />} />
+                  <Route path="/user-access" element={<UserAccess />} />
+                  <Route path="/company-profile" element={<CompanyProfile />} />
+                  
+                  {/* Master data */}
+                  <Route path="/master" element={<Master />} />
+                  <Route path="/product-categories" element={<ProductCategories />} />
+                  <Route path="/areas" element={<Master />} />
+                  <Route path="/bulk-rates" element={<Master />} />
+                  
+                  {/* Messaging */}
+                  <Route path="/messaging" element={<Messaging />} />
+                  
+                  {/* Catch all */}
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+              <Toaster position="top-right" />
+            </MessagingProvider>
+          </InvoiceProvider>
+        </DataProvider>
       </AuthProvider>
-      <Toaster position="top-right" />
     </ThemeProvider>
   );
 }

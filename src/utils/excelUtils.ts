@@ -13,6 +13,11 @@ export function exportToExcel(
   filename: string = "export.xlsx"
 ): void {
   try {
+    // Ensure filename has correct extension
+    if (!filename.toLowerCase().endsWith('.xlsx')) {
+      filename += '.xlsx';
+    }
+    
     // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([columns, ...data]);
     
@@ -20,8 +25,20 @@ export function exportToExcel(
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
     
+    // Apply custom styling for header row
+    const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!worksheet[cellAddress]) continue;
+      
+      // Apply bold formatting to header cells
+      worksheet[cellAddress].s = { font: { bold: true } };
+    }
+    
     // Write to file and trigger download
-    XLSX.writeFile(workbook, filename);
+    XLSX.writeFile(workbook, filename, { compression: true });
+    
+    console.log(`Excel file "${filename}" exported successfully`);
   } catch (error) {
     console.error("Error exporting to Excel:", error);
     throw error;
@@ -35,13 +52,27 @@ export function exportToExcel(
  */
 export function exportTableToExcel(tableId: string, filename: string = "export.xlsx"): void {
   try {
+    // Ensure filename has correct extension
+    if (!filename.toLowerCase().endsWith('.xlsx')) {
+      filename += '.xlsx';
+    }
+    
     const table = document.getElementById(tableId);
     if (!table) {
       throw new Error(`Table with ID "${tableId}" not found`);
     }
     
-    const workbook = XLSX.utils.table_to_book(table);
-    XLSX.writeFile(workbook, filename);
+    // Create workbook from table
+    const workbook = XLSX.utils.table_to_book(table, { 
+      sheet: "Sheet1",
+      raw: false,
+      dateNF: "yyyy-mm-dd"
+    });
+    
+    // Write to file and trigger download
+    XLSX.writeFile(workbook, filename, { compression: true });
+    
+    console.log(`Table exported to Excel file "${filename}" successfully`);
   } catch (error) {
     console.error("Error exporting table to Excel:", error);
     throw error;
@@ -52,10 +83,57 @@ export function exportTableToExcel(tableId: string, filename: string = "export.x
  * Convert data to Excel file and return as data URL
  * @param columns - Column headers
  * @param data - Table data rows
+ * @param sheetName - Optional sheet name
  * @returns Data URL of Excel file
  */
-export function dataToExcelDataUrl(columns: string[], data: any[][]): string {
+export function dataToExcelDataUrl(
+  columns: string[], 
+  data: any[][], 
+  sheetName: string = "Sheet1"
+): string {
   try {
+    // Create worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet([columns, ...data]);
+    
+    // Create workbook and add the worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    
+    // Write to binary string
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    
+    // Convert to ArrayBuffer
+    const buf = new ArrayBuffer(wbout.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < wbout.length; i++) {
+      view[i] = wbout.charCodeAt(i) & 0xFF;
+    }
+    
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Error converting data to Excel URL:", error);
+    return '';
+  }
+}
+
+/**
+ * Export data directly to CSV file
+ * @param columns - Column headers
+ * @param data - Table data rows
+ * @param filename - Output filename
+ */
+export function exportToCSV(
+  columns: string[],
+  data: any[][],
+  filename: string = "export.csv"
+): void {
+  try {
+    // Ensure filename has correct extension
+    if (!filename.toLowerCase().endsWith('.csv')) {
+      filename += '.csv';
+    }
+    
     // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([columns, ...data]);
     
@@ -63,20 +141,32 @@ export function dataToExcelDataUrl(columns: string[], data: any[][]): string {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
     
-    // Write to binary string
-    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    // Write to CSV file and trigger download
+    XLSX.writeFile(workbook, filename, { bookType: 'csv' });
     
-    // Convert to data URL
-    const buf = new ArrayBuffer(wbout.length);
-    const view = new Uint8Array(buf);
-    for (let i = 0; i < wbout.length; i++) {
-      view[i] = wbout.charCodeAt(i) & 0xFF;
-    }
-    
-    const blob = new Blob([buf], { type: 'application/octet-stream' });
-    return URL.createObjectURL(blob);
+    console.log(`CSV file "${filename}" exported successfully`);
   } catch (error) {
-    console.error("Error converting data to Excel URL:", error);
-    return '';
+    console.error("Error exporting to CSV:", error);
+    throw error;
   }
+}
+
+/**
+ * Export data to PDF (using xlsx to html and then converting to PDF)
+ * Note: This is a basic implementation. For more advanced PDF exports,
+ * you may want to use a dedicated PDF library like jspdf.
+ * @param columns - Column headers
+ * @param data - Table data rows
+ * @param title - Title for the PDF
+ * @param filename - Output filename
+ */
+export function exportToPDF(
+  columns: string[],
+  data: any[][],
+  title: string = "Export Data",
+  filename: string = "export.pdf"
+): void {
+  // This implementation would require jspdf and jspdf-autotable packages
+  // For now, we'll just log a message
+  console.warn("PDF export requires additional implementation with jspdf");
 }

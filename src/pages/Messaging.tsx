@@ -7,8 +7,9 @@ import { MessageSender } from "@/components/messaging/MessageSender";
 import { useData } from '@/contexts/data/DataContext';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, UserSearch } from "lucide-react";
+import { Download, Search, UserSearch, Filter } from "lucide-react";
 import { MessagingProvider } from "@/contexts/MessagingContext";
+import { exportToExcel } from "@/utils/excelUtils";
 
 const Messaging = () => {
   const { customers } = useData();
@@ -25,14 +26,35 @@ const Messaging = () => {
     ? customers.find(c => c.id === selectedCustomerId) 
     : null;
 
+  const exportCustomerContacts = () => {
+    const headers = ["Name", "Phone", "Email"];
+    const data = filteredCustomers.map(customer => [
+      customer.name,
+      customer.phone || "",
+      customer.email || ""
+    ]);
+    exportToExcel(headers, data, "customer_contacts.xlsx");
+  };
+
   return (
     <MessagingProvider>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Messaging</h1>
-          <p className="text-muted-foreground">
-            Send messages to customers via SMS, WhatsApp, and Email
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Messaging</h1>
+            <p className="text-muted-foreground">
+              Send messages to customers via SMS, WhatsApp, and Email
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={exportCustomerContacts}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export Contacts
+          </Button>
         </div>
 
         <Tabs defaultValue="messages" className="space-y-4">

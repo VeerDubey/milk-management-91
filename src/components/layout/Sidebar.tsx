@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -53,7 +54,7 @@ export function Sidebar({ className }: SidebarProps) {
     { 
       name: "Messaging",
       href: "/messaging",
-      icon: MessageSquare  // Make sure MessageSquare is imported from lucide-react
+      icon: MessageSquare
     },
   ];
 
