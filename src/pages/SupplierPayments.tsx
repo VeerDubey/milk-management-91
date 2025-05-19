@@ -93,13 +93,15 @@ const SupplierPayments = () => {
   const handleAddSupplier = () => {
     const newSupplier = {
       name: supplierName,
-      contactPerson: contactPerson,
+      contactName: contactPerson, // Changed to match the interface
       phone: supplierPhone,
       email: supplierEmail,
       address: supplierAddress,
       gstNumber: gstNumber,
       outstandingBalance: 0,
-      notes: supplierNotes
+      notes: supplierNotes,
+      products: [], // Added required property
+      isActive: true // Added required property
     };
 
     addSupplier(newSupplier);
@@ -118,7 +120,7 @@ const SupplierPayments = () => {
   const handleEditSupplier = (supplier: Supplier) => {
     setEditingSupplier(supplier);
     setSupplierName(supplier.name);
-    setContactPerson(supplier.contactPerson || "");
+    setContactPerson(supplier.contactName || "");
     setSupplierPhone(supplier.phone);
     setSupplierEmail(supplier.email || "");
     setSupplierAddress(supplier.address);
@@ -209,7 +211,7 @@ const SupplierPayments = () => {
 
     updateSupplier(editingSupplier.id, {
       name: supplierName,
-      contactPerson: contactPerson,
+      contactName: contactPerson, // Changed from contactPerson to match interface
       phone: supplierPhone,
       email: supplierEmail,
       address: supplierAddress,
@@ -224,7 +226,7 @@ const SupplierPayments = () => {
         return {
           ...prevState,
           name: supplierName,
-          contactPerson: contactPerson,
+          contactName: contactPerson,
           phone: supplierPhone,
           email: supplierEmail,
           address: supplierAddress,

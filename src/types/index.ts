@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -36,6 +35,8 @@ export interface OrderItem {
   unitPrice: number;
   price?: number; // For dashboard compatibility
   id?: string; // Added to support InvoiceService
+  productName?: string; // Added for InvoiceService
+  unit?: string; // Added for InvoiceService
 }
 
 export interface Order {
@@ -55,7 +56,7 @@ export interface Order {
 export interface Payment {
   id: string;
   customerId: string;
-  orderId: string;
+  orderId?: string; // Made optional for compatibility with PaymentCreate
   date: string;
   amount: number;
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
@@ -257,4 +258,6 @@ export interface TaxSetting {
   rate: number;
   isDefault: boolean;
   appliedTo: string[];
+  isActive?: boolean;  // Added for TaxSettings page
+  applicableOn?: string[];  // Added for TaxSettings page
 }

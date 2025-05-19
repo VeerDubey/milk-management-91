@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,7 +171,7 @@ export default function InvoiceTemplates() {
                     <div className="absolute z-10 mt-2 p-2 bg-background border rounded-md shadow-md">
                       <HexColorPicker 
                         color={primaryColor}
-                        onChange={(color) => setPrimaryColor(color.hex)}
+                        onChange={setPrimaryColor}
                       />
                       <div className="flex justify-end mt-2">
                         <Button 

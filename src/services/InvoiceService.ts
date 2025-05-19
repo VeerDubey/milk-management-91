@@ -98,3 +98,41 @@ export const convertOrderToInvoice = (order: any): Invoice => {
     orderId: order.id
   };
 };
+
+export const createInvoiceItems = (products, quantities) => {
+  const items = [];
+  products.forEach((product, index) => {
+    items.push({
+      productId: product.id,
+      quantity: quantities[index],
+      unitPrice: product.price,
+      // Don't include productName as it's not in the OrderItem interface
+    });
+  });
+  return items;
+};
+
+export const createInvoice = (customer, items, date) => {
+  return {
+    id: `INV-${Date.now()}`,
+    customerId: customer.id,
+    customerName: customer.name,
+    date: date || new Date().toISOString(),
+    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // Add due date 15 days from now
+    items: items,
+    status: "draft",
+    subtotal: calculateSubtotal(items),
+    total: calculateTotal(items),
+    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+    orderId: null
+  };
+};
+
+const calculateSubtotal = (items) => {
+  return items.reduce((subtotal, item) => subtotal + item.quantity * item.unitPrice, 0);
+};
+
+const calculateTotal = (items) => {
+  const subtotal = calculateSubtotal(items);
+  return subtotal + subtotal * 0.2; // Assuming 20% tax
+};

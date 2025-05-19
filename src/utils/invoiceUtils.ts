@@ -303,16 +303,22 @@ export const createInvoiceFromOrder = (
     return {
       id: crypto.randomUUID(),
       productId: item.productId,
-      productName: product ? product.name : "Unknown Product",
       customerId: item.customerId,
       quantity: item.quantity,
       unitPrice: rate,
-      unit: "unit" // Add a default unit
+      // Don't include productName as it's not in the OrderItem interface
     };
   });
 
   // Calculate total amount
   const total = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  
+  // Get current date
+  const currentDate = new Date().toISOString().split('T')[0];
+  // Create due date 15 days from now
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 15);
+  const formattedDueDate = dueDate.toISOString().split('T')[0];
   
   return {
     id: generateInvoiceNumber(),
@@ -320,6 +326,7 @@ export const createInvoiceFromOrder = (
     customerName: customerName || order.customerName || "Unknown Customer",
     customerId: customerId,
     date: order.date,
+    dueDate: formattedDueDate, // Add the due date
     amount: total,
     total: total,
     subtotal: total,
@@ -343,18 +350,24 @@ export const generateDueDate = (invoiceDate: string, daysToAdd = 15): string => 
 
 // Partial update to fix status errors
 export const generateInvoiceFromData = (data: any) => {
+  // Get current date
+  const currentDate = new Date().toISOString().split('T')[0];
+  // Create due date 15 days from now
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 15);
+  const formattedDueDate = dueDate.toISOString().split('T')[0];
+  
   return {
     id: `INV-${Date.now()}`,
     customerId: data.customerId || "",
     customerName: data.customerName || "",
-    date: new Date().toISOString(),
-    items: data.items.map((item: any): OrderItem => ({
-      id: `ITEM-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    date: currentDate,
+    dueDate: formattedDueDate, // Add the due date
+    items: data.items.map((item: any) => ({
       productId: item.productId,
-      productName: item.productName || "Unknown Product",
       quantity: item.quantity,
       unitPrice: item.unitPrice || 0,
-      unit: item.unit || "unit"
+      // Don't include productName as it's not in the OrderItem interface
     })),
     status: "draft", // Fix: Using valid status value
     subtotal: data.subtotal || 0,

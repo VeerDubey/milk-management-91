@@ -63,6 +63,8 @@ const OrderEntry = () => {
   const [orderDate, setOrderDate] = useState<Date>(new Date());
   const [orderGrid, setOrderGrid] = useState<OrderGridCell[]>([]);
   const [customerTotals, setCustomerTotals] = useState<Record<string, { quantity: number, amount: number }>>({});
+  const [selectedVehicle, setSelectedVehicle] = useState<string>(''); // Added missing variable
+  const [selectedSalesman, setSelectedSalesman] = useState<string>(''); // Added missing variable
   
   // Customer form state
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
@@ -190,8 +192,8 @@ const OrderEntry = () => {
       date: format(orderDate, "yyyy-MM-dd"),
       items: orderItems,
       total: totalAmount,
-      vehicleId: selectedVehicle || '0', // Use a default or placeholder
-      salesmanId: selectedSalesman || '0', // Use a default or placeholder
+      vehicleId: selectedVehicle || '0', // Use default or placeholder
+      salesmanId: selectedSalesman || '0', // Use default or placeholder
       status: 'pending' as const,
       paymentStatus: 'pending' as const,
     };
@@ -396,7 +398,8 @@ const OrderEntry = () => {
       description: productDescription.trim() || productCategory.trim(),
       unit: productUnit.trim() || "L",
       category: productCategory.trim() || "Other",
-      sku: `${productName.trim().substring(0, 4).toUpperCase()}-${Date.now().toString().substring(9)}`
+      sku: `${productName.trim().substring(0, 4).toUpperCase()}-${Date.now().toString().substring(9)}`,
+      isActive: true // Added missing isActive property
     };
 
     if (editingProduct) {
