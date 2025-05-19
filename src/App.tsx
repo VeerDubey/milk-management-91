@@ -62,8 +62,8 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <DataProvider>
-          <InvoiceProvider>
+        <InvoiceProvider>
+          <DataProvider>
             <MessagingProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -151,8 +151,8 @@ function App() {
               </Routes>
               <Toaster position="top-right" />
             </MessagingProvider>
-          </InvoiceProvider>
-        </DataProvider>
+          </DataProvider>
+        </InvoiceProvider>
       </AuthProvider>
     </ThemeProvider>
   );
