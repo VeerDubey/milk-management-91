@@ -1,6 +1,6 @@
 
 import { format } from 'date-fns';
-import { ArrowUpDown, Phone, Send, History, Printer, Mail, MessageSquare } from 'lucide-react';
+import { ArrowUpDown, Phone, Send, History, Printer, Mail, MessageSquare, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
