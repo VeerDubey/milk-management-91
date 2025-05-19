@@ -18,7 +18,11 @@ import {
   Calendar,
   Newspaper,
   Store,
-  User
+  User,
+  DollarSign,
+  MessageSquare,
+  Mail,
+  Layout
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -128,11 +132,13 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
               <SidebarItem icon={FileText} title="Product Rates" to="/product-rates" collapsed={false} />
               <SidebarItem icon={Database} title="Stock Management" to="/stock-management" collapsed={false} />
               <SidebarItem icon={Settings} title="Stock Settings" to="/stock-settings" collapsed={false} />
+              <SidebarItem icon={Layout} title="Product Categories" to="/product-categories" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={FileText} title="Invoices" to="/invoices" collapsed={collapsed}>
               <SidebarItem icon={FileText} title="Create Invoice" to="/invoice-create" collapsed={false} />
               <SidebarItem icon={Clock} title="Invoice History" to="/invoice-history" collapsed={false} />
+              <SidebarItem icon={Layout} title="Invoice Templates" to="/invoice-templates" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={CreditCard} title="Payments" to="/payments" collapsed={collapsed}>
@@ -156,15 +162,25 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
               <SidebarItem icon={User} title="Vehicle & Salesman" to="/vehicle-salesman-create" collapsed={false} />
               <SidebarItem icon={Truck} title="Vehicle Tracking" to="/vehicle-tracking" collapsed={false} />
               <SidebarItem icon={Newspaper} title="Track Sheet" to="/track-sheet" collapsed={false} />
+              <SidebarItem icon={Newspaper} title="Track Sheet History" to="/track-sheet-history" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={BarChart3} title="Reports" to="/reports" collapsed={collapsed}>
               <SidebarItem icon={Users} title="Customer Report" to="/customer-report" collapsed={false} />
               <SidebarItem icon={BarChart3} title="Sales Report" to="/sales-report" collapsed={false} />
+              <SidebarItem icon={BarChart3} title="Analytics" to="/analytics" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={Calendar} title="Financial Year" to="/financial-year" collapsed={collapsed} />
-            <SidebarItem icon={CreditCard} title="Expenses" to="/expenses" collapsed={false} />
+            <SidebarItem icon={DollarSign} title="Expenses" to="/expenses" collapsed={collapsed} />
+            <SidebarItem icon={DollarSign} title="Tax Settings" to="/tax-settings" collapsed={collapsed} />
+            
+            <SidebarItem icon={MessageSquare} title="Communication" to="/communication" collapsed={collapsed}>
+              <SidebarItem icon={MessageSquare} title="Messaging" to="/messaging" collapsed={false} />
+              <SidebarItem icon={Mail} title="Email Templates" to="/email-templates" collapsed={false} />
+              <SidebarItem icon={MessageSquare} title="SMS Templates" to="/sms-templates" collapsed={false} />
+              <SidebarItem icon={Users} title="Bulk Communication" to="/bulk-communication" collapsed={false} />
+            </SidebarItem>
             
             <SidebarItem icon={Settings} title="Settings" to="/settings" collapsed={collapsed}>
               <SidebarItem icon={Settings} title="UI Settings" to="/ui-settings" collapsed={false} />
