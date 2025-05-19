@@ -25,6 +25,19 @@ export interface CompanyInfo {
   logoUrl?: string;
 }
 
+export interface OrderData {
+  customerId: string;
+  items: { productId: string; quantity: number; unitPrice: number }[];
+  date: string;
+  notes?: string;
+}
+
+export interface PaymentAmount {
+  amount: number;
+  method: 'cash' | 'bank' | 'upi' | 'other';
+  date: string;
+}
+
 export interface InvoiceContextType {
   invoices: Invoice[];
   templates: InvoiceTemplate[];
@@ -112,7 +125,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   
   // Calculate invoice total from items
   const calculateInvoiceTotal = (items: OrderItem[]): number => {
-    return items.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
+    return items.reduce((total, item) => total + (item.quantity * (item.unitPrice || 0)), 0);
   };
   
   // Invoice CRUD operations

@@ -24,7 +24,8 @@ export function useSupplierState() {
   const addSupplier = (supplier: Omit<Supplier, "id">) => {
     const newSupplier = {
       ...supplier,
-      id: `s${Date.now()}`
+      id: `s${Date.now()}`,
+      outstandingBalance: supplier.outstandingBalance || 0
     };
     setSuppliers([...suppliers, newSupplier]);
   };

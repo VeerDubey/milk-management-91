@@ -21,7 +21,7 @@ export function usePaymentState(customers: Customer[], updateCustomer: Function)
     setPayments([...payments, newPayment]);
     
     const customer = customers.find(c => c.id === payment.customerId);
-    if (customer) {
+    if (customer && customer.outstandingBalance !== undefined) {
       updateCustomer(customer.id, {
         outstandingBalance: customer.outstandingBalance - payment.amount,
         lastPaymentDate: payment.date,
@@ -41,7 +41,7 @@ export function usePaymentState(customers: Customer[], updateCustomer: Function)
     
     if (oldPayment && paymentData.amount && oldPayment.amount !== paymentData.amount) {
       const customer = customers.find(c => c.id === oldPayment.customerId);
-      if (customer) {
+      if (customer && customer.outstandingBalance !== undefined) {
         const difference = paymentData.amount - oldPayment.amount;
         updateCustomer(customer.id, {
           outstandingBalance: customer.outstandingBalance - difference,
@@ -57,7 +57,7 @@ export function usePaymentState(customers: Customer[], updateCustomer: Function)
     
     if (payment) {
       const customer = customers.find(c => c.id === payment.customerId);
-      if (customer) {
+      if (customer && customer.outstandingBalance !== undefined) {
         updateCustomer(customer.id, {
           outstandingBalance: customer.outstandingBalance + payment.amount
         });

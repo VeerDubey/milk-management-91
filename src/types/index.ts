@@ -1,9 +1,14 @@
+
 export interface Customer {
   id: string;
   name: string;
   phone: string;
   address: string;
   isActive: boolean;
+  outstandingBalance: number;
+  lastPaymentDate?: string;
+  lastPaymentAmount?: number;
+  email?: string;
 }
 
 export interface Product {
@@ -14,12 +19,16 @@ export interface Product {
   unit: string;
   image?: string;
   isActive: boolean;
+  sku?: string;
+  category?: string;
+  minStockLevel?: number;
 }
 
 export interface OrderItem {
   productId: string;
   customerId: string;
   quantity: number;
+  unitPrice: number;
 }
 
 export interface Order {
@@ -38,14 +47,26 @@ export interface Payment {
   orderId: string;
   date: string;
   amount: number;
-  method: string;
+  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
+  notes?: string;
 }
 
-export interface ProductRate {
+export interface CustomerProductRate {
   id: string;
+  customerId: string;
   productId: string;
-  date: string;
   rate: number;
+  effectiveDate: string;
+  isActive: boolean;
+}
+
+export interface SupplierProductRate {
+  id: string;
+  supplierId: string;
+  productId: string;
+  rate: number;
+  effectiveDate: string;
+  isActive: boolean;
 }
 
 export interface Supplier {
@@ -57,6 +78,16 @@ export interface Supplier {
   address: string;
   products: string[];
   isActive: boolean;
+  outstandingBalance?: number;
+}
+
+export interface SupplierPayment {
+  id: string;
+  supplierId: string;
+  amount: number;
+  date: string;
+  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
+  notes?: string;
 }
 
 export interface Stock {
@@ -68,8 +99,20 @@ export interface Stock {
   date: string;
 }
 
+export interface StockRecord {
+  id: string;
+  date: string;
+  entries: StockEntry[];
+}
+
+export interface StockEntry {
+  productId: string;
+  quantity: number;
+  price: number;
+}
+
 export interface UISettings {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
   language: 'en' | 'es';
   currency: 'USD' | 'EUR' | 'GBP';
 }
@@ -100,7 +143,6 @@ export interface Expense {
   amount: number;
 }
 
-// Add the TrackSheet type
 export interface TrackSheetRow {
   name: string;
   quantities: Record<string, number | string>;
@@ -116,4 +158,20 @@ export interface TrackSheet {
   salesmanId: string;
   productNames: string[];
   rows: TrackSheetRow[];
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  date: string;
+  dueDate: string;
+  items: OrderItem[];
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  total: number;
+  notes?: string;
+  paymentTerms?: string;
+  taxRate?: number;
+  discount?: number;
+  shipping?: number;
 }

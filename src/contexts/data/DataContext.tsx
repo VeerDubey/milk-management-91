@@ -48,7 +48,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...expenseState,
     ...trackSheetState,
     // Use the actual invoice data
-    ...invoiceState
+    invoices: invoiceState.invoices,
+    addInvoice: invoiceState.addInvoice,
+    updateInvoice: invoiceState.updateInvoice,
+    deleteInvoice: invoiceState.deleteInvoice
   };
 
   return (

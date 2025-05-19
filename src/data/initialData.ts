@@ -1,4 +1,3 @@
-
 import { Customer, Product, Order, Payment, Expense, Supplier } from "@/types";
 
 export const initialCustomers: Customer[] = [
@@ -9,7 +8,9 @@ export const initialCustomers: Customer[] = [
     address: "123 Main St",
     outstandingBalance: 1200,
     lastPaymentDate: "2025-04-05",
-    lastPaymentAmount: 2500
+    lastPaymentAmount: 2500,
+    isActive: true,
+    email: "ganesh@example.com"
   },
   {
     id: "c2",
@@ -18,7 +19,9 @@ export const initialCustomers: Customer[] = [
     address: "456 Market Rd",
     outstandingBalance: 950,
     lastPaymentDate: "2025-04-07",
-    lastPaymentAmount: 1800
+    lastPaymentAmount: 1800,
+    isActive: true,
+    email: "sharma@example.com"
   },
   {
     id: "c3",
@@ -27,7 +30,9 @@ export const initialCustomers: Customer[] = [
     address: "789 Milk Lane",
     outstandingBalance: 780,
     lastPaymentDate: "2025-04-08",
-    lastPaymentAmount: 1500
+    lastPaymentAmount: 1500,
+    isActive: true,
+    email: "patel@example.com"
   },
   {
     id: "c4",
@@ -36,7 +41,9 @@ export const initialCustomers: Customer[] = [
     address: "101 Cafe Street",
     outstandingBalance: 450,
     lastPaymentDate: "2025-04-09",
-    lastPaymentAmount: 1200
+    lastPaymentAmount: 1200,
+    isActive: true,
+    email: "sunrise@example.com"
   },
   {
     id: "c5",
@@ -45,7 +52,9 @@ export const initialCustomers: Customer[] = [
     address: "202 Education Rd",
     outstandingBalance: 350,
     lastPaymentDate: "2025-04-10",
-    lastPaymentAmount: 2000
+    lastPaymentAmount: 2000,
+    isActive: true,
+    email: "greenvalley@example.com"
   },
 ];
 
@@ -57,7 +66,8 @@ export const initialProducts: Product[] = [
     description: "Pasteurized toned milk",
     unit: "Liter",
     sku: "AMUL-TZ-01",
-    category: "Amul"
+    category: "Amul",
+    isActive: true
   },
   {
     id: "p2",
@@ -66,7 +76,8 @@ export const initialProducts: Product[] = [
     description: "Cow milk",
     unit: "Liter",
     sku: "AMUL-CW-01",
-    category: "Amul"
+    category: "Amul",
+    isActive: true
   },
   {
     id: "p3",
@@ -314,14 +325,23 @@ export const initialSuppliers: Supplier[] = [
   {
     id: "s1",
     name: "Mountain Dairy Farm",
+    contactName: "Ramesh Kumar",
     phone: "9876543215",
     address: "Rural Route 5",
-    email: "mountain@example.com"
+    email: "mountain@example.com",
+    products: [],
+    isActive: true,
+    outstandingBalance: 0
   },
   {
     id: "s2",
     name: "Valley Milk Co-op",
+    contactName: "Suresh Patel",
     phone: "9876543216",
     address: "Co-op Road 10",
+    email: "valley@example.com",
+    products: [],
+    isActive: true,
+    outstandingBalance: 0
   },
 ];

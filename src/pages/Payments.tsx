@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,7 @@ const Payments = () => {
   const [formData, setFormData] = useState({
     customerId: "",
     amount: "",
-    paymentMethod: "cash",
+    paymentMethod: "cash" as "cash" | "bank" | "upi" | "other",
     notes: "",
   });
   const [searchQuery, setSearchQuery] = useState("");
@@ -110,9 +109,10 @@ const Payments = () => {
 
     addPayment({
       customerId: formData.customerId,
+      orderId: "", // This is required by the type but might not be used in all cases
       amount: parseFloat(formData.amount),
       date: format(paymentDate, "yyyy-MM-dd"),
-      paymentMethod: formData.paymentMethod as "cash" | "bank" | "upi" | "other",
+      paymentMethod: formData.paymentMethod,
       notes: formData.notes,
     });
 
@@ -149,7 +149,7 @@ const Payments = () => {
 
   // Calculate total outstanding balance across all customers
   const totalOutstanding = customers.reduce(
-    (total, customer) => total + customer.outstandingBalance,
+    (total, customer) => total + (customer.outstandingBalance || 0),
     0
   );
 
