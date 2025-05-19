@@ -1,141 +1,96 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  Input 
-} from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { 
-  Calendar, 
-  FileSpreadsheet, 
-  Search, 
-  Copy, 
-  Eye, 
-  Download, 
-  Trash2, 
-  Filter 
-} from "lucide-react";
-import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Search, Calendar, Filter, Download, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format } from 'date-fns';
+import { generateTrackSheetPdf } from '@/utils/trackSheetUtils';
 
-// Sample track sheet data
-const sampleTrackSheets = [
-  {
-    id: "TS-001",
-    date: "2025-05-10",
-    routeName: "Morning Route",
-    customerCount: 12,
-    productCount: 5,
-    totalAmount: 5680,
-    createdBy: "John Operator"
-  },
-  {
-    id: "TS-002",
-    date: "2025-05-11",
-    routeName: "Evening Route",
-    customerCount: 8,
-    productCount: 4,
-    totalAmount: 3420,
-    createdBy: "Jane Manager"
-  },
-  {
-    id: "TS-003",
-    date: "2025-05-12",
-    routeName: "South Area",
-    customerCount: 15,
-    productCount: 6,
-    totalAmount: 7850,
-    createdBy: "John Operator"
-  },
-  {
-    id: "TS-004",
-    date: "2025-05-13",
-    routeName: "North Area",
-    customerCount: 10,
-    productCount: 3,
-    totalAmount: 4200,
-    createdBy: "Jane Manager"
-  },
-  {
-    id: "TS-005",
-    date: "2025-05-14",
-    routeName: "Central Route",
-    customerCount: 18,
-    productCount: 7,
-    totalAmount: 9300,
-    createdBy: "John Operator"
-  }
-];
+interface TrackSheetHistoryProps {}
 
-const TrackSheetHistory = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [routeFilter, setRouteFilter] = useState("");
-
-  // Filter sheets based on search and filters
-  const filteredSheets = sampleTrackSheets.filter(sheet => {
-    // Search by ID or route name
-    if (
-      searchQuery && 
-      !sheet.id.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !sheet.routeName.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
+const TrackSheetHistory: React.FC<TrackSheetHistoryProps> = () => {
+  const { trackSheets, vehicles, salesmen } = useData();
+  
+  // State for filters
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    vehicleId: '',
+    salesmanId: '',
+    dateRange: ''
+  });
+  
+  // Filter track sheets
+  const filteredTrackSheets = trackSheets.filter(sheet => {
+    // Search filter
+    if (filters.searchTerm && 
+        !sheet.title.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
       return false;
     }
     
-    // Date filter
-    if (dateFilter && sheet.date !== dateFilter) {
+    // Vehicle filter
+    if (filters.vehicleId && sheet.vehicleId !== filters.vehicleId) {
       return false;
     }
     
-    // Route filter
-    if (routeFilter && sheet.routeName !== routeFilter) {
+    // Salesman filter
+    if (filters.salesmanId && sheet.salesmanId !== filters.salesmanId) {
       return false;
+    }
+    
+    // Date range filter
+    if (filters.dateRange) {
+      const today = new Date();
+      const sheetDate = new Date(sheet.date);
+      
+      if (filters.dateRange === 'today' && 
+          sheetDate.getDate() !== today.getDate()) {
+        return false;
+      }
+      
+      if (filters.dateRange === 'week' && 
+          sheetDate < new Date(today.setDate(today.getDate() - 7))) {
+        return false;
+      }
+      
+      if (filters.dateRange === 'month' && 
+          sheetDate < new Date(today.setMonth(today.getMonth() - 1))) {
+        return false;
+      }
     }
     
     return true;
   });
-
-  // Get unique route names for filter
-  const uniqueRoutes = Array.from(new Set(sampleTrackSheets.map(sheet => sheet.routeName)));
-
-  const handleViewSheet = (id: string) => {
-    navigate(`/track-sheet?id=${id}`);
-  };
-
-  const handleDuplicateSheet = (id: string) => {
-    navigate(`/track-sheet?duplicate=${id}`);
-    toast.success("Track sheet duplicated. You can now edit the copy.");
-  };
-
-  const handleDownloadPDF = (id: string) => {
-    toast.success(`PDF downloaded for track sheet ${id}`);
-  };
-
-  const handleDownloadExcel = (id: string) => {
-    toast.success(`Excel file downloaded for track sheet ${id}`);
-  };
-
-  const handleDeleteSheet = (id: string) => {
-    toast.success(`Track sheet ${id} deleted`);
-    // In a real implementation, you would remove the sheet from state/database
+  
+  // Download track sheet as PDF
+  const handleDownload = (sheet) => {
+    generateTrackSheetPdf(
+      sheet.title,
+      new Date(sheet.date),
+      sheet.rows,
+      sheet.productNames,
+      [
+        { label: 'Vehicle', value: vehicles.find(v => v.id === sheet.vehicleId)?.name || 'N/A' },
+        { label: 'Salesman', value: salesmen.find(s => s.id === sheet.salesmanId)?.name || 'N/A' }
+      ]
+    );
   };
 
   return (
@@ -143,10 +98,11 @@ const TrackSheetHistory = () => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Track Sheet History</h1>
         <p className="text-muted-foreground">
-          View and manage all saved track sheets
+          View and download previously generated track sheets
         </p>
       </div>
-
+      
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -155,152 +111,160 @@ const TrackSheetHistory = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by ID or route name..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search track sheets..." 
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
                 className="flex-1"
               />
             </div>
             
-            <div>
-              <Select 
-                value={dateFilter} 
-                onValueChange={setDateFilter}
-              >
-                <SelectTrigger className="w-full">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{dateFilter ? format(parseISO(dateFilter), "dd MMM yyyy") : "Select Date"}</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Dates</SelectItem>
-                  {Array.from(new Set(sampleTrackSheets.map(sheet => sheet.date))).map(date => (
-                    <SelectItem key={date} value={date}>
-                      {format(parseISO(date), "dd MMM yyyy")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select 
+              value={filters.vehicleId} 
+              onValueChange={(value) => setFilters({...filters, vehicleId: value})}
+            >
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <span>
+                    {filters.vehicleId ? 
+                      'Vehicle: ' + (vehicles.find(v => v.id === filters.vehicleId)?.name || 'Selected') : 
+                      'All Vehicles'}
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Vehicles</SelectItem>
+                {vehicles.map(vehicle => (
+                  <SelectItem key={vehicle.id} value={vehicle.id}>
+                    {vehicle.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
-            <div>
-              <Select 
-                value={routeFilter} 
-                onValueChange={setRouteFilter}
-              >
-                <SelectTrigger className="w-full">
-                  <div className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-4 w-4" />
-                    <span>{routeFilter || "Select Route"}</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Routes</SelectItem>
-                  {uniqueRoutes.map(route => (
-                    <SelectItem key={route} value={route}>
-                      {route}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select 
+              value={filters.salesmanId} 
+              onValueChange={(value) => setFilters({...filters, salesmanId: value})}
+            >
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <span>
+                    {filters.salesmanId ? 
+                      'Salesman: ' + (salesmen.find(s => s.id === filters.salesmanId)?.name || 'Selected') : 
+                      'All Salesmen'}
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Salesmen</SelectItem>
+                {salesmen.map(salesman => (
+                  <SelectItem key={salesman.id} value={salesman.id}>
+                    {salesman.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select 
+              value={filters.dateRange} 
+              onValueChange={(value) => setFilters({...filters, dateRange: value})}
+            >
+              <SelectTrigger className="w-full">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    {filters.dateRange === 'today' ? 'Today' : 
+                     filters.dateRange === 'week' ? 'This Week' : 
+                     filters.dateRange === 'month' ? 'This Month' : 
+                     'All Time'}
+                  </span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
-
+      
+      {/* Track Sheets Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileSpreadsheet className="mr-2 h-5 w-5" />
-            Track Sheets ({filteredSheets.length})
+          <CardTitle>
+            Track Sheets ({filteredTrackSheets.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Track Sheet ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Route Name</TableHead>
-                <TableHead>Customers</TableHead>
-                <TableHead>Products</TableHead>
-                <TableHead>Total Amount</TableHead>
-                <TableHead>Created By</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSheets.map((sheet) => (
-                <TableRow key={sheet.id}>
-                  <TableCell className="font-medium">{sheet.id}</TableCell>
-                  <TableCell>{format(parseISO(sheet.date), "dd MMM yyyy")}</TableCell>
-                  <TableCell>{sheet.routeName}</TableCell>
-                  <TableCell>{sheet.customerCount}</TableCell>
-                  <TableCell>{sheet.productCount}</TableCell>
-                  <TableCell>₹{sheet.totalAmount.toFixed(2)}</TableCell>
-                  <TableCell>{sheet.createdBy}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleViewSheet(sheet.id)}
-                        title="View Track Sheet"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDuplicateSheet(sheet.id)}
-                        title="Duplicate Track Sheet"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDownloadPDF(sheet.id)}
-                        title="Download PDF"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteSheet(sheet.id)}
-                        title="Delete Track Sheet"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {filteredSheets.length === 0 && (
+          {filteredTrackSheets.length > 0 ? (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
-                    No track sheets found matching your filters.
-                  </TableCell>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Vehicle</TableHead>
+                  <TableHead>Salesman</TableHead>
+                  <TableHead>Products</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTrackSheets.map((sheet) => {
+                  const vehicle = vehicles.find(v => v.id === sheet.vehicleId);
+                  const salesman = salesmen.find(s => s.id === sheet.salesmanId);
+                  
+                  return (
+                    <TableRow key={sheet.id}>
+                      <TableCell>{sheet.title}</TableCell>
+                      <TableCell>{format(new Date(sheet.date), 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>{vehicle?.name || 'Not assigned'}</TableCell>
+                      <TableCell>{salesman?.name || 'Not assigned'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {sheet.productNames.map((product, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {product}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="outline"
+                            size="sm" 
+                            onClick={() => handleDownload(sheet)}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            PDF
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No track sheets found matching your filters.
+            </div>
+          )}
         </CardContent>
       </Card>
-      
-      <div className="flex justify-center">
-        <Button onClick={() => navigate("/track-sheet")} className="gap-2">
-          <FileSpreadsheet className="h-4 w-4" />
-          Create New Track Sheet
-        </Button>
-      </div>
     </div>
   );
 };
