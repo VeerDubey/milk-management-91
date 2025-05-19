@@ -1,4 +1,3 @@
-
 // Add this to the existing types/index.ts file, we'll define/update types needed for the app
 
 // Customer type definition
@@ -16,6 +15,7 @@ export interface Customer {
   totalPaid?: number;
   joinedDate?: string;
   notes?: string;
+  isActive?: boolean;  // Added isActive property
 }
 
 // Product type definition
