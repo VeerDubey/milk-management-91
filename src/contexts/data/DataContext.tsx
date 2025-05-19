@@ -51,7 +51,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     invoices: invoiceState.invoices,
     addInvoice: invoiceState.addInvoice,
     updateInvoice: invoiceState.updateInvoice,
-    deleteInvoice: invoiceState.deleteInvoice
+    deleteInvoice: invoiceState.deleteInvoice,
+    
+    // Adding missing properties
+    addStock: stockState.addStock,
   };
 
   return (

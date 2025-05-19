@@ -10,6 +10,7 @@ export interface Customer {
   lastPaymentAmount?: number;
   email?: string;
   area?: string;
+  outstandingAmount?: number; // Added for compatibility with existing code
 }
 
 export interface Product {
@@ -23,13 +24,17 @@ export interface Product {
   sku?: string;
   category?: string;
   minStockLevel?: number;
+  stock?: number; // Added for dashboard display
+  minStock?: number; // Added for dashboard display
+  costPrice?: number; // Added for product detail
 }
 
 export interface OrderItem {
   productId: string;
-  customerId: string;
+  customerId?: string;
   quantity: number;
   unitPrice: number;
+  price?: number; // For dashboard compatibility
 }
 
 export interface Order {
@@ -42,6 +47,8 @@ export interface Order {
   paymentStatus: 'pending' | 'paid' | 'partial';
   customerId?: string; // Added for CustomerLedger
   total?: number; // Added for CustomerLedger
+  customerName?: string; // Added for display purposes
+  totalAmount?: number; // Added for compatibility with existing code
 }
 
 export interface Payment {
@@ -151,6 +158,12 @@ export interface Expense {
   category: string;
   description: string;
   amount: number;
+  title?: string;
+  paymentMethod?: string;
+  paidTo?: string;
+  notes?: string;
+  isRecurring?: boolean;
+  recurringFrequency?: string;
 }
 
 export interface TrackSheetRow {
@@ -184,6 +197,9 @@ export interface Invoice {
   taxRate?: number;
   discount?: number;
   shipping?: number;
+  customerName?: string; // Added for display purposes
+  amount?: number; // Added for compatibility
+  orderId?: string; // Added for linking to orders
 }
 
 export interface CustomerLedgerEntry {
@@ -204,4 +220,14 @@ export interface CustomerLedgerReportType {
   endingBalance: number;
   totalDebit: number;
   totalCredit: number;
+}
+
+export interface InvoiceTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  fontFamily?: string;
+  primaryColor?: string;
+  showHeader?: boolean;
+  showFooter?: boolean;
 }

@@ -48,10 +48,10 @@ export function Sidebar({ className }: SidebarProps) {
   };
 
   const mainNavLinks: NavLink[] = [
-    { name: "Dashboard", href: "/", icon: Home },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Orders", href: "/orders", icon: ShoppingCart },
     { name: "Customers", href: "/customers", icon: Users },
-    { name: "Products", href: "/products", icon: Package },
+    { name: "Products", href: "/inventory", icon: Package },
     { name: "Invoices", href: "/invoices", icon: Receipt },
     { name: "Messaging", href: "/messaging", icon: MessageSquare },
     { name: "Communication", href: "/communication", icon: Phone },
@@ -75,6 +75,13 @@ export function Sidebar({ className }: SidebarProps) {
     { name: "Bulk Communication", href: "/bulk-communication", icon: Users },
   ];
 
+  const invoiceLinks: NavLink[] = [
+    { name: "All Invoices", href: "/invoices", icon: Receipt },
+    { name: "Create Invoice", href: "/invoice-create", icon: FileText },
+    { name: "Invoice Templates", href: "/invoice-templates", icon: FileText },
+    { name: "Invoice History", href: "/invoice-history", icon: Calendar },
+  ];
+
   const settingsLinks: NavLink[] = [
     { name: "Settings", href: "/settings", icon: Settings },
   ];
@@ -87,12 +94,12 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       <div className="p-4">
-        <Button variant="ghost" className="justify-start w-full p-0">
+        <Button variant="ghost" className="justify-start w-full p-0" onClick={() => navigate("/dashboard")}>
           <LayoutDashboard className="mr-2 h-4 w-4" />
           Vikas Milk Center
         </Button>
       </div>
-      <div className="flex-grow p-4 flex flex-col justify-between">
+      <div className="flex-grow p-4 flex flex-col justify-between overflow-y-auto">
         <div className="space-y-2">
           {mainNavLinks.map((link) => (
             <Button
@@ -110,6 +117,35 @@ export function Sidebar({ className }: SidebarProps) {
               {link.name}
             </Button>
           ))}
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="invoices">
+              <AccordionTrigger className="hover:bg-secondary-foreground hover:text-secondary-foreground">
+                Invoices
+                <ChevronsDown className="mr-2 h-4 w-4" />
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-2">
+                  {invoiceLinks.map((link) => (
+                    <Button
+                      key={link.href}
+                      variant="ghost"
+                      className={cn(
+                        "justify-start w-full pl-8",
+                        location.pathname === link.href
+                          ? "bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+                          : "hover:bg-secondary-foreground hover:text-secondary-foreground"
+                      )}
+                      onClick={() => navigate(link.href)}
+                    >
+                      <link.icon className="mr-2 h-4 w-4" />
+                      {link.name}
+                    </Button>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="ledgers">

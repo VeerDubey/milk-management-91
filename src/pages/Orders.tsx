@@ -1,10 +1,10 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useData } from "@/contexts/DataContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useData } from '@/contexts/data/DataContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -12,37 +12,64 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar, ArrowUpDown, Eye, Package } from "lucide-react";
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Plus, 
+  Search, 
+  Calendar, 
+  Package, 
+  User,
+  ArrowUpDown,
+  Eye,
+  Edit,
+  Trash,
+  FileText,
+  MoreHorizontal
+} from 'lucide-react';
+
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 export default function Orders() {
-  const { orders, customers, products } = useData();
+  const { orders, customers, deleteOrder } = useData();
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const handleSort = (field: string) => {
-    if (sortBy === field) {
+  // Enhance orders with customer names
+  const ordersWithCustomerNames = orders.map(order => {
+    const customer = customers.find(c => c.id === order.customerId);
+    return {
+      ...order,
+      customerName: customer ? customer.name : 'Unknown Customer'
+    };
+  });
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortBy(field);
+      setSortBy(column);
       setSortDirection('asc');
     }
   };
 
   // Filter orders based on search term
-  const filteredOrders = orders.filter(order => 
-    order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredOrders = ordersWithCustomerNames.filter(order =>
     order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.date.includes(searchTerm)
+    (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    order.date.includes(searchTerm) ||
+    order.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort the filtered orders
   const sortedOrders = [...filteredOrders].sort((a, b) => {
-    if (!sortBy) return 0;
-    
     const fieldA = a[sortBy as keyof typeof a];
     const fieldB = b[sortBy as keyof typeof b];
     
@@ -50,27 +77,41 @@ export default function Orders() {
       return sortDirection === 'asc' 
         ? fieldA.localeCompare(fieldB)
         : fieldB.localeCompare(fieldA);
-    } else if (typeof fieldA === 'number' && typeof fieldB === 'number') {
-      return sortDirection === 'asc'
-        ? fieldA - fieldB
-        : fieldB - fieldA;
     }
     return 0;
   });
 
-  // Get status badge color based on order status
+  const handleDeleteOrder = (id: string) => {
+    if (confirm('Are you sure you want to delete this order?')) {
+      deleteOrder(id);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
-    switch(status.toLowerCase()) {
-      case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
+    switch(status) {
       case 'pending':
         return <Badge className="bg-yellow-500">Pending</Badge>;
       case 'processing':
         return <Badge className="bg-blue-500">Processing</Badge>;
+      case 'completed':
+        return <Badge className="bg-green-500">Completed</Badge>;
       case 'cancelled':
-        return <Badge className="bg-red-500">Cancelled</Badge>;
+        return <Badge variant="outline">Cancelled</Badge>;
       default:
         return <Badge>{status}</Badge>;
+    }
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-300">Pending</Badge>;
+      case 'paid':
+        return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-300">Paid</Badge>;
+      case 'partial':
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-300">Partial</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -79,24 +120,16 @@ export default function Orders() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground">
-            Manage your customer orders
-          </p>
+          <p className="text-muted-foreground">Manage your customer orders</p>
         </div>
-        <Button onClick={() => navigate("/order-entry")}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Order
+        <Button onClick={() => navigate('/order-entry')}>
+          <Plus className="mr-2 h-4 w-4" /> New Order
         </Button>
       </div>
 
       <Card>
         <CardHeader className="flex flex-row items-center">
-          <div className="space-y-1">
-            <CardTitle>Orders</CardTitle>
-            <CardDescription>
-              View and manage all customer orders
-            </CardDescription>
-          </div>
+          <CardTitle>Orders</CardTitle>
           <div className="ml-auto w-64 relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -123,17 +156,7 @@ export default function Orders() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer"
-                    onClick={() => handleSort('id')}
-                  >
-                    <div className="flex items-center">
-                      Order ID
-                      {sortBy === 'id' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
+                  <TableHead>Order #</TableHead>
                   <TableHead 
                     className="cursor-pointer"
                     onClick={() => handleSort('customerName')}
@@ -145,19 +168,9 @@ export default function Orders() {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead className="text-right">Items</TableHead>
-                  <TableHead 
-                    className="cursor-pointer text-right"
-                    onClick={() => handleSort('total')}
-                  >
-                    <div className="flex items-center justify-end">
-                      Amount
-                      {sortBy === 'total' && (
-                        <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
-                      )}
-                    </div>
-                  </TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -171,32 +184,60 @@ export default function Orders() {
                           {order.date}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.customerName}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end">
+                      <TableCell>
+                        <div className="flex items-center">
                           <Package className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {order.items?.length || 0}
+                          {order.id.slice(0, 8)}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">₹{order.total.toFixed(2)}</TableCell>
-                      <TableCell>{getStatusBadge(order.status || 'Pending')}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {order.customerName}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/order/${order.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        ₹{(order.total || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>{getPaymentStatusBadge(order.paymentStatus)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/order/${order.id}`)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/order-edit/${order.id}`)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Order
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/create-invoice/${order.id}`)}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              Create Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive" 
+                              onClick={() => handleDeleteOrder(order.id)}
+                            >
+                              <Trash className="mr-2 h-4 w-4" />
+                              Delete Order
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={7} className="text-center py-8">
                       {searchTerm 
-                        ? "No orders match your search criteria." 
+                        ? "No orders match your search criteria."
                         : "No orders found. Create your first order to get started."}
                     </TableCell>
                   </TableRow>

@@ -1,13 +1,10 @@
 
-// Import the proper types
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Table,
@@ -19,12 +16,36 @@ import {
 } from "@/components/ui/table";
 import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CustomerLedgerEntry, CustomerLedgerReportType } from '@/types';
+import { Customer } from '@/types';
+import { exportToPdf } from '@/utils/pdfUtils';
+import { Download, FileText } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Define the types needed for the report
+interface CustomerLedgerEntry {
+  id: string;
+  date: string;
+  type: 'order' | 'payment';
+  description: string;
+  debit: number;
+  credit: number;
+  balance: number;
+  reference: string;
+}
+
+interface CustomerLedgerReportType {
+  customer: Customer;
+  entries: CustomerLedgerEntry[];
+  startingBalance: number;
+  endingBalance: number;
+  totalDebit: number;
+  totalCredit: number;
+}
 
 export default function CustomerLedgerReport() {
   const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
-  const { customers } = useData();
+  const { customers, orders, payments } = useData();
 
   const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 1));
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -38,8 +59,8 @@ export default function CustomerLedgerReport() {
   }, [customers, customerId]);
 
   useEffect(() => {
-    if (!customerId) {
-      setError('Customer ID is required.');
+    if (!customerId || !customer) {
+      setError('Customer not found.');
       return;
     }
 
@@ -48,80 +69,141 @@ export default function CustomerLedgerReport() {
       setError(null);
 
       try {
-        // Mock data for demonstration
-        const mockEntries: CustomerLedgerEntry[] = [
-          {
-            id: '1',
-            customerId: customerId,
-            date: format(new Date(), 'yyyy-MM-dd'),
-            type: 'order',
-            description: 'Order #123',
-            debit: 500,
-            credit: 0,
-            balance: 500,
-            referenceId: 'ORD-123',
-            orderId: 'ORD-123',
-            paymentId: null,
-            productQuantities: { 'PROD-1': 2, 'PROD-2': 1 },
-            totalQuantity: 3,
-            amountBilled: 500,
-            paymentReceived: 0,
-            closingBalance: 500,
-            reference: 'Order #123',
-          },
-          {
-            id: '2',
-            customerId: customerId,
-            date: format(new Date(), 'yyyy-MM-dd'),
+        // Get relevant orders and payments for the customer
+        const customerOrders = orders.filter(o => o.customerId === customerId);
+        const customerPayments = payments.filter(p => p.customerId === customerId);
+        
+        // Create ledger entries
+        const entries: CustomerLedgerEntry[] = [];
+        
+        // Add order entries
+        customerOrders.forEach(order => {
+          const total = order.total || 0;
+          if (total > 0) {
+            entries.push({
+              id: `ord-${order.id}`,
+              date: order.date,
+              type: 'order',
+              description: `Order #${order.id}`,
+              debit: total,
+              credit: 0,
+              balance: 0, // To be calculated
+              reference: order.id
+            });
+          }
+        });
+        
+        // Add payment entries
+        customerPayments.forEach(payment => {
+          entries.push({
+            id: `pay-${payment.id}`,
+            date: payment.date,
             type: 'payment',
-            description: 'Payment received',
+            description: `Payment #${payment.id}`,
             debit: 0,
-            credit: 300,
-            balance: 200,
-            referenceId: 'PAY-456',
-            orderId: null,
-            paymentId: 'PAY-456',
-            productQuantities: null,
-            totalQuantity: 0,
-            amountBilled: 0,
-            paymentReceived: 300,
-            closingBalance: 200,
-            reference: 'Payment #456',
-          },
-        ];
-
-        const mockReport: CustomerLedgerReportType = {
-          customerId: customerId,
-          customerName: customer?.name || 'Unknown Customer',
-          startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(endDate, 'yyyy-MM-dd'),
-          entries: mockEntries,
-          openingBalance: 0,
-          closingBalance: 200,
-          totalAmountBilled: 500,
-          totalPaymentReceived: 300,
-          totalProductQuantities: { 'PROD-1': 2, 'PROD-2': 1 },
+            credit: payment.amount,
+            balance: 0, // To be calculated
+            reference: payment.id
+          });
+        });
+        
+        // Sort entries by date
+        entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        // Calculate running balance
+        let balance = 0;
+        let totalDebit = 0;
+        let totalCredit = 0;
+        
+        entries.forEach(entry => {
+          balance = balance + entry.debit - entry.credit;
+          entry.balance = balance;
+          totalDebit += entry.debit;
+          totalCredit += entry.credit;
+        });
+        
+        const reportData: CustomerLedgerReportType = {
+          customer,
+          entries,
+          startingBalance: 0, // Assuming starting balance is 0
+          endingBalance: balance,
+          totalDebit,
+          totalCredit
         };
 
-        setReport(mockReport);
+        setReport(reportData);
       } catch (err) {
-        setError('Failed to fetch customer ledger report.');
+        setError('Failed to generate customer ledger report.');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (customerId) {
-      fetchReport();
-    }
-  }, [customerId, startDate, endDate, customer]);
+    fetchReport();
+  }, [customerId, startDate, endDate, customer, orders, payments]);
 
   const handleGenerateReport = () => {
     if (!startDate || !endDate) {
       setError('Please select both start and end dates.');
       return;
     }
+    // Re-trigger the report generation
+    setReport(null);
+  };
+
+  const exportToCSV = () => {
+    if (!report) return;
+    
+    let csvContent = "Date,Description,Debit,Credit,Balance\n";
+    
+    report.entries.forEach(entry => {
+      csvContent += `${entry.date},"${entry.description}",${entry.debit},${entry.credit},${entry.balance}\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `customer_ledger_${customer?.name || customerId}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast.success('Ledger exported to CSV successfully.');
+  };
+
+  const exportToPDFFile = () => {
+    if (!report) return;
+    
+    const headers = ['Date', 'Description', 'Debit', 'Credit', 'Balance'];
+    const rows = report.entries.map(entry => [
+      entry.date,
+      entry.description,
+      entry.debit.toString(),
+      entry.credit.toString(),
+      entry.balance.toString()
+    ]);
+    
+    exportToPdf(
+      headers,
+      rows,
+      {
+        title: `Customer Ledger: ${customer?.name || 'Unknown Customer'}`,
+        subtitle: `Period: ${format(startDate, 'PP')} - ${format(endDate, 'PP')}`,
+        additionalInfo: [
+          { label: 'Opening Balance', value: '0.00' },
+          { label: 'Total Debit', value: report.totalDebit.toString() },
+          { label: 'Total Credit', value: report.totalCredit.toString() },
+          { label: 'Closing Balance', value: report.endingBalance.toString() }
+        ],
+        filename: `customer_ledger_${customer?.name || customerId}_${format(new Date(), 'yyyy-MM-dd')}.pdf`,
+        dateInfo: `Generated on: ${format(new Date(), 'PP')}`
+      }
+    );
+    
+    toast.success('Ledger exported to PDF successfully.');
   };
 
   if (loading) {
@@ -147,7 +229,21 @@ export default function CustomerLedgerReport() {
             View detailed financial activity for {customer.name}
           </CardDescription>
         </div>
-        <Button onClick={() => navigate('/customers')}>Back to Customers</Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/customers')}>Back to Customers</Button>
+          {report && (
+            <>
+              <Button variant="outline" onClick={exportToCSV}>
+                <FileText className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+              <Button variant="outline" onClick={exportToPDFFile}>
+                <Download className="mr-2 h-4 w-4" />
+                Export PDF
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -230,10 +326,10 @@ export default function CustomerLedgerReport() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p>Opening Balance: {report.openingBalance}</p>
-                  <p>Total Amount Billed: {report.totalAmountBilled}</p>
-                  <p>Total Payment Received: {report.totalPaymentReceived}</p>
-                  <p>Closing Balance: {report.closingBalance}</p>
+                  <p>Opening Balance: {report.startingBalance}</p>
+                  <p>Total Debit: {report.totalDebit}</p>
+                  <p>Total Credit: {report.totalCredit}</p>
+                  <p>Closing Balance: {report.endingBalance}</p>
                 </div>
               </CardContent>
             </Card>

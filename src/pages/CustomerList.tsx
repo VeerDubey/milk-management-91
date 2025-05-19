@@ -33,7 +33,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { OfflineStorageService } from '@/services/OfflineStorageService';
 
 export default function CustomerList() {
   const { customers, deleteCustomer } = useData();
@@ -54,16 +53,6 @@ export default function CustomerList() {
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this customer?')) {
       deleteCustomer(id);
-      
-      // Queue action for offline sync
-      if (!OfflineStorageService.isOnline()) {
-        OfflineStorageService.queueOfflineAction({
-          type: 'DELETE',
-          entity: 'customer',
-          data: { id },
-          timestamp: new Date().toISOString(),
-        });
-      }
     }
   };
 
@@ -203,11 +192,11 @@ export default function CustomerList() {
               </TableHead>
               <TableHead 
                 className="cursor-pointer hover:bg-muted/80 transition-colors"
-                onClick={() => handleSort('outstandingAmount')}
+                onClick={() => handleSort('outstandingBalance')}
               >
                 <div className="flex items-center">
                   Outstanding
-                  {sortBy === 'outstandingAmount' && (
+                  {sortBy === 'outstandingBalance' && (
                     <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
                   )}
                 </div>
@@ -234,8 +223,8 @@ export default function CustomerList() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
-                      <span>₹{customer.outstandingAmount?.toFixed(2) || '0.00'}</span>
-                      {(customer.outstandingAmount || 0) > 1000 && (
+                      <span>₹{customer.outstandingBalance?.toFixed(2) || '0.00'}</span>
+                      {(customer.outstandingBalance || 0) > 1000 && (
                         <Badge variant="destructive" className="ml-2 px-1.5 py-0 text-xs">High</Badge>
                       )}
                     </div>
@@ -245,14 +234,14 @@ export default function CustomerList() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/customer/${customer.id}`)}
+                        onClick={() => navigate(`/customer-detail/${customer.id}`)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/customer/${customer.id}`)}
+                        onClick={() => navigate(`/customer-detail/${customer.id}`)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>

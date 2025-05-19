@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useData } from "@/contexts/DataContext";
+import { useData } from "@/contexts/data/DataContext";
 import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,22 +15,51 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar, ArrowUpDown, Download, FileText, Eye } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  Calendar, 
+  ArrowUpDown, 
+  Download, 
+  FileText, 
+  Eye, 
+  Edit,
+  Trash2,
+  Send,
+  Check
+} from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import InvoiceDownloadButton from '@/components/invoices/InvoiceDownloadButton';
+import { toast } from "sonner";
 
 export default function Invoices() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string | null>("date");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const { invoices } = useInvoices();
+  const { invoices, deleteInvoice } = useInvoices();
+  const { customers } = useData();
 
   // Sample invoices for demo if actual invoices are empty
-  const displayInvoices = invoices.length > 0 ? invoices : [
-    { id: 'INV-2023-001', date: '2023-05-01', customerName: 'Rahul Sharma', amount: 1200, status: 'paid' },
-    { id: 'INV-2023-002', date: '2023-05-03', customerName: 'Priya Patel', amount: 850, status: 'unpaid' },
-    { id: 'INV-2023-003', date: '2023-05-05', customerName: 'Amit Kumar', amount: 2100, status: 'paid' },
-    { id: 'INV-2023-004', date: '2023-05-08', customerName: 'Sita Verma', amount: 950, status: 'overdue' },
-    { id: 'INV-2023-005', date: '2023-05-12', customerName: 'Vikram Singh', amount: 1650, status: 'unpaid' },
+  const displayInvoices = invoices.length > 0 ? invoices.map(invoice => {
+    const customer = customers.find(c => c.id === invoice.customerId);
+    return {
+      ...invoice,
+      customerName: customer?.name || 'Unknown Customer'
+    };
+  }) : [
+    { id: 'INV-2023-001', date: '2023-05-01', customerName: 'Rahul Sharma', total: 1200, status: 'paid' },
+    { id: 'INV-2023-002', date: '2023-05-03', customerName: 'Priya Patel', total: 850, status: 'unpaid' },
+    { id: 'INV-2023-003', date: '2023-05-05', customerName: 'Amit Kumar', total: 2100, status: 'paid' },
+    { id: 'INV-2023-004', date: '2023-05-08', customerName: 'Sita Verma', total: 950, status: 'overdue' },
+    { id: 'INV-2023-005', date: '2023-05-12', customerName: 'Vikram Singh', total: 1650, status: 'unpaid' },
   ];
 
   const handleSort = (field: string) => {
@@ -82,6 +112,17 @@ export default function Invoices() {
       default:
         return <Badge>{status}</Badge>;
     }
+  };
+  
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this invoice?')) {
+      deleteInvoice(id);
+    }
+  };
+  
+  const handleDownload = (id: string) => {
+    // In a real implementation, this would trigger the download
+    toast.success('Invoice download started');
   };
 
   return (
@@ -157,11 +198,11 @@ export default function Invoices() {
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer text-right"
-                    onClick={() => handleSort('amount')}
+                    onClick={() => handleSort('total')}
                   >
                     <div className="flex items-center justify-end">
                       Amount
-                      {sortBy === 'amount' && (
+                      {sortBy === 'total' && (
                         <ArrowUpDown className={`ml-2 h-4 w-4 ${sortDirection === 'desc' ? 'rotate-180' : ''} transition-transform`} />
                       )}
                     </div>
@@ -196,24 +237,51 @@ export default function Invoices() {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{invoice.customerName}</TableCell>
-                    <TableCell className="text-right">₹{invoice.amount?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">₹{invoice.total?.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(invoice.status || 'Unknown')}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/invoice-detail/${invoice.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <span className="sr-only">Open menu</span>
+                            <ArrowUpDown className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => navigate(`/invoice-detail/${invoice.id}`)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(`/invoice-edit/${invoice.id}`)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownload(invoice.id)}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast.success(`Invoice sent to ${invoice.customerName}`)}>
+                            <Send className="mr-2 h-4 w-4" />
+                            Send to Customer
+                          </DropdownMenuItem>
+                          {invoice.status !== 'paid' && (
+                            <DropdownMenuItem onClick={() => toast.success('Invoice marked as paid')}>
+                              <Check className="mr-2 h-4 w-4" />
+                              Mark as Paid
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive" 
+                            onClick={() => handleDelete(invoice.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
