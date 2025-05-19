@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,14 +25,15 @@ import {
 import { Supplier } from "@/types";
 
 interface SupplierFormData {
-  id?: string;
   name: string;
-  contactPerson: string;
+  contactName: string;
   phone: string;
   email: string;
   address: string;
-  status: string;
-  outstandingBalance: number;
+  status?: string;
+  outstandingBalance?: number;
+  isActive: boolean;
+  products: string[];
 }
 
 const SupplierDirectory = () => {
@@ -43,12 +43,14 @@ const SupplierDirectory = () => {
   const [editingSupplier, setEditingSupplier] = useState<string | null>(null);
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',
-    contactPerson: '',
+    contactName: '',
     phone: '',
     email: '',
     address: '',
     status: 'Active',
-    outstandingBalance: 0
+    outstandingBalance: 0,
+    isActive: true,
+    products: []
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,12 +83,14 @@ const SupplierDirectory = () => {
   const handleEdit = (supplier: Supplier) => {
     setFormData({
       name: supplier.name,
-      contactPerson: supplier.contactPerson || supplier.contact || '',
+      contactName: supplier.contactName,
       phone: supplier.phone,
       email: supplier.email || '',
       address: supplier.address,
       status: supplier.status || 'Active',
-      outstandingBalance: supplier.outstandingBalance || 0
+      outstandingBalance: supplier.outstandingBalance || 0,
+      isActive: supplier.isActive,
+      products: supplier.products || []
     });
     setEditingSupplier(supplier.id);
     setIsDialogOpen(true);
@@ -107,12 +111,14 @@ const SupplierDirectory = () => {
   const handleCloseDialog = () => {
     setFormData({
       name: '',
-      contactPerson: '',
+      contactName: '',
       phone: '',
       email: '',
       address: '',
       status: 'Active',
-      outstandingBalance: 0
+      outstandingBalance: 0,
+      isActive: true,
+      products: []
     });
     setEditingSupplier(null);
     setIsDialogOpen(false);
@@ -142,12 +148,14 @@ const SupplierDirectory = () => {
               setEditingSupplier(null);
               setFormData({
                 name: '',
-                contactPerson: '',
+                contactName: '',
                 phone: '',
                 email: '',
                 address: '',
                 status: 'Active',
-                outstandingBalance: 0
+                outstandingBalance: 0,
+                isActive: true,
+                products: []
               });
             }}>
               <Plus className="mr-2 h-4 w-4" />
@@ -173,11 +181,11 @@ const SupplierDirectory = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contactPerson">Contact Person</Label>
+                  <Label htmlFor="contactName">Contact Name</Label>
                   <Input
-                    id="contactPerson"
-                    name="contactPerson"
-                    value={formData.contactPerson}
+                    id="contactName"
+                    name="contactName"
+                    value={formData.contactName}
                     onChange={handleInputChange}
                     required
                   />
@@ -242,6 +250,36 @@ const SupplierDirectory = () => {
                 </div>
               </div>
               
+              <div className="space-y-2">
+                <Label htmlFor="isActive">Active</Label>
+                <Input
+                  id="isActive"
+                  name="isActive"
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    isActive: e.target.checked
+                  }))}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="products">Products</Label>
+                <Input
+                  id="products"
+                  name="products"
+                  type="text"
+                  value={formData.products.join(', ')}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    products: e.target.value.split(', ').map(product => product.trim())
+                  }))}
+                  required
+                />
+              </div>
+              
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={handleCloseDialog}>
                   Cancel
@@ -300,7 +338,7 @@ const SupplierDirectory = () => {
                   {filteredSuppliers.map((supplier) => (
                     <TableRow key={supplier.id}>
                       <TableCell className="font-medium">{supplier.name}</TableCell>
-                      <TableCell>{supplier.contactPerson || supplier.contact || '-'}</TableCell>
+                      <TableCell>{supplier.contactName || supplier.contact || '-'}</TableCell>
                       <TableCell>{supplier.phone}</TableCell>
                       <TableCell>{supplier.email || '-'}</TableCell>
                       <TableCell>
@@ -343,7 +381,7 @@ const SupplierDirectory = () => {
             <CardContent className="p-6 space-y-4">
               <div className="space-y-2">
                 <p className="font-medium">Contact Person</p>
-                <p className="text-sm text-muted-foreground">{supplier.contactPerson || supplier.contact || '-'}</p>
+                <p className="text-sm text-muted-foreground">{supplier.contactName || supplier.contact || '-'}</p>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex items-center gap-2">

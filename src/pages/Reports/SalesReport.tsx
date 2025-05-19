@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
@@ -92,7 +91,7 @@ export default function SalesReport() {
       
       // Status filter
       if (statusFilter !== "all") {
-        if (statusFilter === "delivered" && order.status !== "delivered") {
+        if (statusFilter === "completed" && order.status !== "completed") {
           return false;
         }
         if (statusFilter === "pending" && order.status !== "pending") {
@@ -469,7 +468,7 @@ export default function SalesReport() {
                       <TableCell className="text-right">{order.totalAmount?.toFixed(2) || "0.00"}</TableCell>
                       <TableCell>
                         <Badge variant={
-                          order.status === "delivered" ? "success" : 
+                          order.status === "completed" ? "success" : 
                           order.status === "processing" ? "warning" : 
                           order.status === "pending" ? "default" :
                           "outline"

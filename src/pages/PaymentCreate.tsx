@@ -18,14 +18,17 @@ import { Payment } from '@/types';
 
 export default function PaymentCreate() {
   const navigate = useNavigate();
-  const { customers, addPayment } = useData();
+  const { customers, orders, addPayment } = useData();
   
   const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentNotes, setPaymentNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const customerOrders = orders.filter(order => order.customerId === selectedCustomer);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,14 +37,20 @@ export default function PaymentCreate() {
       toast.error("Please select a customer");
       return;
     }
+
+    if (!selectedOrder) {
+      toast.error("Please select an order");
+      return;
+    }
     
     // Convert Date object to string format
     const formattedDate = format(paymentDate!, "yyyy-MM-dd");
     
     const newPayment: Omit<Payment, "id"> = {
       customerId: selectedCustomer,
+      orderId: selectedOrder,
       amount: parseFloat(paymentAmount),
-      date: formattedDate, // Now using string format
+      date: formattedDate,
       paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
       notes: paymentNotes
     };
@@ -51,6 +60,7 @@ export default function PaymentCreate() {
     
     // Clear form
     setSelectedCustomer("");
+    setSelectedOrder("");
     setPaymentAmount("");
     setPaymentDate(new Date());
     setPaymentMethod("cash");
@@ -91,6 +101,28 @@ export default function PaymentCreate() {
                       {customer.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order">Related Order</Label>
+              <Select value={selectedOrder} onValueChange={setSelectedOrder}>
+                <SelectTrigger id="order" disabled={!selectedCustomer}>
+                  <SelectValue placeholder="Select an order" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customerOrders.length > 0 ? (
+                    customerOrders.map((order) => (
+                      <SelectItem key={order.id} value={order.id}>
+                        Order #{order.id.slice(0, 8)} - {format(new Date(order.date), "MMM d, yyyy")}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-orders" disabled>
+                      No orders found for this customer
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -144,9 +176,8 @@ export default function PaymentCreate() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
                   <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -167,7 +198,7 @@ export default function PaymentCreate() {
           <CardFooter className="flex justify-end space-x-2">
             <Button 
               type="submit" 
-              disabled={isSubmitting} 
+              disabled={isSubmitting || !selectedCustomer || !selectedOrder || !paymentAmount} 
               className="w-full md:w-auto"
             >
               <Save className="mr-2 h-4 w-4" />

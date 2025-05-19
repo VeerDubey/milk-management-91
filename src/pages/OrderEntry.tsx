@@ -190,7 +190,10 @@ const OrderEntry = () => {
       date: format(orderDate, "yyyy-MM-dd"),
       items: orderItems,
       total: totalAmount,
-      status: 'pending'
+      vehicleId: selectedVehicle || '0', // Use a default or placeholder
+      salesmanId: selectedSalesman || '0', // Use a default or placeholder
+      status: 'pending' as const,
+      paymentStatus: 'pending' as const,
     };
     
     addOrder(newOrder);
@@ -336,7 +339,8 @@ const OrderEntry = () => {
       name: customerName.trim(),
       phone: customerPhone.trim(),
       address: customerAddress.trim(),
-      outstandingBalance: 0
+      outstandingBalance: 0,
+      isActive: true,
     };
 
     if (editingCustomer) {

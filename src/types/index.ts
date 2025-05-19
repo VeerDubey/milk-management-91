@@ -35,6 +35,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   price?: number; // For dashboard compatibility
+  id?: string; // Added to support InvoiceService
 }
 
 export interface Order {
@@ -77,6 +78,7 @@ export interface SupplierProductRate {
   rate: number;
   effectiveDate: string;
   isActive: boolean;
+  notes?: string; // Added for SupplierRates
 }
 
 export interface Supplier {
@@ -89,6 +91,11 @@ export interface Supplier {
   products: string[];
   isActive: boolean;
   outstandingBalance?: number;
+  status?: string; // Added for SupplierDirectory
+  contactPerson?: string; // Added for compatibility
+  contact?: string; // Added for compatibility
+  gstNumber?: string; // Added for SupplierPayments
+  notes?: string; // Added for SupplierPayments
 }
 
 export interface SupplierPayment {
@@ -98,6 +105,7 @@ export interface SupplierPayment {
   date: string;
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
   notes?: string;
+  referenceNumber?: string; // Added for SupplierLedger and SupplierPayments
 }
 
 export interface StockEntryItem {
@@ -132,6 +140,13 @@ export interface UISettings {
   theme: 'light' | 'dark' | 'system';
   language: 'en' | 'es';
   currency: 'USD' | 'EUR' | 'GBP';
+  fontSize?: string; // Added for UISettings
+  colorScheme?: string; // Added for UISettings
+  sidebarCollapsed?: boolean; // Added for UISettings
+  sidebarStyle?: string; // Added for UISettings
+  dateFormat?: string; // Added for UISettings
+  tableStyle?: string; // Added for UISettings
+  notificationFrequency?: string; // Added for UISettings
 }
 
 export interface Vehicle {
@@ -141,6 +156,8 @@ export interface Vehicle {
   type: string;
   capacity: number;
   isActive: boolean;
+  driver?: string; // Added for VehicleTracking
+  number?: string; // Added for VehicleTracking
 }
 
 export interface Salesman {
@@ -150,6 +167,7 @@ export interface Salesman {
   email: string;
   address: string;
   isActive: boolean;
+  vehicleId?: string; // Added for VehicleSalesmanCreate
 }
 
 export interface Expense {
@@ -200,6 +218,7 @@ export interface Invoice {
   customerName?: string; // Added for display purposes
   amount?: number; // Added for compatibility
   orderId?: string; // Added for linking to orders
+  subtotal?: number; // Added for InvoiceService
 }
 
 export interface CustomerLedgerEntry {
@@ -230,4 +249,12 @@ export interface InvoiceTemplate {
   primaryColor?: string;
   showHeader?: boolean;
   showFooter?: boolean;
+}
+
+export interface TaxSetting {
+  id: string;
+  name: string;
+  rate: number;
+  isDefault: boolean;
+  appliedTo: string[];
 }

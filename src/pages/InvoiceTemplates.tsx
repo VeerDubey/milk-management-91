@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useInvoice, InvoiceTemplate } from '@/contexts/InvoiceContext';
 import InvoiceTemplateGallery from '@/components/invoices/InvoiceTemplateGallery';
-import { CompactPicker } from 'react-colorful';
+import { HexColorPicker } from 'react-colorful';
 import { toast } from 'sonner';
 import { ArrowLeft, Settings, Plus, Check, Eye } from 'lucide-react';
 
@@ -169,7 +168,7 @@ export default function InvoiceTemplates() {
                   </Button>
                   {showColorPicker && (
                     <div className="absolute z-10 mt-2 p-2 bg-background border rounded-md shadow-md">
-                      <CompactPicker 
+                      <HexColorPicker 
                         color={primaryColor}
                         onChange={(color) => setPrimaryColor(color.hex)}
                       />

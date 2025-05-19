@@ -43,6 +43,8 @@ const Customers = () => {
     address: "",
     email: "",
     outstandingBalance: 0,
+    isActive: true,
+    area: "",
   });
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -53,6 +55,8 @@ const Customers = () => {
       address: "",
       email: "",
       outstandingBalance: 0,
+      isActive: true,
+      area: "",
     });
     setCurrentCustomer(null);
     setEditMode(false);
@@ -73,6 +77,8 @@ const Customers = () => {
       address: customer.address,
       email: customer.email || "",
       outstandingBalance: customer.outstandingBalance,
+      isActive: customer.isActive,
+      area: customer.area || "",
     });
     setEditMode(true);
     setOpen(true);

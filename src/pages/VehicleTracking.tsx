@@ -64,8 +64,11 @@ const VehicleTracking = () => {
     }
     
     addVehicle({
-      ...newVehicle,
-      number: newVehicle.regNumber, // Add the required number property
+      name: newVehicle.name,
+      regNumber: newVehicle.regNumber,
+      type: newVehicle.type,
+      capacity: parseInt(newVehicle.capacity),
+      isActive: true,
     });
     setNewVehicle({
       name: '',
@@ -91,7 +94,13 @@ const VehicleTracking = () => {
       return;
     }
     
-    addSalesman(newSalesman);
+    addSalesman({
+      name: newSalesman.name,
+      phone: newSalesman.phone,
+      address: newSalesman.address,
+      isActive: true,
+      email: '',
+    });
     setNewSalesman({
       name: '',
       phone: '',
