@@ -35,8 +35,28 @@ export function exportToExcel(
       worksheet[cellAddress].s = { font: { bold: true } };
     }
     
-    // Write to file and trigger download
-    XLSX.writeFile(workbook, filename, { compression: true });
+    // Write to binary string
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    
+    // Convert to Blob
+    const blob = new Blob(
+      [s2ab(wbout)], 
+      { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+    );
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
     
     console.log(`Excel file "${filename}" exported successfully`);
   } catch (error) {
@@ -69,8 +89,27 @@ export function exportTableToExcel(tableId: string, filename: string = "export.x
       dateNF: "yyyy-mm-dd"
     });
     
-    // Write to file and trigger download
-    XLSX.writeFile(workbook, filename, { compression: true });
+    // Write to binary string
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
+    
+    // Create blob and trigger download
+    const blob = new Blob(
+      [s2ab(wbout)], 
+      { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+    );
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
     
     console.log(`Table exported to Excel file "${filename}" successfully`);
   } catch (error) {
@@ -134,15 +173,35 @@ export function exportToCSV(
       filename += '.csv';
     }
     
-    // Create worksheet
-    const worksheet = XLSX.utils.aoa_to_sheet([columns, ...data]);
+    // Create CSV content
+    let csvContent = columns.join(',') + '\n';
     
-    // Create workbook and add the worksheet
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    data.forEach(row => {
+      // For each cell, wrap in quotes if needed and escape quotes inside
+      const formattedRow = row.map((cell: any) => {
+        const cellStr = String(cell);
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      });
+      csvContent += formattedRow.join(',') + '\n';
+    });
     
-    // Write to CSV file and trigger download
-    XLSX.writeFile(workbook, filename, { bookType: 'csv' });
+    // Create blob and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
     
     console.log(`CSV file "${filename}" exported successfully`);
   } catch (error) {
@@ -169,4 +228,18 @@ export function exportToPDF(
   // This implementation would require jspdf and jspdf-autotable packages
   // For now, we'll just log a message
   console.warn("PDF export requires additional implementation with jspdf");
+}
+
+/**
+ * Utility function to convert string to ArrayBuffer
+ * @param s - String to convert
+ * @returns ArrayBuffer
+ */
+function s2ab(s: string): ArrayBuffer {
+  const buf = new ArrayBuffer(s.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < s.length; i++) {
+    view[i] = s.charCodeAt(i) & 0xFF;
+  }
+  return buf;
 }
