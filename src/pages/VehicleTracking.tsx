@@ -44,34 +44,41 @@ const VehicleTracking = () => {
   const [vehicleRegNumber, setVehicleRegNumber] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleDriver, setVehicleDriver] = useState("");
+  const [vehicleCapacity, setVehicleCapacity] = useState(0);
 
   // Vehicle CRUD operations
   const handleAddVehicle = () => {
-    const newVehicle = {
+    if (!vehicleName || !vehicleRegNumber) {
+      toast.error("Vehicle name and registration number are required");
+      return;
+    }
+
+    addVehicle({
       name: vehicleName,
-      regNumber: vehicleRegNumber,
+      registrationNumber: vehicleRegNumber, // Changed from regNumber
       type: vehicleType,
-      driver: vehicleDriver,
+      driverName: vehicleDriver, // Changed from driver
       isActive: true,
-      capacity: 0 // Add default capacity value
-    };
-    
-    addVehicle(newVehicle);
-    toast.success("Vehicle added successfully");
-    
+      capacity: vehicleCapacity
+    });
+
     // Reset form
     setVehicleName("");
     setVehicleRegNumber("");
     setVehicleType("");
     setVehicleDriver("");
+    setVehicleCapacity(0);
+    toast.success("Vehicle added successfully");
+    setIsAddingVehicle(false);
   };
 
   const handleEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setVehicleName(vehicle.name);
-    setVehicleRegNumber(vehicle.regNumber);
+    setVehicleRegNumber(vehicle.registrationNumber); // Changed from regNumber
     setVehicleType(vehicle.type);
-    setVehicleDriver(vehicle.driver || "");
+    setVehicleDriver(vehicle.driverName || ""); // Changed from driver
+    setVehicleCapacity(vehicle.capacity);
     setIsAddingVehicle(true);
   };
 
@@ -89,34 +96,30 @@ const VehicleTracking = () => {
     setVehicleRegNumber("");
     setVehicleType("");
     setVehicleDriver("");
+    setVehicleCapacity(0);
   };
 
   const handleUpdateVehicle = () => {
     if (!editingVehicle) return;
-
+    
     updateVehicle(editingVehicle.id, {
       name: vehicleName,
-      regNumber: vehicleRegNumber,
+      registrationNumber: vehicleRegNumber, // Changed from regNumber
       type: vehicleType,
-      driver: vehicleDriver
+      driverName: vehicleDriver, // Changed from driver
+      capacity: vehicleCapacity
     });
+    
+    // Reset form
+    setVehicleName("");
+    setVehicleRegNumber("");
+    setVehicleType("");
+    setVehicleDriver("");
+    setVehicleCapacity(0);
+    
     toast.success("Vehicle updated successfully");
-    resetVehicleForm();
-
-    setEditingVehicle(prevState => {
-      if (prevState) {
-        return {
-          ...prevState,
-          name: vehicleName,
-          regNumber: vehicleRegNumber,
-          type: vehicleType,
-          driver: vehicleDriver
-        };
-      }
-      return prevState;
-    });
-
     setIsAddingVehicle(false);
+    setEditingVehicle(null);
   };
 
   return (
@@ -223,7 +226,7 @@ const VehicleTracking = () => {
                 <div key={vehicle.id} className="flex items-center justify-between p-4 border-b">
                   <div>
                     <h3 className="font-medium">{vehicle.name}</h3>
-                    <p className="text-sm text-muted-foreground">{vehicle.regNumber}</p>
+                    <p className="text-sm text-muted-foreground">{vehicle.registrationNumber}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button

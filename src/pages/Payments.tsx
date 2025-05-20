@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,7 @@ import {
   Trash2, 
   Download, 
   FileSpreadsheet,
-  FilePdf,
+  FileText, // Changed from FilePdf
   SendHorizonal,
   Filter,
   ArrowUpDown,
@@ -393,7 +392,7 @@ const Payments = () => {
                     Quick Export to Excel
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => alert("Quick Export to PDF")}>
-                    <FilePdf className="mr-2 h-4 w-4" />
+                    <FileText className="mr-2 h-4 w-4" />
                     Quick Export to PDF
                   </DropdownMenuItem>
                 </DropdownMenuContent>

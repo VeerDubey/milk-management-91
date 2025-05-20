@@ -217,7 +217,7 @@ export default function OrderList() {
                 <SelectItem value="all">All Vehicles</SelectItem>
                 {vehicles.map(vehicle => (
                   <SelectItem key={vehicle.id} value={vehicle.id}>
-                    {vehicle.name} ({vehicle.regNumber})
+                    {vehicle.name} ({vehicle.registrationNumber})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -421,7 +421,7 @@ export default function OrderList() {
                                     <option value="none">Select Vehicle</option>
                                     {vehicles.filter(v => v.isActive).map(vehicle => (
                                       <option key={vehicle.id} value={vehicle.id}>
-                                        {vehicle.name} ({vehicle.regNumber})
+                                        {vehicle.name} ({vehicle.registrationNumber})
                                       </option>
                                     ))}
                                   </select>
@@ -432,7 +432,7 @@ export default function OrderList() {
                                       <span className="font-medium">Assigned to:</span> {assignedVehicle.name}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                      Reg: {assignedVehicle.regNumber} | Type: {assignedVehicle.type}
+                                      Reg: {assignedVehicle.registrationNumber} | Type: {assignedVehicle.type}
                                     </p>
                                   </div>
                                 )}

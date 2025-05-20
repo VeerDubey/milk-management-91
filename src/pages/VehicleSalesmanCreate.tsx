@@ -37,19 +37,25 @@ export default function VehicleSalesmanCreate() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitSalesman = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
+    // Validate
+    if (!formData.name || !formData.phone) {
+      toast.error("Name and phone are required");
+      return;
+    }
+    
     addSalesman({
       name: formData.name,
       phone: formData.phone,
+      email: formData.email,
       address: formData.address,
-      vehicleId: formData.vehicleId,
       isActive: formData.isActive,
-      email: formData.email || '',
+      assignedVehicleId: formData.vehicleId || undefined // Changed from vehicleId
     });
-
-    toast.success('Salesman added successfully!');
+    
+    toast.success("Salesman created successfully");
     navigate('/vehicle-salesman');
   };
 
@@ -133,7 +139,7 @@ export default function VehicleSalesmanCreate() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmitSalesman}>
             <Save className="mr-2 h-4 w-4" />
             Add Salesman
           </Button>

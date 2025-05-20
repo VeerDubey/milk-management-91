@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +22,7 @@ import { Payment, Customer } from '@/types';
 import { format, subDays } from 'date-fns';
 import { toast } from 'sonner';
 import { exportToExcel } from '@/utils/exportUtils';
-import { FilePdf, FileSpreadsheet } from 'lucide-react';
+import { FileText, FileSpreadsheet, Calendar } from "lucide-react";
 import { exportToPdf } from '@/utils/pdfUtils';
 
 interface PaymentExportDialogProps {
@@ -153,7 +152,7 @@ export function PaymentExportDialog({
                 </SelectItem>
                 <SelectItem value="pdf">
                   <div className="flex items-center gap-2">
-                    <FilePdf className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                     <span>PDF Document</span>
                   </div>
                 </SelectItem>
