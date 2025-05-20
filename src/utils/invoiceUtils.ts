@@ -254,25 +254,30 @@ export const createInvoiceFromFormData = (
   
   return {
     id: formData.invoiceNumber,
-    orderId: `ORD-${Date.now().toString().substring(7)}`,
-    customerName: formData.customerName,
+    number: formData.invoiceNumber,
     customerId: formData.customerId,
     date: formData.invoiceDate,
     dueDate: formData.dueDate,
-    amount: total,
-    total: total,
-    subtotal: total - ((formData.taxRate || 0) * total / 100),
-    status: "draft", // Changed from "Pending" to "draft" to match type
-    invoiceNumber: formData.invoiceNumber,
     items: formData.items.map(item => ({
-      id: crypto.randomUUID(),
-      customerId: formData.customerId,
       productId: item.productId,
+      description: "Product", // Add required field
       quantity: item.quantity,
       unitPrice: item.rate,
-      productName: "Product", // Add missing required property
-      unit: "unit" // Add missing required property
-    }))
+      amount: item.amount
+    })),
+    status: "draft",
+    subtotal: total - ((formData.taxRate || 0) * total / 100),
+    taxRate: formData.taxRate || 0,
+    taxAmount: ((formData.taxRate || 0) * total / 100),
+    total,
+    notes: formData.notes || "",
+    termsAndConditions: formData.terms || "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    // Extra fields for compatibility
+    customerName: formData.customerName,
+    amount: total,
+    orderId: `ORD-${Date.now().toString().substring(7)}`
   };
 };
 
@@ -297,23 +302,21 @@ export const createInvoiceFromOrder = (
   customerName: string
 ): Invoice => {
   // Map order items to invoice items with calculated amounts
-  const invoiceItems: OrderItem[] = order.items.map(item => {
+  const invoiceItems = order.items.map(item => {
     const product = products.find(p => p.id === item.productId);
     const rate = product ? product.price : 0;
     
     return {
-      id: crypto.randomUUID(),
       productId: item.productId,
-      customerId: item.customerId,
+      description: product?.name || "Product",
       quantity: item.quantity,
       unitPrice: rate,
-      productName: "Product", // Include required property
-      unit: "unit" // Include required property
+      amount: item.quantity * rate
     };
   });
 
   // Calculate total amount
-  const total = invoiceItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  const total = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
   
   // Get current date
   const currentDate = new Date().toISOString().split('T')[0];
@@ -324,17 +327,25 @@ export const createInvoiceFromOrder = (
   
   return {
     id: generateInvoiceNumber(),
-    orderId: order.id,
-    customerName: customerName || order.customerName || "Unknown Customer",
+    number: generateInvoiceNumber(),
     customerId: customerId,
     date: order.date,
-    dueDate: formattedDueDate, // Add the due date
-    amount: total,
-    total: total,
+    dueDate: formattedDueDate,
+    items: invoiceItems,
+    status: "draft",
     subtotal: total,
-    status: "draft", // Changed from "Pending" to "draft" to match type
+    taxRate: 0,
+    taxAmount: 0,
+    total: total,
+    notes: "",
+    termsAndConditions: "",
+    createdAt: currentDate,
+    updatedAt: currentDate,
+    // Additional fields for compatibility
+    orderId: order.id,
     invoiceNumber: generateInvoiceNumber(),
-    items: invoiceItems
+    customerName: customerName || order.customerName || "Unknown Customer",
+    amount: total
   };
 };
 

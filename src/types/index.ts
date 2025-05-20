@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   name: string;
@@ -109,6 +110,7 @@ export interface SupplierPayment {
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
   referenceNumber?: string;
   notes?: string;
+  method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
 }
 
 export interface Vehicle {
@@ -215,14 +217,17 @@ export interface Invoice {
   updatedAt: string;
   discount?: number;
   shipping?: number;
+  orderId?: string; // Add orderId for InvoiceGenerator
+  customerName?: string; // Add customerName for InvoiceHistory
+  amount?: number; // Add amount for InvoiceHistory
 }
 
 export interface StockRecord {
   id: string;
   productId: string;
-  quantity: number;
+  quantity: number; // Required field
   date: string;
-  type: 'in' | 'out' | 'adjustment';
+  type: 'in' | 'out' | 'adjustment'; // Required field
   notes?: string;
   relatedEntryId?: string;
   openingStock?: number;
@@ -250,6 +255,7 @@ export interface StockEntry {
   totalAmount: number;
   paymentStatus?: 'paid' | 'partial' | 'unpaid';
   createdAt?: string;
+  referenceNumber?: string; // Add for PurchaseHistory and StockManagement
 }
 
 export interface TaxSetting {
@@ -258,4 +264,7 @@ export interface TaxSetting {
   rate: number;
   isActive: boolean;
   isDefault: boolean;
+  applicableOn?: string; // Add for TaxSettings
+  appliedTo?: string; // Add for TaxSettings
 }
+

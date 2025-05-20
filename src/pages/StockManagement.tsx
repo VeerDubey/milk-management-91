@@ -112,12 +112,13 @@ const StockManagement = () => {
     }));
 
     const entry: StockEntry = {
+      id: `se${Date.now()}`, // Add an ID to the entry
       date: format(entryDate || new Date(), "yyyy-MM-dd"),
       supplierId: selectedSupplierId,
       totalAmount: calculateTotal(),
       items: convertedItems,
-      referenceNumber: referenceNumber,
-      notes: notes
+      notes: notes,
+      referenceNumber: referenceNumber // Now properly part of StockEntry type
     };
 
     addStockEntry(entry);

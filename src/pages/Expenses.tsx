@@ -92,7 +92,7 @@ const Expenses = () => {
       paymentMethod: paymentMethod as 'cash' | 'bank' | 'upi' | 'other',
       paidTo: paidTo,
       notes: notes,
-      isRecurring: isRecurring,
+      recurring: isRecurring, // Use recurring instead of isRecurring
       recurringFrequency: typedRecurringFrequency
     };
 
@@ -120,7 +120,7 @@ const Expenses = () => {
     setPaymentMethod(expense.paymentMethod);
     setPaidTo(expense.paidTo || '');
     setNotes(expense.notes || '');
-    setIsRecurring(expense.isRecurring || false);
+    setIsRecurring(expense.recurring || expense.isRecurring || false);
     setRecurringFrequency(typedRecurringFrequency || 'monthly');
     setEditingExpense(expense);
     setDialogOpen(true);

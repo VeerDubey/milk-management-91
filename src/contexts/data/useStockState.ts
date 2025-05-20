@@ -42,7 +42,7 @@ export function useStockState(updateSupplier: Function) {
     setStockRecords(stockRecords.filter((record) => record.id !== id));
   };
   
-  const addStockEntry = (entry: StockEntry) => {
+  const addStockEntry = (entry: Omit<StockEntry, "id">) => {
     const newEntry = {
       ...entry,
       id: entry.id || `se${Date.now()}`
@@ -62,6 +62,8 @@ export function useStockState(updateSupplier: Function) {
           addStockRecord({
             date: entry.date,
             productId: item.productId,
+            quantity: item.quantity,
+            type: 'in',
             openingStock: latestRecord.closingStock,
             received: item.quantity,
             dispatched: 0,
@@ -72,6 +74,8 @@ export function useStockState(updateSupplier: Function) {
           addStockRecord({
             date: entry.date,
             productId: item.productId,
+            quantity: item.quantity,
+            type: 'in',
             openingStock: 0,
             received: item.quantity,
             dispatched: 0,
@@ -113,6 +117,7 @@ export function useStockState(updateSupplier: Function) {
     };
     
     const entry: StockEntry = {
+      id: `se${Date.now()}`, // Add id to fix the missing id error
       date,
       supplierId,
       items: [stockItem],

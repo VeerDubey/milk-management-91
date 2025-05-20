@@ -51,36 +51,47 @@ export default function TrackSheet() {
     }
   }, [customers, products]);
 
-  const handleQuantityChange = (customerName: string, productName: string, value: string) => {
-    const numValue = value === '' ? 0 : parseInt(value, 10);
+  const handleQuantityChange = (rowIndex: number, productId: string, value: string) => {
+    // Make a shallow copy of rows
+    const updatedRows = [...rows];
     
-    setRows(prevRows => 
-      prevRows.map(row => {
-        if (row.name === customerName) {
-          const updatedQuantities = { 
-            ...row.quantities,
-            [productName]: value 
-          };
-          
-          // Calculate total quantity for this row
-          const total = Object.values(updatedQuantities).reduce((sum, val) => {
-            const qty = val === '' ? 0 : typeof val === 'string' ? parseInt(val, 10) : val;
-            return sum + (isNaN(qty) ? 0 : qty);
-          }, 0);
-          
-          // For now, set amount equal to quantity - in a real app this would involve pricing
-          const amount = total; // Placeholder - real app would calculate based on prices
-          
-          return {
-            ...row,
-            quantities: updatedQuantities,
-            total,
-            amount
-          };
-        }
-        return row;
-      })
-    );
+    // Update the quantity for the specific product in the row
+    updatedRows[rowIndex].quantities[productId] = value;
+    
+    // Recalculate the total and amount for this row
+    if (products) {
+      const rowProducts = productsInRow(updatedRows[rowIndex]);
+      let rowTotal = 0;
+      
+      rowProducts.forEach(product => {
+        const qty = updatedRows[rowIndex].quantities[product.id];
+        // Convert string to number safely before adding
+        const numValue = Number(qty) || 0;
+        rowTotal += numValue;
+      });
+      
+      updatedRows[rowIndex].total = rowTotal;
+      
+      // Calculate amount based on customer rates or default product prices
+      let amount = 0;
+      rowProducts.forEach(product => {
+        const qty = updatedRows[rowIndex].quantities[product.id];
+        const numQty = Number(qty) || 0; // Convert to number safely
+        const customerId = updatedRows[rowIndex].customerId;
+        
+        // Use customer-specific rate if available
+        const rate = customerId 
+          ? getProductRateForCustomer(customerId, product.id) 
+          : product.price;
+        
+        amount += numQty * rate;
+      });
+      
+      updatedRows[rowIndex].amount = amount;
+    }
+    
+    // Update state
+    setRows(updatedRows);
   };
 
   const addEmptyRow = () => {
@@ -282,7 +293,7 @@ export default function TrackSheet() {
                               type="number"
                               className="text-center"
                               value={row.quantities[product] || ''}
-                              onChange={(e) => handleQuantityChange(row.name, product, e.target.value)}
+                              onChange={(e) => handleQuantityChange(index, product, e.target.value)}
                             />
                           </td>
                         ))}

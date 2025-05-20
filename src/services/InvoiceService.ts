@@ -14,20 +14,29 @@ export const createInvoice = (orderId: string, customerId: string, customerName:
     id: `INV-${Date.now()}`,
     invoiceNumber: generateInvoiceNumber(),
     customerId,
-    customerName,
-    orderId,
+    number: generateInvoiceNumber(),
     date: new Date().toISOString(),
     dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
     items: items.map(item => ({
-      id: item.id,
       productId: item.productId,
+      description: item.productName || "Product",
       quantity: item.quantity,
       unitPrice: item.unitPrice,
-      productName: item.productName,
-      unit: item.unit
+      amount: item.quantity * item.unitPrice
     })),
     status: "draft",
-    total
+    subtotal: total,
+    taxRate: 0,
+    taxAmount: 0,
+    total,
+    notes: "",
+    termsAndConditions: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    // Additional fields for compatibility 
+    orderId,
+    customerName,
+    amount: total
   };
 };
 
@@ -52,20 +61,28 @@ export const createInvoiceFromForm = (formData: {
     id: `INV-${Date.now()}`,
     invoiceNumber: generateInvoiceNumber(),
     customerId: formData.customerId,
-    customerName: formData.customerName,
+    number: generateInvoiceNumber(),
     date,
     dueDate,
     items: formData.items.map(item => ({
-      id: item.id,
       productId: item.productId,
+      description: item.productName || "Product",
       quantity: item.quantity,
       unitPrice: item.unitPrice,
-      productName: item.productName,
-      unit: item.unit
+      amount: item.quantity * item.unitPrice
     })),
     status: "draft",
+    subtotal: total,
+    taxRate: 0,
+    taxAmount: 0,
     total,
-    notes: formData.notes
+    notes: formData.notes || "",
+    termsAndConditions: "",
+    createdAt: date,
+    updatedAt: date,
+    // Additional fields for compatibility
+    customerName: formData.customerName,
+    amount: total
   };
 };
 
@@ -80,12 +97,21 @@ export const createBlankInvoice = (): Invoice => {
     id: `INV-${Date.now()}`,
     invoiceNumber: generateInvoiceNumber(),
     customerId: "",
-    customerName: "",
+    number: generateInvoiceNumber(),
     date: today,
     dueDate,
     items: [],
     status: "draft",
-    total: 0
+    subtotal: 0,
+    taxRate: 0,
+    taxAmount: 0,
+    total: 0,
+    notes: "",
+    termsAndConditions: "",
+    createdAt: today,
+    updatedAt: today,
+    // Additional fields for compatibility
+    amount: 0
   };
 };
 
@@ -100,14 +126,30 @@ class InvoiceService {
     return {
       id: data.id,
       customerId: data.customerId,
-      customerName: data.customerName,
+      number: generateInvoiceNumber(),
       date: data.date,
       dueDate: new Date(new Date(data.date).getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days from now
-      items: data.items,
+      items: data.items.map((item: any) => ({
+        productId: item.productId,
+        description: item.productName || "Product",
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        amount: item.quantity * item.unitPrice
+      })),
       status: "draft",
+      subtotal: data.total,
+      taxRate: 0,
+      taxAmount: 0,
       total: data.total,
       invoiceNumber: generateInvoiceNumber(),
-      orderId: data.orderId
+      notes: "",
+      termsAndConditions: "",
+      createdAt: data.date,
+      updatedAt: data.date,
+      // Additional fields for compatibility
+      orderId: data.orderId,
+      customerName: data.customerName,
+      amount: data.total
     };
   }
 }
