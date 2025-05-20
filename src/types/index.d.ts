@@ -1,4 +1,5 @@
 
+
 // Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
 import { ReactNode } from 'react';
@@ -169,3 +170,4 @@ declare module '@/types' {
     method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
   }
 }
+

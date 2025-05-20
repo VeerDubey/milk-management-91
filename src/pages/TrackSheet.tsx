@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrackSheetAnalytics } from '@/components/track-sheet/TrackSheetAnalytics';
 import { TrackSheet as TrackSheetType, TrackSheetRow } from '@/types';
+import { 
+  generateTrackSheetPdf, 
+  createTrackSheetTemplate, 
+  createEmptyTrackSheetRows 
+} from '@/utils/trackSheetUtils';
 import { SaveTemplateDialog } from '@/components/track-sheet/SaveTemplateDialog';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
@@ -324,6 +328,7 @@ export default function TrackSheet() {
             </CardContent>
           </Card>
           
+          {/* Make sure SaveTemplateDialog accepts a rows prop */}
           <SaveTemplateDialog 
             open={isSaveTemplateOpen} 
             onOpenChange={setIsSaveTemplateOpen}

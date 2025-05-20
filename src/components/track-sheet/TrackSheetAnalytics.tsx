@@ -48,7 +48,7 @@ export function TrackSheetAnalytics({ rows, products }: TrackSheetAnalyticsProps
     rows
       .filter(row => row.total > 0)
       .map(row => ({
-        name: row.name || row.customerName || 'Unknown',
+        name: row.name || 'Unknown',
         quantity: row.total,
         amount: row.amount || 0
       }))

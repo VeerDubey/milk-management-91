@@ -1,8 +1,9 @@
+
 // Add necessary imports for calculations and PDF generation
-import { TrackSheetRow } from '@/types';
-import PubSub from 'pubsub-js';
+import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import PubSub from 'pubsub-js';
 
 // Define types
 export interface TrackSheetTemplate {
