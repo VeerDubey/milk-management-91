@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -323,23 +322,35 @@ const BulkCommunication = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {messageType === "email" ? (
-                        templates.email.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))
+                        templates.email.length > 0 ? (
+                          templates.email.map((template) => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-templates">No templates available</SelectItem>
+                        )
                       ) : messageType === "sms" ? (
-                        templates.sms.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))
+                        templates.sms.length > 0 ? (
+                          templates.sms.map((template) => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-templates">No templates available</SelectItem>
+                        )
                       ) : (
-                        templates.whatsapp.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.name}
-                          </SelectItem>
-                        ))
+                        templates.whatsapp.length > 0 ? (
+                          templates.whatsapp.map((template) => (
+                            <SelectItem key={template.id} value={template.id}>
+                              {template.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-templates">No templates available</SelectItem>
+                        )
                       )}
                     </SelectContent>
                   </Select>
