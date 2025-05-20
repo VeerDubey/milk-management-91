@@ -37,14 +37,21 @@ declare module '@/types' {
     type: 'in' | 'out' | 'adjustment';
     notes?: string;
     relatedEntryId?: string;
+    // Added properties
+    openingStock?: number;
+    received?: number;
+    dispatched?: number;
+    closingStock?: number;
+    minStockLevel?: number;
   }
 
   export interface StockEntryItem {
-    id: string;
+    id?: string;
     productId: string;
     quantity: number;
     unitPrice: number;
-    totalPrice: number;
+    totalPrice?: number;
+    total?: number; // For compatibility with existing code
   }
 
   export interface StockEntry {
@@ -54,8 +61,8 @@ declare module '@/types' {
     items: StockEntryItem[];
     notes?: string;
     totalAmount: number;
-    paymentStatus: 'paid' | 'partial' | 'unpaid';
-    createdAt: string;
+    paymentStatus?: 'paid' | 'partial' | 'unpaid';
+    createdAt?: string;
   }
 
   export interface TaxSetting {
@@ -77,6 +84,9 @@ declare module '@/types' {
     title: string;
     notes?: string;
     paidTo?: string;
+    description: string; // Added for compatibility
+    paymentMethod: string; // Added for compatibility
+    reference?: string; // Added for compatibility
   }
 
   // Make sure the Vehicle interface has the correct properties
@@ -101,6 +111,11 @@ declare module '@/types' {
     sidebarStyle?: 'compact' | 'expanded';
     tableStyle?: 'bordered' | 'minimal' | 'striped';
     notificationFrequency?: 'high' | 'medium' | 'low' | 'off';
+    compactMode: boolean; // Added for compatibility
+    currency: string; // Added for compatibility
+    sidebarCollapsed: boolean; // Added for compatibility
+    defaultPaymentMethod: string; // Added for compatibility
+    defaultReportPeriod: string; // Added for compatibility
   }
 
   // Make sure the TrackSheet interface has the correct properties
@@ -112,8 +127,23 @@ declare module '@/types' {
     rows: TrackSheetRow[];
     routeName?: string;
     title?: string; // Added for compatibility
+    name?: string; // Added for compatibility
     createdAt?: string;
     updatedAt?: string;
+    vehicleName?: string;
+    salesmanName?: string;
+    savedAt?: string;
+  }
+
+  // Make sure the TrackSheetRow interface has the correct properties
+  export interface TrackSheetRow {
+    name: string;
+    customerName?: string;
+    customerId?: string;
+    quantities: Record<string, number | string>;
+    total: number;
+    amount: number;
+    products?: string[];
   }
 
   // Make sure the Salesman interface has the correct property
@@ -125,5 +155,17 @@ declare module '@/types' {
     address?: string;
     isActive: boolean;
     vehicleId?: string;
+  }
+
+  // Make sure the SupplierPayment interface has the correct properties
+  export interface SupplierPayment {
+    id: string;
+    supplierId: string;
+    amount: number;
+    date: string;
+    paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
+    referenceNumber?: string;
+    notes?: string;
+    method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
   }
 }

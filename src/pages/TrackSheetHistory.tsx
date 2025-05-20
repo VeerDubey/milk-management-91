@@ -1,85 +1,76 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/data/DataContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DatePicker } from '@/components/ui/date-picker';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Search, Calendar, Eye, Download, Plus } from 'lucide-react';
-import { format, isWithinInterval, parseISO, subDays } from 'date-fns';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TrackSheetDetails } from '@/components/track-sheet/TrackSheetDetails';
 
 export default function TrackSheetHistory() {
-  const navigate = useNavigate();
-  const { trackSheets, vehicles, salesmen } = useData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
-  
-  // Add guard clause for when trackSheets is undefined
-  if (!trackSheets) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Track Sheet History</h1>
-            <p className="text-muted-foreground">View and manage your past track sheets</p>
-          </div>
-          <Button onClick={() => navigate('/track-sheet')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Track Sheet
-          </Button>
-        </div>
-        
-        <div className="flex justify-center items-center h-[400px]">
-          <p>Track sheet data is loading or not available.</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Filter track sheets based on search term and date range
-  const filteredTrackSheets = trackSheets.filter(sheet => {
+  const { trackSheets, vehicles, salesmen, deleteTrackSheet } = useData();
+  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterVehicle, setFilterVehicle] = useState('all');
+  const [filterSalesman, setFilterSalesman] = useState('all');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedTrackSheet, setSelectedTrackSheet] = useState<any>(null);
+
+  // Filter track sheets
+  const filteredTrackSheets = trackSheets.filter(ts => {
     const matchesSearch = 
-      sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      sheet.id.toLowerCase().includes(searchTerm.toLowerCase());
+      searchQuery === '' || 
+      (ts.name || ts.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (ts.routeName || '').toLowerCase().includes(searchQuery.toLowerCase());
     
-    const sheetDate = parseISO(sheet.date);
-    const withinDateRange = startDate && endDate 
-      ? isWithinInterval(sheetDate, { start: startDate, end: endDate })
-      : true;
+    const matchesVehicle = filterVehicle === 'all' || ts.vehicleId === filterVehicle;
+    const matchesSalesman = filterSalesman === 'all' || ts.salesmanId === filterSalesman;
     
-    return matchesSearch && withinDateRange;
+    // Period filtering logic
+    if (selectedPeriod === 'all') return matchesSearch && matchesVehicle && matchesSalesman;
+    
+    const tsDate = new Date(ts.date);
+    const today = new Date();
+    
+    if (selectedPeriod === 'today') {
+      return matchesSearch && matchesVehicle && matchesSalesman && 
+        tsDate.toDateString() === today.toDateString();
+    }
+    
+    if (selectedPeriod === 'thisWeek') {
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      return matchesSearch && matchesVehicle && matchesSalesman && 
+        tsDate >= startOfWeek;
+    }
+    
+    if (selectedPeriod === 'thisMonth') {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      return matchesSearch && matchesVehicle && matchesSalesman && 
+        tsDate >= startOfMonth;
+    }
+    
+    return matchesSearch && matchesVehicle && matchesSalesman;
   });
   
-  // Get vehicle and salesman names
-  const getVehicleName = (vehicleId: string) => {
-    const vehicle = vehicles?.find(v => v.id === vehicleId);
-    return vehicle ? vehicle.name : 'Unknown Vehicle';
+  // Sort by most recent
+  const sortedTrackSheets = [...filteredTrackSheets].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  const handleViewDetails = (trackSheet: any) => {
+    setSelectedTrackSheet(trackSheet);
+    setDetailsOpen(true);
   };
   
-  const getSalesmanName = (salesmanId: string) => {
-    const salesman = salesmen?.find(s => s.id === salesmanId);
-    return salesman ? salesman.name : 'Unknown Salesman';
-  };
-  
-  const handleViewTrackSheet = (id: string) => {
-    navigate(`/track-sheet-detail/${id}`);
-  };
-  
-  const handleDownloadTrackSheet = (id: string) => {
-    // This would normally trigger a download
-    toast.success('Track sheet download started');
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this track sheet?")) {
+      deleteTrackSheet(id);
+    }
   };
 
   return (
@@ -87,51 +78,70 @@ export default function TrackSheetHistory() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Track Sheet History</h1>
-          <p className="text-muted-foreground">View and manage your past track sheets</p>
+          <p className="text-muted-foreground">View and manage all track sheets</p>
         </div>
-        <Button onClick={() => navigate('/track-sheet')}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Track Sheet
-        </Button>
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Filter Track Sheets</CardTitle>
-          <CardDescription>View track sheets by date range</CardDescription>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div>
-              <label htmlFor="search" className="text-sm font-medium block mb-1">Search</label>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by title or ID..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label htmlFor="start-date" className="text-sm font-medium block mb-1">Start Date</label>
-              <DatePicker
-                id="start-date"
-                date={startDate}
-                setDate={setStartDate}
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="search">Search</Label>
+              <Input
+                id="search"
+                placeholder="Search track sheets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
-            <div>
-              <label htmlFor="end-date" className="text-sm font-medium block mb-1">End Date</label>
-              <DatePicker
-                id="end-date"
-                date={endDate}
-                setDate={setEndDate}
-              />
+            <div className="space-y-2">
+              <Label htmlFor="period">Period</Label>
+              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="thisWeek">This Week</SelectItem>
+                  <SelectItem value="thisMonth">This Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicle">Vehicle</Label>
+              <Select value={filterVehicle} onValueChange={setFilterVehicle}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by vehicle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vehicles</SelectItem>
+                  {vehicles.map(vehicle => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="salesman">Salesman</Label>
+              <Select value={filterSalesman} onValueChange={setFilterSalesman}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by salesman" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Salesmen</SelectItem>
+                  {salesmen.map(salesman => (
+                    <SelectItem key={salesman.id} value={salesman.id}>
+                      {salesman.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -139,65 +149,73 @@ export default function TrackSheetHistory() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Track Sheet History</CardTitle>
-          <CardDescription>
-            {filteredTrackSheets.length} track sheets found
-          </CardDescription>
+          <CardTitle>Track Sheets</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredTrackSheets.length > 0 ? (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Title</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Vehicle</TableHead>
                   <TableHead>Salesman</TableHead>
+                  <TableHead>Customers</TableHead>
+                  <TableHead>Total Items</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTrackSheets.map((sheet) => (
-                  <TableRow key={sheet.id}>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {sheet.date}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{sheet.title}</TableCell>
-                    <TableCell>{getVehicleName(sheet.vehicleId)}</TableCell>
-                    <TableCell>{getSalesmanName(sheet.salesmanId)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleViewTrackSheet(sheet.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleDownloadTrackSheet(sheet.id)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {sortedTrackSheets.length > 0 ? (
+                  sortedTrackSheets.map(sheet => {
+                    const vehicle = vehicles.find(v => v.id === sheet.vehicleId);
+                    const salesman = salesmen.find(s => s.id === sheet.salesmanId);
+                    const totalItems = sheet.rows.reduce((total: number, row: any) => total + row.total, 0);
+                    
+                    return (
+                      <TableRow key={sheet.id}>
+                        <TableCell>{format(new Date(sheet.date), 'yyyy-MM-dd')}</TableCell>
+                        <TableCell>{sheet.name || sheet.title || 'Untitled'}</TableCell>
+                        <TableCell>{vehicle?.name || 'Not assigned'}</TableCell>
+                        <TableCell>{salesman?.name || 'Not assigned'}</TableCell>
+                        <TableCell>{sheet.rows.length}</TableCell>
+                        <TableCell>{totalItems}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleViewDetails(sheet)}>
+                              View
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(sheet.id)}>
+                              Delete
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4">
+                      No track sheets found. Create a new track sheet first.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8">
-              <p className="text-muted-foreground mb-4">No track sheets found for the selected criteria.</p>
-              <Button onClick={() => navigate('/track-sheet')}>Create Track Sheet</Button>
-            </div>
-          )}
+          </div>
         </CardContent>
       </Card>
+      
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Track Sheet Details</DialogTitle>
+          </DialogHeader>
+          {selectedTrackSheet && (
+            <TrackSheetDetails trackSheet={selectedTrackSheet} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

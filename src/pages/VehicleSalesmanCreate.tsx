@@ -53,7 +53,7 @@ export default function VehicleSalesmanCreate() {
       email: formData.email,
       address: formData.address,
       isActive: formData.isActive,
-      vehicleId: formData.vehicleId || undefined // Changed to vehicleId based on type definition
+      vehicleId: formData.vehicleId || undefined
     });
     
     toast.success("Salesman created successfully");

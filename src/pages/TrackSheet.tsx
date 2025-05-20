@@ -1,486 +1,338 @@
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { useData } from "@/contexts/data/DataContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { CalendarIcon, Save, Download, FileText, Search, Printer, Plus } from "lucide-react";
-import { toast } from "sonner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { generateTrackSheetPdf, createTrackSheetTemplate, TrackSheetRow, createEmptyTrackSheetRows } from "@/utils/trackSheetUtils";
-import { exportToExcel } from "@/utils/excelUtils";
-import { useLocation, useNavigate } from "react-router-dom";
-import { TrackSheetAnalytics } from "@/components/track-sheet/TrackSheetAnalytics";
-import { TrackSheetHeader } from "@/components/track-sheet/TrackSheetHeader";
-import { TrackSheetDetails } from "@/components/track-sheet/TrackSheetDetails";
-import { SaveTemplateDialog } from "@/components/track-sheet/SaveTemplateDialog";
-
-interface SavedTrackSheet {
-  id: string;
-  name: string;
-  date: Date;
-  routeName: string;
-  rows: TrackSheetRow[];
-  createdAt: Date;
-}
+import React, { useState, useEffect } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TrackSheetAnalytics } from '@/components/track-sheet/TrackSheetAnalytics';
+import { TrackSheet as TrackSheetType, TrackSheetRow } from '@/types';
+import { SaveTemplateDialog } from '@/components/track-sheet/SaveTemplateDialog';
+import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
+import { format } from 'date-fns';
 
 export default function TrackSheet() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { products, customers } = useData();
-  const [date, setDate] = useState<Date>(new Date());
-  const [routeName, setRouteName] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const { products, vehicles, salesmen, customers, addTrackSheet } = useData();
+  const [activeTab, setActiveTab] = useState<'sheet' | 'analytics'>('sheet');
+  const [trackSheetDate, setTrackSheetDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
+  const [selectedSalesman, setSelectedSalesman] = useState<string>('');
+  const [routeName, setRouteName] = useState<string>('');
   const [rows, setRows] = useState<TrackSheetRow[]>([]);
-  const [productNames, setProductNames] = useState<string[]>([]);
-  const [savedTemplates, setSavedTemplates] = useState<SavedTrackSheet[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [newTemplateName, setNewTemplateName] = useState<string>("");
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>("editor");
+  const [activeCustomers, setActiveCustomers] = useState<string[]>([]);
+  const [isSaveTemplateOpen, setIsSaveTemplateOpen] = useState(false);
 
-  // Get product names for column headers
+  const activeProductNames = products.filter(p => p.isActive).map(p => p.name);
+  
+  // Initialize rows with active customers
   useEffect(() => {
-    const names = products.map(p => p.name);
-    setProductNames(names);
+    const activeCustomersList = customers.filter(c => c.isActive).map(c => c.name);
+    setActiveCustomers(activeCustomersList);
     
-    // Initialize with empty template
-    if (rows.length === 0) {
-      const emptyRows = createEmptyTrackSheetRows(names);
-      setRows(emptyRows);
+    if (activeCustomersList.length > 0 && rows.length === 0) {
+      const initialRows = activeCustomersList.map(name => ({
+        name,
+        customerName: name,
+        customerId: customers.find(c => c.name === name)?.id || '',
+        quantities: activeProductNames.reduce((acc, productName) => {
+          acc[productName] = '';
+          return acc;
+        }, {} as Record<string, string | number>),
+        total: 0,
+        amount: 0,
+        products: activeProductNames
+      }));
+      setRows(initialRows);
     }
-  }, [products]);
+  }, [customers, products]);
 
-  // Handle incoming template data from history page
-  useEffect(() => {
-    if (location.state?.templateData) {
-      const template = location.state.templateData;
-      setDate(new Date(template.date));
-      setRouteName(template.routeName);
-      setRows([...template.rows]);
-      setSelectedTemplate(template.id);
-      setNewTemplateName(template.name);
-      
-      // Clear the location state to prevent reapplying on refresh
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
-  // Load saved templates from local storage
-  useEffect(() => {
-    const savedData = localStorage.getItem('savedTrackSheets');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        // Convert string dates back to Date objects
-        const templatesWithDates = parsedData.map((template: any) => ({
-          ...template,
-          date: new Date(template.date),
-          createdAt: new Date(template.createdAt)
-        }));
-        setSavedTemplates(templatesWithDates);
-      } catch (error) {
-        console.error("Error loading saved track sheets:", error);
-      }
-    }
-  }, []);
-
-  // Save templates to local storage when they change
-  useEffect(() => {
-    if (savedTemplates.length > 0) {
-      localStorage.setItem('savedTrackSheets', JSON.stringify(savedTemplates));
-    }
-  }, [savedTemplates]);
-
-  // Filter customers based on search query
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Generate template with sample data
-  const generateTemplate = () => {
-    const template = createTrackSheetTemplate(productNames, date, routeName);
-    setRows(template);
-    toast.success("Sample template generated");
+  const handleQuantityChange = (customerName: string, productName: string, value: string) => {
+    const numValue = value === '' ? 0 : parseInt(value, 10);
+    
+    setRows(prevRows => 
+      prevRows.map(row => {
+        if (row.name === customerName) {
+          const updatedQuantities = { 
+            ...row.quantities,
+            [productName]: value 
+          };
+          
+          // Calculate total quantity for this row
+          const total = Object.values(updatedQuantities).reduce((sum, val) => {
+            const qty = val === '' ? 0 : typeof val === 'string' ? parseInt(val, 10) : val;
+            return sum + (isNaN(qty) ? 0 : qty);
+          }, 0);
+          
+          // For now, set amount equal to quantity - in a real app this would involve pricing
+          const amount = total; // Placeholder - real app would calculate based on prices
+          
+          return {
+            ...row,
+            quantities: updatedQuantities,
+            total,
+            amount
+          };
+        }
+        return row;
+      })
+    );
   };
 
-  // Handle quantity change - Fixed TypeScript issues
-  const handleQuantityChange = (rowIndex: number, productName: string, value: string) => {
-    const newRows = [...rows];
-    
-    // Update the quantity for this product
-    const numValue = value === "" ? "" : parseFloat(value);
-    newRows[rowIndex].quantities[productName] = numValue;
-    
-    // Recalculate totals for this row
-    let total = 0;
-    let amount = 0;
-    
-    Object.entries(newRows[rowIndex].quantities).forEach(([, qty]) => {
-      if (typeof qty === 'number') {
-        total += qty;
-      }
-    });
-    
-    // Calculate amount (assuming a simple calculation for now)
-    amount = total * 50; // Assuming ₹50 per unit
-    
-    newRows[rowIndex].total = total;
-    newRows[rowIndex].amount = amount;
-    
-    setRows(newRows);
-  };
-
-  // Add a new row
-  const addRow = () => {
+  const addEmptyRow = () => {
     const newRow: TrackSheetRow = {
-      name: "",
-      quantities: {},
+      name: '',
+      customerName: '',
+      customerId: '',
+      quantities: activeProductNames.reduce((acc, productName) => {
+        acc[productName] = '';
+        return acc;
+      }, {} as Record<string, string | number>),
       total: 0,
-      amount: 0
+      amount: 0,
+      products: activeProductNames
     };
-    
-    // Initialize quantities for each product
-    productNames.forEach(product => {
-      newRow.quantities[product] = "";
-    });
-    
     setRows([...rows, newRow]);
   };
 
-  // Remove a row
+  const updateRowCustomer = (index: number, customerName: string) => {
+    setRows(prevRows => 
+      prevRows.map((row, i) => {
+        if (i === index) {
+          const customer = customers.find(c => c.name === customerName);
+          return {
+            ...row,
+            name: customerName,
+            customerName: customerName,
+            customerId: customer?.id || ''
+          };
+        }
+        return row;
+      })
+    );
+  };
+
   const removeRow = (index: number) => {
-    const newRows = [...rows];
-    newRows.splice(index, 1);
-    setRows(newRows);
+    setRows(rows.filter((_, i) => i !== index));
   };
 
-  // Update customer name
-  const handleNameChange = (index: number, name: string) => {
-    const newRows = [...rows];
-    newRows[index].name = name;
-    setRows(newRows);
-  };
-
-  // Export to Excel - Fixed TypeScript issues
-  const exportAsExcel = () => {
-    const headers = ["Customer", ...productNames, "Total", "Amount"];
-    
-    const data = rows.map(row => {
-      const rowData = [row.name];
-      
-      productNames.forEach(product => {
-        // Convert any number values to strings for Excel export
-        const value = row.quantities[product];
-        rowData.push(value === "" ? "" : String(value));
-      });
-      
-      // Convert numeric values to strings
-      rowData.push(String(row.total));
-      rowData.push(`₹${row.amount}`);
-      
-      return rowData;
-    });
-    
-    const filename = `track-sheet-${format(date, "yyyy-MM-dd")}${routeName ? '-' + routeName : ''}`;
-    exportToExcel(headers, data, filename);
-    toast.success("Track sheet exported to Excel");
-  };
-
-  // Generate PDF
-  const exportAsPdf = () => {
-    const title = `Daily Track Sheet${routeName ? ' - ' + routeName : ''}`;
-    
-    const additionalInfo = [
-      { label: "Route", value: routeName || "All Routes" }
-    ];
-    
-    generateTrackSheetPdf(title, date, rows, productNames, additionalInfo);
-    toast.success("Track sheet exported to PDF");
-  };
-
-  // Print track sheet
-  const printTrackSheet = () => {
-    window.print();
-  };
-
-  // Save current template
-  const saveTemplate = () => {
-    if (!newTemplateName.trim()) {
-      toast.error("Please enter a template name");
+  const handleSaveTrackSheet = () => {
+    if (!trackSheetDate) {
+      toast.error("Please select a date");
       return;
     }
-
-    // Check if we're updating an existing template
-    if (selectedTemplate) {
-      const updatedTemplates = savedTemplates.map(t => 
-        t.id === selectedTemplate 
-          ? {
-              ...t,
-              name: newTemplateName,
-              date: date,
-              routeName: routeName,
-              rows: [...rows],
-            }
-          : t
-      );
-      
-      setSavedTemplates(updatedTemplates);
-      toast.success(`Template "${newTemplateName}" updated`);
-    } else {
-      // Create new template
-      const newTemplate: SavedTrackSheet = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: newTemplateName,
-        date: date,
-        routeName: routeName,
-        rows: [...rows],
-        createdAt: new Date()
-      };
-
-      setSavedTemplates([...savedTemplates, newTemplate]);
-      setSelectedTemplate(newTemplate.id);
-      toast.success(`Template "${newTemplateName}" saved`);
-    }
     
-    setIsSaveDialogOpen(false);
+    const trackSheet: Omit<TrackSheetType, 'id'> = {
+      date: trackSheetDate,
+      vehicleId: selectedVehicle || undefined,
+      salesmanId: selectedSalesman || undefined,
+      routeName: routeName || undefined,
+      name: `Track Sheet - ${trackSheetDate}`,
+      rows: rows.filter(r => r.name),
+      createdAt: new Date().toISOString()
+    };
+    
+    addTrackSheet(trackSheet);
+    toast.success("Track sheet saved successfully");
+    
+    // Reset form
+    setTrackSheetDate(format(new Date(), 'yyyy-MM-dd'));
+    setSelectedVehicle('');
+    setSelectedSalesman('');
+    setRouteName('');
   };
-
-  // Load a saved template
-  const loadTemplate = (templateId: string) => {
-    const template = savedTemplates.find(t => t.id === templateId);
-    if (template) {
-      setDate(new Date(template.date));
-      setRouteName(template.routeName);
-      setRows([...template.rows]);
-      setSelectedTemplate(templateId);
-      setNewTemplateName(template.name);
-      toast.success(`Template "${template.name}" loaded`);
-    }
+  
+  const handleGeneratePdf = () => {
+    // This would be implemented in a real app
+    toast.info("PDF generation feature would be implemented here");
   };
-
-  // Delete a saved template
-  const deleteTemplate = (templateId: string) => {
-    const updatedTemplates = savedTemplates.filter(t => t.id !== templateId);
-    setSavedTemplates(updatedTemplates);
-    if (selectedTemplate === templateId) {
-      setSelectedTemplate(null);
-      setNewTemplateName("");
-    }
-    toast.success("Template deleted");
-  };
-
+  
   return (
-    <div className="space-y-6 print:p-4">
-      <TrackSheetHeader 
-        selectedTemplate={selectedTemplate}
-        onOpenSaveDialog={() => setIsSaveDialogOpen(true)}
-        onExportExcel={exportAsExcel}
-        onExportPdf={exportAsPdf}
-        onPrint={printTrackSheet}
-      />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="print:hidden">
-          <TabsTrigger value="editor">Editor</TabsTrigger>
-          <TabsTrigger value="templates">Saved Templates</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="editor" className="space-y-4">
-          <TrackSheetDetails
-            date={date}
-            routeName={routeName}
-            onDateChange={(date) => date && setDate(date)}
-            onRouteNameChange={setRouteName}
-            onGenerateTemplate={generateTemplate}
-          />
-
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Track Sheet</h1>
+          <p className="text-muted-foreground">Create and manage daily delivery track sheets</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant={activeTab === 'sheet' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('sheet')}
+          >
+            Sheet
+          </Button>
+          <Button 
+            variant={activeTab === 'analytics' ? 'default' : 'outline'} 
+            onClick={() => setActiveTab('analytics')}
+          >
+            Analytics
+          </Button>
+        </div>
+      </div>
+      
+      {activeTab === 'sheet' ? (
+        <div className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Track Sheet Data</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="relative w-64">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search customers..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+            <CardHeader>
+              <CardTitle>Track Sheet Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input 
+                    id="date" 
+                    type="date" 
+                    value={trackSheetDate} 
+                    onChange={(e) => setTrackSheetDate(e.target.value)} 
                   />
                 </div>
-                <Button size="sm" onClick={addRow}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Row
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="vehicle">Vehicle</Label>
+                  <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Vehicle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vehicles.map(vehicle => (
+                        <SelectItem key={vehicle.id} value={vehicle.id}>
+                          {vehicle.name} - {vehicle.registrationNumber}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salesman">Salesman</Label>
+                  <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Salesman" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {salesmen.map(salesman => (
+                        <SelectItem key={salesman.id} value={salesman.id}>
+                          {salesman.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="route">Route Name</Label>
+                  <Input 
+                    id="route" 
+                    value={routeName} 
+                    onChange={(e) => setRouteName(e.target.value)} 
+                    placeholder="Morning Route" 
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Products Distribution</CardTitle>
+              <div className="flex gap-2">
+                <Button onClick={() => setIsSaveTemplateOpen(true)} variant="outline">Save as Template</Button>
+                <Button onClick={handleGeneratePdf} variant="outline">Generate PDF</Button>
+                <Button onClick={addEmptyRow}>Add Custom Entry</Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[200px]">Customer</TableHead>
-                        {productNames.map((product) => (
-                          <TableHead key={product} className="w-[100px]">{product}</TableHead>
-                        ))}
-                        <TableHead className="w-[100px]">Total</TableHead>
-                        <TableHead className="w-[100px]">Amount</TableHead>
-                        <TableHead className="w-[60px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rows.map((row, rowIndex) => (
-                        <TableRow key={rowIndex}>
-                          <TableCell>
-                            <Select
-                              value={row.name || ""}
-                              onValueChange={(value) => handleNameChange(rowIndex, value)}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select customer" />
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="px-4 py-2 text-left">Customer</th>
+                      {activeProductNames.map(product => (
+                        <th key={product} className="px-4 py-2 text-center">{product}</th>
+                      ))}
+                      <th className="px-4 py-2 text-center">Total</th>
+                      <th className="px-4 py-2 text-center">Amount</th>
+                      <th className="px-4 py-2 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, index) => (
+                      <tr key={index} className="border-b">
+                        <td className="px-4 py-2">
+                          {row.name ? (
+                            row.name
+                          ) : (
+                            <Select onValueChange={(value) => updateRowCustomer(index, value)}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Customer" />
                               </SelectTrigger>
                               <SelectContent>
-                                {filteredCustomers.map((customer) => (
-                                  <SelectItem key={customer.id} value={customer.name}>
-                                    {customer.name}
+                                {activeCustomers.map(customer => (
+                                  <SelectItem key={customer} value={customer}>
+                                    {customer}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                          </TableCell>
-                          {productNames.map((product) => (
-                            <TableCell key={product}>
-                              <Input
-                                type="number"
-                                min="0"
-                                value={row.quantities[product] === "" ? "" : String(row.quantities[product])}
-                                onChange={(e) => handleQuantityChange(rowIndex, product, e.target.value)}
-                                className="w-full"
-                              />
-                            </TableCell>
-                          ))}
-                          <TableCell className="font-medium">{row.total}</TableCell>
-                          <TableCell className="font-medium">₹{row.amount}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => removeRow(rowIndex)}
-                            >
-                              &times;
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      
-                      {/* Totals row */}
-                      <TableRow className="bg-muted/50">
-                        <TableCell className="font-medium">TOTAL</TableCell>
-                        {productNames.map((product) => (
-                          <TableCell key={product} className="font-medium">
-                            {rows.reduce((sum, row) => {
-                              const qty = row.quantities[product];
-                              return sum + (typeof qty === 'number' ? qty : 0);
-                            }, 0)}
-                          </TableCell>
+                          )}
+                        </td>
+                        {activeProductNames.map(product => (
+                          <td key={product} className="px-4 py-2">
+                            <Input
+                              type="number"
+                              className="text-center"
+                              value={row.quantities[product] || ''}
+                              onChange={(e) => handleQuantityChange(row.name, product, e.target.value)}
+                            />
+                          </td>
                         ))}
-                        <TableCell className="font-medium">
-                          {rows.reduce((sum, row) => sum + row.total, 0)}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          ₹{rows.reduce((sum, row) => sum + row.amount, 0)}
-                        </TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
+                        <td className="px-4 py-2 text-center">{row.total}</td>
+                        <td className="px-4 py-2 text-center">₹{row.amount}</td>
+                        <td className="px-4 py-2 text-center">
+                          <Button variant="ghost" size="sm" onClick={() => removeRow(index)}>
+                            Remove
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td className="px-4 py-2 font-bold">Total</td>
+                      {activeProductNames.map(product => {
+                        const productTotal = rows.reduce((sum, row) => {
+                          const qty = row.quantities[product];
+                          return sum + (qty === '' ? 0 : typeof qty === 'string' ? parseInt(qty, 10) : qty || 0);
+                        }, 0);
+                        return (
+                          <td key={product} className="px-4 py-2 text-center font-bold">{productTotal}</td>
+                        );
+                      })}
+                      <td className="px-4 py-2 text-center font-bold">
+                        {rows.reduce((sum, row) => sum + row.total, 0)}
+                      </td>
+                      <td className="px-4 py-2 text-center font-bold">
+                        ₹{rows.reduce((sum, row) => sum + row.amount, 0)}
+                      </td>
+                      <td className="px-4 py-2"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button onClick={handleSaveTrackSheet}>Save Track Sheet</Button>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="templates" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Saved Track Sheet Templates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {savedTemplates.length > 0 ? (
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Template Name</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Route</TableHead>
-                        <TableHead>Created On</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {savedTemplates.map((template) => (
-                        <TableRow key={template.id} className={selectedTemplate === template.id ? "bg-muted" : ""}>
-                          <TableCell className="font-medium">{template.name}</TableCell>
-                          <TableCell>{format(new Date(template.date), "PPP")}</TableCell>
-                          <TableCell>{template.routeName || "—"}</TableCell>
-                          <TableCell>{format(new Date(template.createdAt), "PPP")}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => loadTemplate(template.id)}
-                              >
-                                Load
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => deleteTemplate(template.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No saved templates yet</p>
-                  <p className="text-sm">Save your track sheets to reuse them later</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <TrackSheetAnalytics rows={rows} products={productNames} />
-        </TabsContent>
-      </Tabs>
-
-      <SaveTemplateDialog
-        open={isSaveDialogOpen}
-        onOpenChange={setIsSaveDialogOpen}
-        templateName={newTemplateName}
-        onTemplateNameChange={setNewTemplateName}
-        onSave={saveTemplate}
-        isUpdate={Boolean(selectedTemplate)}
-      />
+          
+          <SaveTemplateDialog 
+            open={isSaveTemplateOpen} 
+            onOpenChange={setIsSaveTemplateOpen}
+            rows={rows}
+          />
+        </div>
+      ) : (
+        <TrackSheetAnalytics rows={rows} products={activeProductNames} />
+      )}
     </div>
   );
 }

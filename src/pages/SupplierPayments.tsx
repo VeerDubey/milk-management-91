@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { format } from 'date-fns';
@@ -9,10 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Download, Plus, Search } from 'lucide-react';
+import { CalendarIcon, Download, Plus, Search, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { defineColumnHelper } from "@tanstack/react-table";
-import { useReactTable, flexRender } from "@tanstack/react-table";
 import { exportToExcel } from '@/utils/excelUtils';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -21,7 +20,7 @@ export default function SupplierPayments() {
   const { suppliers, supplierPayments, addSupplierPayment, updateSupplierPayment, deleteSupplierPayment } = useData();
   const [supplierId, setSupplierId] = useState<string>('');
   const [amount, setAmount] = useState<number | undefined>(undefined);
-  const [method, setMethod] = useState<'cash' | 'bank' | 'upi' | 'other'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | 'upi' | 'other'>('cash');
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -51,7 +50,7 @@ export default function SupplierPayments() {
     const paymentData = {
       supplierId,
       amount,
-      method,
+      paymentMethod,
       date: format(date, 'yyyy-MM-dd'),
     };
 
@@ -73,20 +72,22 @@ export default function SupplierPayments() {
       setEditPaymentId(id);
       setSupplierId(payment.supplierId);
       setAmount(payment.amount);
-      setMethod(payment.method);
-      setDate(new Date(payment.date));
+      setPaymentMethod(payment.paymentMethod || 'cash');
+      setDate(payment.date ? new Date(payment.date) : undefined);
     }
   };
 
   const handleDelete = (id: string) => {
-    deleteSupplierPayment(id);
-    toast.success("Payment deleted successfully.");
+    if (id) {
+      deleteSupplierPayment(id);
+      toast.success("Payment deleted successfully.");
+    }
   };
 
   const resetForm = () => {
     setSupplierId('');
     setAmount(undefined);
-    setMethod('cash');
+    setPaymentMethod('cash');
     setDate(undefined);
     setIsEditMode(false);
     setEditPaymentId(null);
@@ -96,7 +97,7 @@ export default function SupplierPayments() {
     const headers = ["Supplier", "Amount", "Method", "Date"];
     const data = filteredPayments.map(payment => {
       const supplier = suppliers.find(supplier => supplier.id === payment.supplierId);
-      return [supplier?.name, payment.amount, payment.method, payment.date];
+      return [supplier?.name, payment.amount, payment.paymentMethod || payment.method || 'cash', payment.date];
     });
     exportToExcel(headers, data, 'supplier-payments');
   };
@@ -108,7 +109,7 @@ export default function SupplierPayments() {
     const headers = ["Supplier", "Amount", "Method", "Date"];
     const data = filteredPayments.map(payment => {
       const supplier = suppliers.find(supplier => supplier.id === payment.supplierId);
-      return [supplier?.name, payment.amount, payment.method, payment.date];
+      return [supplier?.name, payment.amount, payment.paymentMethod || payment.method || 'cash', payment.date];
     });
 
     (doc as any).autoTable({
@@ -118,43 +119,6 @@ export default function SupplierPayments() {
 
     doc.save('supplier-payments.pdf');
   };
-
-  const columnHelper = defineColumnHelper();
-
-  const columns = [
-    columnHelper.accessor("supplierId", {
-      header: () => "Supplier",
-      cell: info => {
-        const supplier = suppliers.find(supplier => supplier.id === info.getValue());
-        return supplier?.name || "Unknown";
-      }
-    }),
-    columnHelper.accessor("amount", {
-      header: () => "Amount",
-    }),
-    columnHelper.accessor("method", {
-      header: () => "Method",
-    }),
-    columnHelper.accessor("date", {
-      header: () => "Date",
-    }),
-    columnHelper.display({
-      id: "actions",
-      header: () => "Actions",
-      cell: info => (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => handleEdit(info.row.original.id)}>Edit</Button>
-          <Button size="sm" variant="destructive" onClick={() => handleDelete(info.row.original.id)}>Delete</Button>
-        </div>
-      )
-    })
-  ];
-
-  const table = useReactTable({
-    data: filteredPayments,
-    columns,
-    getCoreRowModel: () => filteredPayments,
-  });
 
   return (
     <div className="space-y-6">
@@ -172,6 +136,7 @@ export default function SupplierPayments() {
             exportToPdf();
             toast.success("PDF exported successfully");
           }}>
+            <FileText className="mr-2 h-4 w-4" />
             Export to PDF
           </Button>
         </div>
@@ -185,7 +150,7 @@ export default function SupplierPayments() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="supplierId">Supplier</Label>
-                <Select value={supplierId} onValueChange={setSupplierId}>
+                <Select value={supplierId} onValueChange={(value) => setSupplierId(value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a supplier" />
                   </SelectTrigger>
@@ -209,8 +174,11 @@ export default function SupplierPayments() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="method">Payment Method</Label>
-                <Select value={method} onValueChange={setMethod}>
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select 
+                  value={paymentMethod} 
+                  onValueChange={(value: string) => setPaymentMethod(value as 'cash' | 'bank' | 'upi' | 'other')}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select payment method" />
                   </SelectTrigger>
@@ -228,7 +196,7 @@ export default function SupplierPayments() {
                   <PopoverTrigger asChild>
                     <Button
                       variant={"outline"}
-                      className={format ? "w-full justify-start text-left font-normal" : "w-full justify-start text-left font-normal text-muted-foreground"}
+                      className={date ? "w-full justify-start text-left font-normal" : "w-full justify-start text-left font-normal text-muted-foreground"}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -269,37 +237,36 @@ export default function SupplierPayments() {
           <Table>
             <TableCaption>A list of your recent payments to suppliers.</TableCaption>
             <TableHeader>
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map(header => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                      </TableHead>
-                    )
-                  })}
-                </TableRow>
-              ))}
+              <TableRow>
+                <TableHead>Supplier</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map(row => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                    {row.getVisibleCells().map(cell => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              {filteredPayments.length > 0 ? (
+                filteredPayments.map(payment => {
+                  const supplier = suppliers.find(s => s.id === payment.supplierId);
+                  return (
+                    <TableRow key={payment.id}>
+                      <TableCell>{supplier?.name || "Unknown"}</TableCell>
+                      <TableCell>{payment.amount}</TableCell>
+                      <TableCell>{payment.paymentMethod || payment.method || "cash"}</TableCell>
+                      <TableCell>{payment.date}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handleEdit(payment.id)}>Edit</Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(payment.id)}>Delete</Button>
+                        </div>
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No results.
                   </TableCell>
                 </TableRow>

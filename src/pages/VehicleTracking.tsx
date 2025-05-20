@@ -1,258 +1,267 @@
-import React, { useState, useEffect } from "react";
-import { useData } from "@/contexts/DataContext";
-import { Vehicle } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Truck, FileText, Save, Download } from "lucide-react";
-import { format } from "date-fns";
-import { toast } from "sonner";
 
-const VehicleTracking = () => {
+import React, { useState } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { Vehicle } from '@/types';
+
+export default function VehicleTracking() {
   const { vehicles, addVehicle, updateVehicle, deleteVehicle } = useData();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editVehicleId, setEditVehicleId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    registrationNumber: '',
+    type: '',
+    driverName: '',
+    isActive: true,
+    capacity: 0
+  });
 
-  // Vehicle form state
-  const [isAddingVehicle, setIsAddingVehicle] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [vehicleName, setVehicleName] = useState("");
-  const [vehicleRegNumber, setVehicleRegNumber] = useState("");
-  const [vehicleType, setVehicleType] = useState("");
-  const [vehicleDriver, setVehicleDriver] = useState("");
-  const [vehicleCapacity, setVehicleCapacity] = useState(0);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
-  // Vehicle CRUD operations
-  const handleAddVehicle = () => {
-    if (!vehicleName || !vehicleRegNumber) {
-      toast.error("Vehicle name and registration number are required");
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      isActive: checked,
+    });
+  };
+
+  const handleAddClick = () => {
+    setIsEditMode(false);
+    setFormData({
+      name: '',
+      registrationNumber: '',
+      type: '',
+      driverName: '',
+      isActive: true,
+      capacity: 0
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleEditClick = (vehicle: Vehicle) => {
+    setIsEditMode(true);
+    setEditVehicleId(vehicle.id);
+    setFormData({
+      name: vehicle.name,
+      registrationNumber: vehicle.registrationNumber,
+      type: vehicle.type,
+      driverName: vehicle.driverName || '',
+      isActive: vehicle.isActive,
+      capacity: vehicle.capacity || 0
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this vehicle?')) {
+      deleteVehicle(id);
+      toast.success('Vehicle deleted successfully');
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.registrationNumber || !formData.type) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    addVehicle({
-      name: vehicleName,
-      registrationNumber: vehicleRegNumber, // Changed from regNumber
-      type: vehicleType,
-      driverName: vehicleDriver, // Changed from driver
-      isActive: true,
-      capacity: vehicleCapacity
-    });
-
-    // Reset form
-    setVehicleName("");
-    setVehicleRegNumber("");
-    setVehicleType("");
-    setVehicleDriver("");
-    setVehicleCapacity(0);
-    toast.success("Vehicle added successfully");
-    setIsAddingVehicle(false);
-  };
-
-  const handleEditVehicle = (vehicle: Vehicle) => {
-    setEditingVehicle(vehicle);
-    setVehicleName(vehicle.name);
-    setVehicleRegNumber(vehicle.registrationNumber); // Changed from regNumber
-    setVehicleType(vehicle.type);
-    setVehicleDriver(vehicle.driverName || ""); // Changed from driver
-    setVehicleCapacity(vehicle.capacity);
-    setIsAddingVehicle(true);
-  };
-
-  const handleDeleteVehicle = (vehicleId: string) => {
-    if (window.confirm("Are you sure you want to delete this vehicle? This cannot be undone.")) {
-      deleteVehicle(vehicleId);
-      toast.success("Vehicle deleted successfully");
+    if (isEditMode && editVehicleId) {
+      updateVehicle(editVehicleId, {
+        name: formData.name,
+        registrationNumber: formData.registrationNumber,
+        type: formData.type,
+        driverName: formData.driverName,
+        isActive: formData.isActive,
+        capacity: formData.capacity
+      });
+      toast.success('Vehicle updated successfully');
+    } else {
+      addVehicle({
+        name: formData.name,
+        registrationNumber: formData.registrationNumber,
+        type: formData.type,
+        driverName: formData.driverName,
+        isActive: formData.isActive,
+        capacity: formData.capacity
+      });
+      toast.success('Vehicle added successfully');
     }
-  };
 
-  const resetVehicleForm = () => {
-    setIsAddingVehicle(false);
-    setEditingVehicle(null);
-    setVehicleName("");
-    setVehicleRegNumber("");
-    setVehicleType("");
-    setVehicleDriver("");
-    setVehicleCapacity(0);
-  };
-
-  const handleUpdateVehicle = () => {
-    if (!editingVehicle) return;
-    
-    updateVehicle(editingVehicle.id, {
-      name: vehicleName,
-      registrationNumber: vehicleRegNumber, // Changed from regNumber
-      type: vehicleType,
-      driverName: vehicleDriver, // Changed from driver
-      capacity: vehicleCapacity
-    });
-    
-    // Reset form
-    setVehicleName("");
-    setVehicleRegNumber("");
-    setVehicleType("");
-    setVehicleDriver("");
-    setVehicleCapacity(0);
-    
-    toast.success("Vehicle updated successfully");
-    setIsAddingVehicle(false);
-    setEditingVehicle(null);
+    setIsDialogOpen(false);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Vehicle Tracking
-          </h1>
-          <p className="text-muted-foreground">
-            Manage vehicles and their tracking information
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Vehicle Tracking</h1>
+          <p className="text-muted-foreground">Manage your delivery vehicles</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button onClick={() => setIsAddingVehicle(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Vehicle
-          </Button>
-        </div>
+        <Button onClick={handleAddClick}>Add Vehicle</Button>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Vehicle Management</CardTitle>
-            <Button variant="outline" onClick={() => setIsAddingVehicle(true)}>
-              <Truck className="mr-2 h-4 w-4" />
-              Add Vehicle
-            </Button>
-          </div>
+          <CardTitle>Vehicle Fleet</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            {/* Add Vehicle Dialog */}
-            <Dialog open={isAddingVehicle} onOpenChange={setIsAddingVehicle}>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingVehicle
-                      ? "Update vehicle details below"
-                      : "Add vehicle details to create a new vehicle."}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleName">Vehicle Name</Label>
-                    <Input
-                      id="vehicleName"
-                      value={vehicleName}
-                      onChange={(e) => setVehicleName(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleRegNumber">Reg Number</Label>
-                    <Input
-                      id="vehicleRegNumber"
-                      value={vehicleRegNumber}
-                      onChange={(e) => setVehicleRegNumber(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleType">Vehicle Type</Label>
-                    <Input
-                      id="vehicleType"
-                      value={vehicleType}
-                      onChange={(e) => setVehicleType(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="vehicleDriver">Driver</Label>
-                    <Input
-                      id="vehicleDriver"
-                      value={vehicleDriver}
-                      onChange={(e) => setVehicleDriver(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="secondary" onClick={resetVehicleForm}>
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  {editingVehicle ? (
-                    <Button onClick={handleUpdateVehicle}>Update Vehicle</Button>
-                  ) : (
-                    <Button onClick={handleAddVehicle}>Add Vehicle</Button>
-                  )}
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Vehicles List */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Vehicles</h3>
-              {vehicles.map(vehicle => (
-                <div key={vehicle.id} className="flex items-center justify-between p-4 border-b">
-                  <div>
-                    <h3 className="font-medium">{vehicle.name}</h3>
-                    <p className="text-sm text-muted-foreground">{vehicle.registrationNumber}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditVehicle(vehicle)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => handleDeleteVehicle(vehicle.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Registration Number</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>Capacity</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vehicles.length > 0 ? (
+                  vehicles.map((vehicle) => (
+                    <TableRow key={vehicle.id}>
+                      <TableCell className="font-medium">{vehicle.name}</TableCell>
+                      <TableCell>{vehicle.registrationNumber}</TableCell>
+                      <TableCell>{vehicle.type}</TableCell>
+                      <TableCell>{vehicle.driverName || 'Not assigned'}</TableCell>
+                      <TableCell>{vehicle.capacity || 'N/A'}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            vehicle.isActive
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {vehicle.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClick(vehicle)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteClick(vehicle.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10">
+                      No vehicles found. Add a new vehicle to get started.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isEditMode ? 'Edit Vehicle' : 'Add New Vehicle'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Vehicle Name</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="e.g. Delivery Van 1"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="registrationNumber">Registration Number</Label>
+              <Input
+                id="registrationNumber"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleInputChange}
+                placeholder="e.g. MH01AB1234"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Vehicle Type</Label>
+              <Input
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleInputChange}
+                placeholder="e.g. Van, Truck, Scooter"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="driverName">Driver Name</Label>
+              <Input
+                id="driverName"
+                name="driverName"
+                value={formData.driverName}
+                onChange={handleInputChange}
+                placeholder="e.g. John Doe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="capacity">Capacity</Label>
+              <Input
+                id="capacity"
+                name="capacity"
+                type="number"
+                value={formData.capacity.toString()}
+                onChange={handleInputChange}
+                placeholder="Capacity in kg or crates"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={handleSwitchChange}
+              />
+              <Label htmlFor="isActive">Active</Label>
+            </div>
+            <DialogFooter>
+              <Button type="submit">{isEditMode ? 'Update' : 'Add'} Vehicle</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default VehicleTracking;
+}

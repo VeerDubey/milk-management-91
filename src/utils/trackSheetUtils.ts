@@ -1,288 +1,157 @@
-
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { format } from 'date-fns';
-import { Product, Customer } from '@/types';
+// Add necessary imports for calculations and PDF generation
+import { TrackSheetRow } from '@/types';
 import PubSub from 'pubsub-js';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
-export interface TrackSheetRow {
-  customerId: string;
-  customerName: string;
-  products: {[productId: string]: number};
-  total: number;
-  name?: string; // Added for compatibility
-  quantities?: {[productName: string]: number | string}; // Added for compatibility
-  amount?: number; // Added for compatibility
-}
-
-interface ExportData {
-  date: string;
+// Define types
+export interface TrackSheetTemplate {
+  id: string;
+  name: string;
   rows: TrackSheetRow[];
-  products: Product[];
-  customers: Customer[];
+  createdAt: string;
 }
 
-// Calculate product totals from track sheet rows
-export const calculateProductTotals = (rows: TrackSheetRow[], productNames: string[]) => {
-  const totals: { [productName: string]: number } = {};
+// Utility function to calculate totals
+export const calculateTotals = (rows: TrackSheetRow[]) => {
+  const totalQuantity = rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
+
+  return {
+    totalQuantity,
+    totalAmount
+  };
+};
+
+// Utility function to calculate product totals
+export const calculateProductTotals = (rows: TrackSheetRow[], products: string[]) => {
+  // Initialize product totals object
+  const productTotals: Record<string, number> = {};
   
-  productNames.forEach(name => {
-    totals[name] = 0;
+  // Initialize all products with 0
+  products.forEach(productName => {
+    productTotals[productName] = 0;
   });
   
+  // Sum up quantities for each product
   rows.forEach(row => {
-    if (row.quantities) {
-      // Handle quantities property
-      Object.entries(row.quantities).forEach(([productName, qty]) => {
-        if (typeof qty === 'number') {
-          totals[productName] = (totals[productName] || 0) + qty;
-        }
-      });
-    } else if (row.products) {
-      // Handle products property
-      Object.entries(row.products).forEach(([productId, qty]) => {
-        // Map productId to name - this is a simplified version
-        const productName = productId; // In real app, you'd map ID to name
-        totals[productName] = (totals[productName] || 0) + qty;
-      });
+    Object.entries(row.quantities).forEach(([productName, quantity]) => {
+      if (products.includes(productName)) {
+        const numQuantity = quantity === '' ? 0 : typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
+        productTotals[productName] = (productTotals[productName] || 0) + (isNaN(numQuantity) ? 0 : numQuantity);
+      }
+    });
+  });
+  
+  return productTotals;
+};
+
+// Function to generate a PDF from track sheet data
+export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], customers: any[]) => {
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(18);
+  doc.text('Track Sheet', 14, 22);
+  
+  // Add date
+  doc.setFontSize(12);
+  doc.text(`Date: ${trackSheet.date}`, 14, 32);
+  
+  // Add vehicle and salesman info if available
+  let yPos = 36;
+  if (trackSheet.vehicleName) {
+    doc.text(`Vehicle: ${trackSheet.vehicleName}`, 14, yPos);
+    yPos += 6;
+  }
+  if (trackSheet.salesmanName) {
+    doc.text(`Salesman: ${trackSheet.salesmanName}`, 14, yPos);
+    yPos += 6;
+  }
+  if (trackSheet.routeName) {
+    doc.text(`Route: ${trackSheet.routeName}`, 14, yPos);
+    yPos += 6;
+  }
+  
+  // Prepare data for table
+  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
+  const data = trackSheet.rows.map((row: any) => {
+    const rowData = [row.name || 'Unknown'];
+    productNames.forEach(product => {
+      rowData.push(row.quantities[product] || '');
+    });
+    rowData.push(row.total || 0);
+    rowData.push(row.amount || 0);
+    return rowData;
+  });
+  
+  // Add table
+  (doc as any).autoTable({
+    head: [headers],
+    body: data,
+    startY: yPos + 5,
+    styles: {
+      fontSize: 8
+    },
+    headStyles: {
+      fillColor: [66, 139, 202]
     }
   });
   
-  return totals;
-};
-
-// Calculate overall totals from track sheet rows
-export const calculateTotals = (rows: TrackSheetRow[]) => {
-  let totalQuantity = 0;
-  let totalAmount = 0;
-  
-  rows.forEach(row => {
-    totalQuantity += row.total || 0;
-    totalAmount += row.amount || 0;
-  });
-  
-  return { totalQuantity, totalAmount };
-};
-
-// Create empty track sheet rows
-export const createEmptyTrackSheetRows = (productNames: string[]) => {
-  // Create 5 empty rows
-  const emptyRows: TrackSheetRow[] = Array(5).fill(null).map(() => {
-    const quantities: {[key: string]: string | number} = {};
-    productNames.forEach(product => {
-      quantities[product] = '';
-    });
-    
-    return {
-      customerId: '',
-      customerName: '',
-      products: {},
-      total: 0,
-      name: '',
-      quantities: quantities,
-      amount: 0
-    };
-  });
-  
-  return emptyRows;
-};
-
-// Create track sheet template with sample data
-export const createTrackSheetTemplate = (productNames: string[], date: Date, routeName: string) => {
-  const sampleRows: TrackSheetRow[] = [
-    { customerId: '1', customerName: 'Customer 1', products: {}, total: 6, name: 'Customer 1', quantities: {}, amount: 300 },
-    { customerId: '2', customerName: 'Customer 2', products: {}, total: 8, name: 'Customer 2', quantities: {}, amount: 400 },
-    { customerId: '3', customerName: 'Customer 3', products: {}, total: 5, name: 'Customer 3', quantities: {}, amount: 250 },
-  ];
-  
-  // Fill in sample quantities for each product
-  sampleRows.forEach(row => {
-    const quantities: {[key: string]: number} = {};
-    
-    productNames.forEach((product, index) => {
-      // Generate some random but consistent quantities
-      const base = index % 3 + 1;
-      quantities[product] = base + (row.customerId === '1' ? 1 : row.customerId === '2' ? 2 : 0);
-    });
-    
-    row.quantities = quantities;
-  });
-  
-  return sampleRows;
-};
-
-// Generate PDF export
-export const generateTrackSheetPdf = (
-  title: string, 
-  date: Date, 
-  rows: TrackSheetRow[], 
-  productNames: string[],
-  additionalInfo: Array<{label: string, value: string}> = []
-) => {
-  const doc = new jsPDF();
-
-  // Add header
-  doc.setFontSize(18);
-  doc.text(title, 14, 22);
-  doc.setFontSize(11);
-  doc.text(`Date: ${format(date, "PPP")}`, 14, 32);
-  
-  // Add additional info if provided
-  additionalInfo.forEach((info, index) => {
-    doc.text(`${info.label}: ${info.value}`, 14, 37 + (index * 5));
-  });
-  
-  // Setup columns
-  const columns = ["Customer", ...productNames, "Total", "Amount"];
-  
-  // Setup rows
-  const tableRows = rows.map(row => {
-    const productValues = productNames.map(product => {
-      if (row.quantities && row.quantities[product] !== undefined) {
-        const qty = row.quantities[product];
-        return typeof qty === 'number' ? qty.toString() : qty;
-      }
-      return "0";
-    });
-    
-    const customerName = row.name || row.customerName || "Unknown";
-    return [customerName, ...productValues, row.total.toString(), `₹${row.amount || 0}`];
-  });
-  
-  // Add totals row
-  const totalsRow = ["TOTAL"];
-  
-  // Calculate totals for each product
-  productNames.forEach(product => {
-    let total = 0;
-    rows.forEach(row => {
-      if (row.quantities && row.quantities[product] !== undefined) {
-        const qty = row.quantities[product];
-        if (typeof qty === 'number') {
-          total += qty;
-        }
-      }
-    });
-    totalsRow.push(total.toString());
-  });
-  
-  // Calculate grand total
-  const grandTotal = rows.reduce((sum, row) => sum + (row.total || 0), 0);
-  totalsRow.push(grandTotal.toString());
-  
-  // Calculate total amount
-  const totalAmount = rows.reduce((sum, row) => sum + (row.amount || 0), 0);
-  totalsRow.push(`₹${totalAmount}`);
-  
-  tableRows.push(totalsRow);
-  
-  // Create the table
-  (doc as any).autoTable({
-    head: [columns],
-    body: tableRows,
-    startY: 50,
-    theme: 'grid',
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [60, 60, 60] }
-  });
-  
   // Save the PDF
-  doc.save(`track-sheet-${format(date, "yyyy-MM-dd")}.pdf`);
-  
-  return true;
+  return doc;
 };
 
-const calculateTotalsOld = (data: TrackSheetRow[]) => {
-  const totals: { [productId: string]: number } = {};
-  data.forEach(row => {
-    Object.keys(row.products).forEach(productId => {
-      totals[productId] = (totals[productId] || 0) + row.products[productId];
-    });
-  });
-  return totals;
+// Function to create a template from track sheet data
+export const createTrackSheetTemplate = (name: string, rows: TrackSheetRow[]) => {
+  return {
+    id: `template-${Date.now()}`,
+    name,
+    rows,
+    createdAt: new Date().toISOString()
+  };
 };
 
-const exportToExcel = (data: any, products: Product[], customers: Customer[]) => {
-  if (!data || data.length === 0) {
-    console.warn("No data to export");
-    return false;
-  }
-
-  const productNames = products.map(p => p.name).join('\t');
-  const header = `Customer\t${productNames}\tTotal\n`;
-
-  const rows = data.map((row: TrackSheetRow) => {
-    const customerName = customers.find(c => c.id === row.customerId)?.name || "Unknown";
-    const productValues = products.map(p => row.products[p.id] || 0).join('\t');
-    return `${customerName}\t${productValues}\t${row.total}`;
-  }).join('\n');
-
-  const totals = calculateTotalsOld(data);
-  const totalValues = products.map(p => totals[p.id] || 0).join('\t');
-  const grandTotal = data.reduce((sum, row) => sum + row.total, 0);
-  const totalsRow = `TOTAL\t${totalValues}\t${grandTotal}\n`;
-
-  const csvData = header + rows + '\n' + totalsRow;
-
-  const blob = new Blob([csvData], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.setAttribute('href', url);
-  a.setAttribute('download', `track-sheet-${format(new Date(), 'yyyy-MM-dd')}.csv`);
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  return true;
+// Function to create empty track sheet rows
+export const createEmptyTrackSheetRows = (customers: any[], products: string[]) => {
+  return customers.map(customer => ({
+    name: customer.name,
+    customerName: customer.name,
+    customerId: customer.id,
+    quantities: products.reduce((acc, product) => {
+      acc[product] = '';
+      return acc;
+    }, {} as Record<string, string | number>),
+    total: 0,
+    amount: 0,
+    products
+  }));
 };
 
-// Fix jsPDF typings issue
-const exportToPdf = (data: any, products: Product[], customers: Customer[]) => {
-  const doc = new jsPDF();
+// Other utility functions...
 
-  // Add header
-  doc.setFontSize(18);
-  doc.text("Track Sheet", 14, 22);
-  doc.setFontSize(11);
-  doc.text(`Date: ${format(new Date(), "PPP")}`, 14, 32);
-  
-  // Setup columns
-  const productNames = products.map(p => p.name);
-  const columns = ["Customer", ...productNames, "Total"];
-  
-  // Setup rows
-  const rows = data.map((row: TrackSheetRow) => {
-    const customerName = customers.find(c => c.id === row.customerId)?.name || "Unknown";
-    const productQuantities = products.map(p => row.products[p.id]?.toString() || "0");
-    return [customerName, ...productQuantities, row.total.toString()];
-  });
-  
-  // Add totals row
-  const totals = ["TOTAL"];
-  products.forEach(product => {
-    const total = data.reduce((sum: number, row: TrackSheetRow) => 
-      sum + (row.products[product.id] || 0), 0);
-    totals.push(total.toString());
-  });
-  const grandTotal = data.reduce((sum: number, row: TrackSheetRow) => 
-    sum + row.total, 0);
-  totals.push(grandTotal.toString());
-  
-  rows.push(totals);
-  
-  // Create the table
-  (doc as any).autoTable({
-    head: [columns],
-    body: rows,
-    startY: 40,
-    theme: 'grid',
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [60, 60, 60] }
-  });
-  
-  // Save the PDF
-  doc.save("track-sheet.pdf");
-  
-  return true;
+export const savePdf = (doc: jsPDF, filename: string) => {
+  doc.save(filename);
 };
 
-export { exportToExcel, exportToPdf };
+export const getBlankRow = (products: string[]): TrackSheetRow => {
+  return {
+    name: '',
+    customerName: '',
+    customerId: '',
+    quantities: products.reduce((acc, product) => {
+      acc[product] = '';
+      return acc;
+    }, {} as Record<string, string | number>),
+    total: 0,
+    amount: 0,
+    products
+  };
+};
+
+export const filterEmptyRows = (rows: TrackSheetRow[]): TrackSheetRow[] => {
+  return rows.filter(row => {
+    // Keep rows that have a customer name and at least one non-zero quantity
+    return row.name && Object.values(row.quantities).some(q => q !== '' && q !== 0);
+  });
+};
