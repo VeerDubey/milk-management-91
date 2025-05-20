@@ -31,6 +31,7 @@ export default function VehicleTracking() {
       return;
     }
     
+    // Add vehicle with the correct properties according to the Vehicle interface
     addVehicle({
       name: formData.name,
       registrationNumber: formData.registrationNumber,
@@ -57,6 +58,7 @@ export default function VehicleTracking() {
   const handleEditVehicle = () => {
     if (!selectedVehicle) return;
     
+    // Update vehicle with the correct properties
     updateVehicle(selectedVehicle, {
       name: formData.name,
       registrationNumber: formData.registrationNumber,
@@ -95,6 +97,7 @@ export default function VehicleTracking() {
   };
   
   const getAssignedDriver = (vehicleId: string) => {
+    // Find a salesman that has this vehicle ID
     const assignedSalesman = salesmen.find(s => s.vehicleId === vehicleId);
     return assignedSalesman?.name || 'Unassigned';
   };

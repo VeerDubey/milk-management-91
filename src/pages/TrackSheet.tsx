@@ -38,7 +38,6 @@ export default function TrackSheet() {
     if (activeCustomersList.length > 0 && rows.length === 0) {
       const initialRows = activeCustomersList.map(name => ({
         name,
-        customerName: name,
         customerId: customers.find(c => c.name === name)?.id || '',
         quantities: activeProductNames.reduce((acc, productName) => {
           acc[productName] = '';
@@ -87,7 +86,6 @@ export default function TrackSheet() {
   const addEmptyRow = () => {
     const newRow: TrackSheetRow = {
       name: '',
-      customerName: '',
       customerId: '',
       quantities: activeProductNames.reduce((acc, productName) => {
         acc[productName] = '';
@@ -108,7 +106,6 @@ export default function TrackSheet() {
           return {
             ...row,
             name: customerName,
-            customerName: customerName,
             customerId: customer?.id || ''
           };
         }

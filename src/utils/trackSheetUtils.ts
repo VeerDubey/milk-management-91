@@ -1,9 +1,7 @@
-
 // Add necessary imports for calculations and PDF generation
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import PubSub from 'pubsub-js';
 
 // Define types
 export interface TrackSheetTemplate {
@@ -117,7 +115,6 @@ export const createTrackSheetTemplate = (name: string, rows: TrackSheetRow[]) =>
 export const createEmptyTrackSheetRows = (customers: any[], products: string[]) => {
   return customers.map(customer => ({
     name: customer.name,
-    customerName: customer.name,
     customerId: customer.id,
     quantities: products.reduce((acc, product) => {
       acc[product] = '';
@@ -138,7 +135,6 @@ export const savePdf = (doc: jsPDF, filename: string) => {
 export const getBlankRow = (products: string[]): TrackSheetRow => {
   return {
     name: '',
-    customerName: '',
     customerId: '',
     quantities: products.reduce((acc, product) => {
       acc[product] = '';

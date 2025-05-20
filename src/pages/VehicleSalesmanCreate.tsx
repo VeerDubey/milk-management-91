@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -47,15 +46,30 @@ export default function VehicleSalesmanCreate() {
       return;
     }
     
-    addSalesman({
+    // Make a copy of the salesman data without the vehicleId
+    const salesmanData: Omit<Salesman, "id"> = {
       name: formData.name,
       phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-      isActive: formData.isActive,
-      vehicleId: formData.vehicleId || undefined
-    });
+      isActive: formData.isActive
+    };
     
+    // Add optional fields if they exist
+    if (formData.email) salesmanData.email = formData.email;
+    if (formData.address) salesmanData.address = formData.address;
+    if (formData.vehicleId) salesmanData.vehicleId = formData.vehicleId;
+    
+    // Add the salesman with the correct properties
+    addSalesman(salesmanData);
+    
+    // Reset form and show success message
+    setFormData({
+      name: '',
+      phone: '',
+      address: '',
+      email: '',
+      vehicleId: '',
+      isActive: true,
+    });
     toast.success("Salesman created successfully");
     navigate('/vehicle-salesman');
   };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { format } from 'date-fns';
@@ -175,7 +174,7 @@ export default function TrackSheetHistory() {
                     return (
                       <TableRow key={sheet.id}>
                         <TableCell>{format(new Date(sheet.date), 'yyyy-MM-dd')}</TableCell>
-                        <TableCell>{sheet.name || sheet.title || 'Untitled'}</TableCell>
+                        <TableCell className="font-medium">{sheet.name || sheet.title || 'Untitled'}</TableCell>
                         <TableCell>{vehicle?.name || 'Not assigned'}</TableCell>
                         <TableCell>{salesman?.name || 'Not assigned'}</TableCell>
                         <TableCell>{sheet.rows.length}</TableCell>

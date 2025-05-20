@@ -1,6 +1,5 @@
 
 
-
 // Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
 import { ReactNode } from 'react';
@@ -42,6 +41,7 @@ declare module '@/types' {
   export interface Invoice {
     id: string;
     customerId: string;
+    invoiceNumber?: string;
     number: string;
     date: string;
     dueDate: string;
@@ -61,6 +61,8 @@ declare module '@/types' {
     termsAndConditions: string;
     createdAt: string;
     updatedAt: string;
+    discount?: number;
+    shipping?: number;
   }
 
   export interface StockRecord {
@@ -121,9 +123,10 @@ declare module '@/types' {
     description: string; // Added for compatibility
     paymentMethod: string; // Added for compatibility
     reference?: string; // Added for compatibility
+    isRecurring?: boolean; // Added for compatibility with existing code
   }
 
-  // Make sure the Vehicle interface has the correct properties
+  // Updated Vehicle interface with the missing properties
   export interface Vehicle {
     id: string;
     name: string;
@@ -132,9 +135,10 @@ declare module '@/types' {
     driverName?: string;
     isActive: boolean;
     capacity?: number;
+    description?: string;
   }
 
-  // Make sure the UISettings interface has the correct properties
+  // Updated UISettings interface with the missing properties
   export interface UISettings {
     theme: 'light' | 'dark' | 'system';
     language: string;
@@ -152,7 +156,7 @@ declare module '@/types' {
     defaultReportPeriod: string; // Added for compatibility
   }
 
-  // Make sure the TrackSheet interface has the correct properties
+  // Updated TrackSheet interface with compatible properties
   export interface TrackSheet {
     id: string;
     date: string;
@@ -160,8 +164,8 @@ declare module '@/types' {
     salesmanId?: string;
     rows: TrackSheetRow[];
     routeName?: string;
-    title?: string; // Added for compatibility
-    name?: string; // Added for compatibility
+    name: string; // Required property
+    title?: string; // For backward compatibility
     createdAt?: string;
     updatedAt?: string;
     vehicleName?: string;
@@ -169,10 +173,10 @@ declare module '@/types' {
     savedAt?: string;
   }
 
-  // Make sure the TrackSheetRow interface has the correct properties
+  // Updated TrackSheetRow interface with all required properties
   export interface TrackSheetRow {
     name: string;
-    customerName?: string;
+    customerName?: string; // Made optional for compatibility
     customerId?: string;
     quantities: Record<string, number | string>;
     total: number;
@@ -180,7 +184,7 @@ declare module '@/types' {
     products?: string[];
   }
 
-  // Make sure the Salesman interface has the correct property
+  // Updated Salesman interface with necessary properties
   export interface Salesman {
     id: string;
     name: string;
@@ -191,7 +195,7 @@ declare module '@/types' {
     vehicleId?: string;
   }
 
-  // Make sure the SupplierPayment interface has the correct properties
+  // Updated SupplierPayment interface with method property
   export interface SupplierPayment {
     id: string;
     supplierId: string;

@@ -1,111 +1,152 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, BarChart3, HelpCircle } from 'lucide-react';
+import { TrackSheet } from '@/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Download, Printer } from 'lucide-react';
+import { calculateProductTotals } from '@/utils/trackSheetUtils';
 
 interface TrackSheetDetailsProps {
-  date: Date;
-  routeName: string;
-  onDateChange: (date: Date | undefined) => void;
-  onRouteNameChange: (routeName: string) => void;
-  onGenerateTemplate: () => void;
+  trackSheet: TrackSheet;
 }
 
-export function TrackSheetDetails({
-  date,
-  routeName,
-  onDateChange,
-  onRouteNameChange,
-  onGenerateTemplate
-}: TrackSheetDetailsProps) {
+export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
+  // Extract product names from the first row's quantities
+  const productNames = trackSheet.rows.length > 0 
+    ? Object.keys(trackSheet.rows[0].quantities) 
+    : [];
+  
+  // Calculate product totals
+  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
+  
+  // Calculate grand totals
+  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
+  
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  const handleDownload = () => {
+    // This would be implemented in a real app
+    console.log('Download functionality would be implemented here');
+  };
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Track Sheet Details</h3>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onGenerateTemplate}
-          >
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Generate Sample Data
+    <div className="space-y-6 print:p-10">
+      <div className="flex justify-between items-center print:hidden">
+        <h2 className="text-2xl font-bold">{trackSheet.name}</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            Print
           </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 text-sm" align="end">
-              <div className="space-y-2">
-                <p>
-                  <strong>Track Sheet</strong> helps you record daily product distribution 
-                  per customer.
-                </p>
-                <p>
-                  1. Set the date and route for this sheet
-                </p>
-                <p>
-                  2. Enter quantities for each product per customer
-                </p>
-                <p>
-                  3. Use the sample data generator to quickly see how it works
-                </p>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            <Download className="mr-2 h-4 w-4" />
+            Download
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={onDateChange}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Date</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{format(new Date(trackSheet.date), 'PPP')}</p>
+          </CardContent>
+        </Card>
+        
+        {trackSheet.vehicleName && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Vehicle</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{trackSheet.vehicleName}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {trackSheet.salesmanName && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Salesman</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{trackSheet.salesmanName}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {trackSheet.routeName && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Route</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>{trackSheet.routeName}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribution Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  {productNames.map(product => (
+                    <TableHead key={product} className="text-center">{product}</TableHead>
+                  ))}
+                  <TableHead className="text-center">Total</TableHead>
+                  <TableHead className="text-center">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {trackSheet.rows.map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    {productNames.map(product => (
+                      <TableCell key={product} className="text-center">
+                        {row.quantities[product] || ''}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-center">{row.total}</TableCell>
+                    <TableCell className="text-center">₹{row.amount}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <tfoot>
+                <TableRow>
+                  <TableCell className="font-bold">Total</TableCell>
+                  {productNames.map(product => (
+                    <TableCell key={product} className="text-center font-bold">
+                      {productTotals[product] || 0}
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-center font-bold">{totalQuantity}</TableCell>
+                  <TableCell className="text-center font-bold">₹{totalAmount}</TableCell>
+                </TableRow>
+              </tfoot>
+            </Table>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="route">Route Name (Optional)</Label>
-            <Input
-              id="route"
-              value={routeName}
-              onChange={(e) => onRouteNameChange(e.target.value)}
-              placeholder="e.g., North City Route"
-            />
-          </div>
+        </CardContent>
+      </Card>
+      
+      {trackSheet.createdAt && (
+        <div className="text-sm text-muted-foreground text-right print:hidden">
+          Created: {format(new Date(trackSheet.createdAt), 'PPP p')}
+          {trackSheet.savedAt && ` • Last saved: ${format(new Date(trackSheet.savedAt), 'PPP p')}`}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
