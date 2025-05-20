@@ -27,6 +27,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -93,10 +95,18 @@ const SidebarItem = ({ icon: Icon, title, to, children, collapsed }: SidebarItem
 };
 
 export function Sidebar({ collapsed = false }: SidebarProps) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div
       className={cn(
-        "border-r bg-card flex-shrink-0 transition-all duration-300 ease-in-out",
+        "border-r bg-card flex-shrink-0 transition-all duration-300 ease-in-out h-screen",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -119,16 +129,16 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
             <SidebarItem icon={Users} title="Customers" to="/customers" collapsed={collapsed}>
               <SidebarItem icon={Users} title="Customer Directory" to="/customer-directory" collapsed={false} />
               <SidebarItem icon={CreditCard} title="Customer Ledger" to="/customer-ledger" collapsed={false} />
-              <SidebarItem icon={FileText} title="Customer Rates" to="/customer-rates" collapsed={false} />
+              <SidebarItem icon={FileText} title="Customer Rates" to="/customer-product-rates" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={ShoppingCart} title="Orders" to="/orders" collapsed={collapsed}>
-              <SidebarItem icon={ShoppingCart} title="Order List" to="/order-list" collapsed={false} />
+              <SidebarItem icon={ShoppingCart} title="Order List" to="/orders" collapsed={false} />
               <SidebarItem icon={FileText} title="Order Entry" to="/order-entry" collapsed={false} />
             </SidebarItem>
             
-            <SidebarItem icon={Package} title="Inventory" to="/inventory" collapsed={collapsed}>
-              <SidebarItem icon={Package} title="Product List" to="/product-list" collapsed={false} />
+            <SidebarItem icon={Package} title="Products" to="/products" collapsed={collapsed}>
+              <SidebarItem icon={Package} title="Product List" to="/products" collapsed={false} />
               <SidebarItem icon={FileText} title="Product Rates" to="/product-rates" collapsed={false} />
               <SidebarItem icon={Database} title="Stock Management" to="/stock-management" collapsed={false} />
               <SidebarItem icon={Settings} title="Stock Settings" to="/stock-settings" collapsed={false} />
@@ -136,7 +146,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
             </SidebarItem>
             
             <SidebarItem icon={FileText} title="Invoices" to="/invoices" collapsed={collapsed}>
-              <SidebarItem icon={FileText} title="Create Invoice" to="/invoice-create" collapsed={false} />
+              <SidebarItem icon={FileText} title="Create Invoice" to="/invoice-generator" collapsed={false} />
               <SidebarItem icon={Clock} title="Invoice History" to="/invoice-history" collapsed={false} />
               <SidebarItem icon={Layout} title="Invoice Templates" to="/invoice-templates" collapsed={false} />
             </SidebarItem>
@@ -150,7 +160,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
               <SidebarItem icon={Users} title="Supplier Directory" to="/supplier-directory" collapsed={false} />
               <SidebarItem icon={CreditCard} title="Supplier Ledger" to="/supplier-ledger" collapsed={false} />
               <SidebarItem icon={CreditCard} title="Supplier Payments" to="/supplier-payments" collapsed={false} />
-              <SidebarItem icon={FileText} title="Supplier Rates" to="/supplier-rates" collapsed={false} />
+              <SidebarItem icon={FileText} title="Supplier Rates" to="/supplier-product-rates" collapsed={false} />
             </SidebarItem>
             
             <SidebarItem icon={Clock} title="Outstanding" to="/outstanding" collapsed={collapsed}>
@@ -189,6 +199,15 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
             </SidebarItem>
             
             <SidebarItem icon={Database} title="Master Data" to="/master" collapsed={collapsed} />
+            
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 font-normal text-red-500 hover:text-red-700 hover:bg-red-100/10"
+              onClick={handleLogout}
+            >
+              <User className="h-4 w-4" />
+              {!collapsed && <span>Logout</span>}
+            </Button>
           </div>
         </ScrollArea>
       </div>
