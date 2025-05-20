@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
 import { UISettingsProvider, useUISettings } from '@/contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
@@ -106,15 +106,13 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <UISettingsProvider>
-        <DataProvider>
-          <InvoiceProvider>
-            <AppContent />
-          </InvoiceProvider>
-        </DataProvider>
-      </UISettingsProvider>
-    </Router>
+    <UISettingsProvider>
+      <DataProvider>
+        <InvoiceProvider>
+          <AppContent />
+        </InvoiceProvider>
+      </DataProvider>
+    </UISettingsProvider>
   );
 }
 

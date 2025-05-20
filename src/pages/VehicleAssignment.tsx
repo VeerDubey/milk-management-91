@@ -65,20 +65,12 @@ export default function VehicleAssignmentPage() {
     
     try {
       // Save the track sheet
-      const newSheet = addTrackSheet(trackSheet);
+      const result = addTrackSheet(trackSheet);
       
-      // Since we're not sure if addTrackSheet returns anything, let's handle it safely
-      if (newSheet && typeof newSheet === 'object') {
-        const sheetId = (newSheet as any).id;
-        if (sheetId) {
-          // Redirect to edit the newly created track sheet
-          window.location.href = `/track-sheet?id=${sheetId}`;
-          return;
-        }
-      }
-      
-      // If we couldn't get a specific ID but track sheet was probably created
+      // Show success message and navigate
       toast.success("Track sheet created successfully");
+      
+      // Simply navigate to track sheet page
       window.location.href = '/track-sheet';
     } catch (error) {
       console.error("Failed to create track sheet:", error);
