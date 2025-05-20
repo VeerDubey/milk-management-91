@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Save, Download, FileSpreadsheet, FilePdf, Printer } from 'lucide-react';
+import { Save, Download, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 
 interface TrackSheetHeaderProps {
   selectedTemplate: string | null;
@@ -58,7 +58,7 @@ export function TrackSheetHeader({
               Export to Excel
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onExportPdf}>
-              <FilePdf className="mr-2 h-4 w-4" />
+              <FileText className="mr-2 h-4 w-4" />
               Export to PDF
             </DropdownMenuItem>
             <DropdownMenuSeparator />

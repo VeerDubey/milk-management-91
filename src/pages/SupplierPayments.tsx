@@ -54,7 +54,8 @@ import {
   Save,
   Download,
   FileSpreadsheet,
-  FilePdf,
+  ChevronDown,
+  Search,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -117,13 +118,15 @@ const SupplierPayments = () => {
     }
     
     if (format === 'excel') {
-      if (exportSupplierPaymentsToExcel(filteredPayments, suppliers)) {
+      const result = exportSupplierPaymentsToExcel(filteredPayments, suppliers);
+      if (result) {
         toast.success("Payments exported to Excel");
       } else {
         toast.error("Failed to export payments");
       }
     } else {
-      if (exportSupplierPaymentsToPdf(filteredPayments, suppliers)) {
+      const result = exportSupplierPaymentsToPdf(filteredPayments, suppliers);
+      if (result) {
         toast.success("Payments exported to PDF");
       } else {
         toast.error("Failed to export payments");
@@ -341,7 +344,7 @@ const SupplierPayments = () => {
                 Export to Excel
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                <FilePdf className="mr-2 h-4 w-4" />
+                <FileText className="mr-2 h-4 w-4" />
                 Export to PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -385,7 +388,7 @@ const SupplierPayments = () => {
                   <SelectValue placeholder="All Suppliers" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Suppliers</SelectItem>
+                  <SelectItem value="all">All Suppliers</SelectItem>
                   {suppliers.map((supplier) => (
                     <SelectItem key={supplier.id} value={supplier.id}>
                       {supplier.name}
