@@ -104,6 +104,7 @@ function AppContent() {
   );
 }
 
+// Fix the App component to properly type the children
 function App() {
   return (
     <UISettingsProvider>

@@ -14,8 +14,8 @@ import { useTrackSheetState } from './useTrackSheetState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 import { DataContextType } from './types';
 
-// Import the context, not the hook
-import { InvoiceContext } from '@/contexts/InvoiceContext';
+// Import the context properly with its type
+import { InvoiceContext, InvoiceContextType } from '@/contexts/InvoiceContext';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -33,8 +33,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const expenseState = useExpenseState();
   const trackSheetState = useTrackSheetState();
   
-  // Use the InvoiceContext directly instead of the hook
-  const invoiceContext = useContext(InvoiceContext);
+  // Use the InvoiceContext with proper typing
+  const invoiceContext = useContext(InvoiceContext) as InvoiceContextType;
   
   if (!invoiceContext) {
     throw new Error('DataProvider must be used within an InvoiceProvider');
@@ -54,7 +54,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...expenseState,
     ...trackSheetState,
     
-    // Use the context values directly
+    // Use the context values directly with proper typing
     invoices: invoiceContext.invoices,
     addInvoice: invoiceContext.addInvoice,
     updateInvoice: invoiceContext.updateInvoice,

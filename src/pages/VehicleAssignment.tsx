@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/data/DataContext';
 import { VehicleAssignment } from '@/components/track-sheet/VehicleAssignment';
 import { Customer, TrackSheet as TrackSheetType, TrackSheetRow } from '@/types';
 import { format } from 'date-fns';
@@ -60,17 +60,17 @@ export default function VehicleAssignmentPage() {
           notes: customer.deliveryNotes || ''
         };
         return acc;
-      }, {})
+      }, {} as Record<string, { time: string; notes: string }>)
     };
     
     try {
       // Save the track sheet
-      const result = addTrackSheet(trackSheet);
+      addTrackSheet(trackSheet);
       
       // Show success message and navigate
       toast.success("Track sheet created successfully");
       
-      // Simply navigate to track sheet page
+      // Navigate to track sheet page
       window.location.href = '/track-sheet';
     } catch (error) {
       console.error("Failed to create track sheet:", error);

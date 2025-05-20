@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Invoice, OrderItem } from '@/types';
@@ -66,7 +65,8 @@ const defaultCompanyInfo: CompanyInfo = {
   logoUrl: '/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png'
 };
 
-const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
+// Export the context directly
+export const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
 export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
