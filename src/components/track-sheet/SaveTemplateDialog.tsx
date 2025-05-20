@@ -11,7 +11,7 @@ import { createTrackSheetTemplate } from '@/utils/trackSheetUtils';
 interface SaveTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  rows: TrackSheetRow[]; // Add the rows prop
+  rows: TrackSheetRow[]; // Added rows prop
 }
 
 export function SaveTemplateDialog({ open, onOpenChange, rows }: SaveTemplateDialogProps) {

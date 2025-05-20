@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -264,7 +263,6 @@ export interface TaxSetting {
   rate: number;
   isActive: boolean;
   isDefault: boolean;
-  applicableOn?: string; // Add for TaxSettings
-  appliedTo?: string; // Add for TaxSettings
+  applicableOn?: string[]; // Changed from string to string[]
+  appliedTo?: string[]; // Changed from string to string[]
 }
-

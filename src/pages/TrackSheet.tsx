@@ -17,6 +17,24 @@ import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 
+// Helper functions that were missing
+const productsInRow = (row: TrackSheetRow) => {
+  // Return products based on the row's quantities
+  return Object.keys(row.quantities).map(productName => {
+    return {
+      id: productName,
+      name: productName,
+      price: 0 // Default price
+    };
+  });
+};
+
+const getProductRateForCustomer = (customerId: string, productId: string) => {
+  // This is a placeholder function - in a real implementation, it would
+  // fetch the customer-specific rate for a product
+  return 0; // Default rate
+};
+
 export default function TrackSheet() {
   const { products, vehicles, salesmen, customers, addTrackSheet } = useData();
   const [activeTab, setActiveTab] = useState<'sheet' | 'analytics'>('sheet');
@@ -336,7 +354,6 @@ export default function TrackSheet() {
             </CardContent>
           </Card>
           
-          {/* Make sure SaveTemplateDialog accepts a rows prop */}
           <SaveTemplateDialog 
             open={isSaveTemplateOpen} 
             onOpenChange={setIsSaveTemplateOpen}

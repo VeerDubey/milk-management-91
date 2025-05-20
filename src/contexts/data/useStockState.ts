@@ -43,9 +43,10 @@ export function useStockState(updateSupplier: Function) {
   };
   
   const addStockEntry = (entry: Omit<StockEntry, "id">) => {
+    // Generate ID only if not provided
     const newEntry = {
       ...entry,
-      id: entry.id || `se${Date.now()}`
+      id: `se${Date.now()}`
     };
     
     setStockEntries([...stockEntries, newEntry]);
@@ -116,8 +117,7 @@ export function useStockState(updateSupplier: Function) {
       total: quantity * pricePerUnit
     };
     
-    const entry: StockEntry = {
-      id: `se${Date.now()}`, // Add id to fix the missing id error
+    const entry: Omit<StockEntry, "id"> = {
       date,
       supplierId,
       items: [stockItem],

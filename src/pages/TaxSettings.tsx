@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { 
@@ -78,9 +79,9 @@ const TaxSettings = () => {
     name: "",
     rate: 0,
     isActive: true,
-    applicableOn: ["all"],
+    applicableOn: ["all"] as string[],
     isDefault: false,
-    appliedTo: ["all"]
+    appliedTo: ["all"] as string[]
   });
 
   const handleEdit = (tax: TaxSetting) => {
@@ -90,7 +91,7 @@ const TaxSettings = () => {
       isActive: tax.isActive || false,
       applicableOn: tax.applicableOn || ["all"],
       isDefault: tax.isDefault,
-      appliedTo: tax.appliedTo
+      appliedTo: tax.appliedTo || ["all"]
     });
     setEditingTax(tax.id);
     setIsDialogOpen(true);
@@ -376,9 +377,9 @@ const TaxSettings = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    {tax.applicableOn.includes("all") 
+                    {tax.applicableOn && tax.applicableOn.includes("all") 
                       ? "All Products" 
-                      : tax.applicableOn.join(", ")}
+                      : tax.applicableOn && tax.applicableOn.join(", ")}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

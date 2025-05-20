@@ -1,3 +1,4 @@
+
 // Add necessary imports for calculations and PDF generation
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
@@ -122,7 +123,7 @@ export const createEmptyTrackSheetRows = (customers: any[], products: string[]) 
     }, {} as Record<string, string | number>),
     total: 0,
     amount: 0,
-    products
+    products // Add the products array to the row
   }));
 };
 
@@ -142,7 +143,7 @@ export const getBlankRow = (products: string[]): TrackSheetRow => {
     }, {} as Record<string, string | number>),
     total: 0,
     amount: 0,
-    products
+    products // Add the products array to the row
   };
 };
 
