@@ -73,38 +73,166 @@ function AppContent() {
         <Route path="/signup" element={<Signup />} />
         
         {/* Protected routes (requiring authentication) */}
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-        <Route path="/customers/:id" element={<ProtectedRoute><CustomerDetail /></ProtectedRoute>} />
-        <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-        <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
-        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-        <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
-        <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-        <Route path="/payments/:id" element={<ProtectedRoute><PaymentDetail /></ProtectedRoute>} />
-        <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
-        <Route path="/suppliers/:id" element={<ProtectedRoute><SupplierDetail /></ProtectedRoute>} />
-        <Route path="/supplier-payments/:id" element={<ProtectedRoute><SupplierPaymentDetail /></ProtectedRoute>} />
-        <Route path="/stock-management" element={<ProtectedRoute><StockManagement /></ProtectedRoute>} />
-        <Route path="/stock-entries/:id" element={<ProtectedRoute><StockEntryDetail /></ProtectedRoute>} />
-        <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-        <Route path="/expenses/:id" element={<ProtectedRoute><ExpenseDetail /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="/customer-product-rates" element={<ProtectedRoute><CustomerProductRates /></ProtectedRoute>} />
-        <Route path="/supplier-product-rates" element={<ProtectedRoute><SupplierProductRates /></ProtectedRoute>} />
-        <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
-        <Route path="/salesmen" element={<ProtectedRoute><Salesmen /></ProtectedRoute>} />
-        <Route path="/track-sheet" element={<ProtectedRoute><TrackSheet /></ProtectedRoute>} />
-        <Route path="/tax-settings" element={<ProtectedRoute><TaxSettings /></ProtectedRoute>} />
-        <Route path="/invoice-history" element={<ProtectedRoute><InvoiceHistory /></ProtectedRoute>} />
-        <Route path="/invoice-detail/:id" element={<ProtectedRoute><InvoiceDetail /></ProtectedRoute>} />
-        <Route path="/invoice-generator" element={<ProtectedRoute><InvoiceGenerator /></ProtectedRoute>} />
-        <Route path="/vehicle-assignment" element={<ProtectedRoute><VehicleAssignment /></ProtectedRoute>} />
-        <Route path="/customer-directory" element={<ProtectedRoute><CustomerDirectory /></ProtectedRoute>} />
-        <Route path="/supplier-directory" element={<ProtectedRoute><SupplierDirectory /></ProtectedRoute>} />
-        <Route path="/master" element={<ProtectedRoute><Master /></ProtectedRoute>} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <Customers />
+          </ProtectedRoute>
+        } />
+        <Route path="/customers/:id" element={
+          <ProtectedRoute>
+            <CustomerDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <Products />
+          </ProtectedRoute>
+        } />
+        <Route path="/products/:id" element={
+          <ProtectedRoute>
+            <ProductDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders/:id" element={
+          <ProtectedRoute>
+            <OrderDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments" element={
+          <ProtectedRoute>
+            <Payments />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments/:id" element={
+          <ProtectedRoute>
+            <PaymentDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/suppliers" element={
+          <ProtectedRoute>
+            <Suppliers />
+          </ProtectedRoute>
+        } />
+        <Route path="/suppliers/:id" element={
+          <ProtectedRoute>
+            <SupplierDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-payments/:id" element={
+          <ProtectedRoute>
+            <SupplierPaymentDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/stock-management" element={
+          <ProtectedRoute>
+            <StockManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/stock-entries/:id" element={
+          <ProtectedRoute>
+            <StockEntryDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/expenses" element={
+          <ProtectedRoute>
+            <Expenses />
+          </ProtectedRoute>
+        } />
+        <Route path="/expenses/:id" element={
+          <ProtectedRoute>
+            <ExpenseDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-product-rates" element={
+          <ProtectedRoute>
+            <CustomerProductRates />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-product-rates" element={
+          <ProtectedRoute>
+            <SupplierProductRates />
+          </ProtectedRoute>
+        } />
+        <Route path="/vehicles" element={
+          <ProtectedRoute>
+            <Vehicles />
+          </ProtectedRoute>
+        } />
+        <Route path="/salesmen" element={
+          <ProtectedRoute>
+            <Salesmen />
+          </ProtectedRoute>
+        } />
+        <Route path="/track-sheet" element={
+          <ProtectedRoute>
+            <TrackSheet />
+          </ProtectedRoute>
+        } />
+        <Route path="/tax-settings" element={
+          <ProtectedRoute>
+            <TaxSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-history" element={
+          <ProtectedRoute>
+            <InvoiceHistory />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-detail/:id" element={
+          <ProtectedRoute>
+            <InvoiceDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-generator" element={
+          <ProtectedRoute>
+            <InvoiceGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/vehicle-assignment" element={
+          <ProtectedRoute>
+            <VehicleAssignment />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-directory" element={
+          <ProtectedRoute>
+            <CustomerDirectory />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-directory" element={
+          <ProtectedRoute>
+            <SupplierDirectory />
+          </ProtectedRoute>
+        } />
+        <Route path="/master" element={
+          <ProtectedRoute>
+            <Master />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Layout>
   );
