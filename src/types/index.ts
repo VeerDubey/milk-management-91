@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   name: string;
@@ -10,6 +11,8 @@ export interface Customer {
   email?: string;
   area?: string;
   outstandingAmount?: number; // Added for compatibility with existing code
+  vehicleId?: string; // Track vehicle assignment
+  salesmanId?: string; // Track salesman assignment
 }
 
 export interface Product {
@@ -105,159 +108,82 @@ export interface SupplierPayment {
   amount: number;
   date: string;
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-  notes?: string;
-  referenceNumber?: string; // Added for SupplierLedger and SupplierPayments
-}
-
-export interface StockEntryItem {
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-export interface StockEntry {
-  id?: string;
-  date: string;
-  supplierId: string;
-  items: StockEntryItem[];
-  totalAmount: number;
   referenceNumber?: string;
   notes?: string;
-}
-
-export interface StockRecord {
-  id: string;
-  date: string;
-  productId: string;
-  openingStock: number;
-  received: number;
-  dispatched: number;
-  closingStock: number;
-  minStockLevel?: number;
-}
-
-export interface UISettings {
-  theme: 'light' | 'dark' | 'system';
-  language: 'en' | 'es';
-  currency: 'USD' | 'EUR' | 'GBP';
-  fontSize?: string; // Added for UISettings
-  colorScheme?: string; // Added for UISettings
-  sidebarCollapsed?: boolean; // Added for UISettings
-  sidebarStyle?: string; // Added for UISettings
-  dateFormat?: string; // Added for UISettings
-  tableStyle?: string; // Added for UISettings
-  notificationFrequency?: string; // Added for UISettings
 }
 
 export interface Vehicle {
   id: string;
   name: string;
-  regNumber: string;
+  registrationNumber: string;
   type: string;
-  capacity: number;
+  description?: string;
   isActive: boolean;
-  driver?: string; // Added for VehicleTracking
-  number?: string; // Added for VehicleTracking
 }
 
 export interface Salesman {
   id: string;
   name: string;
   phone: string;
-  email: string;
-  address: string;
+  address?: string;
+  email?: string;
   isActive: boolean;
-  vehicleId?: string; // Added for VehicleSalesmanCreate
+}
+
+export interface TrackSheetRow {
+  name: string;
+  quantities: Record<string, number | string>; // Product name -> quantity
+  total: number;
+  amount: number;
+  customerId?: string;
+}
+
+export interface TrackSheet {
+  id: string;
+  name: string;
+  date: string;
+  rows: TrackSheetRow[];
+  vehicleId?: string;
+  vehicleName?: string;
+  salesmanId?: string;
+  salesmanName?: string;
+  routeName?: string;
+  createdAt?: string;
+  savedAt?: string;
 }
 
 export interface Expense {
   id: string;
   date: string;
+  amount: number;
   category: string;
   description: string;
-  amount: number;
-  title?: string;
-  paymentMethod?: string;
-  paidTo?: string;
+  paymentMethod: string;
+  reference?: string;
+  recurring?: boolean;
+  recurringInterval?: string;
+  nextDueDate?: string;
+}
+
+export interface UISettings {
+  theme: 'light' | 'dark' | 'system';
+  compactMode: boolean;
+  currency: string;
+  dateFormat: string;
+  sidebarCollapsed: boolean;
+  defaultPaymentMethod: string;
+  defaultReportPeriod: string;
+}
+
+export interface ProductStockEntry {
+  id: string;
+  productId: string;
+  quantity: number;
+  date: string;
+  supplierId?: string;
+  unitPrice?: number;
+  totalPrice?: number;
   notes?: string;
-  isRecurring?: boolean;
-  recurringFrequency?: string;
-}
-
-export interface TrackSheetRow {
-  name: string;
-  quantities: Record<string, number | string>;
-  total: number;
-  amount: number;
-}
-
-export interface TrackSheet {
-  id: string;
-  title: string;
-  date: string;
-  vehicleId: string;
-  salesmanId: string;
-  productNames: string[];
-  rows: TrackSheetRow[];
-}
-
-export interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  customerId: string;
-  date: string;
-  dueDate: string;
-  items: OrderItem[];
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  total: number;
-  notes?: string;
-  paymentTerms?: string;
-  taxRate?: number;
-  discount?: number;
-  shipping?: number;
-  customerName?: string; // Added for display purposes
-  amount?: number; // Added for compatibility
-  orderId?: string; // Added for linking to orders
-  subtotal?: number; // Added for InvoiceService
-}
-
-export interface CustomerLedgerEntry {
-  id: string;
-  date: string;
-  type: 'order' | 'payment';
-  description: string;
-  debit: number;
-  credit: number;
-  balance: number;
-  reference: string;
-}
-
-export interface CustomerLedgerReportType {
-  customer: Customer;
-  entries: CustomerLedgerEntry[];
-  startingBalance: number;
-  endingBalance: number;
-  totalDebit: number;
-  totalCredit: number;
-}
-
-export interface InvoiceTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  fontFamily?: string;
-  primaryColor?: string;
-  showHeader?: boolean;
-  showFooter?: boolean;
-}
-
-export interface TaxSetting {
-  id: string;
-  name: string;
-  rate: number;
-  isDefault: boolean;
-  appliedTo: string[];
-  isActive?: boolean;  // Added for TaxSettings page
-  applicableOn?: string[];  // Added for TaxSettings page
+  type: 'in' | 'out' | 'adjustment';
+  referenceNumber?: string;
 }

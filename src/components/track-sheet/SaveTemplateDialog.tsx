@@ -1,8 +1,16 @@
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 interface SaveTemplateDialogProps {
   open: boolean;
@@ -23,24 +31,36 @@ export function SaveTemplateDialog({
 }: SaveTemplateDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Save Track Sheet Template</DialogTitle>
+          <DialogTitle>
+            {isUpdate ? "Update Template" : "Save as Template"}
+          </DialogTitle>
+          <DialogDescription>
+            {isUpdate 
+              ? "Update your track sheet template with the current changes." 
+              : "Save your current track sheet as a template for future use."}
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="template-name">Template Name</Label>
             <Input
               id="template-name"
-              placeholder="Morning Route Sheet"
               value={templateName}
               onChange={(e) => onTemplateNameChange(e.target.value)}
+              placeholder="e.g., Daily North Route"
+              autoFocus
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={onSave}>{isUpdate ? "Update" : "Save"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={onSave}>
+            {isUpdate ? "Update Template" : "Save Template"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

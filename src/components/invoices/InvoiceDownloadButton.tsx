@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useInvoices } from '@/contexts/InvoiceContext';
+import { toast } from 'sonner';
 
 interface InvoiceDownloadButtonProps {
   invoiceId: string;
@@ -36,6 +37,10 @@ export default function InvoiceDownloadButton({
     setIsDownloading(true);
     try {
       await downloadInvoice(invoiceId, templateId);
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast.error("Failed to download invoice. Please try again.");
     } finally {
       setIsDownloading(false);
     }
@@ -60,7 +65,7 @@ export default function InvoiceDownloadButton({
             <ChevronDown className="h-4 w-4 ml-2" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="z-50">
           <DropdownMenuLabel>Select Template</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {/* Quick download with selected template */}
@@ -70,7 +75,7 @@ export default function InvoiceDownloadButton({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {/* Download with specific template */}
-          {templates.map(template => (
+          {templates.length > 0 ? templates.map(template => (
             <DropdownMenuItem 
               key={template.id} 
               onClick={() => handleDownload(template.id)}
@@ -79,7 +84,11 @@ export default function InvoiceDownloadButton({
               <span className="h-4 w-4 mr-2" style={{ backgroundColor: template.primaryColor, borderRadius: '50%' }} />
               <span>{template.name}</span>
             </DropdownMenuItem>
-          ))}
+          )) : (
+            <DropdownMenuItem disabled>
+              No templates available
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

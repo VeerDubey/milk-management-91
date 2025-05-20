@@ -30,7 +30,8 @@ class InvoiceAPI {
       }
       
       // Convert base64 data to buffer and write to file
-      fs.writeFileSync(filePath, Buffer.from(data, 'base64'));
+      const pdfData = data.split(';base64,').pop();
+      fs.writeFileSync(filePath, Buffer.from(pdfData, 'base64'));
       
       return { success: true, filePath };
     } catch (error) {
@@ -49,11 +50,16 @@ class InvoiceAPI {
     try {
       // Create a temporary file for printing
       const tempPath = path.join(app.getPath('temp'), `print-${Date.now()}.pdf`);
-      fs.writeFileSync(tempPath, Buffer.from(data));
+      
+      // Handle base64 data if provided in that format
+      if (typeof data === 'string' && data.includes('base64')) {
+        const pdfData = data.split(';base64,').pop();
+        fs.writeFileSync(tempPath, Buffer.from(pdfData, 'base64'));
+      } else {
+        fs.writeFileSync(tempPath, Buffer.from(data));
+      }
       
       // Open the PDF file with the default PDF viewer
-      // Note: This is a workaround as electron doesn't have native printing support
-      // from the main process. The actual printing will happen in the renderer.
       const { shell } = require('electron');
       await shell.openPath(tempPath);
       
