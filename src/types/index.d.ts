@@ -1,8 +1,41 @@
 
 
+
 // Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
 import { ReactNode } from 'react';
+
+// Extend Window interface for Electron
+declare global {
+  interface Window {
+    electron?: {
+      isElectron: boolean;
+      appInfo?: {
+        getVersion: () => Promise<string>;
+        getPlatform: () => string;
+        getSystemInfo: () => Promise<Record<string, any>>;
+        getAppPaths: () => Promise<Record<string, string>>;
+      };
+      exportData?: (data: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      importData?: () => Promise<{ success: boolean; data?: string; error?: string }>;
+      saveLog?: (logData: string) => Promise<{ success: boolean; path?: string; error?: string }>;
+      system?: {
+        openExternal: (url: string) => Promise<boolean>;
+        openPath: (path: string) => Promise<boolean>;
+        copyToClipboard: (text: string) => Promise<boolean>;
+        readFromClipboard: () => Promise<string>;
+        isPlatform: (platform: 'win32' | 'darwin' | 'linux') => Promise<boolean>;
+      };
+      updates?: {
+        checkForUpdates: () => Promise<any>;
+        downloadUpdate: () => Promise<any>;
+        installUpdate: () => Promise<any>;
+      };
+      onMenuExportData?: (callback: () => void) => void;
+      onMenuImportData?: (callback: () => void) => void;
+    };
+  }
+}
 
 // Extend the existing types
 declare module '@/types' {
@@ -170,4 +203,3 @@ declare module '@/types' {
     method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
   }
 }
-

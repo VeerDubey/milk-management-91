@@ -1,10 +1,10 @@
 
-import { useEffect, useState, memo } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
-// Using memo to prevent unnecessary re-renders
-export const ElectronDetector = memo(function ElectronDetector() {
+// Remove memo to simplify the component and avoid potential issues with React context
+export const ElectronDetector = function ElectronDetector() {
   const [isElectron, setIsElectron] = useState<boolean>(false);
   const [appVersion, setAppVersion] = useState<string>('');
 
@@ -13,7 +13,10 @@ export const ElectronDetector = memo(function ElectronDetector() {
     const detectElectron = async () => {
       try {
         console.log("Checking for Electron environment...");
-        const isRunningInElectron = Boolean(window.electron?.isElectron);
+        // Safely check if window.electron exists before accessing isElectron
+        const isRunningInElectron = typeof window !== 'undefined' && 
+          window.electron && Boolean(window.electron.isElectron);
+        
         setIsElectron(isRunningInElectron);
         
         if (!isRunningInElectron) {
@@ -23,7 +26,7 @@ export const ElectronDetector = memo(function ElectronDetector() {
         
         console.log("Running in Electron desktop environment");
         
-        // Get app version if available
+        // Get app version if available - safely check each property
         if (window.electron?.appInfo?.getVersion) {
           try {
             console.log("Getting app version...");
@@ -47,10 +50,16 @@ export const ElectronDetector = memo(function ElectronDetector() {
         });
       } catch (err) {
         console.error('Error in detectElectron:', err);
+        // Don't throw errors that would break rendering
       }
     };
 
-    detectElectron();
+    // Wrap in a try/catch to ensure the component doesn't crash
+    try {
+      detectElectron();
+    } catch (error) {
+      console.error("Failed to detect Electron:", error);
+    }
   }, []);
 
   // Don't render anything if not in Electron
@@ -63,4 +72,7 @@ export const ElectronDetector = memo(function ElectronDetector() {
       </Badge>
     </div>
   );
-});
+};
+
+// Export without memo to ensure hooks work properly
+export default ElectronDetector;
