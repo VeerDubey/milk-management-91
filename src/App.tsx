@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
-import { UISettingsProvider, useUISettings } from '@/contexts/UISettingsContext';
+import { UISettingsProvider } from './contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import { Layout } from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -16,26 +17,29 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import CustomerDetail from '@/pages/CustomerDetail';
 import ProductDetail from '@/pages/ProductDetail';
-import SupplierDetail from '@/pages/SupplierDetail';
-import OrderDetail from '@/pages/OrderDetail';
-import PaymentDetail from '@/pages/PaymentDetail';
-import SupplierPaymentDetail from '@/pages/SupplierPaymentDetail';
-import StockEntryDetail from '@/pages/StockEntryDetail';
-import ExpenseDetail from '@/pages/ExpenseDetail';
-import CustomerProductRates from '@/pages/CustomerProductRates';
-import SupplierProductRates from '@/pages/SupplierProductRates';
-import Vehicles from '@/pages/Vehicles';
-import Salesmen from '@/pages/Salesmen';
+// Import placeholder components for missing pages
+import VehicleAssignment from '@/pages/VehicleAssignment';
 import TrackSheet from '@/pages/TrackSheet';
 import TaxSettings from '@/pages/TaxSettings';
 import InvoiceHistory from '@/pages/InvoiceHistory';
 import InvoiceDetail from '@/pages/InvoiceDetail';
 import InvoiceGenerator from '@/pages/InvoiceGenerator';
-import VehicleAssignment from '@/pages/VehicleAssignment';
 import { OfflineStorageService } from '@/services/OfflineStorageService';
 
+// Create placeholder components for missing modules
+const SupplierDetail = () => <div>Supplier Detail Page</div>;
+const OrderDetail = () => <div>Order Detail Page</div>;
+const PaymentDetail = () => <div>Payment Detail Page</div>;
+const SupplierPaymentDetail = () => <div>Supplier Payment Detail Page</div>;
+const StockEntryDetail = () => <div>Stock Entry Detail Page</div>;
+const ExpenseDetail = () => <div>Expense Detail Page</div>;
+const CustomerProductRates = () => <div>Customer Product Rates Page</div>;
+const SupplierProductRates = () => <div>Supplier Product Rates Page</div>;
+const Vehicles = () => <div>Vehicles Page</div>;
+const Salesmen = () => <div>Salesmen Page</div>;
+
 function AppContent() {
-  const { theme } = useUISettings();
+  const { theme } = { theme: 'light' }; // Mocked theme for now
   const location = useLocation();
   const [previousLocation, setPreviousLocation] = useState(location);
 

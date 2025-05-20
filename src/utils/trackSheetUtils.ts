@@ -79,10 +79,10 @@ export const generateTrackSheetPdf = (trackSheet: TrackSheet, productNames: stri
   const data = trackSheet.rows.map((row: any) => {
     const rowData = [row.name || 'Unknown'];
     productNames.forEach(product => {
-      rowData.push(row.quantities[product] || '');
+      rowData.push(row.quantities[product]?.toString() || '');
     });
-    rowData.push(row.total || 0);
-    rowData.push(row.amount || 0);
+    rowData.push(row.total.toString() || '0');
+    rowData.push(row.amount.toString() || '0');
     return rowData;
   });
   
@@ -91,14 +91,14 @@ export const generateTrackSheetPdf = (trackSheet: TrackSheet, productNames: stri
   const productTotals = calculateProductTotals(trackSheet.rows, productNames);
   
   productNames.forEach(product => {
-    totals.push(productTotals[product] || 0);
+    totals.push(productTotals[product]?.toString() || '0');
   });
   
   const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
   const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
   
-  totals.push(totalQuantity);
-  totals.push(totalAmount);
+  totals.push(totalQuantity.toString());
+  totals.push(totalAmount.toString());
   
   // Add table with totals
   (doc as any).autoTable({
@@ -132,10 +132,10 @@ export const exportTrackSheetToExcel = (trackSheet: TrackSheet, productNames: st
     ...trackSheet.rows.map(row => {
       const rowData = [row.name];
       productNames.forEach(product => {
-        rowData.push(row.quantities[product] || '');
+        rowData.push(row.quantities[product]?.toString() || '');
       });
-      rowData.push(row.total);
-      rowData.push(row.amount);
+      rowData.push(row.total.toString());
+      rowData.push(row.amount.toString());
       return rowData;
     })
   ];
@@ -145,14 +145,14 @@ export const exportTrackSheetToExcel = (trackSheet: TrackSheet, productNames: st
   const productTotals = calculateProductTotals(trackSheet.rows, productNames);
   
   productNames.forEach(product => {
-    totals.push(productTotals[product] || 0);
+    totals.push(productTotals[product]?.toString() || '0');
   });
   
   const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
   const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
   
-  totals.push(totalQuantity);
-  totals.push(totalAmount);
+  totals.push(totalQuantity.toString());
+  totals.push(totalAmount.toString());
   
   // Add totals row
   data.push(totals);

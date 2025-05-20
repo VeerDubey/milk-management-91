@@ -66,8 +66,13 @@ export default function VehicleAssignmentPage() {
     // Save the track sheet
     const newSheet = addTrackSheet(trackSheet);
     
-    // Redirect to edit the newly created track sheet
-    window.location.href = `/track-sheet?id=${newSheet.id}`;
+    // Make sure we have a valid ID before redirecting
+    if (newSheet && newSheet.id) {
+      // Redirect to edit the newly created track sheet
+      window.location.href = `/track-sheet?id=${newSheet.id}`;
+    } else {
+      toast.error("Failed to create track sheet");
+    }
   };
 
   return (
