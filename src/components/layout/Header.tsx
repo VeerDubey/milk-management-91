@@ -9,6 +9,7 @@ import {
   Moon,
   Menu,
   Settings,
+  LogOut
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,6 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useData } from '@/contexts/data/DataContext';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   toggleSidebar?: () => void;
@@ -34,6 +36,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   const navigate = useNavigate();
   const { uiSettings } = useData();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const handleOnlineStatusChange = () => {
@@ -54,6 +57,11 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     toggleTheme();
     // Use alert for simplicity since toast might not be fully initialized
     alert(`Switched to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -102,9 +110,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {
-              navigate('/login');
-            }}>
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
