@@ -5,7 +5,7 @@ import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { MoonIcon, SunIcon, BellIcon, UserIcon, MenuIcon } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
+import { useData } from "@/contexts/data/DataContext";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Layout() {
+export function Layout({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme } = useTheme();
   const { uiSettings } = useData();
   const isDarkTheme = theme === 'dark';
@@ -119,7 +119,7 @@ export function Layout() {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            {children || <Outlet />}
           </div>
         </main>
       </div>

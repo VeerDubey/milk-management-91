@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/data/DataContext';
-import { UISettingsProvider, useUISettings } from '@/contexts/UISettingsContext';
+import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
+import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { Layout } from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
 import Customers from '@/pages/Customers';
@@ -41,11 +42,6 @@ const Salesmen = () => <div>Salesmen Page</div>;
 function AppContent() {
   const location = useLocation();
   const [previousLocation, setPreviousLocation] = useState(location);
-  const { theme } = useUISettings();
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     if (!(location.pathname === previousLocation.pathname && location.key !== previousLocation.key)) {
@@ -107,13 +103,15 @@ function AppContent() {
 // Fix the App component to properly type the children
 function App() {
   return (
-    <UISettingsProvider>
-      <InvoiceProvider>
-        <DataProvider>
-          <AppContent />
-        </DataProvider>
-      </InvoiceProvider>
-    </UISettingsProvider>
+    <ThemeProvider>
+      <UISettingsProvider>
+        <InvoiceProvider>
+          <DataProvider>
+            <AppContent />
+          </DataProvider>
+        </InvoiceProvider>
+      </UISettingsProvider>
+    </ThemeProvider>
   );
 }
 
