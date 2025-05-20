@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { DataProvider } from '@/contexts/DataContext';
+import { DataProvider } from '@/contexts/data/DataContext';
 import { UISettingsProvider, useUISettings } from '@/contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import { Layout } from '@/components/Layout';
@@ -107,11 +107,11 @@ function AppContent() {
 function App() {
   return (
     <UISettingsProvider>
-      <DataProvider>
-        <InvoiceProvider>
+      <InvoiceProvider>
+        <DataProvider>
           <AppContent />
-        </InvoiceProvider>
-      </DataProvider>
+        </DataProvider>
+      </InvoiceProvider>
     </UISettingsProvider>
   );
 }

@@ -12,8 +12,10 @@ import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { useTrackSheetState } from './useTrackSheetState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
-import { useInvoice } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
+
+// Import the context, not the hook
+import { InvoiceContext } from '@/contexts/InvoiceContext';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -31,8 +33,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const expenseState = useExpenseState();
   const trackSheetState = useTrackSheetState();
   
-  // Use the actual invoice context data
-  const invoiceState = useInvoice();
+  // Use the InvoiceContext directly instead of the hook
+  const invoiceContext = useContext(InvoiceContext);
+  
+  if (!invoiceContext) {
+    throw new Error('DataProvider must be used within an InvoiceProvider');
+  }
 
   // Combine all state objects into one
   const contextValue: DataContextType = {
@@ -47,11 +53,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...vehicleSalesmanState,
     ...expenseState,
     ...trackSheetState,
-    // Use the actual invoice data
-    invoices: invoiceState.invoices,
-    addInvoice: invoiceState.addInvoice,
-    updateInvoice: invoiceState.updateInvoice,
-    deleteInvoice: invoiceState.deleteInvoice,
+    
+    // Use the context values directly
+    invoices: invoiceContext.invoices,
+    addInvoice: invoiceContext.addInvoice,
+    updateInvoice: invoiceContext.updateInvoice,
+    deleteInvoice: invoiceContext.deleteInvoice,
     
     // Adding missing properties
     addStock: stockState.addStock,
