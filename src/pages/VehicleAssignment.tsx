@@ -63,11 +63,11 @@ export default function VehicleAssignmentPage() {
       }, {})
     };
     
-    // Save the track sheet
+    // Save the track sheet and capture the returned value
     const newSheet = addTrackSheet(trackSheet);
     
-    // Check if newSheet exists and has an id before redirecting
-    if (newSheet && 'id' in newSheet) {
+    // Check if newSheet is defined and has an id property
+    if (newSheet && typeof newSheet === 'object' && 'id' in newSheet) {
       // Redirect to edit the newly created track sheet
       window.location.href = `/track-sheet?id=${newSheet.id}`;
     } else {
