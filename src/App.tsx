@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
-import { UISettingsProvider } from '@/contexts/UISettingsContext';
+import { UISettingsProvider, useUISettings } from '@/contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import { Layout } from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -41,11 +41,11 @@ const Salesmen = () => <div>Salesmen Page</div>;
 function AppContent() {
   const location = useLocation();
   const [previousLocation, setPreviousLocation] = useState(location);
+  const { theme } = useUISettings();
 
   useEffect(() => {
-    const { theme } = useUISettings();
     document.documentElement.setAttribute('data-theme', theme);
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
     if (!(location.pathname === previousLocation.pathname && location.key !== previousLocation.key)) {
