@@ -1,136 +1,129 @@
 
-// Define all the missing types referenced in the code
+// Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
-// Invoice related types
-export interface Invoice {
-  id: string;
-  customerId: string;
-  date: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  totalAmount: number;
-  paidAmount: number;
-  notes?: string;
-  termsAndConditions?: string;
-  templateId?: string;
-}
+import { ReactNode } from 'react';
 
-export interface InvoiceItem {
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  discount?: number;
-  tax?: number;
-  total: number;
-}
+// Extend the existing types
+declare module '@/types' {
+  export interface Invoice {
+    id: string;
+    customerId: string;
+    number: string;
+    date: string;
+    dueDate: string;
+    items: Array<{
+      productId: string;
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      amount: number;
+    }>;
+    subtotal: number;
+    taxRate: number;
+    taxAmount: number;
+    total: number;
+    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
+    notes: string;
+    termsAndConditions: string;
+    createdAt: string;
+    updatedAt: string;
+  }
 
-// Stock related types
-export interface StockRecord {
-  id: string;
-  date: string;
-  productId: string;
-  openingStock: number;
-  received: number;
-  dispatched: number;
-  closingStock: number;
-  minStockLevel?: number;
-}
-
-export interface StockEntry {
-  id: string;
-  date: string;
-  supplierId: string;
-  items: StockEntryItem[];
-  totalAmount: number;
-  referenceNumber?: string;
-}
-
-export interface StockEntryItem {
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-// Expense related types
-export interface Expense {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  description: string;
-  date: string;
-  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-  paidTo: string;
-  notes?: string;
-  isRecurring: boolean;
-  recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-}
-
-// Vehicle and Salesman related types
-export interface Vehicle {
-  id: string;
-  name: string;
-  registrationNumber: string; // This is the correct property name, not regNumber
-  type: string;
-  driverName?: string; // This is the correct property name, not driver
-  isActive: boolean;
-  capacity: number;
-}
-
-export interface Salesman {
-  id: string;
-  name: string;
-  phone: string;
-  address?: string;
-  email?: string;
-  isActive: boolean;
-  assignedVehicleId?: string; // This is the correct property name, not vehicleId
-}
-
-// Tax Settings
-export interface TaxSetting {
-  id: string;
-  name: string;
-  rate: number;
-  isDefault: boolean;
-  isActive: boolean;
-  code?: string;
-  description?: string;
-}
-
-// Track Sheet
-export interface TrackSheet {
-  id: string;
-  date: string;
-  title: string;
-  vehicleId?: string;
-  salesmanId?: string;
-  items: TrackSheetItem[];
-  isTemplate: boolean;
-  createdAt: string;
-}
-
-export interface TrackSheetItem {
-  customerId: string;
-  products: {
+  export interface StockRecord {
+    id: string;
     productId: string;
     quantity: number;
-  }[];
-  totalAmount: number;
-}
+    date: string;
+    type: 'in' | 'out' | 'adjustment';
+    notes?: string;
+    relatedEntryId?: string;
+  }
 
-// UI Settings
-export interface UISettings {
-  theme: 'light' | 'dark' | 'system';
-  fontSize: 'small' | 'medium' | 'large';
-  colorScheme: string;
-  notifications: boolean;
-  compactView: boolean;
-  sidebarStyle: 'compact' | 'full';
-  tableStyle: 'bordered' | 'minimal' | 'striped';
-  notificationFrequency: 'immediate' | 'hourly' | 'daily' | 'weekly';
-}
+  export interface StockEntryItem {
+    id: string;
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }
 
-// Add any other missing types here
+  export interface StockEntry {
+    id: string;
+    supplierId: string;
+    date: string;
+    items: StockEntryItem[];
+    notes?: string;
+    totalAmount: number;
+    paymentStatus: 'paid' | 'partial' | 'unpaid';
+    createdAt: string;
+  }
+
+  export interface TaxSetting {
+    id: string;
+    name: string;
+    rate: number;
+    isActive: boolean;
+    isDefault: boolean;
+  }
+
+  // Make sure the Expense interface has the correct properties
+  export interface Expense {
+    id: string;
+    category: string;
+    amount: number;
+    date: string;
+    recurring: boolean;
+    recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+    title: string;
+    notes?: string;
+    paidTo?: string;
+  }
+
+  // Make sure the Vehicle interface has the correct properties
+  export interface Vehicle {
+    id: string;
+    name: string;
+    type: string;
+    registrationNumber: string;
+    driverName?: string;
+    isActive: boolean;
+    capacity?: number;
+  }
+
+  // Make sure the UISettings interface has the correct properties
+  export interface UISettings {
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    dateFormat: string;
+    currencyFormat: string;
+    fontSize?: 'small' | 'medium' | 'large';
+    colorScheme?: string;
+    sidebarStyle?: 'compact' | 'expanded';
+    tableStyle?: 'bordered' | 'minimal' | 'striped';
+    notificationFrequency?: 'high' | 'medium' | 'low' | 'off';
+  }
+
+  // Make sure the TrackSheet interface has the correct properties
+  export interface TrackSheet {
+    id: string;
+    date: string;
+    vehicleId?: string;
+    salesmanId?: string;
+    rows: TrackSheetRow[];
+    routeName?: string;
+    title?: string; // Added for compatibility
+    createdAt?: string;
+    updatedAt?: string;
+  }
+
+  // Make sure the Salesman interface has the correct property
+  export interface Salesman {
+    id: string;
+    name: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    isActive: boolean;
+    vehicleId?: string;
+  }
+}

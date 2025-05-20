@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrackSheetRow } from '@/types';
+import { TrackSheetRow } from '@/utils/trackSheetUtils';
 import { calculateProductTotals, calculateTotals } from '@/utils/trackSheetUtils';
 
 // Import charts if you have recharts
@@ -29,8 +29,8 @@ export function TrackSheetAnalytics({ rows, products }: TrackSheetAnalyticsProps
     return Object.entries(productTotals)
       .map(([name, qty]) => ({
         name,
-        totalQty: qty,
-        percentage: (qty / totalQuantity) * 100
+        totalQty: qty || 0, // Ensure it's a number
+        percentage: totalQuantity > 0 ? ((qty || 0) / totalQuantity) * 100 : 0
       }))
       .sort((a, b) => b.totalQty - a.totalQty);
   }, [productTotals, totalQuantity]);
@@ -48,9 +48,9 @@ export function TrackSheetAnalytics({ rows, products }: TrackSheetAnalyticsProps
     rows
       .filter(row => row.total > 0)
       .map(row => ({
-        name: row.name,
+        name: row.name || row.customerName,
         quantity: row.total,
-        amount: row.amount
+        amount: row.amount || 0
       }))
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10) // Take top 10 customers only

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -52,7 +53,7 @@ export default function VehicleSalesmanCreate() {
       email: formData.email,
       address: formData.address,
       isActive: formData.isActive,
-      assignedVehicleId: formData.vehicleId || undefined // Changed from vehicleId
+      vehicleId: formData.vehicleId || undefined // Changed to vehicleId based on type definition
     });
     
     toast.success("Salesman created successfully");
