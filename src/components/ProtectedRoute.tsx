@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   redirectPath?: string;
 }
 
-export const ProtectedRoute = ({ 
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   redirectPath = '/login' 
 }: ProtectedRouteProps) => {
