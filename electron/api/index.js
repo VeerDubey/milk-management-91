@@ -14,6 +14,7 @@ import appInfo from './appInfo.js';
 import fileSystem from './fileSystem.js';
 import system from './system.js';
 import invoiceApi from './invoiceApi.js';
+import dbApi from './dbApi.js';
 
 /**
  * API Registry for centralizing all IPC handlers
@@ -44,6 +45,14 @@ const APIRegistry = {
     ipcMain.handle('download-invoice', (event, data, filename) => invoiceApi.downloadInvoice(event, data, filename));
     ipcMain.handle('print-invoice', (event, data) => invoiceApi.printInvoice(event, data));
     ipcMain.handle('get-printers', () => invoiceApi.getPrinters());
+    
+    // Register database APIs
+    ipcMain.handle('db-initialize', () => dbApi.initialize());
+    ipcMain.handle('db-save', (event, table, data) => dbApi.save(table, data));
+    ipcMain.handle('db-query', (event, table, params) => dbApi.query(table, params));
+    ipcMain.handle('db-get-by-id', (event, table, id) => dbApi.getById(table, id));
+    ipcMain.handle('db-delete', (event, table, id) => dbApi.delete(table, id));
+    ipcMain.handle('db-import-table', (event, table, data) => dbApi.importTable(table, data));
     
     console.log('All API handlers registered successfully');
   }

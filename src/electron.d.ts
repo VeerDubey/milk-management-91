@@ -53,6 +53,16 @@ interface ElectronAPI {
     readFromClipboard: () => Promise<string>;
     isPlatform: (platform: string) => Promise<boolean>;
   };
+  
+  // Database operations
+  db?: {
+    initialize: () => Promise<{ success: boolean; error?: string }>;
+    save: (table: string, data: any) => Promise<{ success: boolean; data?: any; error?: string }>;
+    query: (table: string, params?: any) => Promise<{ success: boolean; data?: any[]; error?: string }>;
+    getById: (table: string, id: string) => Promise<{ success: boolean; data?: any; error?: string }>;
+    delete: (table: string, id: string | string[]) => Promise<{ success: boolean; deleted?: number; error?: string }>;
+    importTable: (table: string, data: any[]) => Promise<{ success: boolean; count?: number; error?: string }>;
+  };
 }
 
 declare interface Window {

@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { OfflineIndicator } from "./OfflineIndicator";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -57,44 +58,26 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon">
                   <BellIcon className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-secondary text-xs flex items-center justify-center text-white">3</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <div className="max-h-80 overflow-auto">
-                  <DropdownMenuItem>
-                    <div className="flex flex-col">
-                      <span className="font-medium">New Order Received</span>
-                      <span className="text-xs text-muted-foreground">Customer: Raj Kumar</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex flex-col">
-                      <span className="font-medium">Payment Overdue</span>
-                      <span className="text-xs text-muted-foreground">Invoice #INV-2023-005</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex flex-col">
-                      <span className="font-medium">Low Stock Alert</span>
-                      <span className="text-xs text-muted-foreground">Product: Full Cream Milk</span>
-                    </div>
-                  </DropdownMenuItem>
+                <div className="flex flex-col gap-2 p-2">
+                  <div className="text-sm text-muted-foreground">No new notifications</div>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
             
+            <Button variant="ghost" size="icon" onClick={handleToggleTheme}>
+              {isDarkTheme ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="rounded-full hover:bg-muted"
-                >
+                <Button variant="ghost" size="icon" className="rounded-full">
                   <UserIcon className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -103,29 +86,14 @@ export function Layout({ children }: LayoutProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleToggleTheme}
-              className="rounded-full hover:bg-muted"
-            >
-              {isDarkTheme ? (
-                <SunIcon className="h-5 w-5" />
-              ) : (
-                <MoonIcon className="h-5 w-5" />
-              )}
-              <span className="sr-only">Toggle theme</span>
-            </Button>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="mx-auto max-w-7xl">
-            {children || <Outlet />}
-          </div>
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
         </main>
       </div>
     </div>
