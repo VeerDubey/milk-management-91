@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -118,6 +117,8 @@ export interface Vehicle {
   registrationNumber: string;
   type: string;
   description?: string;
+  driverName?: string; // Adding driverName property
+  capacity?: number; // Adding capacity property
   isActive: boolean;
 }
 
@@ -127,20 +128,23 @@ export interface Salesman {
   phone: string;
   address?: string;
   email?: string;
+  vehicleId?: string; // Adding vehicleId property
   isActive: boolean;
 }
 
 export interface TrackSheetRow {
   name: string;
+  customerId?: string;
   quantities: Record<string, number | string>; // Product name -> quantity
   total: number;
   amount: number;
-  customerId?: string;
+  products?: string[]; // Adding the products property
 }
 
 export interface TrackSheet {
   id: string;
   name: string;
+  title?: string; // Adding title property for backward compatibility
   date: string;
   rows: TrackSheetRow[];
   vehicleId?: string;
@@ -160,8 +164,12 @@ export interface Expense {
   description: string;
   paymentMethod: string;
   reference?: string;
-  recurring?: boolean;
-  recurringInterval?: string;
+  recurring: boolean;
+  recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  title: string; // Adding title property
+  paidTo?: string; // Adding paidTo property
+  notes?: string; // Adding notes property
+  isRecurring?: boolean; // Adding isRecurring for compatibility
   nextDueDate?: string;
 }
 
@@ -173,17 +181,81 @@ export interface UISettings {
   sidebarCollapsed: boolean;
   defaultPaymentMethod: string;
   defaultReportPeriod: string;
+  fontSize?: 'small' | 'medium' | 'large';
+  colorScheme?: string;
+  sidebarStyle?: 'compact' | 'expanded';
+  tableStyle?: 'bordered' | 'minimal' | 'striped';
+  notificationFrequency?: 'high' | 'medium' | 'low' | 'off';
+  language?: string;
+  currencyFormat?: string;
 }
 
-export interface ProductStockEntry {
+export interface Invoice {
+  id: string;
+  customerId: string;
+  invoiceNumber?: string;
+  number: string;
+  date: string;
+  dueDate: string;
+  items: Array<{
+    productId: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    amount: number;
+  }>;
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
+  notes: string;
+  termsAndConditions: string;
+  createdAt: string;
+  updatedAt: string;
+  discount?: number;
+  shipping?: number;
+}
+
+export interface StockRecord {
   id: string;
   productId: string;
   quantity: number;
   date: string;
-  supplierId?: string;
-  unitPrice?: number;
-  totalPrice?: number;
-  notes?: string;
   type: 'in' | 'out' | 'adjustment';
-  referenceNumber?: string;
+  notes?: string;
+  relatedEntryId?: string;
+  openingStock?: number;
+  received?: number;
+  dispatched?: number;
+  closingStock?: number;
+  minStockLevel?: number;
+}
+
+export interface StockEntryItem {
+  id?: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice?: number;
+  total?: number; // For compatibility with existing code
+}
+
+export interface StockEntry {
+  id: string;
+  supplierId: string;
+  date: string;
+  items: StockEntryItem[];
+  notes?: string;
+  totalAmount: number;
+  paymentStatus?: 'paid' | 'partial' | 'unpaid';
+  createdAt?: string;
+}
+
+export interface TaxSetting {
+  id: string;
+  name: string;
+  rate: number;
+  isActive: boolean;
+  isDefault: boolean;
 }

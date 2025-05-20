@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Vehicle, Salesman } from '@/types'; // Import needed types
 
 export default function VehicleTracking() {
   const { vehicles, salesmen, addVehicle, updateVehicle, deleteVehicle } = useData();
@@ -38,7 +39,8 @@ export default function VehicleTracking() {
       type: formData.type,
       driverName: formData.driverName || undefined,
       isActive: formData.isActive,
-      capacity: formData.capacity || undefined
+      capacity: formData.capacity || undefined,
+      description: '' // Add a default empty description
     });
     
     // Reset form

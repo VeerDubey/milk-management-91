@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { Save, UserPlus } from 'lucide-react';
+import { Salesman } from '@/types'; // Import Salesman type
 
 export default function VehicleSalesmanCreate() {
   const navigate = useNavigate();
