@@ -66,8 +66,8 @@ export default function VehicleAssignmentPage() {
     // Save the track sheet
     const newSheet = addTrackSheet(trackSheet);
     
-    // Make sure we have a valid ID before redirecting
-    if (newSheet && newSheet.id) {
+    // Check if newSheet exists and has an id before redirecting
+    if (newSheet && 'id' in newSheet) {
       // Redirect to edit the newly created track sheet
       window.location.href = `/track-sheet?id=${newSheet.id}`;
     } else {
