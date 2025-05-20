@@ -45,7 +45,7 @@ const Signup = () => {
       
       if (success) {
         toast.success('Account created successfully');
-        navigate('/');
+        navigate('/login');
       } else {
         toast.error('Email already in use');
       }

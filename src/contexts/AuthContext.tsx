@@ -10,7 +10,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -27,9 +28,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(defaultUser);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     // In a real app, this would validate credentials with a backend service
-    setUser(defaultUser);
+    if (email === 'admin@example.com' && password === 'admin123') {
+      setUser(defaultUser);
+      return true;
+    }
+    return false;
+  };
+
+  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+    // In a real app, this would create a new user in a backend service
+    // For now, just simulate a successful signup
+    return true;
   };
 
   const logout = () => {
@@ -41,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         login,
+        signup,
         logout,
         isAuthenticated: !!user
       }}

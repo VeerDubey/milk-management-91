@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/data/DataContext';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { Layout } from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
 import Customers from '@/pages/Customers';
@@ -18,6 +18,9 @@ import Reports from '@/pages/Reports';
 import Settings from '@/pages/Settings';
 import CustomerDetail from '@/pages/CustomerDetail';
 import ProductDetail from '@/pages/ProductDetail';
+// Import Authentication pages
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
 // Import placeholder components for missing pages
 import VehicleAssignment from '@/pages/VehicleAssignment';
 import TrackSheet from '@/pages/TrackSheet';
@@ -28,6 +31,7 @@ import InvoiceGenerator from '@/pages/InvoiceGenerator';
 import { OfflineStorageService } from '@/services/OfflineStorageService';
 import CustomerDirectory from '@/pages/CustomerDirectory';
 import SupplierDirectory from '@/pages/SupplierDirectory';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 // Create placeholder components for missing modules
 const SupplierDetail = () => <div>Supplier Detail Page</div>;
@@ -60,6 +64,11 @@ function AppContent() {
   }, []);
 
   const routes = [
+    // Public routes (no authentication required)
+    { path: '/login', element: <Login /> },
+    { path: '/signup', element: <Signup /> },
+    
+    // Protected routes (requiring authentication)
     { path: '/', element: <Dashboard /> },
     { path: '/dashboard', element: <Dashboard /> },
     { path: '/customers', element: <Customers /> },
@@ -107,13 +116,15 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <UISettingsProvider>
-        <InvoiceProvider>
-          <DataProvider>
-            <AppContent />
-          </DataProvider>
-        </InvoiceProvider>
-      </UISettingsProvider>
+      <AuthProvider>
+        <UISettingsProvider>
+          <InvoiceProvider>
+            <DataProvider>
+              <AppContent />
+            </DataProvider>
+          </InvoiceProvider>
+        </UISettingsProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
