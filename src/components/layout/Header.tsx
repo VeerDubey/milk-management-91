@@ -19,8 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useTheme } from '@/contexts/ThemeProvider';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -32,9 +30,7 @@ interface HeaderProps {
 }
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
-  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { uiSettings } = useData();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -56,10 +52,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   // Toggle theme
   const handleToggleTheme = () => {
     toggleTheme();
-    toast({
-      title: `${theme === 'dark' ? 'Light' : 'Dark'} mode activated`,
-      description: `Application switched to ${theme === 'dark' ? 'light' : 'dark'} mode`,
-    });
+    // Use alert for simplicity since toast might not be fully initialized
+    alert(`Switched to ${theme === 'dark' ? 'light' : 'dark'} mode`);
   };
 
   return (
@@ -102,16 +96,13 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>
-              {user ? user.name : 'My Account'}
-            </DropdownMenuLabel>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {
-              logout();
               navigate('/login');
             }}>
               Log out

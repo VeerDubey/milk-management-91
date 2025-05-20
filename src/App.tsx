@@ -26,6 +26,8 @@ import InvoiceHistory from '@/pages/InvoiceHistory';
 import InvoiceDetail from '@/pages/InvoiceDetail';
 import InvoiceGenerator from '@/pages/InvoiceGenerator';
 import { OfflineStorageService } from '@/services/OfflineStorageService';
+import CustomerDirectory from '@/pages/CustomerDirectory';
+import SupplierDirectory from '@/pages/SupplierDirectory';
 
 // Create placeholder components for missing modules
 const SupplierDetail = () => <div>Supplier Detail Page</div>;
@@ -87,6 +89,8 @@ function AppContent() {
     { path: '/invoice-detail/:id', element: <InvoiceDetail /> },
     { path: '/invoice-generator', element: <InvoiceGenerator /> },
     { path: '/vehicle-assignment', element: <VehicleAssignment /> },
+    { path: '/customer-directory', element: <CustomerDirectory /> },
+    { path: '/supplier-directory', element: <SupplierDirectory /> },
   ];
 
   return (

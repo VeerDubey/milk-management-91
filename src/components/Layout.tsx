@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { useTheme } from "@/contexts/ThemeProvider";
@@ -16,7 +17,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export function Layout({ children }: LayoutProps) {
   const { theme, toggleTheme } = useTheme();
   const { uiSettings } = useData();
   const isDarkTheme = theme === 'dark';
