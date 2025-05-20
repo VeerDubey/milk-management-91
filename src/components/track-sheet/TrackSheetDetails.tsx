@@ -1,17 +1,24 @@
+
 import React from 'react';
 import { TrackSheet } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, Clock, FileText } from 'lucide-react';
 import { calculateProductTotals } from '@/utils/trackSheetUtils';
 
 interface TrackSheetDetailsProps {
   trackSheet: TrackSheet;
+  onExportPdf?: () => void;
+  onExportExcel?: () => void;
 }
 
-export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
+export function TrackSheetDetails({ 
+  trackSheet,
+  onExportPdf,
+  onExportExcel
+}: TrackSheetDetailsProps) {
   // Extract product names from the first row's quantities
   const productNames = trackSheet.rows.length > 0 
     ? Object.keys(trackSheet.rows[0].quantities) 
@@ -27,11 +34,6 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
   const handlePrint = () => {
     window.print();
   };
-  
-  const handleDownload = () => {
-    // This would be implemented in a real app
-    console.log('Download functionality would be implemented here');
-  };
 
   return (
     <div className="space-y-6 print:p-10">
@@ -42,15 +44,32 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
+          {onExportExcel && (
+            <Button variant="outline" size="sm" onClick={onExportExcel}>
+              <FileText className="mr-2 h-4 w-4" />
+              Excel
+            </Button>
+          )}
+          {onExportPdf && (
+            <Button variant="outline" size="sm" onClick={onExportPdf}>
+              <Download className="mr-2 h-4 w-4" />
+              PDF
+            </Button>
+          )}
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <div className="print:mb-6">
+        <div className="text-3xl font-bold text-center print:text-2xl">
+          Vikas Milk Centers & Manali Enterprises
+        </div>
+        <div className="text-xl text-center text-muted-foreground print:text-base">
+          Distribution Track Sheet
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print:grid-cols-3 print:gap-8">
+        <Card className="print:shadow-none print:border-none">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Date</CardTitle>
           </CardHeader>
@@ -60,7 +79,7 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
         </Card>
         
         {trackSheet.vehicleName && (
-          <Card>
+          <Card className="print:shadow-none print:border-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Vehicle</CardTitle>
             </CardHeader>
@@ -71,7 +90,7 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
         )}
         
         {trackSheet.salesmanName && (
-          <Card>
+          <Card className="print:shadow-none print:border-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Salesman</CardTitle>
             </CardHeader>
@@ -82,7 +101,7 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
         )}
         
         {trackSheet.routeName && (
-          <Card>
+          <Card className="print:shadow-none print:border-none">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Route</CardTitle>
             </CardHeader>
@@ -93,7 +112,7 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
         )}
       </div>
       
-      <Card>
+      <Card className="print:shadow-none print:border-none">
         <CardHeader>
           <CardTitle>Distribution Details</CardTitle>
         </CardHeader>
@@ -108,6 +127,17 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
                   ))}
                   <TableHead className="text-center">Total</TableHead>
                   <TableHead className="text-center">Amount</TableHead>
+                  {trackSheet.deliveryDetails && (
+                    <>
+                      <TableHead className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          <span>Time</span>
+                        </div>
+                      </TableHead>
+                      <TableHead>Notes</TableHead>
+                    </>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -121,6 +151,16 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
                     ))}
                     <TableCell className="text-center">{row.total}</TableCell>
                     <TableCell className="text-center">₹{row.amount}</TableCell>
+                    {trackSheet.deliveryDetails && (
+                      <>
+                        <TableCell className="text-center">
+                          {trackSheet.deliveryDetails[row.customerId || '']?.time || ''}
+                        </TableCell>
+                        <TableCell>
+                          {trackSheet.deliveryDetails[row.customerId || '']?.notes || ''}
+                        </TableCell>
+                      </>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -134,12 +174,24 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
                   ))}
                   <TableCell className="text-center font-bold">{totalQuantity}</TableCell>
                   <TableCell className="text-center font-bold">₹{totalAmount}</TableCell>
+                  {trackSheet.deliveryDetails && <TableCell colSpan={2}></TableCell>}
                 </TableRow>
               </tfoot>
             </Table>
           </div>
         </CardContent>
       </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:mt-10">
+        <div>
+          <p className="text-sm font-medium mb-1">Salesman's Signature</p>
+          <div className="h-16 border-b border-dashed"></div>
+        </div>
+        <div>
+          <p className="text-sm font-medium mb-1">Manager's Signature</p>
+          <div className="h-16 border-b border-dashed"></div>
+        </div>
+      </div>
       
       {trackSheet.createdAt && (
         <div className="text-sm text-muted-foreground text-right print:hidden">

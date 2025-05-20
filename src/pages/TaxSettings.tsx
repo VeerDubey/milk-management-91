@@ -1,17 +1,25 @@
-
 import { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { 
   Card, 
   CardContent, 
+  CardDescription, 
   CardHeader, 
-  CardTitle, 
-  CardDescription 
+  CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -20,68 +28,64 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  DollarSign,
-  PlusCircle,
-  Trash,
-  Edit,
-  AlertCircle,
-  CheckCircle2
-} from "lucide-react";
 import { toast } from "sonner";
 import { TaxSetting } from "@/types";
 
-const TaxSettings = () => {
-  // This would come from the DataContext in a real implementation
-  const [taxSettings, setTaxSettings] = useState<TaxSetting[]>([
-    {
-      id: "1",
-      name: "CGST",
-      rate: 9,
-      isActive: true,
-      applicableOn: ["all"],
-      isDefault: true,
-      appliedTo: ["all"]
-    },
-    {
-      id: "2",
-      name: "SGST",
-      rate: 9,
-      isActive: true,
-      applicableOn: ["all"],
-      isDefault: false,
-      appliedTo: ["all"]
-    },
-    {
-      id: "3",
-      name: "IGST",
-      rate: 18,
-      isActive: false,
-      applicableOn: ["all"],
-      isDefault: false,
-      appliedTo: ["all"]
-    }
-  ]);
+export default function TaxSettings() {
+  const { uiSettings } = useData();
+
+  const [taxes, setTaxes] = useState<TaxSetting[]>(() => {
+    const saved = localStorage.getItem("taxSettings");
+    return saved
+      ? JSON.parse(saved)
+      : [
+          {
+            id: "tax-gst",
+            name: "GST",
+            rate: 5,
+            isActive: true,
+            applicableOn: ["all"],
+            isDefault: true,
+            appliedTo: ["all"]
+          },
+          {
+            id: "tax-cgst",
+            name: "CGST",
+            rate: 2.5,
+            isActive: true,
+            applicableOn: ["milk", "curd"],
+            isDefault: false,
+            appliedTo: ["invoices"]
+          },
+          {
+            id: "tax-sgst",
+            name: "SGST",
+            rate: 2.5,
+            isActive: true,
+            applicableOn: ["milk", "curd"],
+            isDefault: false,
+            appliedTo: ["invoices"]
+          }
+        ];
+  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingTax, setEditingTax] = useState<string | null>(null);
-  const [deletingTax, setDeletingTax] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  
+  const [formData, setFormData] = useState<{
+    name: string;
+    rate: number;
+    isActive: boolean;
+    applicableOn: string[];
+    isDefault: boolean;
+    appliedTo: string[];
+  }>({
     name: "",
     rate: 0,
     isActive: true,
-    applicableOn: ["all"] as string[],
+    applicableOn: ["all"],
     isDefault: false,
-    appliedTo: ["all"] as string[]
+    appliedTo: ["all"]
   });
 
   const handleEdit = (tax: TaxSetting) => {
@@ -97,56 +101,7 @@ const TaxSettings = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (taxId: string) => {
-    setDeletingTax(taxId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (deletingTax) {
-      // Filter out the tax to be deleted
-      setTaxSettings(taxSettings.filter(tax => tax.id !== deletingTax));
-      toast.success("Tax setting deleted successfully");
-      setIsDeleteDialogOpen(false);
-      setDeletingTax(null);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim()) {
-      toast.error("Tax name cannot be empty");
-      return;
-    }
-
-    if (isNaN(formData.rate) || formData.rate < 0) {
-      toast.error("Tax rate must be a positive number");
-      return;
-    }
-
-    if (editingTax) {
-      // Update existing tax
-      setTaxSettings(taxSettings.map(tax => 
-        tax.id === editingTax 
-          ? { ...tax, ...formData } 
-          : tax
-      ));
-      toast.success("Tax setting updated successfully");
-    } else {
-      // Add new tax
-      const newTax: TaxSetting = {
-        id: `tax-${Date.now()}`,
-        ...formData
-      };
-      setTaxSettings([...taxSettings, newTax]);
-      toast.success("Tax setting added successfully");
-    }
-
-    handleCloseDialog();
-  };
-
-  const handleCloseDialog = () => {
+  const handleAdd = () => {
     setFormData({
       name: "",
       rate: 0,
@@ -156,224 +111,178 @@ const TaxSettings = () => {
       appliedTo: ["all"]
     });
     setEditingTax(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.name.trim()) {
+      toast.error("Please enter a name for the tax");
+      return;
+    }
+
+    if (formData.rate <= 0) {
+      toast.error("Please enter a valid tax rate");
+      return;
+    }
+
+    const newTax = {
+      id: editingTax || `tax-${Date.now()}`,
+      name: formData.name,
+      rate: formData.rate,
+      isActive: formData.isActive,
+      applicableOn: formData.applicableOn,
+      isDefault: formData.isDefault,
+      appliedTo: formData.appliedTo
+    };
+
+    // If setting a new default, remove default from others
+    if (newTax.isDefault) {
+      setTaxes(prevTaxes => 
+        prevTaxes.map(tax => 
+          tax.id !== newTax.id ? { ...tax, isDefault: false } : tax
+        )
+      );
+    }
+
+    if (editingTax) {
+      setTaxes(prevTaxes =>
+        prevTaxes.map(tax => (tax.id === editingTax ? newTax : tax))
+      );
+      toast.success("Tax updated successfully");
+    } else {
+      setTaxes(prevTaxes => [...prevTaxes, newTax]);
+      toast.success("Tax added successfully");
+    }
+
+    // Save to localStorage
+    localStorage.setItem("taxSettings", JSON.stringify(
+      editingTax 
+        ? taxes.map(tax => (tax.id === editingTax ? newTax : tax)) 
+        : [...taxes, newTax]
+    ));
+
     setIsDialogOpen(false);
   };
 
+  const handleDelete = (id: string) => {
+    const tax = taxes.find(t => t.id === id);
+    
+    if (tax?.isDefault) {
+      toast.error("Cannot delete the default tax. Please set another tax as default first.");
+      return;
+    }
+    
+    setTaxes(taxes.filter(tax => tax.id !== id));
+    localStorage.setItem("taxSettings", JSON.stringify(taxes.filter(tax => tax.id !== id)));
+    toast.success("Tax deleted successfully");
+  };
+
+  const handleToggleActive = (id: string) => {
+    setTaxes(prevTaxes =>
+      prevTaxes.map(tax => {
+        if (tax.id === id) {
+          // Don't allow deactivating the default tax
+          if (tax.isDefault && tax.isActive) {
+            toast.error("Cannot deactivate the default tax. Please set another tax as default first.");
+            return tax;
+          }
+          return { ...tax, isActive: !tax.isActive };
+        }
+        return tax;
+      })
+    );
+
+    // Save to localStorage after updating
+    localStorage.setItem(
+      "taxSettings",
+      JSON.stringify(
+        taxes.map(tax => {
+          if (tax.id === id) {
+            if (tax.isDefault && tax.isActive) return tax;
+            return { ...tax, isActive: !tax.isActive };
+          }
+          return tax;
+        })
+      )
+    );
+  };
+
+  const handleMakeDefault = (id: string) => {
+    setTaxes(prevTaxes =>
+      prevTaxes.map(tax => ({
+        ...tax,
+        isDefault: tax.id === id
+      }))
+    );
+
+    // Save to localStorage after updating
+    localStorage.setItem(
+      "taxSettings",
+      JSON.stringify(
+        taxes.map(tax => ({
+          ...tax,
+          isDefault: tax.id === id
+        }))
+      )
+    );
+
+    toast.success(`${taxes.find(t => t.id === id)?.name} set as default tax`);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container space-y-6 py-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tax Settings</h1>
           <p className="text-muted-foreground">
-            Configure tax rates and settings for invoices
+            Manage tax configurations for your business
           </p>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingTax(null);
-              setFormData({
-                name: "",
-                rate: 0,
-                isActive: true,
-                applicableOn: ["all"],
-                isDefault: false,
-                appliedTo: ["all"]
-              });
-            }}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Tax
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>{editingTax ? "Edit Tax Setting" : "Add Tax Setting"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Tax Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., GST, VAT, Sales Tax"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="rate">Tax Rate (%)</Label>
-                <Input
-                  id="rate"
-                  type="number"
-                  value={formData.rate}
-                  onChange={e => setFormData({ ...formData, rate: parseFloat(e.target.value) })}
-                  step="0.01"
-                  min="0"
-                  required
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={checked => setFormData({ ...formData, isActive: checked })}
-                />
-                <Label htmlFor="isActive">Active</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isDefault"
-                  checked={formData.isDefault}
-                  onCheckedChange={checked => setFormData({ ...formData, isDefault: checked })}
-                />
-                <Label htmlFor="isDefault">Set as Default</Label>
-              </div>
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingTax ? "Update" : "Add"} Tax
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleAdd}>Add New Tax</Button>
       </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>GST Configuration</CardTitle>
-            <CardDescription>Configure GST settings for invoices</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="gstType">GST Type</Label>
-              <select
-                id="gstType"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="regular">Regular GST</option>
-                <option value="composite">Composition Scheme</option>
-                <option value="exempt">GST Exempt</option>
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="gstNumber">GST Number</Label>
-              <Input id="gstNumber" placeholder="e.g., 22AAAAA0000A1Z5" />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch id="showGstInInvoice" defaultChecked={true} />
-              <Label htmlFor="showGstInInvoice">Show GST details in invoice</Label>
-            </div>
-            
-            <Button className="w-full">Save GST Settings</Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Tax Settings</CardTitle>
-            <CardDescription>Configure how taxes appear on invoices</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="taxCalculation">Tax Calculation</Label>
-              <select
-                id="taxCalculation"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="exclusive">Tax Exclusive (Add to subtotal)</option>
-                <option value="inclusive">Tax Inclusive (Included in price)</option>
-              </select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch id="itemWiseTax" defaultChecked={false} />
-              <Label htmlFor="itemWiseTax">Enable item-wise tax rates</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch id="showTaxBreakdown" defaultChecked={true} />
-              <Label htmlFor="showTaxBreakdown">Show tax breakdown in invoice</Label>
-            </div>
-            
-            <Button className="w-full">Save Invoice Settings</Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Default Tax Rates</CardTitle>
-            <CardDescription>Configure default tax rates for new products</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="defaultTaxCategory">Default Tax Category</Label>
-              <select
-                id="defaultTaxCategory"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="standard">Standard Rate (18%)</option>
-                <option value="reduced">Reduced Rate (12%)</option>
-                <option value="special">Special Rate (5%)</option>
-                <option value="exempt">Tax Exempt (0%)</option>
-              </select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch id="applyDefaultToAll" defaultChecked={true} />
-              <Label htmlFor="applyDefaultToAll">Apply default to all new products</Label>
-            </div>
-            
-            <Button className="w-full">Save Default Settings</Button>
-          </CardContent>
-        </Card>
-      </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Tax Rates</CardTitle>
-          <CardDescription>Manage your tax rates and their applicability</CardDescription>
+          <CardDescription>Configure tax rates for different product categories</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[100px]">Status</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Rate (%)</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Applied To</TableHead>
+                <TableHead className="text-right">Rate</TableHead>
+                <TableHead>Default</TableHead>
+                <TableHead>Applicable On</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {taxSettings.map(tax => (
+              {taxes.map((tax) => (
                 <TableRow key={tax.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {tax.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{tax.rate}%</TableCell>
                   <TableCell>
-                    {tax.isActive ? (
-                      <span className="flex items-center text-green-600">
-                        <CheckCircle2 className="h-4 w-4 mr-1" /> Active
+                    <Switch
+                      checked={tax.isActive}
+                      onCheckedChange={() => handleToggleActive(tax.id)}
+                      aria-label="Toggle tax status"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{tax.name}</TableCell>
+                  <TableCell className="text-right">{tax.rate}%</TableCell>
+                  <TableCell>
+                    {tax.isDefault ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500">
+                        Default
                       </span>
                     ) : (
-                      <span className="flex items-center text-amber-600">
-                        <AlertCircle className="h-4 w-4 mr-1" /> Inactive
-                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMakeDefault(tax.id)}
+                      >
+                        Set Default
+                      </Button>
                     )}
                   </TableCell>
                   <TableCell>
@@ -383,19 +292,20 @@ const TaxSettings = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => handleEdit(tax)}
                       >
-                        <Edit className="h-4 w-4" />
+                        Edit
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => handleDelete(tax.id)}
+                        disabled={tax.isDefault}
                       >
-                        <Trash className="h-4 w-4" />
+                        Delete
                       </Button>
                     </div>
                   </TableCell>
@@ -405,33 +315,88 @@ const TaxSettings = () => {
           </Table>
         </CardContent>
       </Card>
-      
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Tax Setting</DialogTitle>
+            <DialogTitle>{editingTax ? "Edit Tax" : "Add New Tax"}</DialogTitle>
+            <DialogDescription>
+              {editingTax
+                ? "Update the tax configuration"
+                : "Add a new tax to your system"}
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete this tax setting? This action cannot be undone.</p>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Tax Name</Label>
+              <Input
+                id="name"
+                placeholder="GST"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="rate">Tax Rate (%)</Label>
+              <Input
+                id="rate"
+                type="number"
+                placeholder="5"
+                value={formData.rate}
+                onChange={(e) =>
+                  setFormData({ ...formData, rate: parseFloat(e.target.value) || 0 })
+                }
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) =>
+                  setFormData({
+                    ...formData,
+                    isActive: checked === true,
+                  })
+                }
+              />
+              <label
+                htmlFor="isActive"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Active
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isDefault"
+                checked={formData.isDefault}
+                onCheckedChange={(checked) =>
+                  setFormData({
+                    ...formData,
+                    isDefault: checked === true,
+                  })
+                }
+              />
+              <label
+                htmlFor="isDefault"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Set as Default Tax
+              </label>
+            </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete}
-            >
-              Delete
+            <Button onClick={handleSubmit}>
+              {editingTax ? "Update" : "Add"} Tax
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-};
-
-export default TaxSettings;
+}
