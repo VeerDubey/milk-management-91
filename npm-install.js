@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-console.log('=== ENFORCING NPM FOR ALL DEPENDENCIES ===');
-console.log('This script will bypass Bun and use npm directly to avoid git clone issues.');
+console.log('=== FORCIBLY USING NPM INSTEAD OF BUN ===');
+console.log('This script will ensure we use npm for everything and completely ignore Bun.');
 
 try {
   // Check if npm is installed
