@@ -35,4 +35,3 @@ if (scriptPath) {
 } else {
   console.error('Error: Could not locate electron-scripts.js');
 }
-
