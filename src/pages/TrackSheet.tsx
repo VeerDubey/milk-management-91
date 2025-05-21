@@ -182,10 +182,10 @@ export default function TrackSheet() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Vikas Milk Centers</h1>
-          <p className="text-muted-foreground">Track Sheet & Order Entry System</p>
+          <h1 className="text-3xl font-bold tracking-tight">Track Sheet</h1>
+          <p className="text-muted-foreground">Create and manage daily delivery track sheets</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex gap-2">
           <Button 
             variant={activeTab === 'sheet' ? 'default' : 'outline'} 
             onClick={() => setActiveTab('sheet')}
@@ -197,9 +197,6 @@ export default function TrackSheet() {
             onClick={() => setActiveTab('analytics')}
           >
             Analytics
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="/vehicle-assignment">Vehicle Assignment</a>
           </Button>
         </div>
       </div>

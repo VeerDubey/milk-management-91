@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeProvider';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,12 +17,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { theme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Please enter both email and password');
+      toast.error('Please fill all fields');
       return;
     }
     
@@ -49,9 +51,9 @@ const Login = () => {
       <div className="w-full max-w-md">
         <Card className="border shadow-lg">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardTitle className="text-2xl">Vikas Milk Centre</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Enter your credentials to login to your account
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -90,6 +92,9 @@ const Login = () => {
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
+                    <span className="sr-only">
+                      {showPassword ? "Hide password" : "Show password"}
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -121,6 +126,10 @@ const Login = () => {
             </CardFooter>
           </form>
         </Card>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-muted-foreground">Demo credentials:</p>
+          <p className="text-xs text-muted-foreground">Email: admin@example.com / Password: admin123</p>
+        </div>
       </div>
     </div>
   );

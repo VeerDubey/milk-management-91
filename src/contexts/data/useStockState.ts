@@ -43,7 +43,7 @@ export function useStockState(updateSupplier: Function) {
   };
   
   const addStockEntry = (entry: Omit<StockEntry, "id">) => {
-    // Generate ID for the new entry
+    // Generate ID only if not provided
     const newEntry = {
       ...entry,
       id: `se${Date.now()}`
@@ -63,8 +63,8 @@ export function useStockState(updateSupplier: Function) {
           addStockRecord({
             date: entry.date,
             productId: item.productId,
-            quantity: item.quantity, // Add the required quantity field
-            type: 'in', // Add the required type field
+            quantity: item.quantity,
+            type: 'in',
             openingStock: latestRecord.closingStock,
             received: item.quantity,
             dispatched: 0,
@@ -75,8 +75,8 @@ export function useStockState(updateSupplier: Function) {
           addStockRecord({
             date: entry.date,
             productId: item.productId,
-            quantity: item.quantity, // Add the required quantity field
-            type: 'in', // Add the required type field
+            quantity: item.quantity,
+            type: 'in',
             openingStock: 0,
             received: item.quantity,
             dispatched: 0,

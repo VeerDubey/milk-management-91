@@ -9,7 +9,6 @@ import {
   Moon,
   Menu,
   Settings,
-  LogOut
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,23 +19,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 import { useTheme } from '@/contexts/ThemeProvider';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useData } from '@/contexts/data/DataContext';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   toggleSidebar?: () => void;
 }
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
+  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { uiSettings } = useData();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { logout } = useAuth();
 
   useEffect(() => {
     const handleOnlineStatusChange = () => {
@@ -55,13 +56,10 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   // Toggle theme
   const handleToggleTheme = () => {
     toggleTheme();
-    // Use alert for simplicity since toast might not be fully initialized
-    alert(`Switched to ${theme === 'dark' ? 'light' : 'dark'} mode`);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+    toast({
+      title: `${theme === 'dark' ? 'Light' : 'Dark'} mode activated`,
+      description: `Application switched to ${theme === 'dark' ? 'light' : 'dark'} mode`,
+    });
   };
 
   return (
@@ -104,14 +102,18 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {user ? user.name : 'My Account'}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={() => {
+              logout();
+              navigate('/login');
+            }}>
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

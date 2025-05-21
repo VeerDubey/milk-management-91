@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -143,11 +142,6 @@ export interface TrackSheetRow {
   products?: string[]; // Adding the products property
 }
 
-export interface DeliveryDetail {
-  time: string;
-  notes: string;
-}
-
 export interface TrackSheet {
   id: string;
   name: string;
@@ -161,7 +155,6 @@ export interface TrackSheet {
   routeName?: string;
   createdAt?: string;
   savedAt?: string;
-  deliveryDetails?: Record<string, DeliveryDetail>;
 }
 
 export interface Expense {
