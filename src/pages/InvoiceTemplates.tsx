@@ -6,21 +6,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useInvoice, InvoiceTemplate } from '@/contexts/InvoiceContext';
+import { useInvoices } from '@/contexts/InvoiceContext';
 import InvoiceTemplateGallery from '@/components/invoices/InvoiceTemplateGallery';
 import { HexColorPicker } from 'react-colorful';
 import { toast } from 'sonner';
 import { ArrowLeft, Settings, Plus, Check, Eye } from 'lucide-react';
 
 export default function InvoiceTemplates() {
-  const { templates, companyInfo, updateCompanyInfo } = useInvoice();
+  const { templates, companyInfo, setCompanyInfo } = useInvoices();
   const [activeTab, setActiveTab] = useState('gallery');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [primaryColor, setPrimaryColor] = useState('#4F46E5');
   
   const handleUpdateCompanyInfo = (field: string, value: string) => {
-    updateCompanyInfo({ [field]: value } as any);
+    setCompanyInfo({ [field]: value } as any);
     toast.success(`${field} updated successfully`);
   };
   

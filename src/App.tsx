@@ -1,9 +1,10 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Layout from './components/Layout';
+import { Layout } from './components/Layout';
 import Master from './pages/Master';
 import Customers from './pages/Customers';
 import CustomerList from './pages/CustomerList';

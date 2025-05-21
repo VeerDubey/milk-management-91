@@ -1,9 +1,8 @@
 
-// This will be a partial update to fix the download/print functionality
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice, Customer, Product } from '@/types';
 import { 
-  createInvoicePreview, 
+  generateInvoicePreview, 
   generateInvoiceNumber,
   INVOICE_TEMPLATES
 } from '../utils/invoiceUtils';
@@ -104,7 +103,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   };
   
   // Function to generate PDF preview
-  const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
+  const generateInvoicePreviewImpl = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       // Mock data for demo - in a real app, we'd fetch these from the contexts
       const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
@@ -113,7 +112,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const templateToUse = templateId || selectedTemplateId;
       
       // Generate and return the PDF preview
-      return createInvoicePreview(
+      return generateInvoicePreview(
         invoice,
         companyInfo,
         products,
@@ -131,15 +130,24 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const pdfData = await generateInvoicePreview(invoice, templateId);
+      const pdfData = await generateInvoicePreviewImpl(invoice, templateId);
       
       // When running in Electron
-      if (window.electron) {
-        const result = await window.electron.invoke('download-invoice', pdfData, `invoice-${invoice.id}.pdf`);
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to download invoice');
+      if (window.electron && typeof window.electron === 'object') {
+        if (window.electron.invoke) {
+          const result = await window.electron.invoke('download-invoice', pdfData, `invoice-${invoice.id}.pdf`);
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to download invoice');
+          }
+          toast.success('Invoice downloaded successfully');
+        } else {
+          // Fallback for web browsers
+          const link = document.createElement('a');
+          link.href = pdfData;
+          link.download = `invoice-${invoice.id}.pdf`;
+          link.click();
+          toast.success('Invoice downloaded successfully');
         }
-        toast.success('Invoice downloaded successfully');
       } 
       // When running in web browser
       else {
@@ -162,15 +170,31 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const pdfData = await generateInvoicePreview(invoice, templateId);
+      const pdfData = await generateInvoicePreviewImpl(invoice, templateId);
       
       // When running in Electron
-      if (window.electron) {
-        const result = await window.electron.invoke('print-invoice', pdfData);
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to print invoice');
+      if (window.electron && typeof window.electron === 'object') {
+        if (window.electron.invoke) {
+          const result = await window.electron.invoke('print-invoice', pdfData);
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to print invoice');
+          }
+          toast.success('Invoice sent to printer');
+        } else {
+          // Fallback for web browsers
+          const printWindow = window.open(pdfData, '_blank');
+          if (!printWindow) {
+            throw new Error('Pop-up blocked. Please allow pop-ups to print.');
+          }
+          
+          printWindow.addEventListener('load', () => {
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          });
+          
+          toast.success('Invoice print dialog opened');
         }
-        toast.success('Invoice sent to printer');
       } 
       // When running in web browser
       else {
@@ -197,7 +221,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   
   // Function to get available printers (Electron only)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
-    if (window.electron) {
+    if (window.electron && typeof window.electron === 'object' && window.electron.invoke) {
       try {
         return await window.electron.invoke('get-printers');
       } catch (error) {
@@ -221,7 +245,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         templates: INVOICE_TEMPLATES,
         companyInfo,
         setCompanyInfo,
-        generateInvoicePreview,
+        generateInvoicePreview: generateInvoicePreviewImpl,
         downloadInvoice,
         printInvoice,
         getPrinters,

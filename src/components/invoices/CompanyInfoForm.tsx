@@ -14,17 +14,18 @@ interface CompanyInfoFormProps {
 }
 
 export default function CompanyInfoForm({ onSave }: CompanyInfoFormProps) {
-  const { companyInfo, updateCompanyInfo } = useInvoices();
+  const { companyInfo, setCompanyInfo } = useInvoices();
   
   const { register, handleSubmit, formState: { isDirty, isValid } } = useForm({
     defaultValues: companyInfo
   });
   
   const onSubmit = (data: any) => {
-    updateCompanyInfo(data);
+    setCompanyInfo(data);
     if (onSave) {
       onSave(data);
     }
+    toast.success("Company information saved successfully");
   };
   
   return (

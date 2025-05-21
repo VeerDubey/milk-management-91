@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -239,21 +238,23 @@ export default function OrderHistory() {
     
     const trackSheetRows: TrackSheetRow[] = order.items.map(item => {
       const product = products.find(p => p.id === item.productId);
+      const quantities: Record<string, number | string> = {};
+      quantities[product?.id || "unknown"] = item.quantity;
+      
       return {
-        productId: item.productId,
-        productName: product?.name || "Unknown Product",
-        quantity: item.quantity,
-        rate: product?.price || 0,
+        name: product?.name || "Unknown Product",
+        quantities: quantities,
+        total: item.quantity,
         amount: item.quantity * (product?.price || 0)
       };
     });
     
     const newTrackSheet: Omit<TrackSheet, "id"> = {
+      name: `Track Sheet - ${format(tomorrow, 'yyyy-MM-dd')}`,
       date: format(tomorrow, 'yyyy-MM-dd'),
       vehicleId: order.vehicleId || "",
       salesmanId: order.salesmanId || "",
       rows: trackSheetRows,
-      total: trackSheetRows.reduce((sum, row) => sum + row.amount, 0),
       notes: `Carried forward from order ${order.id}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -268,7 +269,7 @@ export default function OrderHistory() {
     // Offer to navigate to the newly created track sheet
     setTimeout(() => {
       const shouldNavigate = window.confirm("Do you want to view the created track sheet?");
-      if (shouldNavigate) {
+      if (shouldNavigate && createdSheet && createdSheet.id) {
         navigate(`/track-sheet/${createdSheet.id}`);
       }
     }, 500);
