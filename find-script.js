@@ -32,8 +32,14 @@ function findScript(startDir) {
 const scriptPath = findScript(__dirname);
 if (scriptPath) {
   console.log(`Please run: node ${scriptPath} [command]`);
-  console.log(`If you're having issues with installation, please run: node force-npm.js`);
+  console.log('\n=== IMPORTANT INSTALLATION NOTE ===');
+  console.log('If you\'re seeing "git clone" errors with @electron/node-gyp, please run:');
+  console.log('  node force-npm.js');
+  console.log('This will bypass Bun and use npm directly for installation.\n');
 } else {
   console.error('Error: Could not locate electron-scripts.js');
-  console.log(`If you're having issues with installation, please run: node force-npm.js`);
+  console.log('\n=== IMPORTANT INSTALLATION NOTE ===');
+  console.log('If you\'re seeing "git clone" errors with @electron/node-gyp, please run:');
+  console.log('  node force-npm.js');
+  console.log('This will bypass Bun and use npm directly for installation.\n');
 }
