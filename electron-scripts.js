@@ -17,7 +17,22 @@ function runCommand(command) {
   } catch (error) {
     console.error(`Command failed: ${command}`);
     console.error(error);
-    process.exit(1);
+    
+    // Special handling for npm install failures
+    if (command.includes('npm install') || command.includes('npx')) {
+      console.log('Attempting alternative command without git...');
+      try {
+        // Try alternative command without git
+        const altCommand = command + ' --no-git';
+        console.log(`\n> ${altCommand}\n`);
+        execSync(altCommand, { stdio: 'inherit' });
+      } catch (altError) {
+        console.error('Alternative command also failed:', altError);
+        process.exit(1);
+      }
+    } else {
+      process.exit(1);
+    }
   }
 }
 

@@ -21,7 +21,7 @@ try {
   
   console.log('Installing main dependencies...');
   // Using all safety flags to maximize compatibility and avoid git
-  execSync('npm install --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git', { stdio: 'inherit' });
+  execSync('npm install --no-git --ignore-scripts --no-fund --no-audit --legacy-peer-deps', { stdio: 'inherit' });
   
   // Explicitly handle problematic packages with special flags
   console.log('Handling potentially problematic packages...');
@@ -41,9 +41,13 @@ try {
   console.log('Installing Lovable tagger plugin...');
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ lovable-tagger@latest', { stdio: 'inherit' });
 
-  // Explicitly install node-gyp to avoid git issues
-  console.log('Installing node-gyp explicitly...');
-  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ node-gyp@latest @electron/node-gyp@latest', { stdio: 'inherit' });
+  // Install node-gyp packages from npm directly without git
+  console.log('Installing node-gyp explicitly from npm registry...');
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ node-gyp@latest', { stdio: 'inherit' });
+  
+  // Install @electron/node-gyp directly from npm without git
+  console.log('Installing @electron/node-gyp directly from registry...');
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ @electron/node-gyp@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
