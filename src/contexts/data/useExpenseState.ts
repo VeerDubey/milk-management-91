@@ -19,6 +19,7 @@ export function useExpenseState() {
       id: `exp${Date.now()}`
     };
     setExpenses([...expenses, newExpense]);
+    return newExpense; // Return the newly created expense
   };
 
   const updateExpense = (id: string, expenseData: Partial<Expense>) => {
