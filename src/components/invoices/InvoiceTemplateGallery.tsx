@@ -43,7 +43,7 @@ const InvoiceTemplateGallery: React.FC<InvoiceTemplateGalleryProps> = ({
             <div className="aspect-[8.5/11] bg-muted/20 relative">
               {/* Template preview image */}
               <img 
-                src={template.thumbnailUrl || '/placeholder.svg'} 
+                src={template.previewImage || '/placeholder.svg'} 
                 alt={template.name} 
                 className="w-full h-full object-cover"
               />

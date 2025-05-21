@@ -134,8 +134,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       // When running in Electron
       if (window.electron && typeof window.electron === 'object') {
-        if (window.electron.invoke) {
-          const result = await window.electron.invoke('download-invoice', pdfData, `invoice-${invoice.id}.pdf`);
+        if (typeof window.electron.downloadInvoice === 'function') {
+          const result = await window.electron.downloadInvoice(pdfData, `invoice-${invoice.id}.pdf`);
           if (!result.success) {
             throw new Error(result.error || 'Failed to download invoice');
           }
@@ -174,8 +174,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       // When running in Electron
       if (window.electron && typeof window.electron === 'object') {
-        if (window.electron.invoke) {
-          const result = await window.electron.invoke('print-invoice', pdfData);
+        if (typeof window.electron.printInvoice === 'function') {
+          const result = await window.electron.printInvoice(pdfData);
           if (!result.success) {
             throw new Error(result.error || 'Failed to print invoice');
           }
@@ -221,9 +221,9 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   
   // Function to get available printers (Electron only)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
-    if (window.electron && typeof window.electron === 'object' && window.electron.invoke) {
+    if (window.electron && typeof window.electron === 'object' && typeof window.electron.getPrinters === 'function') {
       try {
-        return await window.electron.invoke('get-printers');
+        return await window.electron.getPrinters();
       } catch (error) {
         console.error('Error getting printers:', error);
         return { success: false, printers: [] };

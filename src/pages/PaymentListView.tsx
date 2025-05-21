@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,6 +54,13 @@ import {
 import { toast } from 'sonner';
 import { exportToPdf } from '@/utils/pdfUtils';
 
+// Augment the Payment type
+interface ExtendedPayment extends Payment {
+  status?: string;
+  referenceNumber?: string;
+  paymentMethod?: string;
+}
+
 export default function PaymentListView() {
   const { payments, customers, deletePayment, deleteMultiplePayments } = useData();
   const navigate = useNavigate();
@@ -84,7 +90,7 @@ export default function PaymentListView() {
   };
 
   // Filter and sort payments
-  const filteredPayments = payments
+  const filteredPayments = (payments as ExtendedPayment[])
     .filter(payment => {
       const customerName = customers.find(c => c.id === payment.customerId)?.name || '';
       const matchesSearch = 

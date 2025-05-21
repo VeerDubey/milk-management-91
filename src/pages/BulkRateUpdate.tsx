@@ -76,7 +76,6 @@ export default function BulkRateUpdate() {
       });
     } else {
       addCustomerProductRate({
-        id: uuidv4(),
         customerId: selectedCustomer,
         productId,
         rate: newRate,

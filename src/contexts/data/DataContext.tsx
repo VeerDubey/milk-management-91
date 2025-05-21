@@ -12,7 +12,7 @@ import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { useTrackSheetState } from './useTrackSheetState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
-import { useInvoice } from '@/contexts/InvoiceContext';
+import { useInvoices } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -32,7 +32,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const trackSheetState = useTrackSheetState();
   
   // Use the actual invoice context data
-  const invoiceState = useInvoice();
+  const invoiceState = useInvoices();
 
   // Combine all state objects into one
   const contextValue: DataContextType = {

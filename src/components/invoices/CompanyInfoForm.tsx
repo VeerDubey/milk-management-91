@@ -78,7 +78,7 @@ export default function CompanyInfoForm({ onSave }: CompanyInfoFormProps) {
                 size="sm" 
                 className="absolute -top-2 -right-2"
                 onClick={() => {
-                  updateCompanyInfo({ ...companyInfo, logoUrl: undefined });
+                  setCompanyInfo({ ...companyInfo, logoUrl: undefined });
                   toast.success("Logo removed");
                 }}
               >
