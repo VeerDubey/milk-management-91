@@ -2,155 +2,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { OfflineStorageService } from '@/services/OfflineStorageService';
 import { toast } from 'sonner';
-
-// Define types for our data
-export interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone: string;
-  address?: string;
-  outstandingBalance?: number;
-  lastPaymentDate?: string;
-  lastPaymentAmount?: number;
-  area?: string;
-  isActive?: boolean;
-  // Add other customer properties as needed
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  stock?: number;
-  category?: string;
-  // Add other product properties as needed
-}
-
-export interface Order {
-  id: string;
-  customerId: string;
-  products: Array<{ productId: string; quantity: number; price: number }>;
-  totalAmount: number;
-  date: string;
-  status: 'pending' | 'delivered' | 'canceled';
-  vehicleId?: string;
-  salesmanId?: string;
-  items?: Array<any>; // For compatibility with existing code
-  total?: number; // For compatibility with existing code
-  // Add other order properties as needed
-}
-
-export interface Payment {
-  id: string;
-  customerId: string;
-  amount: number;
-  date: string;
-  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-  notes?: string;
-  // Add other payment properties as needed
-}
-
-export interface Invoice {
-  id: string;
-  customerId: string;
-  orderId?: string;
-  amount: number;
-  date: string;
-  dueDate: string;
-  status: 'paid' | 'pending' | 'overdue';
-  // Add other invoice properties as needed
-}
-
-export interface CustomerProductRate {
-  id: string;
-  customerId: string;
-  productId: string;
-  rate: number;
-  effectiveFrom: string;
-  // Add other properties as needed
-}
-
-export interface SupplierProductRate {
-  id: string;
-  supplierId: string;
-  productId: string;
-  rate: number;
-  effectiveFrom: string;
-  // Add other properties as needed
-}
-
-export interface Supplier {
-  id: string;
-  name: string;
-  // Add other properties as needed
-}
-
-export interface Vehicle {
-  id: string;
-  name: string;
-  // Add other properties as needed
-}
-
-export interface Salesman {
-  id: string;
-  name: string;
-  // Add other properties as needed
-}
-
-export interface UISettings {
-  sidebarCollapsed: boolean;
-  darkMode: boolean;
-  language: string;
-  // Add other UI settings as needed
-}
-
-export interface DataContextType {
-  customers: Customer[];
-  products: Product[];
-  orders: Order[];
-  invoices: Invoice[];
-  payments: Payment[]; // Added payments to DataContextType
-  customerProductRates: CustomerProductRate[]; // Added for compatibility
-  supplierProductRates: SupplierProductRate[]; // Added for compatibility
-  suppliers: Supplier[]; // Added for compatibility 
-  vehicles: Vehicle[]; // Added for compatibility
-  salesmen: Salesman[]; // Added for compatibility
-  uiSettings: UISettings;
-  addCustomer: (customer: Omit<Customer, 'id'>) => Promise<Customer>;
-  updateCustomer: (id: string, customer: Partial<Customer>) => Promise<Customer | null>;
-  deleteCustomer: (id: string) => Promise<boolean>;
-  addProduct: (product: Omit<Product, 'id'>) => Promise<Product>;
-  updateProduct: (id: string, product: Partial<Product>) => Promise<Product | null>;
-  deleteProduct: (id: string) => Promise<boolean>;
-  addOrder: (order: Omit<Order, 'id'>) => Promise<Order>;
-  updateOrder: (id: string, order: Partial<Order>) => Promise<Order | null>;
-  deleteOrder: (id: string) => Promise<boolean>;
-  addPayment: (payment: Omit<Payment, 'id'>) => Promise<Payment> | Payment; // Added for flexibility with different return types
-  updatePayment: (id: string, payment: Partial<Payment>) => Promise<Payment | null> | void;
-  deletePayment: (id: string) => Promise<boolean> | void;
-  deleteMultiplePayments: (ids: string[]) => void; // Added for compatibility
-  addInvoice: (invoice: Omit<Invoice, 'id'>) => Promise<Invoice>;
-  updateInvoice: (id: string, invoice: Partial<Invoice>) => Promise<Invoice | null>;
-  deleteInvoice: (id: string) => Promise<boolean>;
-  updateUISettings: (settings: Partial<UISettings>) => void;
-  // Added for compatibility with existing code
-  addCustomerProductRate: (rate: Omit<CustomerProductRate, 'id'>) => void;
-  updateCustomerProductRate: (id: string, rate: Partial<CustomerProductRate>) => void;
-  deleteCustomerProductRate?: (id: string) => void;
-  getCustomerProductRates?: (customerId: string) => CustomerProductRate[];
-  getProductRateForCustomer?: (customerId: string, productId: string) => number;
-  addSupplierProductRate?: (rate: Omit<SupplierProductRate, 'id'>) => void;
-  updateSupplierProductRate?: (id: string, rate: Partial<SupplierProductRate>) => void;
-  deleteSupplierProductRate?: (id: string) => void;
-  getSupplierProductRates?: (supplierId: string) => SupplierProductRate[];
-  getProductRateForSupplier?: (supplierId: string, productId: string) => number | null;
-  getSupplierRateHistory?: (supplierId: string, productId: string) => SupplierProductRate[];
-  addSupplier?: (supplier: Omit<Supplier, 'id'>) => void;
-  updateSupplier?: (id: string, supplier: Partial<Supplier>) => void;
-  deleteSupplier?: (id: string) => void;
-}
+import { 
+  Customer, Product, Order, Payment, 
+  CustomerProductRate, SupplierProductRate, 
+  Supplier, UISettings, Vehicle, Salesman, 
+  Expense, TrackSheet, Invoice, SupplierPayment,
+  StockRecord, StockEntry
+} from '@/types';
+import { DataContextType } from './types';
 
 // Generate a mock ID
 const generateId = (): string => {
@@ -163,50 +22,81 @@ const DataContext = createContext<DataContextType>({
   products: [],
   orders: [],
   invoices: [],
-  payments: [], // Added payments array
-  customerProductRates: [], // Added for compatibility
-  supplierProductRates: [], // Added for compatibility
-  suppliers: [], // Added for compatibility
-  vehicles: [], // Added for compatibility
-  salesmen: [], // Added for compatibility
+  payments: [],
+  customerProductRates: [],
+  supplierProductRates: [],
+  suppliers: [],
+  vehicles: [],
+  salesmen: [],
+  expenses: [],
+  stockRecords: [],
+  stockEntries: [],
+  supplierPayments: [],
+  trackSheets: [],
   uiSettings: {
+    theme: 'light',
+    compactMode: false,
+    currency: 'INR',
+    dateFormat: 'dd/MM/yyyy',
     sidebarCollapsed: false,
-    darkMode: false,
+    defaultPaymentMethod: 'cash',
+    defaultReportPeriod: 'month',
     language: 'en',
+    currencyFormat: '₹0,0.00',
   },
-  addCustomer: async () => ({ id: '', name: '', phone: '' }),
-  updateCustomer: async () => null,
-  deleteCustomer: async () => false,
-  addProduct: async () => ({ id: '', name: '', price: 0 }),
-  updateProduct: async () => null,
-  deleteProduct: async () => false,
-  addOrder: async () => ({ 
-    id: '', 
-    customerId: '', 
-    products: [], 
-    totalAmount: 0, 
-    date: new Date().toISOString(), 
-    status: 'pending' 
-  }),
-  updateOrder: async () => null,
-  deleteOrder: async () => false,
-  addInvoice: async () => ({ 
-    id: '', 
-    customerId: '', 
-    amount: 0, 
-    date: new Date().toISOString(),
-    dueDate: new Date().toISOString(), 
-    status: 'pending' 
-  }),
-  updateInvoice: async () => null,
-  deleteInvoice: async () => false,
-  addPayment: () => ({ id: '', customerId: '', amount: 0, date: '', paymentMethod: 'cash' }),
-  updatePayment: () => null,
-  deletePayment: () => false,
+  addCustomer: () => {},
+  updateCustomer: () => {},
+  deleteCustomer: () => {},
+  addProduct: () => {},
+  updateProduct: () => {},
+  deleteProduct: () => {},
+  addOrder: () => {},
+  updateOrder: () => {},
+  deleteOrder: () => {},
+  addInvoice: () => "",
+  updateInvoice: () => {},
+  deleteInvoice: () => {},
+  addPayment: () => ({}),
+  updatePayment: () => {},
+  deletePayment: () => {},
   deleteMultiplePayments: () => {},
   updateUISettings: () => {},
   addCustomerProductRate: () => {},
   updateCustomerProductRate: () => {},
+  deleteCustomerProductRate: () => {},
+  getCustomerProductRates: () => [],
+  getProductRateForCustomer: () => 0,
+  addSupplierProductRate: () => {},
+  updateSupplierProductRate: () => {},
+  deleteSupplierProductRate: () => {},
+  getSupplierProductRates: () => [],
+  getProductRateForSupplier: () => null,
+  getSupplierRateHistory: () => [],
+  addSupplier: () => {},
+  updateSupplier: () => {},
+  deleteSupplier: () => {},
+  addVehicle: () => {},
+  updateVehicle: () => {},
+  deleteVehicle: () => {},
+  addSalesman: () => {},
+  updateSalesman: () => {},
+  deleteSalesman: () => {},
+  addExpense: () => {},
+  updateExpense: () => {},
+  deleteExpense: () => {},
+  addTrackSheet: () => {},
+  updateTrackSheet: () => {},
+  deleteTrackSheet: () => {},
+  addSupplierPayment: () => {},
+  updateSupplierPayment: () => {},
+  deleteSupplierPayment: () => {},
+  addStockRecord: () => {},
+  updateStockRecord: () => {},
+  deleteStockRecord: () => {},
+  addStockEntry: () => {},
+  updateStockEntry: () => {},
+  deleteStockEntry: () => {},
+  addStock: () => {},
 });
 
 // Generate mock data
@@ -282,40 +172,60 @@ const generateMockData = () => {
       name: 'Full Cream Milk',
       description: 'Fresh full cream milk with high fat content',
       price: 60,
+      unit: 'liter',
       stock: 200,
-      category: 'Milk'
+      category: 'Milk',
+      isActive: true,
+      sku: 'FCM001',
+      minStockLevel: 50
     },
     {
       id: '2',
       name: 'Toned Milk',
       description: 'Milk with 3% fat content',
       price: 45,
+      unit: 'liter',
       stock: 350,
-      category: 'Milk'
+      category: 'Milk',
+      isActive: true,
+      sku: 'TM001',
+      minStockLevel: 75
     },
     {
       id: '3',
       name: 'Double Toned Milk',
       description: 'Milk with 1.5% fat content',
       price: 40,
+      unit: 'liter',
       stock: 280,
-      category: 'Milk'
+      category: 'Milk',
+      isActive: true,
+      sku: 'DTM001',
+      minStockLevel: 60
     },
     {
       id: '4',
       name: 'Paneer',
       description: 'Fresh homemade cottage cheese',
       price: 320,
+      unit: 'kg',
       stock: 50,
-      category: 'Dairy Product'
+      category: 'Dairy Product',
+      isActive: true,
+      sku: 'PNR001',
+      minStockLevel: 10
     },
     {
       id: '5',
       name: 'Curd',
       description: 'Natural probiotic yogurt',
       price: 80,
+      unit: 'kg',
       stock: 120,
-      category: 'Dairy Product'
+      category: 'Dairy Product',
+      isActive: true,
+      sku: 'CRD001',
+      minStockLevel: 25
     }
   ];
 
@@ -324,54 +234,42 @@ const generateMockData = () => {
     {
       id: '1',
       customerId: '1',
-      products: [
-        { productId: '1', quantity: 5, price: 60 },
-        { productId: '4', quantity: 1, price: 320 }
-      ],
-      items: [
-        { productId: '1', quantity: 5, price: 60 },
-        { productId: '4', quantity: 1, price: 320 }
-      ],
-      totalAmount: 620,
-      total: 620,
       date: '2023-05-10T08:30:00Z',
-      status: 'delivered',
+      items: [
+        { productId: '1', quantity: 5, unitPrice: 60 },
+        { productId: '4', quantity: 1, unitPrice: 320 }
+      ],
+      total: 620,
+      status: 'completed',
+      paymentStatus: 'paid',
       vehicleId: 'v1',
       salesmanId: 's1'
     },
     {
       id: '2',
       customerId: '2',
-      products: [
-        { productId: '2', quantity: 3, price: 45 },
-        { productId: '5', quantity: 2, price: 80 }
-      ],
-      items: [
-        { productId: '2', quantity: 3, price: 45 },
-        { productId: '5', quantity: 2, price: 80 }
-      ],
-      totalAmount: 295,
-      total: 295,
       date: '2023-05-11T09:15:00Z',
-      status: 'delivered',
+      items: [
+        { productId: '2', quantity: 3, unitPrice: 45 },
+        { productId: '5', quantity: 2, unitPrice: 80 }
+      ],
+      total: 295,
+      status: 'completed',
+      paymentStatus: 'partial',
       vehicleId: 'v2',
       salesmanId: 's2'
     },
     {
       id: '3',
       customerId: '3',
-      products: [
-        { productId: '1', quantity: 2, price: 60 },
-        { productId: '3', quantity: 4, price: 40 }
-      ],
-      items: [
-        { productId: '1', quantity: 2, price: 60 },
-        { productId: '3', quantity: 4, price: 40 }
-      ],
-      totalAmount: 280,
-      total: 280,
       date: '2023-05-12T10:00:00Z',
+      items: [
+        { productId: '1', quantity: 2, unitPrice: 60 },
+        { productId: '3', quantity: 4, unitPrice: 40 }
+      ],
+      total: 280,
       status: 'pending',
+      paymentStatus: 'pending',
       vehicleId: 'v1',
       salesmanId: 's3'
     }
@@ -382,29 +280,107 @@ const generateMockData = () => {
     {
       id: '1',
       customerId: '1',
-      orderId: '1',
-      amount: 620,
+      invoiceNumber: 'INV0001',
+      number: 'INV0001',
       date: '2023-05-10T08:30:00Z',
       dueDate: '2023-05-24T08:30:00Z',
-      status: 'pending'
+      items: [
+        {
+          productId: '1',
+          description: 'Full Cream Milk',
+          quantity: 5,
+          unitPrice: 60,
+          amount: 300
+        },
+        {
+          productId: '4',
+          description: 'Paneer',
+          quantity: 1,
+          unitPrice: 320,
+          amount: 320
+        }
+      ],
+      subtotal: 620,
+      taxRate: 5,
+      taxAmount: 31,
+      total: 651,
+      status: 'paid',
+      notes: '',
+      termsAndConditions: 'Standard terms apply',
+      createdAt: '2023-05-10T08:30:00Z',
+      updatedAt: '2023-05-10T08:30:00Z',
+      orderId: '1',
+      customerName: 'Raj Sharma'
     },
     {
       id: '2',
       customerId: '2',
-      orderId: '2',
-      amount: 295,
+      invoiceNumber: 'INV0002',
+      number: 'INV0002',
       date: '2023-05-11T09:15:00Z',
       dueDate: '2023-05-25T09:15:00Z',
-      status: 'paid'
+      items: [
+        {
+          productId: '2',
+          description: 'Toned Milk',
+          quantity: 3,
+          unitPrice: 45,
+          amount: 135
+        },
+        {
+          productId: '5',
+          description: 'Curd',
+          quantity: 2,
+          unitPrice: 80,
+          amount: 160
+        }
+      ],
+      subtotal: 295,
+      taxRate: 5,
+      taxAmount: 14.75,
+      total: 309.75,
+      status: 'draft',
+      notes: '',
+      termsAndConditions: 'Standard terms apply',
+      createdAt: '2023-05-11T09:15:00Z',
+      updatedAt: '2023-05-11T09:15:00Z',
+      orderId: '2',
+      customerName: 'Priya Patel'
     },
     {
       id: '3',
       customerId: '3',
-      orderId: '3',
-      amount: 280,
+      invoiceNumber: 'INV0003',
+      number: 'INV0003',
       date: '2023-05-12T10:00:00Z',
       dueDate: '2023-05-26T10:00:00Z',
-      status: 'overdue'
+      items: [
+        {
+          productId: '1',
+          description: 'Full Cream Milk',
+          quantity: 2,
+          unitPrice: 60,
+          amount: 120
+        },
+        {
+          productId: '3',
+          description: 'Double Toned Milk',
+          quantity: 4,
+          unitPrice: 40,
+          amount: 160
+        }
+      ],
+      subtotal: 280,
+      taxRate: 5,
+      taxAmount: 14,
+      total: 294,
+      status: 'overdue',
+      notes: '',
+      termsAndConditions: 'Standard terms apply',
+      createdAt: '2023-05-12T10:00:00Z',
+      updatedAt: '2023-05-12T10:00:00Z',
+      orderId: '3',
+      customerName: 'Vikram Singh'
     }
   ];
 
@@ -451,21 +427,24 @@ const generateMockData = () => {
       customerId: '1',
       productId: '1',
       rate: 58,
-      effectiveFrom: '2023-01-01'
+      effectiveDate: '2023-01-01',
+      isActive: true
     },
     {
       id: '2',
       customerId: '1',
       productId: '2',
       rate: 43,
-      effectiveFrom: '2023-01-01'
+      effectiveDate: '2023-01-01',
+      isActive: true
     },
     {
       id: '3',
       customerId: '2',
       productId: '1',
       rate: 59,
-      effectiveFrom: '2023-02-15'
+      effectiveDate: '2023-02-15',
+      isActive: true
     }
   ];
 
@@ -476,14 +455,16 @@ const generateMockData = () => {
       supplierId: '1',
       productId: '1',
       rate: 50,
-      effectiveFrom: '2023-01-01'
+      effectiveDate: '2023-01-01',
+      isActive: true
     },
     {
       id: '2',
       supplierId: '1',
       productId: '2',
       rate: 38,
-      effectiveFrom: '2023-01-01'
+      effectiveDate: '2023-01-01',
+      isActive: true
     }
   ];
 
@@ -491,11 +472,23 @@ const generateMockData = () => {
   const mockSuppliers: Supplier[] = [
     {
       id: '1',
-      name: 'ABC Dairy Farm'
+      name: 'ABC Dairy Farm',
+      contactName: 'Rajesh Agarwal',
+      phone: '9988776655',
+      email: 'rajesh@abcdairy.com',
+      address: 'Village Dairy Complex, Rural District',
+      products: ['1', '2', '3'],
+      isActive: true
     },
     {
       id: '2',
-      name: 'XYZ Milk Co-op'
+      name: 'XYZ Milk Co-op',
+      contactName: 'Suresh Mehta',
+      phone: '8877665544',
+      email: 'suresh@xyzmilk.com',
+      address: 'Cooperative Society Building, Agricultural Zone',
+      products: ['4', '5'],
+      isActive: true
     }
   ];
 
@@ -503,11 +496,21 @@ const generateMockData = () => {
   const mockVehicles: Vehicle[] = [
     {
       id: 'v1',
-      name: 'Delivery Van 1'
+      name: 'Delivery Van 1',
+      registrationNumber: 'MH01AB1234',
+      type: 'Van',
+      isActive: true,
+      capacity: 500,
+      driverName: 'Ramesh Kumar'
     },
     {
       id: 'v2',
-      name: 'Delivery Van 2'
+      name: 'Delivery Van 2',
+      registrationNumber: 'MH01CD5678',
+      type: 'Mini Truck',
+      isActive: true,
+      capacity: 1000,
+      driverName: 'Suresh Patil'
     }
   ];
 
@@ -515,15 +518,132 @@ const generateMockData = () => {
   const mockSalesmen: Salesman[] = [
     {
       id: 's1',
-      name: 'Ramesh'
+      name: 'Ramesh',
+      phone: '7788990011',
+      email: 'ramesh@example.com',
+      address: '123 Staff Quarters, Mumbai',
+      isActive: true,
+      vehicleId: 'v1'
     },
     {
       id: 's2',
-      name: 'Suresh'
+      name: 'Suresh',
+      phone: '7788990022',
+      email: 'suresh@example.com',
+      address: '456 Staff Quarters, Mumbai',
+      isActive: true,
+      vehicleId: 'v2'
     },
     {
       id: 's3',
-      name: 'Dinesh'
+      name: 'Dinesh',
+      phone: '7788990033',
+      email: 'dinesh@example.com',
+      address: '789 Staff Quarters, Mumbai',
+      isActive: true
+    }
+  ];
+
+  // Mock expenses
+  const mockExpenses: Expense[] = [
+    {
+      id: 'e1',
+      title: 'Fuel',
+      category: 'Transportation',
+      amount: 5000,
+      date: '2023-05-01',
+      recurring: false,
+      description: 'Monthly fuel expenses for delivery vehicles',
+      paymentMethod: 'cash'
+    },
+    {
+      id: 'e2',
+      title: 'Electricity',
+      category: 'Utilities',
+      amount: 12000,
+      date: '2023-05-05',
+      recurring: true,
+      recurringFrequency: 'monthly',
+      description: 'Monthly electricity bill',
+      paymentMethod: 'bank'
+    }
+  ];
+
+  // Mock track sheets
+  const mockTrackSheets: TrackSheet[] = [
+    {
+      id: 't1',
+      name: 'Morning Route 1',
+      date: '2023-05-15',
+      vehicleId: 'v1',
+      salesmanId: 's1',
+      vehicleName: 'Delivery Van 1',
+      salesmanName: 'Ramesh',
+      rows: [
+        {
+          name: 'Raj Sharma',
+          customerId: '1',
+          quantities: { '1': 5, '4': 1 },
+          total: 5,
+          amount: 620
+        },
+        {
+          name: 'Priya Patel',
+          customerId: '2',
+          quantities: { '2': 3, '5': 2 },
+          total: 5,
+          amount: 295
+        }
+      ]
+    }
+  ];
+
+  // Mock stock records
+  const mockStockRecords: StockRecord[] = [
+    {
+      id: 'sr1',
+      productId: '1',
+      quantity: 200,
+      date: '2023-05-01',
+      type: 'in',
+      notes: 'Initial stock'
+    },
+    {
+      id: 'sr2',
+      productId: '2',
+      quantity: 150,
+      date: '2023-05-01',
+      type: 'in',
+      notes: 'Initial stock'
+    }
+  ];
+
+  // Mock stock entries
+  const mockStockEntries: StockEntry[] = [
+    {
+      id: 'se1',
+      supplierId: '1',
+      date: '2023-05-01',
+      items: [
+        { productId: '1', quantity: 200, unitPrice: 50, totalPrice: 10000 },
+        { productId: '2', quantity: 150, unitPrice: 38, totalPrice: 5700 }
+      ],
+      totalAmount: 15700,
+      paymentStatus: 'paid',
+      createdAt: '2023-05-01'
+    }
+  ];
+
+  // Mock supplier payments
+  const mockSupplierPayments: SupplierPayment[] = [
+    {
+      id: 'sp1',
+      supplierId: '1',
+      amount: 15700,
+      date: '2023-05-01',
+      paymentMethod: 'bank',
+      referenceNumber: 'REF123456',
+      notes: 'Payment for stock entry SE001'
     }
   ];
 
@@ -537,7 +657,12 @@ const generateMockData = () => {
     mockSupplierProductRates,
     mockSuppliers,
     mockVehicles,
-    mockSalesmen
+    mockSalesmen,
+    mockExpenses,
+    mockTrackSheets,
+    mockStockRecords,
+    mockStockEntries,
+    mockSupplierPayments
   };
 };
 
@@ -553,7 +678,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mockSupplierProductRates,
     mockSuppliers,
     mockVehicles,
-    mockSalesmen
+    mockSalesmen,
+    mockExpenses,
+    mockTrackSheets,
+    mockStockRecords,
+    mockStockEntries,
+    mockSupplierPayments
   } = generateMockData();
   
   const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
@@ -566,10 +696,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
   const [salesmen, setSalesmen] = useState<Salesman[]>(mockSalesmen);
+  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+  const [trackSheets, setTrackSheets] = useState<TrackSheet[]>(mockTrackSheets);
+  const [stockRecords, setStockRecords] = useState<StockRecord[]>(mockStockRecords);
+  const [stockEntries, setStockEntries] = useState<StockEntry[]>(mockStockEntries);
+  const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>(mockSupplierPayments);
   const [uiSettings, setUISettings] = useState<UISettings>({
+    theme: 'light',
+    compactMode: false,
+    currency: 'INR',
+    dateFormat: 'dd/MM/yyyy',
     sidebarCollapsed: false,
-    darkMode: false,
+    defaultPaymentMethod: 'cash',
+    defaultReportPeriod: 'month',
     language: 'en',
+    currencyFormat: '₹0,0.00',
   });
 
   // Load data from local storage on initialization
@@ -605,6 +746,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedSalesmen = localStorage.getItem('salesmen');
       if (storedSalesmen) setSalesmen(JSON.parse(storedSalesmen));
 
+      const storedExpenses = localStorage.getItem('expenses');
+      if (storedExpenses) setExpenses(JSON.parse(storedExpenses));
+
+      const storedTrackSheets = localStorage.getItem('trackSheets');
+      if (storedTrackSheets) setTrackSheets(JSON.parse(storedTrackSheets));
+
+      const storedStockRecords = localStorage.getItem('stockRecords');
+      if (storedStockRecords) setStockRecords(JSON.parse(storedStockRecords));
+
+      const storedStockEntries = localStorage.getItem('stockEntries');
+      if (storedStockEntries) setStockEntries(JSON.parse(storedStockEntries));
+
+      const storedSupplierPayments = localStorage.getItem('supplierPayments');
+      if (storedSupplierPayments) setSupplierPayments(JSON.parse(storedSupplierPayments));
+
       const storedUISettings = localStorage.getItem('uiSettings');
       if (storedUISettings) setUISettings(JSON.parse(storedUISettings));
     } catch (error) {
@@ -626,213 +782,110 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('suppliers', JSON.stringify(suppliers));
       localStorage.setItem('vehicles', JSON.stringify(vehicles));
       localStorage.setItem('salesmen', JSON.stringify(salesmen));
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+      localStorage.setItem('trackSheets', JSON.stringify(trackSheets));
+      localStorage.setItem('stockRecords', JSON.stringify(stockRecords));
+      localStorage.setItem('stockEntries', JSON.stringify(stockEntries));
+      localStorage.setItem('supplierPayments', JSON.stringify(supplierPayments));
       localStorage.setItem('uiSettings', JSON.stringify(uiSettings));
     } catch (error) {
       console.error('Error saving data to local storage:', error);
       toast.error('Failed to save data locally.');
     }
-  }, [customers, products, orders, invoices, payments, customerProductRates, supplierProductRates, suppliers, vehicles, salesmen, uiSettings]);
+  }, [
+    customers, products, orders, invoices, payments, customerProductRates, 
+    supplierProductRates, suppliers, vehicles, salesmen, expenses, trackSheets,
+    stockRecords, stockEntries, supplierPayments, uiSettings
+  ]);
 
   // Customer CRUD operations
-  const addCustomer = async (customerData: Omit<Customer, 'id'>): Promise<Customer> => {
+  const addCustomer = (customerData: Omit<Customer, 'id'>): void => {
     const newCustomer = { ...customerData, id: generateId() };
     setCustomers(prev => [...prev, newCustomer]);
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'ADD_CUSTOMER',
-        data: newCustomer
-      });
-    }
-    return newCustomer;
   };
 
-  const updateCustomer = async (id: string, customerData: Partial<Customer>): Promise<Customer | null> => {
-    let updatedCustomer: Customer | null = null;
-    
+  const updateCustomer = (id: string, customerData: Partial<Customer>): void => {
     setCustomers(prev => {
       const index = prev.findIndex(c => c.id === id);
       if (index === -1) return prev;
       
-      updatedCustomer = { ...prev[index], ...customerData };
+      const updatedCustomer = { ...prev[index], ...customerData };
       const newCustomers = [...prev];
-      newCustomers[index] = updatedCustomer as Customer;
+      newCustomers[index] = updatedCustomer;
       return newCustomers;
     });
-    
-    if (!OfflineStorageService.isOnline() && updatedCustomer) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'UPDATE_CUSTOMER',
-        data: { id, ...customerData }
-      });
-    }
-    
-    return updatedCustomer;
   };
 
-  const deleteCustomer = async (id: string): Promise<boolean> => {
+  const deleteCustomer = (id: string): void => {
     setCustomers(prev => prev.filter(c => c.id !== id));
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'DELETE_CUSTOMER',
-        data: { id }
-      });
-    }
-    
-    return true;
   };
 
   // Product CRUD operations
-  const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
+  const addProduct = (productData: Omit<Product, 'id'>): void => {
     const newProduct = { ...productData, id: generateId() };
     setProducts(prev => [...prev, newProduct]);
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'ADD_PRODUCT',
-        data: newProduct
-      });
-    }
-    
-    return newProduct;
   };
 
-  const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product | null> => {
-    let updatedProduct: Product | null = null;
-    
+  const updateProduct = (id: string, productData: Partial<Product>): void => {
     setProducts(prev => {
       const index = prev.findIndex(p => p.id === id);
       if (index === -1) return prev;
       
-      updatedProduct = { ...prev[index], ...productData };
+      const updatedProduct = { ...prev[index], ...productData };
       const newProducts = [...prev];
-      newProducts[index] = updatedProduct as Product;
+      newProducts[index] = updatedProduct;
       return newProducts;
     });
-    
-    if (!OfflineStorageService.isOnline() && updatedProduct) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'UPDATE_PRODUCT',
-        data: { id, ...productData }
-      });
-    }
-    
-    return updatedProduct;
   };
 
-  const deleteProduct = async (id: string): Promise<boolean> => {
+  const deleteProduct = (id: string): void => {
     setProducts(prev => prev.filter(p => p.id !== id));
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'DELETE_PRODUCT',
-        data: { id }
-      });
-    }
-    
-    return true;
   };
 
   // Order CRUD operations
-  const addOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> => {
+  const addOrder = (orderData: Omit<Order, 'id'>): void => {
     const newOrder = { ...orderData, id: generateId() };
     setOrders(prev => [...prev, newOrder]);
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'ADD_ORDER',
-        data: newOrder
-      });
-    }
-    
-    return newOrder;
   };
 
-  const updateOrder = async (id: string, orderData: Partial<Order>): Promise<Order | null> => {
-    let updatedOrder: Order | null = null;
-    
+  const updateOrder = (id: string, orderData: Partial<Order>): void => {
     setOrders(prev => {
       const index = prev.findIndex(o => o.id === id);
       if (index === -1) return prev;
       
-      updatedOrder = { ...prev[index], ...orderData };
+      const updatedOrder = { ...prev[index], ...orderData };
       const newOrders = [...prev];
-      newOrders[index] = updatedOrder as Order;
+      newOrders[index] = updatedOrder;
       return newOrders;
     });
-    
-    if (!OfflineStorageService.isOnline() && updatedOrder) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'UPDATE_ORDER',
-        data: { id, ...orderData }
-      });
-    }
-    
-    return updatedOrder;
   };
 
-  const deleteOrder = async (id: string): Promise<boolean> => {
+  const deleteOrder = (id: string): void => {
     setOrders(prev => prev.filter(o => o.id !== id));
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'DELETE_ORDER',
-        data: { id }
-      });
-    }
-    
-    return true;
   };
 
   // Invoice CRUD operations
-  const addInvoice = async (invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> => {
-    const newInvoice = { ...invoiceData, id: generateId() };
-    setInvoices(prev => [...prev, newInvoice]);
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'ADD_INVOICE',
-        data: newInvoice
-      });
-    }
-    
-    return newInvoice;
+  const addInvoice = (invoiceData: Omit<Invoice, 'id'>): string => {
+    const id = generateId();
+    const newInvoice = { ...invoiceData, id };
+    setInvoices(prev => [...prev, newInvoice as Invoice]);
+    return id;
   };
 
-  const updateInvoice = async (id: string, invoiceData: Partial<Invoice>): Promise<Invoice | null> => {
-    let updatedInvoice: Invoice | null = null;
-    
+  const updateInvoice = (id: string, invoiceData: Partial<Invoice>): void => {
     setInvoices(prev => {
       const index = prev.findIndex(i => i.id === id);
       if (index === -1) return prev;
       
-      updatedInvoice = { ...prev[index], ...invoiceData };
+      const updatedInvoice = { ...prev[index], ...invoiceData };
       const newInvoices = [...prev];
-      newInvoices[index] = updatedInvoice as Invoice;
+      newInvoices[index] = updatedInvoice;
       return newInvoices;
     });
-    
-    if (!OfflineStorageService.isOnline() && updatedInvoice) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'UPDATE_INVOICE',
-        data: { id, ...invoiceData }
-      });
-    }
-    
-    return updatedInvoice;
   };
 
-  const deleteInvoice = async (id: string): Promise<boolean> => {
+  const deleteInvoice = (id: string): void => {
     setInvoices(prev => prev.filter(i => i.id !== id));
-    
-    if (!OfflineStorageService.isOnline()) {
-      OfflineStorageService.queueOfflineAction({
-        type: 'DELETE_INVOICE',
-        data: { id }
-      });
-    }
-    
-    return true;
   };
 
   // Payment CRUD operations
@@ -841,7 +894,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...paymentData,
       id: `pay${Date.now()}`,
     };
-    setPayments([...payments, newPayment]);
+    setPayments(prev => [...prev, newPayment]);
     
     // Update customer outstanding balance if applicable
     const customer = customers.find(c => c.id === paymentData.customerId);
@@ -856,11 +909,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return newPayment;
   };
 
-  const updatePayment = (id: string, paymentData: Partial<Payment>) => {
+  const updatePayment = (id: string, paymentData: Partial<Payment>): void => {
     const oldPayment = payments.find(p => p.id === id);
     
-    setPayments(
-      payments.map((payment) =>
+    setPayments(prev =>
+      prev.map((payment) =>
         payment.id === id ? { ...payment, ...paymentData } : payment
       )
     );
@@ -878,7 +931,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const deletePayment = (id: string) => {
+  const deletePayment = (id: string): void => {
     const payment = payments.find(p => p.id === id);
     
     if (payment) {
@@ -890,11 +943,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    setPayments(payments.filter((payment) => payment.id !== id));
+    setPayments(prev => prev.filter((payment) => payment.id !== id));
   };
   
   // Delete multiple payments at once
-  const deleteMultiplePayments = (ids: string[]) => {
+  const deleteMultiplePayments = (ids: string[]): void => {
     if (!Array.isArray(ids) || ids.length === 0) return;
     
     // Update customer balances for each payment being deleted
@@ -911,103 +964,338 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     // Remove the payments
-    setPayments(payments.filter(payment => !ids.includes(payment.id)));
+    setPayments(prev => prev.filter(payment => !ids.includes(payment.id)));
     
     toast.success(`${ids.length} payments deleted successfully`);
   };
 
   // Customer Product Rate operations
-  const addCustomerProductRate = (rateData: Omit<CustomerProductRate, 'id'>) => {
+  const addCustomerProductRate = (rateData: Omit<CustomerProductRate, 'id'>): void => {
     const newRate = { ...rateData, id: generateId() };
     setCustomerProductRates(prev => [...prev, newRate]);
   };
 
-  const updateCustomerProductRate = (id: string, rateData: Partial<CustomerProductRate>) => {
+  const updateCustomerProductRate = (id: string, rateData: Partial<CustomerProductRate>): void => {
     setCustomerProductRates(prev => 
       prev.map(rate => rate.id === id ? { ...rate, ...rateData } : rate)
     );
   };
 
-  const deleteCustomerProductRate = (id: string) => {
+  const deleteCustomerProductRate = (id: string): void => {
     setCustomerProductRates(prev => prev.filter(rate => rate.id !== id));
   };
 
-  const getCustomerProductRates = (customerId: string) => {
+  const getCustomerProductRates = (customerId: string): CustomerProductRate[] => {
     return customerProductRates.filter(rate => rate.customerId === customerId);
   };
 
-  const getProductRateForCustomer = (customerId: string, productId: string) => {
+  const getProductRateForCustomer = (customerId: string, productId: string): number => {
     const rate = customerProductRates
       .filter(r => r.customerId === customerId && r.productId === productId)
-      .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0];
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())[0];
     
     return rate ? rate.rate : 0;
   };
 
   // Supplier Product Rate operations
-  const addSupplierProductRate = (rateData: Omit<SupplierProductRate, 'id'>) => {
+  const addSupplierProductRate = (rateData: Omit<SupplierProductRate, 'id'>): void => {
     const newRate = { ...rateData, id: generateId() };
     setSupplierProductRates(prev => [...prev, newRate]);
   };
 
-  const updateSupplierProductRate = (id: string, rateData: Partial<SupplierProductRate>) => {
+  const updateSupplierProductRate = (id: string, rateData: Partial<SupplierProductRate>): void => {
     setSupplierProductRates(prev => 
       prev.map(rate => rate.id === id ? { ...rate, ...rateData } : rate)
     );
   };
 
-  const deleteSupplierProductRate = (id: string) => {
+  const deleteSupplierProductRate = (id: string): void => {
     setSupplierProductRates(prev => prev.filter(rate => rate.id !== id));
   };
 
-  const getSupplierProductRates = (supplierId: string) => {
+  const getSupplierProductRates = (supplierId: string): SupplierProductRate[] => {
     return supplierProductRates.filter(rate => rate.supplierId === supplierId);
   };
 
-  const getProductRateForSupplier = (supplierId: string, productId: string) => {
+  const getProductRateForSupplier = (supplierId: string, productId: string): number | null => {
     const rate = supplierProductRates
       .filter(r => r.supplierId === supplierId && r.productId === productId)
-      .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0];
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime())[0];
     
     return rate ? rate.rate : null;
   };
 
-  const getSupplierRateHistory = (supplierId: string, productId: string) => {
+  const getSupplierRateHistory = (supplierId: string, productId: string): SupplierProductRate[] => {
     return supplierProductRates
       .filter(r => r.supplierId === supplierId && r.productId === productId)
-      .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime());
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime());
   };
 
   // Supplier CRUD operations
-  const addSupplier = (supplierData: Omit<Supplier, 'id'>) => {
+  const addSupplier = (supplierData: Omit<Supplier, 'id'>): void => {
     const newSupplier = { ...supplierData, id: generateId() };
     setSuppliers(prev => [...prev, newSupplier]);
-    return newSupplier;
   };
 
-  const updateSupplier = (id: string, supplierData: Partial<Supplier>) => {
-    let updatedSupplier: Supplier | null = null;
-    
+  const updateSupplier = (id: string, supplierData: Partial<Supplier>): void => {
     setSuppliers(prev => {
       const index = prev.findIndex(s => s.id === id);
       if (index === -1) return prev;
       
-      updatedSupplier = { ...prev[index], ...supplierData };
+      const updatedSupplier = { ...prev[index], ...supplierData };
       const newSuppliers = [...prev];
-      newSuppliers[index] = updatedSupplier as Supplier;
+      newSuppliers[index] = updatedSupplier;
       return newSuppliers;
     });
-    
-    return updatedSupplier;
   };
 
-  const deleteSupplier = (id: string) => {
+  const deleteSupplier = (id: string): void => {
     setSuppliers(prev => prev.filter(s => s.id !== id));
-    return true;
+  };
+
+  // Vehicle CRUD operations
+  const addVehicle = (vehicleData: Omit<Vehicle, 'id'>): void => {
+    const newVehicle = { ...vehicleData, id: generateId() };
+    setVehicles(prev => [...prev, newVehicle]);
+  };
+
+  const updateVehicle = (id: string, vehicleData: Partial<Vehicle>): void => {
+    setVehicles(prev => {
+      const index = prev.findIndex(v => v.id === id);
+      if (index === -1) return prev;
+      
+      const updatedVehicle = { ...prev[index], ...vehicleData };
+      const newVehicles = [...prev];
+      newVehicles[index] = updatedVehicle;
+      return newVehicles;
+    });
+  };
+
+  const deleteVehicle = (id: string): void => {
+    setVehicles(prev => prev.filter(v => v.id !== id));
+  };
+
+  // Salesman CRUD operations
+  const addSalesman = (salesmanData: Omit<Salesman, 'id'>): void => {
+    const newSalesman = { ...salesmanData, id: generateId() };
+    setSalesmen(prev => [...prev, newSalesman]);
+  };
+
+  const updateSalesman = (id: string, salesmanData: Partial<Salesman>): void => {
+    setSalesmen(prev => {
+      const index = prev.findIndex(s => s.id === id);
+      if (index === -1) return prev;
+      
+      const updatedSalesman = { ...prev[index], ...salesmanData };
+      const newSalesmen = [...prev];
+      newSalesmen[index] = updatedSalesman;
+      return newSalesmen;
+    });
+  };
+
+  const deleteSalesman = (id: string): void => {
+    setSalesmen(prev => prev.filter(s => s.id !== id));
+  };
+  
+  // Expense CRUD operations
+  const addExpense = (expenseData: Omit<Expense, 'id'>): void => {
+    const newExpense = { ...expenseData, id: generateId() };
+    setExpenses(prev => [...prev, newExpense]);
+  };
+
+  const updateExpense = (id: string, expenseData: Partial<Expense>): void => {
+    setExpenses(prev => {
+      const index = prev.findIndex(e => e.id === id);
+      if (index === -1) return prev;
+      
+      const updatedExpense = { ...prev[index], ...expenseData };
+      const newExpenses = [...prev];
+      newExpenses[index] = updatedExpense;
+      return newExpenses;
+    });
+  };
+
+  const deleteExpense = (id: string): void => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+  };
+
+  // Track Sheet operations
+  const addTrackSheet = (trackSheetData: Omit<TrackSheet, 'id'>): void => {
+    const newTrackSheet = { ...trackSheetData, id: generateId() };
+    setTrackSheets(prev => [...prev, newTrackSheet]);
+  };
+
+  const updateTrackSheet = (id: string, trackSheetData: Partial<TrackSheet>): void => {
+    setTrackSheets(prev => {
+      const index = prev.findIndex(ts => ts.id === id);
+      if (index === -1) return prev;
+      
+      const updatedTrackSheet = { ...prev[index], ...trackSheetData };
+      const newTrackSheets = [...prev];
+      newTrackSheets[index] = updatedTrackSheet;
+      return newTrackSheets;
+    });
+  };
+
+  const deleteTrackSheet = (id: string): void => {
+    setTrackSheets(prev => prev.filter(ts => ts.id !== id));
+  };
+
+  // Stock Record operations
+  const addStockRecord = (recordData: Omit<StockRecord, 'id'>): void => {
+    const newRecord = { ...recordData, id: generateId() };
+    setStockRecords(prev => [...prev, newRecord]);
+    
+    // Update product stock if applicable
+    const product = products.find(p => p.id === recordData.productId);
+    if (product) {
+      const currentStock = product.stock || 0;
+      let newStock = currentStock;
+      
+      if (recordData.type === 'in') {
+        newStock = currentStock + recordData.quantity;
+      } else if (recordData.type === 'out') {
+        newStock = currentStock - recordData.quantity;
+      } else if (recordData.type === 'adjustment') {
+        newStock = recordData.quantity; // Direct adjustment
+      }
+      
+      updateProduct(product.id, { stock: newStock });
+    }
+  };
+
+  const updateStockRecord = (id: string, recordData: Partial<StockRecord>): void => {
+    const oldRecord = stockRecords.find(r => r.id === id);
+    
+    if (oldRecord && recordData.quantity !== undefined && recordData.type !== undefined) {
+      // Reverse old stock change
+      const product = products.find(p => p.id === oldRecord.productId);
+      if (product) {
+        const currentStock = product.stock || 0;
+        let stockAfterReversal = currentStock;
+        
+        if (oldRecord.type === 'in') {
+          stockAfterReversal = currentStock - oldRecord.quantity;
+        } else if (oldRecord.type === 'out') {
+          stockAfterReversal = currentStock + oldRecord.quantity;
+        }
+        
+        // Apply new stock change
+        let newStock = stockAfterReversal;
+        if (recordData.type === 'in') {
+          newStock = stockAfterReversal + recordData.quantity;
+        } else if (recordData.type === 'out') {
+          newStock = stockAfterReversal - recordData.quantity;
+        } else if (recordData.type === 'adjustment') {
+          newStock = recordData.quantity;
+        }
+        
+        updateProduct(product.id, { stock: newStock });
+      }
+    }
+    
+    setStockRecords(prev => 
+      prev.map(record => record.id === id ? { ...record, ...recordData } : record)
+    );
+  };
+
+  const deleteStockRecord = (id: string): void => {
+    const record = stockRecords.find(r => r.id === id);
+    
+    if (record) {
+      // Reverse stock change when deleting record
+      const product = products.find(p => p.id === record.productId);
+      if (product) {
+        const currentStock = product.stock || 0;
+        let newStock = currentStock;
+        
+        if (record.type === 'in') {
+          newStock = currentStock - record.quantity;
+        } else if (record.type === 'out') {
+          newStock = currentStock + record.quantity;
+        }
+        
+        updateProduct(product.id, { stock: newStock });
+      }
+    }
+    
+    setStockRecords(prev => prev.filter(r => r.id !== id));
+  };
+  
+  // Stock Entry operations
+  const addStockEntry = (entry: StockEntry): void => {
+    setStockEntries(prev => [...prev, entry]);
+    
+    // Add stock records for each item in the entry
+    entry.items.forEach(item => {
+      addStockRecord({
+        productId: item.productId,
+        quantity: item.quantity,
+        date: entry.date,
+        type: 'in',
+        relatedEntryId: entry.id,
+        notes: `Stock entry from supplier ${entry.supplierId}`
+      });
+    });
+  };
+  
+  const updateStockEntry = (id: string, entryData: Partial<StockEntry>): void => {
+    // This would be more complex with stock adjustments - simplified version
+    setStockEntries(prev => 
+      prev.map(entry => entry.id === id ? { ...entry, ...entryData } : entry)
+    );
+  };
+  
+  const deleteStockEntry = (id: string): void => {
+    // Delete related stock records first
+    const relatedRecords = stockRecords.filter(r => r.relatedEntryId === id);
+    relatedRecords.forEach(record => {
+      deleteStockRecord(record.id);
+    });
+    
+    setStockEntries(prev => prev.filter(e => e.id !== id));
+  };
+
+  // Add stock helper method
+  const addStock = (supplierId: string, productId: string, quantity: number, pricePerUnit: number, date: string): void => {
+    const totalPrice = quantity * pricePerUnit;
+    
+    // Create a stock entry
+    const entryId = generateId();
+    const newEntry: StockEntry = {
+      id: entryId,
+      supplierId,
+      date,
+      items: [{ productId, quantity, unitPrice: pricePerUnit, totalPrice }],
+      totalAmount: totalPrice,
+      paymentStatus: 'unpaid',
+      createdAt: new Date().toISOString(),
+    };
+    
+    addStockEntry(newEntry);
+  };
+
+  // Supplier Payment operations
+  const addSupplierPayment = (payment: Omit<SupplierPayment, 'id'>): void => {
+    const newPayment = { ...payment, id: generateId() };
+    setSupplierPayments(prev => [...prev, newPayment]);
+    
+    // Update supplier outstanding balance if needed
+    // This would require tracking supplier outstanding balances
+  };
+  
+  const updateSupplierPayment = (id: string, paymentData: Partial<SupplierPayment>): void => {
+    setSupplierPayments(prev => 
+      prev.map(payment => payment.id === id ? { ...payment, ...paymentData } : payment)
+    );
+  };
+  
+  const deleteSupplierPayment = (id: string): void => {
+    setSupplierPayments(prev => prev.filter(payment => payment.id !== id));
   };
 
   // UI Settings
-  const updateUISettings = (settings: Partial<UISettings>) => {
+  const updateUISettings = (settings: Partial<UISettings>): void => {
     setUISettings(prev => ({ ...prev, ...settings }));
   };
 
@@ -1024,6 +1312,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         suppliers,
         vehicles,
         salesmen,
+        expenses,
+        trackSheets,
+        stockRecords,
+        stockEntries,
+        supplierPayments,
         uiSettings,
         addCustomer,
         updateCustomer,
@@ -1056,6 +1349,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addSupplier,
         updateSupplier,
         deleteSupplier,
+        addVehicle,
+        updateVehicle,
+        deleteVehicle,
+        addSalesman,
+        updateSalesman,
+        deleteSalesman,
+        addExpense,
+        updateExpense,
+        deleteExpense,
+        addTrackSheet,
+        updateTrackSheet,
+        deleteTrackSheet,
+        addStockRecord,
+        updateStockRecord,
+        deleteStockRecord,
+        addStockEntry,
+        updateStockEntry,
+        deleteStockEntry,
+        addStock,
+        addSupplierPayment,
+        updateSupplierPayment,
+        deleteSupplierPayment
       }}
     >
       {children}

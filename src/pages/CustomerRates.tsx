@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Customer } from "@/types";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Download, FileText, Filter } from "lucide-react";
+import { Search, Download, FileText } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -58,7 +59,7 @@ export default function CustomerRates() {
           productId,
           rate,
           effectiveDate: new Date().toISOString().split('T')[0],
-          isActive: true // Add the missing isActive property
+          isActive: true
         });
       }
     });

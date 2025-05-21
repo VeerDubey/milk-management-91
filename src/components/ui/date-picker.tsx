@@ -14,7 +14,7 @@ import {
 interface DatePickerProps {
   date?: Date;
   setDate: (date: Date) => void;
-  className?: string;  // Added className prop
+  className?: string;
 }
 
 export function DatePicker({ date, setDate, className }: DatePickerProps) {
@@ -26,7 +26,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           className={cn(
             "w-[180px] justify-start text-left font-normal",
             !date && "text-muted-foreground",
-            className  // Apply the className prop
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
