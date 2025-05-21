@@ -1,86 +1,53 @@
-import { 
-  Customer, Product, Order, Payment, 
-  CustomerProductRate, SupplierProductRate, 
-  Supplier, UISettings, Vehicle, Salesman, 
-  Expense, TrackSheet, Invoice, SupplierPayment,
-  StockRecord, StockEntry, StockEntryItem
-} from '@/types';
 
-// Define these types directly
-export interface OrderData {
-  customerId: string;
-  items: { productId: string; quantity: number; unitPrice: number }[];
-  date: string;
-  notes?: string;
-}
-
-export interface PaymentAmount {
-  amount: number;
-  method: 'cash' | 'bank' | 'upi' | 'other';
-  date: string;
-}
+import { Customer, Product, Order, Payment, CustomerProductRate, SupplierProductRate, Stock, StockEntry, StockRecord, Supplier, UISettings, Vehicle, Salesman, TrackSheet, Expense, Invoice } from '@/types';
 
 export interface DataContextType {
   // Customer state
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, "id">) => void;
+  addCustomer: (customer: Omit<Customer, "id">) => Customer;
   updateCustomer: (id: string, customerData: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
-  
+
   // Product state
   products: Product[];
-  addProduct: (product: Omit<Product, "id">) => void;
+  addProduct: (product: Omit<Product, "id">) => Product;
   updateProduct: (id: string, productData: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
-  
+
   // Order state
   orders: Order[];
-  addOrder: (order: Omit<Order, "id">) => void;
+  addOrder: (order: Omit<Order, "id">) => Order;
   updateOrder: (id: string, orderData: Partial<Order>) => void;
   deleteOrder: (id: string) => void;
-  
+
   // Payment state
   payments: Payment[];
-  addPayment: (payment: Omit<Payment, "id">) => void;
+  addPayment: (payment: Omit<Payment, "id">) => Payment;
   updatePayment: (id: string, paymentData: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
-  deleteMultiplePayments: (ids: string[]) => void; // Add this missing function
-  
-  // Product Rate state
+
+  // Product rate state
   customerProductRates: CustomerProductRate[];
-  supplierProductRates: SupplierProductRate[];
-  addCustomerProductRate: (rate: Omit<CustomerProductRate, "id">) => void;
+  addCustomerProductRate: (rate: Omit<CustomerProductRate, "id">) => CustomerProductRate;
   updateCustomerProductRate: (id: string, rateData: Partial<CustomerProductRate>) => void;
   deleteCustomerProductRate: (id: string) => void;
-  getCustomerProductRates: (customerId: string) => CustomerProductRate[];
-  getProductRateForCustomer: (customerId: string, productId: string) => number;
-  addSupplierProductRate: (rate: Omit<SupplierProductRate, "id">) => void;
-  updateSupplierProductRate: (id: string, rateData: Partial<SupplierProductRate>) => void;
-  deleteSupplierProductRate: (id: string) => void;
-  getSupplierProductRates: (supplierId: string) => SupplierProductRate[];
-  getProductRateForSupplier: (supplierId: string, productId: string) => number | null;
-  getSupplierRateHistory: (supplierId: string, productId: string) => SupplierProductRate[];
-  
-  // Supplier state
-  suppliers: Supplier[];
-  supplierPayments: SupplierPayment[];
-  addSupplier: (supplier: Omit<Supplier, "id">) => void;
-  updateSupplier: (id: string, supplierData: Partial<Supplier>) => void;
-  deleteSupplier: (id: string) => void;
-  addSupplierPayment: (payment: Omit<SupplierPayment, "id">) => void;
-  updateSupplierPayment: (id: string, paymentData: Partial<SupplierPayment>) => void;
-  deleteSupplierPayment: (id: string) => void;
   
   // Stock state
   stockRecords: StockRecord[];
-  stockEntries: StockEntry[];
-  addStockRecord: (record: Omit<StockRecord, "id">) => void;
+  addStockRecord: (record: Omit<StockRecord, "id">) => StockRecord;
   updateStockRecord: (id: string, recordData: Partial<StockRecord>) => void;
   deleteStockRecord: (id: string) => void;
-  addStockEntry: (entry: StockEntry) => void;
-  updateStockEntry: (id: string, entryData: Partial<StockEntry>) => void;
-  deleteStockEntry: (id: string) => void;
-  addStock: (supplierId: string, productId: string, quantity: number, pricePerUnit: number, date: string) => void;
+  addStock: (entry: Omit<StockEntry, "id">) => StockEntry;
+  
+  // Supplier state
+  supplierProductRates: SupplierProductRate[];
+  addSupplierProductRate: (rate: Omit<SupplierProductRate, "id">) => SupplierProductRate;
+  updateSupplierProductRate: (id: string, rateData: Partial<SupplierProductRate>) => void;
+  deleteSupplierProductRate: (id: string) => void;
+  suppliers: Supplier[];
+  addSupplier: (supplier: Omit<Supplier, "id">) => Supplier;
+  updateSupplier: (id: string, supplierData: Partial<Supplier>) => void;
+  deleteSupplier: (id: string) => void;
   
   // UI Settings state
   uiSettings: UISettings;
@@ -88,29 +55,29 @@ export interface DataContextType {
   
   // Vehicle/Salesman state
   vehicles: Vehicle[];
-  salesmen: Salesman[];
-  addVehicle: (vehicle: Omit<Vehicle, "id">) => void;
+  addVehicle: (vehicle: Omit<Vehicle, "id">) => Vehicle;
   updateVehicle: (id: string, vehicleData: Partial<Vehicle>) => void;
   deleteVehicle: (id: string) => void;
-  addSalesman: (salesman: Omit<Salesman, "id">) => void;
+  salesmen: Salesman[];
+  addSalesman: (salesman: Omit<Salesman, "id">) => Salesman;
   updateSalesman: (id: string, salesmanData: Partial<Salesman>) => void;
   deleteSalesman: (id: string) => void;
   
   // Expense state
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, "id">) => void;
+  addExpense: (expense: Omit<Expense, "id">) => Expense;
   updateExpense: (id: string, expenseData: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
   
-  // Track Sheet state
+  // TrackSheet state
   trackSheets: TrackSheet[];
-  addTrackSheet: (trackSheet: Omit<TrackSheet, "id">) => void;
+  addTrackSheet: (trackSheet: Omit<TrackSheet, "id">) => TrackSheet;
   updateTrackSheet: (id: string, trackSheetData: Partial<TrackSheet>) => void;
   deleteTrackSheet: (id: string) => void;
   
-  // Invoice context data
+  // Invoice state
   invoices: Invoice[];
-  addInvoice: (invoice: Omit<Invoice, "id">) => string;
+  addInvoice: (invoice: Omit<Invoice, "id">) => string; // Return type is string (invoice ID)
   updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
   deleteInvoice: (id: string) => void;
 }

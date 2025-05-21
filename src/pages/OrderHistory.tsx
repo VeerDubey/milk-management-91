@@ -263,22 +263,24 @@ export default function OrderHistory() {
     };
     
     try {
-      // Store the result in a variable first
-      const result = addTrackSheet(newTrackSheet);
+      // Create the track sheet and store the result
+      const createdSheet = addTrackSheet(newTrackSheet);
       setIsCarryForwardDialogOpen(false);
       setSelectedOrderId(null);
       
       toast.success("Order carried forward to next day's track sheet successfully");
       
-      // Only navigate if there's a valid track sheet ID
-      if (result && typeof result === 'object' && 'id' in result) {
-        // Offer to navigate to the newly created track sheet
-        setTimeout(() => {
-          const shouldNavigate = window.confirm("Do you want to view the created track sheet?");
-          if (shouldNavigate) {
-            navigate(`/track-sheet/${result.id}`);
-          }
-        }, 500);
+      // Create a separate function to handle navigation after creation
+      const offerNavigation = () => {
+        const shouldNavigate = window.confirm("Do you want to view the created track sheet?");
+        if (shouldNavigate && createdSheet && typeof createdSheet === 'object') {
+          navigate(`/track-sheet/${createdSheet.id}`);
+        }
+      };
+      
+      // Only show navigation prompt if we have a valid sheet
+      if (createdSheet && typeof createdSheet === 'object') {
+        setTimeout(offerNavigation, 500);
       }
     } catch (error) {
       console.error("Error creating track sheet:", error);

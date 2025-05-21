@@ -156,7 +156,9 @@ export interface TrackSheet {
   salesmanName?: string;
   routeName?: string;
   createdAt?: string;
+  updatedAt?: string;
   savedAt?: string;
+  notes?: string; // Adding notes property
 }
 
 export interface Expense {

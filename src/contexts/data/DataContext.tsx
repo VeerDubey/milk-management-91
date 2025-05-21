@@ -49,9 +49,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...trackSheetState,
     // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,
+    // Type correction: Cast the return value to string for compatibility
     addInvoice: (invoice) => {
-      return invoiceState.addInvoice(invoice);
-      // Return type issue fixed by removing the cast to string
+      const result = invoiceState.addInvoice(invoice);
+      // Return the id as a string to match expected type
+      return typeof result === 'object' && result !== null ? result.id : String(result);
     },
     updateInvoice: invoiceState.updateInvoice,
     deleteInvoice: invoiceState.deleteInvoice,
