@@ -33,17 +33,21 @@ try {
     console.warn(packageError.message);
   }
   
-  console.log('Installing Electron-specific dependencies explicitly from npm registry...');
-  // Explicitly fetch from npm registry with full safety flags and without git
+  console.log('Installing Electron-specific dependencies from npm registry explicitly...');
+  // Modify this line to install electron packages directly from npm without git
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest', { stdio: 'inherit' });
+
+  // Install explicitly node-gyp without git
+  console.log('Installing node-gyp explicitly from npm registry...');
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ node-gyp@latest', { stdio: 'inherit' });
+  
+  // Install @electron/node-gyp explicitly from npm registry - this fixes the git clone issue
+  console.log('Installing @electron/node-gyp explicitly from npm registry...');
+  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ @electron/node-gyp@latest', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
   execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ lovable-tagger@latest', { stdio: 'inherit' });
-
-  // Explicitly install node-gyp to avoid git issues
-  console.log('Installing node-gyp explicitly...');
-  execSync('npm install --no-save --ignore-scripts --no-fund --no-audit --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ node-gyp@latest @electron/node-gyp@latest', { stdio: 'inherit' });
 
   console.log('\nInstallation completed successfully!');
   console.log('You can now run the application using:');
