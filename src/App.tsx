@@ -36,6 +36,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Master from '@/pages/Master';
 import OutstandingAmounts from '@/pages/OutstandingAmounts';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import Index from '@/pages/Index';
 
 // Create placeholder components for missing modules
 const SupplierDetail = () => <div>Supplier Detail Page</div>;
@@ -76,12 +77,14 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           
-          {/* Protected routes (requiring authentication) */}
+          {/* Root route now points to Index component */}
           <Route path="/" element={
             <ProtectedRoute>
-              <Dashboard />
+              <Index />
             </ProtectedRoute>
           } />
+          
+          {/* Protected routes (requiring authentication) */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
