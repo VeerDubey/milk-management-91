@@ -1,4 +1,3 @@
-
 import { 
   Customer, Product, Order, Payment, 
   CustomerProductRate, SupplierProductRate, 
@@ -42,10 +41,10 @@ export interface DataContextType {
   
   // Payment state
   payments: Payment[];
-  addPayment: (payment: Omit<Payment, "id">) => void | Payment;
+  addPayment: (payment: Omit<Payment, "id">) => void;
   updatePayment: (id: string, paymentData: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
-  deleteMultiplePayments: (ids: string[]) => void;
+  deleteMultiplePayments: (ids: string[]) => void; // Add this missing function
   
   // Product Rate state
   customerProductRates: CustomerProductRate[];

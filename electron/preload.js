@@ -94,34 +94,6 @@ const API = {
     isPlatform: (platform) => {
       return ipcRenderer.invoke('is-platform', platform);
     },
-  },
-  
-  // Database operations
-  db: {
-    initialize: () => {
-      log.info('Initializing database');
-      return ipcRenderer.invoke('db-initialize');
-    },
-    save: (table, data) => {
-      log.info(`Saving data to table: ${table}`);
-      return ipcRenderer.invoke('db-save', table, data);
-    },
-    query: (table, params = {}) => {
-      log.info(`Querying table: ${table}`);
-      return ipcRenderer.invoke('db-query', table, params);
-    },
-    getById: (table, id) => {
-      log.info(`Getting record from table: ${table}, id: ${id}`);
-      return ipcRenderer.invoke('db-get-by-id', table, id);
-    },
-    delete: (table, id) => {
-      log.info(`Deleting from table: ${table}, id: ${id}`);
-      return ipcRenderer.invoke('db-delete', table, id);
-    },
-    importTable: (table, data) => {
-      log.info(`Importing data to table: ${table}`);
-      return ipcRenderer.invoke('db-import-table', table, data);
-    },
   }
 };
 

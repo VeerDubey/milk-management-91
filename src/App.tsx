@@ -34,9 +34,6 @@ import CustomerDirectory from '@/pages/CustomerDirectory';
 import SupplierDirectory from '@/pages/SupplierDirectory';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Master from '@/pages/Master';
-import OutstandingAmounts from '@/pages/OutstandingAmounts';
-import { OfflineIndicator } from '@/components/OfflineIndicator';
-import Index from '@/pages/Index';
 
 // Create placeholder components for missing modules
 const SupplierDetail = () => <div>Supplier Detail Page</div>;
@@ -49,7 +46,6 @@ const CustomerProductRates = () => <div>Customer Product Rates Page</div>;
 const SupplierProductRates = () => <div>Supplier Product Rates Page</div>;
 const Vehicles = () => <div>Vehicles Page</div>;
 const Salesmen = () => <div>Salesmen Page</div>;
-const OutstandingDues = () => <div>Outstanding Dues Page</div>;
 
 function AppContent() {
   const location = useLocation();
@@ -70,190 +66,175 @@ function AppContent() {
   }, []);
 
   return (
-    <>
-      <Layout>
-        <Routes>
-          {/* Public routes (no authentication required) */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          
-          {/* Root route now points to Index component */}
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Index />
-            </ProtectedRoute>
-          } />
-          
-          {/* Protected routes (requiring authentication) */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/customers" element={
-            <ProtectedRoute>
-              <Customers />
-            </ProtectedRoute>
-          } />
-          <Route path="/customers/:id" element={
-            <ProtectedRoute>
-              <CustomerDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/products" element={
-            <ProtectedRoute>
-              <Products />
-            </ProtectedRoute>
-          } />
-          <Route path="/products/:id" element={
-            <ProtectedRoute>
-              <ProductDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/orders" element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          } />
-          <Route path="/orders/:id" element={
-            <ProtectedRoute>
-              <OrderDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/payments" element={
-            <ProtectedRoute>
-              <Payments />
-            </ProtectedRoute>
-          } />
-          <Route path="/payments/:id" element={
-            <ProtectedRoute>
-              <PaymentDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/suppliers" element={
-            <ProtectedRoute>
-              <Suppliers />
-            </ProtectedRoute>
-          } />
-          <Route path="/suppliers/:id" element={
-            <ProtectedRoute>
-              <SupplierDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/supplier-payments/:id" element={
-            <ProtectedRoute>
-              <SupplierPaymentDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/stock-management" element={
-            <ProtectedRoute>
-              <StockManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/stock-entries/:id" element={
-            <ProtectedRoute>
-              <StockEntryDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/expenses" element={
-            <ProtectedRoute>
-              <Expenses />
-            </ProtectedRoute>
-          } />
-          <Route path="/expenses/:id" element={
-            <ProtectedRoute>
-              <ExpenseDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/reports" element={
-            <ProtectedRoute>
-              <Reports />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/customer-product-rates" element={
-            <ProtectedRoute>
-              <CustomerProductRates />
-            </ProtectedRoute>
-          } />
-          <Route path="/supplier-product-rates" element={
-            <ProtectedRoute>
-              <SupplierProductRates />
-            </ProtectedRoute>
-          } />
-          <Route path="/vehicles" element={
-            <ProtectedRoute>
-              <Vehicles />
-            </ProtectedRoute>
-          } />
-          <Route path="/salesmen" element={
-            <ProtectedRoute>
-              <Salesmen />
-            </ProtectedRoute>
-          } />
-          <Route path="/track-sheet" element={
-            <ProtectedRoute>
-              <TrackSheet />
-            </ProtectedRoute>
-          } />
-          <Route path="/tax-settings" element={
-            <ProtectedRoute>
-              <TaxSettings />
-            </ProtectedRoute>
-          } />
-          <Route path="/invoice-history" element={
-            <ProtectedRoute>
-              <InvoiceHistory />
-            </ProtectedRoute>
-          } />
-          <Route path="/invoice-detail/:id" element={
-            <ProtectedRoute>
-              <InvoiceDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/invoice-generator" element={
-            <ProtectedRoute>
-              <InvoiceGenerator />
-            </ProtectedRoute>
-          } />
-          <Route path="/vehicle-assignment" element={
-            <ProtectedRoute>
-              <VehicleAssignment />
-            </ProtectedRoute>
-          } />
-          <Route path="/customer-directory" element={
-            <ProtectedRoute>
-              <CustomerDirectory />
-            </ProtectedRoute>
-          } />
-          <Route path="/supplier-directory" element={
-            <ProtectedRoute>
-              <SupplierDirectory />
-            </ProtectedRoute>
-          } />
-          <Route path="/master" element={
-            <ProtectedRoute>
-              <Master />
-            </ProtectedRoute>
-          } />
-          <Route path="/outstanding-amounts" element={
-            <ProtectedRoute>
-              <OutstandingAmounts />
-            </ProtectedRoute>
-          } />
-          <Route path="/outstanding-dues" element={
-            <ProtectedRoute>
-              <OutstandingDues />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </Layout>
-      <OfflineIndicator />
-    </>
+    <Layout>
+      <Routes>
+        {/* Public routes (no authentication required) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        
+        {/* Protected routes (requiring authentication) */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/customers" element={
+          <ProtectedRoute>
+            <Customers />
+          </ProtectedRoute>
+        } />
+        <Route path="/customers/:id" element={
+          <ProtectedRoute>
+            <CustomerDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <Products />
+          </ProtectedRoute>
+        } />
+        <Route path="/products/:id" element={
+          <ProtectedRoute>
+            <ProductDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Orders />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders/:id" element={
+          <ProtectedRoute>
+            <OrderDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments" element={
+          <ProtectedRoute>
+            <Payments />
+          </ProtectedRoute>
+        } />
+        <Route path="/payments/:id" element={
+          <ProtectedRoute>
+            <PaymentDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/suppliers" element={
+          <ProtectedRoute>
+            <Suppliers />
+          </ProtectedRoute>
+        } />
+        <Route path="/suppliers/:id" element={
+          <ProtectedRoute>
+            <SupplierDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-payments/:id" element={
+          <ProtectedRoute>
+            <SupplierPaymentDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/stock-management" element={
+          <ProtectedRoute>
+            <StockManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/stock-entries/:id" element={
+          <ProtectedRoute>
+            <StockEntryDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/expenses" element={
+          <ProtectedRoute>
+            <Expenses />
+          </ProtectedRoute>
+        } />
+        <Route path="/expenses/:id" element={
+          <ProtectedRoute>
+            <ExpenseDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-product-rates" element={
+          <ProtectedRoute>
+            <CustomerProductRates />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-product-rates" element={
+          <ProtectedRoute>
+            <SupplierProductRates />
+          </ProtectedRoute>
+        } />
+        <Route path="/vehicles" element={
+          <ProtectedRoute>
+            <Vehicles />
+          </ProtectedRoute>
+        } />
+        <Route path="/salesmen" element={
+          <ProtectedRoute>
+            <Salesmen />
+          </ProtectedRoute>
+        } />
+        <Route path="/track-sheet" element={
+          <ProtectedRoute>
+            <TrackSheet />
+          </ProtectedRoute>
+        } />
+        <Route path="/tax-settings" element={
+          <ProtectedRoute>
+            <TaxSettings />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-history" element={
+          <ProtectedRoute>
+            <InvoiceHistory />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-detail/:id" element={
+          <ProtectedRoute>
+            <InvoiceDetail />
+          </ProtectedRoute>
+        } />
+        <Route path="/invoice-generator" element={
+          <ProtectedRoute>
+            <InvoiceGenerator />
+          </ProtectedRoute>
+        } />
+        <Route path="/vehicle-assignment" element={
+          <ProtectedRoute>
+            <VehicleAssignment />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-directory" element={
+          <ProtectedRoute>
+            <CustomerDirectory />
+          </ProtectedRoute>
+        } />
+        <Route path="/supplier-directory" element={
+          <ProtectedRoute>
+            <SupplierDirectory />
+          </ProtectedRoute>
+        } />
+        <Route path="/master" element={
+          <ProtectedRoute>
+            <Master />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Layout>
   );
 }
 

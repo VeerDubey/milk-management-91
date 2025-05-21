@@ -71,7 +71,7 @@ function getSeverity(daysOverdue: number) {
   return "low";
 }
 
-const OutstandingAmounts = () => {
+export default function OutstandingAmounts() {
   const { customers, addInvoice } = useData();
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
@@ -116,15 +116,15 @@ const OutstandingAmounts = () => {
   };
 
   // Filter customers with outstanding balances
-  const customersWithOutstanding = customers?.filter(
+  const customersWithOutstanding = customers.filter(
     (customer) => (customer.outstandingBalance || 0) > 0
-  ) || [];
+  );
 
   // Apply search filter
   const searchFiltered = customersWithOutstanding.filter(
     (customer) =>
-      customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.phone?.includes(searchQuery)
+      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone.includes(searchQuery)
   );
 
   // Apply severity filter
@@ -163,7 +163,6 @@ const OutstandingAmounts = () => {
         </p>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -200,7 +199,6 @@ const OutstandingAmounts = () => {
         </Card>
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center justify-between">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
@@ -228,10 +226,8 @@ const OutstandingAmounts = () => {
         </div>
       </div>
 
-      {/* Tab content */}
       <Tabs value={activeTab} className="w-full">
         <TabsContent value="list">
-          {/* List card */}
           <Card>
             <CardHeader>
               <CardTitle>Due Collection</CardTitle>
@@ -239,7 +235,6 @@ const OutstandingAmounts = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Filters */}
                 <div className="flex flex-col gap-4 md:flex-row">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -274,7 +269,6 @@ const OutstandingAmounts = () => {
                   </Select>
                 </div>
 
-                {/* Table */}
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
@@ -395,20 +389,17 @@ const OutstandingAmounts = () => {
           </Card>
         </TabsContent>
         <TabsContent value="analytics">
-          {/* Analytics card */}
           <Card>
             <CardHeader>
               <CardTitle>Outstanding Analysis</CardTitle>
               <CardDescription>Analyze customer outstanding amounts by different factors</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Analytics content */}
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <h3 className="text-lg font-medium mb-4">Outstanding by Age</h3>
                     <div className="space-y-3">
-                      {/* Age breakdown charts */}
                       {[
                         { label: "0-15 days", color: "bg-green-500" },
                         { label: "15-30 days", color: "bg-amber-500" },
@@ -451,7 +442,6 @@ const OutstandingAmounts = () => {
                   <div>
                     <h3 className="text-lg font-medium mb-4">Top Overdue Customers</h3>
                     <div className="space-y-2">
-                      {/* Top customers list */}
                       {filteredCustomers
                         .sort((a, b) => (b.outstandingBalance || 0) - (a.outstandingBalance || 0))
                         .slice(0, 5)
@@ -489,7 +479,6 @@ const OutstandingAmounts = () => {
                 <div>
                   <h3 className="text-lg font-medium mb-4">Actions Required</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Action cards */}
                     <Card>
                       <CardHeader className="p-4">
                         <div className="flex items-center justify-between">
@@ -555,81 +544,6 @@ const OutstandingAmounts = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* View Statement Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Customer Statement</DialogTitle>
-            <DialogDescription>
-              Statement for {selectedCustomer?.name || ''}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="border rounded p-4">
-              <h3 className="font-medium">Outstanding Balance: ₹{selectedCustomer?.outstandingBalance?.toLocaleString() || '0'}</h3>
-              <p className="text-sm text-muted-foreground">This is a placeholder for the statement details.</p>
-            </div>
-          </div>
-          <DialogFooter className="flex space-x-2 justify-end">
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-            <Button onClick={() => toast.success('Statement printed successfully')}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Reminder Dialog */}
-      <Dialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Payment Reminder</DialogTitle>
-            <DialogDescription>
-              Send a payment reminder to {selectedCustomer?.name || ''}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">Send via:</p>
-                <div className="flex space-x-2 mt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Email
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    SMS
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Customer Info:</p>
-                <p className="text-sm">{selectedCustomer?.phone || 'No phone'}</p>
-                <p className="text-sm">{selectedCustomer?.email || 'No email'}</p>
-              </div>
-            </div>
-            
-            <div>
-              <label htmlFor="message" className="text-sm font-medium">Message</label>
-              <textarea
-                id="message"
-                className="mt-1 w-full h-40 p-2 border rounded-md"
-                value={reminderMessage}
-                onChange={(e) => setReminderMessage(e.target.value)}
-              ></textarea>
-            </div>
-          </div>
-          <DialogFooter className="flex space-x-2 justify-end">
-            <Button variant="outline" onClick={() => setIsReminderDialogOpen(false)}>Cancel</Button>
-            <Button onClick={sendReminder}>Send Reminder</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
-
-export default OutstandingAmounts;

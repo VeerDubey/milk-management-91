@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Save, Download, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 
-export interface TrackSheetHeaderProps {
+interface TrackSheetHeaderProps {
   selectedTemplate: string | null;
   onOpenSaveDialog: () => void;
   onExportExcel: () => void;

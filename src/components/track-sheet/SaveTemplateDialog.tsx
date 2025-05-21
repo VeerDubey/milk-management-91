@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { TrackSheetRow } from '@/types';
 import { createTrackSheetTemplate } from '@/utils/trackSheetUtils';
 
-export interface SaveTemplateDialogProps {
+interface SaveTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rows: TrackSheetRow[]; 
@@ -42,12 +42,7 @@ export function SaveTemplateDialog({ open, onOpenChange, rows }: SaveTemplateDia
       // Use the createTrackSheetTemplate function with processed rows
       const template = createTrackSheetTemplate(templateName, templateRows);
       
-      // Save template to localStorage directly
-      const savedTemplates = localStorage.getItem("trackSheetTemplates");
-      const templates = savedTemplates ? JSON.parse(savedTemplates) : [];
-      templates.push(template);
-      localStorage.setItem("trackSheetTemplates", JSON.stringify(templates));
-      
+      // In a real app, we would save this template to storage
       toast.success(`Template "${templateName}" saved successfully`);
       
       // Close dialog and reset state

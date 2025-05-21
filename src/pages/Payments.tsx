@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const Payments = () => {
-  const { customers = [], payments = [], addPayment, deletePayment, deleteMultiplePayments } = useData();
+  const { customers, payments, addPayment, deletePayment, deleteMultiplePayments } = useData();
   const [open, setOpen] = useState(false);
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
@@ -228,12 +227,6 @@ const Payments = () => {
 
   // Filter payments based on search query and other filters
   const filteredPayments = useMemo(() => {
-    // Ensure payments is an array before filtering
-    if (!Array.isArray(payments)) {
-      console.error("Payments is not an array:", payments);
-      return [];
-    }
-    
     return payments
       .filter(payment => {
         // Tab filter
@@ -319,8 +312,8 @@ const Payments = () => {
 
   // Calculate summaries
   const totalPayments = filteredPayments.reduce((total, p) => total + p.amount, 0);
-  const customersWithDues = customers.filter(c => (c.outstandingBalance || 0) > 0);
-  const totalOutstanding = customersWithDues.reduce((total, c) => total + (c.outstandingBalance || 0), 0);
+  const customersWithDues = customers.filter(c => c.outstandingBalance > 0);
+  const totalOutstanding = customersWithDues.reduce((total, c) => total + c.outstandingBalance, 0);
   const totalSelected = selectedPayments.reduce((total, id) => {
     const payment = payments.find(p => p.id === id);
     return total + (payment?.amount || 0);
@@ -328,7 +321,7 @@ const Payments = () => {
   
   // Get customers with outstanding balances for reminders
   const customersForReminders = customersWithDues.sort((a, b) => 
-    (b.outstandingBalance || 0) - (a.outstandingBalance || 0)
+    b.outstandingBalance - a.outstandingBalance
   );
   
   // Send reminders handler

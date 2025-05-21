@@ -1,212 +1,324 @@
-
+// Add necessary imports for calculations and PDF generation
+import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { TrackSheet, TrackSheetRow, Customer } from '@/types';
 
-// Export track sheet to PDF
-export function generateTrackSheetPdf(trackSheet: TrackSheet, productNames: string[], customers: Customer[]) {
-  const doc = new jsPDF();
-  
-  // Add header
-  doc.setFontSize(18);
-  doc.text('Vikas Milk Centers & Manali Enterprises', doc.internal.pageSize.width / 2, 20, { align: 'center' });
-  doc.setFontSize(12);
-  doc.text('Distribution Track Sheet', doc.internal.pageSize.width / 2, 28, { align: 'center' });
-  
-  // Add metadata
-  doc.setFontSize(10);
-  doc.text(`Date: ${trackSheet.date}`, 14, 40);
-  
-  if (trackSheet.vehicleName) {
-    doc.text(`Vehicle: ${trackSheet.vehicleName}`, 14, 46);
-  }
-  
-  if (trackSheet.salesmanName) {
-    doc.text(`Salesman: ${trackSheet.salesmanName}`, 14, 52);
-  }
-  
-  if (trackSheet.routeName) {
-    doc.text(`Route: ${trackSheet.routeName}`, 14, 58);
-  }
-  
-  // Calculate product totals
-  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
-  
-  // Prepare table data
-  const tableHeaders = ['Customer', ...productNames, 'Total', 'Amount'];
-  const tableData = trackSheet.rows.map(row => {
-    return [
-      row.name,
-      ...productNames.map(product => row.quantities[product] || ''),
-      row.total,
-      `₹${row.amount}`
-    ];
-  });
-  
-  // Add totals row
-  const totalRow = [
-    'Total',
-    ...productNames.map(product => productTotals[product] || 0),
-    trackSheet.rows.reduce((sum, row) => sum + row.total, 0),
-    `₹${trackSheet.rows.reduce((sum, row) => sum + row.amount, 0)}`
-  ];
-  
-  // Generate table
-  autoTable(doc, {
-    startY: 65,
-    head: [tableHeaders],
-    body: [...tableData, totalRow],
-    foot: [],
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255] },
-    footStyles: { fillColor: [240, 240, 240] },
-    alternateRowStyles: { fillColor: [245, 245, 245] },
-    margin: { top: 65 }
-  });
-  
-  // Add signature lines
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(10);
-  doc.text('Salesman\'s Signature', 25, finalY + 10);
-  doc.line(20, finalY + 25, 90, finalY + 25);
-  doc.text('Manager\'s Signature', doc.internal.pageSize.width - 25, finalY + 10, { align: 'right' });
-  doc.line(doc.internal.pageSize.width - 90, finalY + 25, doc.internal.pageSize.width - 20, finalY + 25);
-  
-  return doc;
+// Define types
+export interface TrackSheetTemplate {
+  id: string;
+  name: string;
+  rows: TrackSheetRow[];
+  createdAt: string;
 }
 
-// Export track sheet to Excel
-export function exportTrackSheetToExcel(trackSheet: TrackSheet, productNames: string[]) {
-  // Calculate product totals
-  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
-  
-  // Prepare worksheet data
-  const wsData = [
-    ['Vikas Milk Centers & Manali Enterprises'],
-    ['Distribution Track Sheet'],
-    [],
-    ['Date:', trackSheet.date],
-  ];
-  
-  if (trackSheet.vehicleName) {
-    wsData.push(['Vehicle:', trackSheet.vehicleName]);
-  }
-  
-  if (trackSheet.salesmanName) {
-    wsData.push(['Salesman:', trackSheet.salesmanName]);
-  }
-  
-  if (trackSheet.routeName) {
-    wsData.push(['Route:', trackSheet.routeName]);
-  }
-  
-  wsData.push([]);
-  
-  // Add table headers
-  wsData.push(['Customer', ...productNames, 'Total', 'Amount']);
-  
-  // Add table data
-  trackSheet.rows.forEach(row => {
-    // Ensure all values in the row are strings
-    const rowData = [
-      row.name,
-      ...productNames.map(product => {
-        const quantity = row.quantities[product];
-        // Convert any non-string quantities to strings, or use empty string if undefined
-        return quantity !== undefined ? String(quantity) : '';
-      }),
-      String(row.total), // Convert number to string
-      String(row.amount) // Convert number to string
-    ];
-    wsData.push(rowData);
-  });
-  
-  // Add totals row
-  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
-  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
-  
-  wsData.push([
-    'Total',
-    ...productNames.map(product => String(productTotals[product] || 0)), // Convert numbers to strings
-    String(totalQuantity), // Convert number to string
-    String(totalAmount) // Convert number to string
-  ]);
-  
-  wsData.push([]);
-  wsData.push(['Salesman\'s Signature', '', '', 'Manager\'s Signature']);
-  
-  // Create workbook
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  
-  // Apply some styling
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },  // Title
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }   // Subtitle
-  ];
-  
-  XLSX.utils.book_append_sheet(wb, ws, 'Track Sheet');
-  
-  return wb;
-}
+// Utility function to calculate totals
+export const calculateTotals = (rows: TrackSheetRow[]) => {
+  const totalQuantity = rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
 
-// Save PDF file
-export function savePdf(doc: any, filename: string) {
-  doc.save(filename);
-}
+  return {
+    totalQuantity,
+    totalAmount
+  };
+};
 
-// Save Excel file
-export function saveExcel(workbook: any, filename: string) {
-  XLSX.writeFile(workbook, filename);
-}
-
-// Helper function to calculate product totals
-export function calculateProductTotals(rows: TrackSheetRow[], productNames: string[]) {
+// Utility function to calculate product totals
+export const calculateProductTotals = (rows: TrackSheetRow[], products: string[]) => {
+  // Initialize product totals object
   const productTotals: Record<string, number> = {};
   
-  if (!rows || !productNames) return productTotals;
+  // Initialize all products with 0
+  products.forEach(productName => {
+    productTotals[productName] = 0;
+  });
   
+  // Sum up quantities for each product
   rows.forEach(row => {
-    productNames.forEach(product => {
-      const quantity = row.quantities[product];
-      if (quantity) {
-        const numericQuantity = typeof quantity === 'string' ? parseFloat(quantity) : quantity;
-        if (!isNaN(numericQuantity)) {
-          productTotals[product] = (productTotals[product] || 0) + numericQuantity;
-        }
+    Object.entries(row.quantities).forEach(([productName, quantity]) => {
+      if (products.includes(productName)) {
+        const numQuantity = quantity === '' ? 0 : typeof quantity === 'string' ? parseInt(quantity, 10) : quantity;
+        productTotals[productName] = (productTotals[productName] || 0) + (isNaN(numQuantity) ? 0 : numQuantity);
       }
     });
   });
   
   return productTotals;
-}
+};
 
-// Calculate totals for TrackSheetAnalytics component
-export function calculateTotals(rows: TrackSheetRow[]) {
-  let totalQuantity = 0;
-  let totalAmount = 0;
+// Function to generate a PDF from track sheet data
+export const generateTrackSheetPdf = (trackSheet: TrackSheet, productNames: string[], customers: any[]) => {
+  const doc = new jsPDF();
   
-  if (!rows) return { totalQuantity, totalAmount };
+  // Add title
+  doc.setFontSize(18);
+  doc.text('Vikas Milk Centers - Track Sheet', 14, 22);
   
-  rows.forEach(row => {
-    // Add row total to total quantity
-    totalQuantity += row.total || 0;
-    
-    // Add row amount to total amount
-    totalAmount += row.amount || 0;
+  // Add date
+  doc.setFontSize(12);
+  doc.text(`Date: ${format(new Date(trackSheet.date), 'yyyy-MM-dd')}`, 14, 32);
+  
+  // Add vehicle and salesman info if available
+  let yPos = 36;
+  if (trackSheet.vehicleName) {
+    doc.text(`Vehicle: ${trackSheet.vehicleName}`, 14, yPos);
+    yPos += 6;
+  }
+  if (trackSheet.salesmanName) {
+    doc.text(`Salesman: ${trackSheet.salesmanName}`, 14, yPos);
+    yPos += 6;
+  }
+  if (trackSheet.routeName) {
+    doc.text(`Route: ${trackSheet.routeName}`, 14, yPos);
+    yPos += 6;
+  }
+  
+  // Prepare data for table
+  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
+  const data = trackSheet.rows.map((row: any) => {
+    const rowData = [row.name || 'Unknown'];
+    productNames.forEach(product => {
+      rowData.push(row.quantities[product]?.toString() || '');
+    });
+    rowData.push(row.total.toString() || '0');
+    rowData.push(row.amount.toString() || '0');
+    return rowData;
   });
   
-  return { totalQuantity, totalAmount };
-}
+  // Calculate totals
+  const totals = ['Total'];
+  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
+  
+  productNames.forEach(product => {
+    totals.push(productTotals[product]?.toString() || '0');
+  });
+  
+  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
+  
+  totals.push(totalQuantity.toString());
+  totals.push(totalAmount.toString());
+  
+  // Add table with totals
+  (doc as any).autoTable({
+    head: [headers],
+    body: [...data, totals],
+    startY: yPos + 5,
+    styles: {
+      fontSize: 8
+    },
+    headStyles: {
+      fillColor: [66, 139, 202]
+    },
+    foot: [totals],
+    footStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    }
+  });
+  
+  // Save the PDF
+  return doc;
+};
 
-// Create a new track sheet template
-export function createTrackSheetTemplate(name: string, rows: TrackSheetRow[]) {
-  return {
-    id: `tst${Date.now()}`,
-    name,
-    date: new Date().toISOString().split('T')[0],
-    rows,
-    savedAt: new Date().toISOString()
+// Export track sheet to Excel
+export const exportTrackSheetToExcel = (trackSheet: TrackSheet, productNames: string[]) => {
+  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
+  
+  const data = [
+    headers,
+    ...trackSheet.rows.map(row => {
+      const rowData = [row.name];
+      productNames.forEach(product => {
+        rowData.push(row.quantities[product]?.toString() || '');
+      });
+      rowData.push(row.total.toString());
+      rowData.push(row.amount.toString());
+      return rowData;
+    })
+  ];
+  
+  // Calculate totals
+  const totals = ['Total'];
+  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
+  
+  productNames.forEach(product => {
+    totals.push(productTotals[product]?.toString() || '0');
+  });
+  
+  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
+  
+  totals.push(totalQuantity.toString());
+  totals.push(totalAmount.toString());
+  
+  // Add totals row
+  data.push(totals);
+  
+  // Create workbook and worksheet
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Track Sheet');
+  
+  // Set column widths
+  const colWidths = headers.map(() => ({ wch: 15 }));
+  worksheet['!cols'] = colWidths;
+  
+  // Add some basic metadata
+  workbook.Props = {
+    Title: `Track Sheet - ${trackSheet.date}`,
+    Subject: `Vehicle: ${trackSheet.vehicleName || 'N/A'}, Salesman: ${trackSheet.salesmanName || 'N/A'}`,
+    Author: 'Vikas Milk Centers',
+    CreatedDate: new Date()
   };
-}
+  
+  return workbook;
+};
+
+// Function to create a template from track sheet data
+export const createTrackSheetTemplate = (name: string, rows: TrackSheetRow[]) => {
+  return {
+    id: `template-${Date.now()}`,
+    name,
+    rows,
+    createdAt: new Date().toISOString()
+  };
+};
+
+// Function to create empty track sheet rows
+export const createEmptyTrackSheetRows = (customers: any[], products: string[]) => {
+  return customers.map(customer => ({
+    name: customer.name,
+    customerId: customer.id,
+    quantities: products.reduce((acc, product) => {
+      acc[product] = '';
+      return acc;
+    }, {} as Record<string, string | number>),
+    total: 0,
+    amount: 0,
+    products // Add the products array to the row
+  }));
+};
+
+// Function to calculate customer-specific rates for products
+export const calculateCustomerRates = (rows: TrackSheetRow[], customerProductRates: any[]) => {
+  return rows.map(row => {
+    const updatedRow = { ...row };
+    let amount = 0;
+    
+    Object.entries(row.quantities).forEach(([productName, quantity]) => {
+      const numQty = Number(quantity) || 0;
+      
+      // Find customer-specific rate if available
+      const customerRate = customerProductRates.find(
+        rate => rate.customerId === row.customerId && rate.productId === productName
+      );
+      
+      const rate = customerRate ? customerRate.rate : 0;
+      amount += numQty * rate;
+    });
+    
+    updatedRow.amount = amount;
+    return updatedRow;
+  });
+};
+
+// Other utility functions...
+
+export const savePdf = (doc: jsPDF, filename: string) => {
+  doc.save(filename);
+};
+
+export const saveExcel = (workbook: any, filename: string) => {
+  XLSX.writeFile(workbook, filename);
+};
+
+export const getBlankRow = (products: string[]): TrackSheetRow => {
+  return {
+    name: '',
+    customerId: '',
+    quantities: products.reduce((acc, product) => {
+      acc[product] = '';
+      return acc;
+    }, {} as Record<string, string | number>),
+    total: 0,
+    amount: 0,
+    products // Add the products array to the row
+  };
+};
+
+export const filterEmptyRows = (rows: TrackSheetRow[]): TrackSheetRow[] => {
+  return rows.filter(row => {
+    // Keep rows that have a customer name and at least one non-zero quantity
+    return row.name && Object.values(row.quantities).some(q => q !== '' && q !== 0);
+  });
+};
+
+// Function to generate a summary report
+export const generateSummaryReport = (trackSheets: TrackSheet[], startDate: string, endDate: string) => {
+  // Filter track sheets by date range
+  const filteredSheets = trackSheets.filter(sheet => {
+    const sheetDate = new Date(sheet.date);
+    return sheetDate >= new Date(startDate) && sheetDate <= new Date(endDate);
+  });
+  
+  // Extract all product names
+  const allProductNames = new Set<string>();
+  filteredSheets.forEach(sheet => {
+    sheet.rows.forEach(row => {
+      Object.keys(row.quantities).forEach(productName => {
+        allProductNames.add(productName);
+      });
+    });
+  });
+  
+  const productNames = Array.from(allProductNames);
+  
+  // Calculate totals for each product across all sheets
+  const productTotals: Record<string, number> = {};
+  productNames.forEach(product => {
+    productTotals[product] = 0;
+  });
+  
+  // Calculate totals by customer
+  const customerTotals: Record<string, { quantity: number; amount: number; products: Record<string, number> }> = {};
+  
+  filteredSheets.forEach(sheet => {
+    sheet.rows.forEach(row => {
+      if (!row.name) return;
+      
+      if (!customerTotals[row.name]) {
+        customerTotals[row.name] = {
+          quantity: 0,
+          amount: 0,
+          products: productNames.reduce((acc, prod) => {
+            acc[prod] = 0;
+            return acc;
+          }, {} as Record<string, number>)
+        };
+      }
+      
+      Object.entries(row.quantities).forEach(([productName, quantity]) => {
+        const numQty = Number(quantity) || 0;
+        if (numQty > 0) {
+          productTotals[productName] = (productTotals[productName] || 0) + numQty;
+          customerTotals[row.name].products[productName] += numQty;
+          customerTotals[row.name].quantity += numQty;
+        }
+      });
+      
+      customerTotals[row.name].amount += row.amount;
+    });
+  });
+  
+  return {
+    startDate,
+    endDate,
+    productNames,
+    productTotals,
+    customerTotals,
+    totalTrackSheets: filteredSheets.length
+  };
+};

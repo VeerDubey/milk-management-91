@@ -1,30 +1,41 @@
 
-import * as React from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import * as React from "react"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 
-interface DatePickerProps {
-  date?: Date;
-  setDate: (date: Date) => void;
-  className?: string;
+export interface DatePickerProps {
+  date: Date
+  onDateChange?: (date: Date) => void
+  setDate?: (date: Date) => void
+  className?: string
+  id?: string
 }
 
-export function DatePicker({ date, setDate, className }: DatePickerProps) {
+export function DatePicker({ date, onDateChange, setDate, className, id }: DatePickerProps) {
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      if (onDateChange) onDateChange(selectedDate);
+      if (setDate) setDate(selectedDate);
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant={"outline"}
           className={cn(
-            "w-[180px] justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground",
             className
           )}
@@ -33,14 +44,15 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           {date ? format(date, "PPP") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
-          onSelect={(date) => date && setDate(date)}
+          onSelect={handleDateChange}
           initialFocus
+          className={cn("p-3 pointer-events-auto")}
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
