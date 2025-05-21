@@ -5,74 +5,67 @@
  
 @layer base {
   :root {
-    --background: 220 14% 96%;
-    --foreground: 225 14% 10%;
- 
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 225 14% 10%;
+    --card-foreground: 222.2 84% 4.9%;
  
     --popover: 0 0% 100%;
-    --popover-foreground: 225 14% 10%;
+    --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
-    --primary-foreground: 0 0% 98%;
+    --primary: 162 60% 48%;
+    --primary-foreground: 210 40% 98%;
  
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
  
-    --muted: 220 14% 90%;
-    --muted-foreground: 215 14% 35%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
  
-    --accent: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
-    --accent-foreground: 0 0% 98%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
- 
-    --border: 220 14% 88%;
-    --input: 220 14% 88%;
-    --ring: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
- 
-    --radius: 0.75rem;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Default accent color values - teal */
-    --accent-hue: 164;
-    --accent-saturation: 70%;
-    --accent-lightness: 58%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+ 
+    --radius: 0.5rem;
   }
-  
+ 
   .dark {
-    --background: 225 14% 5%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
  
-    --card: 229 20% 10%;
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
  
-    --popover: 229 20% 12%;
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
-    --primary-foreground: 0 0% 98%;
+    --primary: 162 60% 48%;
+    --primary-foreground: 210 40% 98%;
  
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
  
-    --muted: 225 14% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
  
-    --accent: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
-    --accent-foreground: 0 0% 98%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
  
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
  
-    --border: 225 14% 15%;
-    --input: 225 14% 15%;
-    --ring: var(--accent-hue) var(--accent-saturation) var(--accent-lightness);
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.5% 48%;
   }
-}
- 
-@layer base {
+
   * {
     @apply border-border;
   }
@@ -81,160 +74,44 @@
   }
 }
 
-@layer components {
-  .delete-icon {
-    @apply text-destructive hover:bg-destructive/10 p-1 rounded-full transition-colors;
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
   }
-
-  .tab-active {
-    @apply bg-secondary/20 text-secondary;
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
-
-  /* Updated for better visibility */
-  .table-row {
-    @apply hover:bg-muted/50 transition-colors;
-  }
-  
-  /* Table headers and cells now have improved contrast */
-  .table-header {
-    @apply bg-muted/80 text-foreground font-medium;
-  }
-  
-  .table-cell {
-    @apply text-foreground/90;
-  }
-
-  .glow-border {
-    @apply border border-transparent bg-clip-padding-box bg-origin-border 
-           bg-gradient-to-br from-background to-background 
-           border-gradient-to-br from-primary/80 to-secondary/50;
-  }
-  
-  /* Enhanced vibrant color classes */
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400;
-  }
-  
-  .bg-gradient-card {
-    @apply bg-gradient-to-br from-primary/10 to-secondary/10 border-0 shadow-lg;
-  }
-  
-  .bg-gradient-button {
-    @apply bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white;
-  }
-  
-  .input-glow:focus {
-    @apply border-primary/80 ring-2 ring-primary/20;
-  }
-
-  /* Dark mode specific improvements */
-  .dark .table-header {
-    @apply bg-muted/50 text-foreground font-medium;
-  }
-  
-  .dark .table-cell {
-    @apply text-foreground/90;
-  }
-  
-  .dark .form-label {
-    @apply text-foreground font-medium;
-  }
-  
-  .dark .form-input {
-    @apply bg-muted/30 border-muted text-foreground;
+  .animation-delay-6000 {
+    animation-delay: 6s;
   }
 }
 
-/* Custom global styles */
-.glass-card {
-  @apply bg-background/80 backdrop-blur-md border border-border rounded-lg shadow-sm;
-}
-
-.soft-shadow {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.hover-lift {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-/* Vibrant styling with dark mode compatibility */
-.card-highlight {
-  @apply border-l-4 border-primary;
-}
-
-/* Input field with better visibility */
-.input-visible {
-  @apply bg-muted/50 text-foreground border-muted;
-}
-
-/* Updated table styles specifically for track sheets */
-.track-sheet-table {
-  @apply w-full border-collapse;
-}
-
-.track-sheet-table th,
-.track-sheet-table td {
-  @apply border border-border text-center py-1 px-2;
-}
-
-.track-sheet-table th {
-  @apply bg-muted font-medium text-foreground;
-}
-
-.track-sheet-table td {
-  @apply text-center;
-}
-
-/* Track sheet empty cell styles */
-.track-sheet-cell-empty {
-  @apply text-muted-foreground;
-}
-
-/* Track sheet total row styles */
-.track-sheet-total-row {
-  @apply bg-muted font-medium;
-}
-
-/* Customize PDF appearance */
-.pdf-preview-wrapper {
-  @apply bg-background p-4 rounded-lg shadow-lg max-h-[80vh] overflow-auto;
-}
-
-/* Track sheet compact layout */
-.track-sheet-compact td,
-.track-sheet-compact th {
-  @apply py-0.5 px-1 text-xs;
-}
-
-/* Dark mode specific form styles */
-.dark input, 
-.dark select, 
-.dark textarea {
-  @apply bg-muted/30 text-foreground border-input;
-}
-
-.dark .card {
-  @apply bg-card text-card-foreground;
-}
-
-/* Add special styles for printed track sheets */
-@media print {
-  .track-sheet-table {
-    @apply border-collapse w-full;
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
   }
-  
-  .track-sheet-table th,
-  .track-sheet-table td {
-    @apply border border-gray-400 p-1 text-xs;
+  33% {
+    transform: translate(30px, -50px) scale(1.2);
   }
-  
-  body {
-    @apply text-black bg-white;
+  66% {
+    transform: translate(-20px, 20px) scale(0.8);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+ 
+@layer utilities {
+  .animate-blob {
+    animation: blob 10s infinite;
+  }
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
