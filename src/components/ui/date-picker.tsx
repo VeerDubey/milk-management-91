@@ -14,9 +14,10 @@ import {
 interface DatePickerProps {
   date?: Date;
   setDate: (date: Date) => void;
+  className?: string;  // Added className prop
 }
 
-export function DatePicker({ date, setDate }: DatePickerProps) {
+export function DatePicker({ date, setDate, className }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -24,7 +25,8 @@ export function DatePicker({ date, setDate }: DatePickerProps) {
           variant={"outline"}
           className={cn(
             "w-[180px] justify-start text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
+            className  // Apply the className prop
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
