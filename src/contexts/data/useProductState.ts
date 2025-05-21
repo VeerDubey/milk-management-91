@@ -19,6 +19,7 @@ export function useProductState() {
       id: `p${Date.now()}`
     };
     setProducts([...products, newProduct]);
+    return newProduct; // Return the newly created product to match the type
   };
 
   const updateProduct = (id: string, productData: Partial<Product>) => {

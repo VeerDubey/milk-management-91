@@ -65,12 +65,15 @@ const StockManagement = () => {
   // Update stock item
   const updateStockItem = (
     index: number,
-    field: string,
+    field: "productId" | "quantity" | "rate",
     value: string | number
   ) => {
     const newStockItems = [...stockItems];
-    newStockItems[index][field as keyof typeof newStockItems[0]] =
-      field === "quantity" || field === "rate" ? Number(value) : value;
+    if (field === "productId") {
+      newStockItems[index].productId = value as string;
+    } else if (field === "quantity" || field === "rate") {
+      newStockItems[index][field] = Number(value);
+    }
     setStockItems(newStockItems);
   };
 
