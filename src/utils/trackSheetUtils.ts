@@ -173,6 +173,24 @@ export function calculateProductTotals(rows: TrackSheetRow[], productNames: stri
   return productTotals;
 }
 
+// Calculate totals for TrackSheetAnalytics component
+export function calculateTotals(rows: TrackSheetRow[]) {
+  let totalQuantity = 0;
+  let totalAmount = 0;
+  
+  if (!rows) return { totalQuantity, totalAmount };
+  
+  rows.forEach(row => {
+    // Add row total to total quantity
+    totalQuantity += row.total || 0;
+    
+    // Add row amount to total amount
+    totalAmount += row.amount || 0;
+  });
+  
+  return { totalQuantity, totalAmount };
+}
+
 // Create a new track sheet template
 export function createTrackSheetTemplate(name: string, rows: TrackSheetRow[]) {
   return {

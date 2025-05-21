@@ -93,6 +93,14 @@ const TrackSheet: React.FC = () => {
     }
   }, []);
 
+  // Get the current track sheet if one is selected
+  const currentSheet = currentSheetId 
+    ? trackSheets.find(s => s.id === currentSheetId) 
+    : null;
+
+  // Get all the rows from all track sheets for analytics
+  const allTrackSheetRows = trackSheets.flatMap(sheet => sheet.rows);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -170,17 +178,11 @@ const TrackSheet: React.FC = () => {
                 <CardTitle className="text-xl">Customer Details</CardTitle>
               </CardHeader>
               <CardContent>
-                {trackSheets.find(s => s.id === currentSheetId) && (
+                {currentSheet && (
                   <TrackSheetDetails 
-                    trackSheet={trackSheets.find(s => s.id === currentSheetId)!}
-                    onExportPdf={() => {
-                      const sheet = trackSheets.find(s => s.id === currentSheetId);
-                      if (sheet) handleExportPdf(sheet);
-                    }}
-                    onExportExcel={() => {
-                      const sheet = trackSheets.find(s => s.id === currentSheetId);
-                      if (sheet) handleExportExcel(sheet);
-                    }}
+                    trackSheet={currentSheet}
+                    onExportPdf={() => handleExportPdf(currentSheet)}
+                    onExportExcel={() => handleExportExcel(currentSheet)}
                   />
                 )}
               </CardContent>
@@ -246,7 +248,7 @@ const TrackSheet: React.FC = () => {
             </CardHeader>
             <CardContent>
               <TrackSheetAnalytics 
-                trackSheets={trackSheets} 
+                rows={allTrackSheetRows}
                 products={productNames}
               />
             </CardContent>
