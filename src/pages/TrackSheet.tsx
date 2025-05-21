@@ -21,15 +21,13 @@ const TrackSheet: React.FC = () => {
   
   const { 
     trackSheets,
-    trackSheetTemplates,
     customers, 
     products,
     vehicles,
     salesmen,
     addTrackSheet,
     updateTrackSheet,
-    deleteTrackSheet,
-    saveTrackSheetTemplate
+    deleteTrackSheet
   } = useData();
 
   const productNames = products.map(product => product.name);
@@ -40,7 +38,8 @@ const TrackSheet: React.FC = () => {
     const currentSheet = trackSheets.find(sheet => sheet.id === currentSheetId);
     if (!currentSheet) return;
     
-    saveTrackSheetTemplate({
+    // Using a direct function instead of context function that doesn't exist
+    const templateData = {
       name,
       date: format(new Date(), 'yyyy-MM-dd'),
       rows: currentSheet.rows,
@@ -48,8 +47,15 @@ const TrackSheet: React.FC = () => {
       salesmanId: currentSheet.salesmanId,
       routeName: currentSheet.routeName,
       vehicleName: currentSheet.vehicleName,
-      salesmanName: currentSheet.salesmanName
-    });
+      salesmanName: currentSheet.salesmanName,
+      id: `tst${Date.now()}`
+    };
+    
+    // Save template to localStorage directly since we don't have the context function
+    const savedTemplates = localStorage.getItem("trackSheetTemplates");
+    const templates = savedTemplates ? JSON.parse(savedTemplates) : [];
+    templates.push(templateData);
+    localStorage.setItem("trackSheetTemplates", JSON.stringify(templates));
     
     setShowSaveDialog(false);
     toast.success('Template saved successfully');
@@ -76,6 +82,16 @@ const TrackSheet: React.FC = () => {
       toast.error('Failed to export Excel');
     }
   };
+
+  // Get templates from localStorage directly
+  const [templates, setTemplates] = useState<TrackSheetType[]>([]);
+  
+  useEffect(() => {
+    const savedTemplates = localStorage.getItem("trackSheetTemplates");
+    if (savedTemplates) {
+      setTemplates(JSON.parse(savedTemplates));
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -133,11 +149,17 @@ const TrackSheet: React.FC = () => {
             </CardHeader>
             <CardContent>
               <TrackSheetHeader 
-                trackSheets={trackSheets}
-                templates={trackSheetTemplates}
-                vehicles={vehicles}
-                salesmen={salesmen}
-                onCurrentSheetChange={setCurrentSheetId}
+                selectedTemplate={currentSheetId}
+                onOpenSaveDialog={() => setShowSaveDialog(true)}
+                onExportExcel={() => {
+                  const sheet = trackSheets.find(s => s.id === currentSheetId);
+                  if (sheet) handleExportExcel(sheet);
+                }}
+                onExportPdf={() => {
+                  const sheet = trackSheets.find(s => s.id === currentSheetId);
+                  if (sheet) handleExportPdf(sheet);
+                }}
+                onPrint={() => window.print()}
               />
             </CardContent>
           </Card>
@@ -148,11 +170,19 @@ const TrackSheet: React.FC = () => {
                 <CardTitle className="text-xl">Customer Details</CardTitle>
               </CardHeader>
               <CardContent>
-                <TrackSheetDetails 
-                  sheetId={currentSheetId}
-                  customers={customers}
-                  products={products}
-                />
+                {trackSheets.find(s => s.id === currentSheetId) && (
+                  <TrackSheetDetails 
+                    trackSheet={trackSheets.find(s => s.id === currentSheetId)!}
+                    onExportPdf={() => {
+                      const sheet = trackSheets.find(s => s.id === currentSheetId);
+                      if (sheet) handleExportPdf(sheet);
+                    }}
+                    onExportExcel={() => {
+                      const sheet = trackSheets.find(s => s.id === currentSheetId);
+                      if (sheet) handleExportExcel(sheet);
+                    }}
+                  />
+                )}
               </CardContent>
             </Card>
           )}
@@ -217,7 +247,7 @@ const TrackSheet: React.FC = () => {
             <CardContent>
               <TrackSheetAnalytics 
                 trackSheets={trackSheets} 
-                products={products}
+                products={productNames}
               />
             </CardContent>
           </Card>
@@ -227,7 +257,7 @@ const TrackSheet: React.FC = () => {
       <SaveTemplateDialog 
         open={showSaveDialog} 
         onOpenChange={setShowSaveDialog}
-        onSave={handleSaveTemplate}
+        rows={currentSheetId ? (trackSheets.find(s => s.id === currentSheetId)?.rows || []) : []}
       />
     </div>
   );
