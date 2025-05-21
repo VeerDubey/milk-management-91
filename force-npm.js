@@ -56,17 +56,17 @@ try {
     }
   }
   
-  // First install node-gyp explicitly
-  console.log('Installing node-gyp and @electron/node-gyp directly from npm registry...');
-  execSync('npm install node-gyp@latest @electron/node-gyp@latest --save-exact --no-git-tag-version --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
-  
   // Install all dependencies
   console.log('Installing all dependencies via npm...');
-  execSync('npm install --no-git-tag-version --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
+  execSync('npm install --no-git-tag-version --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
   
   // Ensure Electron packages are installed separately
   console.log('Installing Electron packages separately...');
-  execSync('npm install electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
+  execSync('npm install electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
+  
+  // Explicitly install node-gyp and @electron/node-gyp from npm registry directly
+  console.log('Installing node-gyp and @electron/node-gyp from npm registry explicitly...');
+  execSync('npm install node-gyp@latest @electron/node-gyp@latest --save-exact --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
   
   console.log('Installation completed successfully!');
   console.log('You can now run the application using:');
