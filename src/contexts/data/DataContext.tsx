@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { OfflineStorageService } from '@/services/OfflineStorageService';
 import { toast } from 'sonner';
@@ -56,7 +55,7 @@ const DataContext = createContext<DataContextType>({
   addInvoice: () => "",
   updateInvoice: () => {},
   deleteInvoice: () => {},
-  addPayment: () => ({}),
+  addPayment: () => undefined, // Fixed: Changed from {} to undefined to match void | Payment
   updatePayment: () => {},
   deletePayment: () => {},
   deleteMultiplePayments: () => {},
