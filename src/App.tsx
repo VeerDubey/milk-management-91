@@ -1,170 +1,104 @@
-
-import { ThemeProvider } from "@/contexts/ThemeProvider";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { InvoiceProvider } from "@/contexts/InvoiceContext";
-import { DataProvider } from "@/contexts/data/DataContext";
-import { MessagingProvider } from "@/contexts/MessagingContext";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "sonner";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import Customers from "@/pages/Customers";
-import CustomerList from "@/pages/CustomerList";
-import CustomerDetail from "@/pages/CustomerDetail";
-import CustomerLedger from "@/pages/CustomerLedger";
-import Orders from "@/pages/Orders";
-import OrderList from "@/pages/OrderList";
-import OrderEntry from "@/pages/OrderEntry";
-import Inventory from "@/pages/Inventory";
-import ProductList from "@/pages/ProductList";
-import ProductDetail from "@/pages/ProductDetail";
-import Invoices from "@/pages/Invoices";
-import InvoiceCreate from "@/pages/InvoiceCreate";
-import InvoiceDetail from "@/pages/InvoiceDetail";
-import InvoiceHistory from "@/pages/InvoiceHistory"; 
-import Outstanding from "@/pages/Outstanding";
-import OutstandingDues from "@/pages/OutstandingDues";
-import OutstandingAmounts from "@/pages/OutstandingAmounts";
-import FinancialYear from "@/pages/FinancialYear";
-import Reports from "@/pages/Reports";
-import CustomerReport from "@/pages/Reports/CustomerReport";
-import SalesReport from "@/pages/Reports/SalesReport";
-import Settings from "@/pages/Settings";
-import UISettings from "@/pages/UISettings";
-import UserAccess from "@/pages/UserAccess";
-import CompanyProfile from "@/pages/CompanyProfile";
-import Master from "@/pages/Master";
-import ProductRates from "@/pages/ProductRates";
-import CustomerRates from "@/pages/CustomerRates";
-import StockManagement from "@/pages/StockManagement";
-import StockSettings from "@/pages/StockSettings";
-import Suppliers from "@/pages/Suppliers";
-import SupplierDirectory from "@/pages/SupplierDirectory";
-import SupplierLedger from "@/pages/SupplierLedger";
-import SupplierPayments from "@/pages/SupplierPayments";
-import SupplierRates from "@/pages/SupplierRates";
-import VehicleSalesmanCreate from "@/pages/VehicleSalesmanCreate";
-import VehicleTracking from "@/pages/VehicleTracking";
-import TrackSheet from "@/pages/TrackSheet";
-import TrackSheetHistory from "@/pages/TrackSheetHistory";
-import Expenses from "@/pages/Expenses";
-import PaymentList from "@/pages/PaymentList";
-import PaymentCreate from "@/pages/PaymentCreate";
-import ProductCategories from "@/pages/ProductCategories";
-import TaxSettings from "@/pages/TaxSettings";
-import InvoiceTemplates from "@/pages/InvoiceTemplates";
-import Messaging from "./pages/Messaging";
-import Communication from "./pages/Communication";
-import EmailTemplates from "./pages/EmailTemplates";
-import SMSTemplates from "./pages/SMSTemplates";
-import BulkCommunication from "./pages/BulkCommunication";
-import Analytics from "./pages/Analytics";
-import { Layout } from "@/components/Layout";
-import NotFound from "@/pages/NotFound";
-import Index from "@/pages/Index";
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Layout from './components/Layout';
+import Master from './pages/Master';
+import Customers from './pages/Customers';
+import CustomerList from './pages/CustomerList';
+import CustomerDirectory from './pages/CustomerDirectory';
+import CustomerDetail from './pages/CustomerDetail';
+import CustomerStatement from './pages/CustomerStatement';
+import CustomerLedger from './pages/CustomerLedger';
+import CustomerRates from './pages/CustomerRates';
+import CustomerLedgerReport from './pages/CustomerLedgerReport';
+import Inventory from './pages/Inventory';
+import Communication from './pages/Communication';
+import Messaging from './pages/Messaging';
+import EmailTemplates from './pages/EmailTemplates';
+import BulkCommunication from './pages/BulkCommunication';
+import AreaManagement from './pages/AreaManagement';
+import Analytics from './pages/Analytics';
+import NotFound from './pages/NotFound';
+import OrderList from './pages/OrderList';
+import OrderEntry from './pages/OrderEntry';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import ExpensesRevamped from './pages/ExpensesRevamped';
+import PaymentListView from './pages/PaymentListView';
+import InvoiceDetail from './pages/InvoiceDetail';
+import OrderHistory from './pages/OrderHistory';
+import BulkRateUpdate from './pages/BulkRateUpdate';
+import CompanyProfile from './pages/CompanyProfile';
+import InvoiceHistory from './pages/InvoiceHistory';
+import InvoiceCreate from './pages/InvoiceCreate';
+import InvoiceTemplates from './pages/InvoiceTemplates';
+import FinancialYear from './pages/FinancialYear';
 
 function App() {
+  // React hooks can be added here for state management or side effects
+  useEffect(() => {
+    // Example: Load initial data from local storage or an API
+    // You can dispatch actions to update the state in your contexts
+  }, []);
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <InvoiceProvider>
-          <DataProvider>
-            <MessagingProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route element={<Layout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  
-                  {/* Customer routes */}
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/customer-directory" element={<CustomerList />} />
-                  <Route path="/customer-detail/:id" element={<CustomerDetail />} />
-                  <Route path="/customer-ledger" element={<CustomerLedger />} />
-                  <Route path="/customer-rates" element={<CustomerRates />} />
-                  
-                  {/* Order routes */}
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/order-list" element={<OrderList />} />
-                  <Route path="/order-entry" element={<OrderEntry />} />
-                  
-                  {/* Inventory routes */}
-                  <Route path="/inventory" element={<Inventory />} />
-                  <Route path="/product-list" element={<ProductList />} />
-                  <Route path="/product-detail/:id" element={<ProductDetail />} />
-                  <Route path="/product-rates" element={<ProductRates />} />
-                  <Route path="/stock-management" element={<StockManagement />} />
-                  <Route path="/stock-settings" element={<StockSettings />} />
-                  
-                  {/* Invoice routes */}
-                  <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/invoice-create" element={<InvoiceCreate />} />
-                  <Route path="/invoice-detail/:id" element={<InvoiceDetail />} />
-                  <Route path="/invoice-history" element={<InvoiceHistory />} />
-                  <Route path="/invoice-templates" element={<InvoiceTemplates />} />
-                  
-                  {/* Payment routes */}
-                  <Route path="/payments" element={<PaymentList />} />
-                  <Route path="/payment-create" element={<PaymentCreate />} />
-                  
-                  {/* Supplier routes */}
-                  <Route path="/suppliers" element={<Suppliers />} />
-                  <Route path="/supplier-directory" element={<SupplierDirectory />} />
-                  <Route path="/supplier-ledger" element={<SupplierLedger />} />
-                  <Route path="/supplier-payments" element={<SupplierPayments />} />
-                  <Route path="/supplier-rates" element={<SupplierRates />} />
-                  
-                  {/* Outstanding routes */}
-                  <Route path="/outstanding" element={<Outstanding />} />
-                  <Route path="/outstanding-dues" element={<OutstandingDues />} />
-                  <Route path="/outstanding-amounts" element={<OutstandingAmounts />} />
-                  
-                  {/* Reports routes */}
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/customer-report" element={<CustomerReport />} />
-                  <Route path="/sales-report" element={<SalesReport />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  
-                  {/* Vehicle/Logistics routes */}
-                  <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
-                  <Route path="/vehicle-tracking" element={<VehicleTracking />} />
-                  <Route path="/track-sheet" element={<TrackSheet />} />
-                  <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
-                  
-                  {/* Financial routes */}
-                  <Route path="/financial-year" element={<FinancialYear />} />
-                  <Route path="/expenses" element={<Expenses />} />
-                  <Route path="/tax-settings" element={<TaxSettings />} />
-                  
-                  {/* Settings routes */}
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/ui-settings" element={<UISettings />} />
-                  <Route path="/user-access" element={<UserAccess />} />
-                  <Route path="/company-profile" element={<CompanyProfile />} />
-                  
-                  {/* Master data */}
-                  <Route path="/master" element={<Master />} />
-                  <Route path="/product-categories" element={<ProductCategories />} />
-                  <Route path="/areas" element={<Master />} />
-                  <Route path="/bulk-rates" element={<Master />} />
-                  
-                  {/* Communication routes */}
-                  <Route path="/messaging" element={<Messaging />} />
-                  <Route path="/communication" element={<Communication />} />
-                  <Route path="/email-templates" element={<EmailTemplates />} />
-                  <Route path="/sms-templates" element={<SMSTemplates />} />
-                  <Route path="/bulk-communication" element={<BulkCommunication />} />
-                  
-                  {/* Catch all */}
-                  <Route path="*" element={<NotFound />} />
-                </Route>
-              </Routes>
-              <Toaster position="top-right" />
-            </MessagingProvider>
-          </DataProvider>
-        </InvoiceProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<Login />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/master" element={<Master />} />
+          
+          {/* Customer Routes */}
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/customer-list" element={<CustomerList />} />
+          <Route path="/customer-directory" element={<CustomerDirectory />} />
+          <Route path="/customer-detail/:id" element={<CustomerDetail />} />
+          <Route path="/customer-statement/:id" element={<CustomerStatement />} />
+          <Route path="/customer-ledger" element={<CustomerLedger />} />
+          <Route path="/customer-rates" element={<CustomerRates />} />
+          <Route path="/customer-ledger-report" element={<CustomerLedgerReport />} />
+          
+          {/* Inventory Routes */}
+          <Route path="/inventory" element={<Inventory />} />
+          
+          {/* Order Routes */}
+          <Route path="/order-list" element={<OrderList />} />
+          <Route path="/order-entry" element={<OrderEntry />} />
+          <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/order-history" element={<OrderHistory />} />
+          
+          {/* Payment Routes */}
+          <Route path="/payments" element={<PaymentListView />} />
+          <Route path="/payment-list" element={<PaymentListView />} />
+          
+          {/* Invoice Routes */}
+          <Route path="/invoices" element={<InvoiceHistory />} />
+          <Route path="/invoice-create" element={<InvoiceCreate />} />
+          <Route path="/invoice-templates" element={<InvoiceTemplates />} />
+          <Route path="/invoice/:id" element={<InvoiceDetail />} />
+          
+          {/* Communication Routes */}
+          <Route path="/communication" element={<Communication />} />
+          <Route path="/messaging" element={<Messaging />} />
+          <Route path="/email-templates" element={<EmailTemplates />} />
+          <Route path="/bulk-communication" element={<BulkCommunication />} />
+          
+          {/* Settings Routes */}
+          <Route path="/area-management" element={<AreaManagement />} />
+          <Route path="/expenses" element={<ExpensesRevamped />} />
+          <Route path="/bulk-rates" element={<BulkRateUpdate />} />
+          <Route path="/company-profile" element={<CompanyProfile />} />
+          <Route path="/financial-year" element={<FinancialYear />} />
+          
+          {/* Analytics */}
+          <Route path="/analytics" element={<Analytics />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

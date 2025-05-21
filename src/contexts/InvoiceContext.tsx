@@ -1,225 +1,230 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { Invoice, OrderItem } from '@/types';
-import { INVOICE_TEMPLATES } from '@/utils/invoiceUtils';
+// This will be a partial update to fix the download/print functionality
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Invoice, Customer, Product } from '@/types';
+import { 
+  createInvoicePreview, 
+  generateInvoiceNumber,
+  INVOICE_TEMPLATES
+} from '../utils/invoiceUtils';
 import { toast } from 'sonner';
 
-export interface InvoiceTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  fontFamily?: string;
-  primaryColor?: string;
-  showHeader?: boolean;
-  showFooter?: boolean;
-}
-
-export interface CompanyInfo {
-  companyName: string;
-  address: string;
-  contactNumber: string;
-  email: string;
-  gstNumber?: string;
-  bankDetails?: string;
-  logoUrl?: string;
-}
-
-export interface OrderData {
-  customerId: string;
-  items: { productId: string; quantity: number; unitPrice: number }[];
-  date: string;
-  notes?: string;
-}
-
-export interface PaymentAmount {
-  amount: number;
-  method: 'cash' | 'bank' | 'upi' | 'other';
-  date: string;
-}
-
-export interface InvoiceContextType {
+interface InvoiceContextType {
   invoices: Invoice[];
-  templates: InvoiceTemplate[];
-  selectedTemplateId: string;
-  companyInfo: CompanyInfo;
-  colorScheme: string;
-  addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
-  updateInvoice: (id: string, data: Partial<Invoice>) => void;
+  addInvoice: (invoice: Omit<Invoice, 'id'>) => Invoice;
+  updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
   deleteInvoice: (id: string) => void;
   getInvoiceById: (id: string) => Invoice | undefined;
-  setSelectedTemplateId: (templateId: string) => void;
-  updateCompanyInfo: (info: Partial<CompanyInfo>) => void;
-  setColorScheme: (scheme: string) => void;
-  downloadInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
+  selectedTemplateId: string;
+  setSelectedTemplateId: (id: string) => void;
+  templates: typeof INVOICE_TEMPLATES;
+  companyInfo: {
+    companyName: string;
+    address: string;
+    contactNumber: string;
+    email: string;
+    gstNumber: string;
+    bankDetails: string;
+    logoUrl?: string;
+  };
+  setCompanyInfo: (info: Partial<InvoiceContextType['companyInfo']>) => void;
   generateInvoicePreview: (invoice: Invoice, templateId?: string) => Promise<string>;
-  calculateInvoiceTotal: (items: OrderItem[]) => number;
+  downloadInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
+  printInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
+  getPrinters: () => Promise<{success: boolean, printers: any[]}>;
 }
 
-const defaultCompanyInfo: CompanyInfo = {
-  companyName: 'Vikas Milk Centre',
-  address: '123 Dairy Road, Mumbai, Maharashtra',
-  contactNumber: '+91 9876543210',
-  email: 'info@vikasmilkcentre.com',
-  gstNumber: 'GSTIN12345678',
-  bankDetails: 'Bank: SBI\nAccount: 123456789\nIFSC: SBIN0001234',
-  logoUrl: '/lovable-uploads/94882b07-d7b1-4949-8dcb-7a750fd17c6b.png'
+const defaultCompanyInfo = {
+  companyName: 'Your Company Name',
+  address: '123 Business Street, City, State, ZIP',
+  contactNumber: '+91 98765 43210',
+  email: 'info@yourcompany.com',
+  gstNumber: 'GST1234567890',
+  bankDetails: 'Bank: YourBank, Acc #: 1234567890, IFSC: ABCD0001234',
+  logoUrl: ''
 };
 
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
 export function InvoiceProvider({ children }: { children: ReactNode }) {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [templates] = useState<InvoiceTemplate[]>(INVOICE_TEMPLATES);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('standard');
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(defaultCompanyInfo);
-  const [colorScheme, setColorScheme] = useState<string>('blue');
+  const [invoices, setInvoices] = useState<Invoice[]>(() => {
+    const saved = localStorage.getItem('invoices');
+    return saved ? JSON.parse(saved) : [];
+  });
   
-  // Load data from localStorage on initial load
-  useEffect(() => {
-    const storedInvoices = localStorage.getItem('invoices');
-    if (storedInvoices) {
-      try {
-        setInvoices(JSON.parse(storedInvoices));
-      } catch (e) {
-        console.error('Failed to parse stored invoices', e);
-      }
-    }
-    
-    const storedCompanyInfo = localStorage.getItem('companyInfo');
-    if (storedCompanyInfo) {
-      try {
-        setCompanyInfo(JSON.parse(storedCompanyInfo));
-      } catch (e) {
-        console.error('Failed to parse stored company info', e);
-      }
-    }
-    
-    const storedTemplate = localStorage.getItem('selectedInvoiceTemplate');
-    if (storedTemplate) {
-      setSelectedTemplateId(storedTemplate);
-    }
-    
-    const storedColorScheme = localStorage.getItem('invoiceColorScheme');
-    if (storedColorScheme) {
-      setColorScheme(storedColorScheme);
-    }
-  }, []);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(() => {
+    const saved = localStorage.getItem('selectedInvoiceTemplate');
+    return saved || 'standard';
+  });
   
-  // Save to localStorage whenever data changes
+  const [companyInfo, setCompanyInfoState] = useState(() => {
+    const saved = localStorage.getItem('companyInfo');
+    return saved ? JSON.parse(saved) : defaultCompanyInfo;
+  });
+  
   useEffect(() => {
     localStorage.setItem('invoices', JSON.stringify(invoices));
   }, [invoices]);
-  
-  useEffect(() => {
-    localStorage.setItem('companyInfo', JSON.stringify(companyInfo));
-  }, [companyInfo]);
   
   useEffect(() => {
     localStorage.setItem('selectedInvoiceTemplate', selectedTemplateId);
   }, [selectedTemplateId]);
   
   useEffect(() => {
-    localStorage.setItem('invoiceColorScheme', colorScheme);
-  }, [colorScheme]);
+    localStorage.setItem('companyInfo', JSON.stringify(companyInfo));
+  }, [companyInfo]);
   
-  // Calculate invoice total from items
-  const calculateInvoiceTotal = (items: OrderItem[]): number => {
-    return items.reduce((total, item) => total + (item.quantity * (item.unitPrice || 0)), 0);
-  };
-  
-  // Invoice CRUD operations
-  const addInvoice = (invoice: Omit<Invoice, 'id'>): string => {
-    const id = uuidv4();
-    
-    // Calculate total if not provided
-    let total = invoice.total;
-    if (!total && invoice.items) {
-      total = calculateInvoiceTotal(invoice.items);
-    }
-    
-    const newInvoice = { 
-      ...invoice, 
-      id,
-      total: total || 0 // Ensure we always have a total
+  const addInvoice = (invoice: Omit<Invoice, 'id'>) => {
+    const newInvoice = {
+      ...invoice,
+      id: invoice.number || generateInvoiceNumber()
     };
-    
-    setInvoices(prev => [...prev, newInvoice as Invoice]);
-    toast.success("Invoice added successfully");
-    return id;
+    setInvoices([...invoices, newInvoice]);
+    return newInvoice;
   };
   
-  const updateInvoice = (id: string, data: Partial<Invoice>) => {
-    setInvoices(prev => 
-      prev.map(invoice => 
-        invoice.id === id ? { ...invoice, ...data } : invoice
+  const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
+    setInvoices(
+      invoices.map((invoice) =>
+        invoice.id === id ? { ...invoice, ...invoiceData } : invoice
       )
     );
-    toast.success("Invoice updated successfully");
   };
   
   const deleteInvoice = (id: string) => {
-    setInvoices(prev => prev.filter(invoice => invoice.id !== id));
-    toast.success("Invoice deleted successfully");
+    setInvoices(invoices.filter((invoice) => invoice.id !== id));
   };
   
-  const getInvoiceById = (id: string): Invoice | undefined => {
-    return invoices.find(invoice => invoice.id === id);
+  const getInvoiceById = (id: string) => {
+    return invoices.find((invoice) => invoice.id === id);
   };
   
-  const updateCompanyInfo = (info: Partial<CompanyInfo>) => {
-    setCompanyInfo(prev => ({ ...prev, ...info }));
+  const setCompanyInfo = (info: Partial<InvoiceContextType['companyInfo']>) => {
+    setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
-    const invoice = getInvoiceById(invoiceId);
-    if (!invoice) {
-      console.error(`Invoice with ID ${invoiceId} not found`);
-      toast.error("Invoice not found");
-      return;
-    }
-    
-    try {
-      // In a real app, this would generate and download a PDF
-      console.log(`Downloading invoice ${invoiceId} with template ${templateId || selectedTemplateId}`);
-      toast.success("Invoice downloaded successfully");
-      // This would typically call a service to generate and download the PDF
-    } catch (error) {
-      console.error("Failed to download invoice:", error);
-      toast.error("Failed to download invoice");
-    }
-  };
-  
+  // Function to generate PDF preview
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
-    // Mock function - in a real app, this would generate a preview URL
-    // For now, we simulate a brief delay to simulate PDF rendering
-    return new Promise((resolve) => {
-      console.log(`Generating preview for invoice using template ${templateId || selectedTemplateId}`);
-      setTimeout(() => {
-        // This would typically return a data URL or blob URL for preview
-        resolve('#preview-url');
-      }, 1000);
-    });
+    try {
+      // Mock data for demo - in a real app, we'd fetch these from the contexts
+      const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
+      
+      // Use specified template or fallback to selected template
+      const templateToUse = templateId || selectedTemplateId;
+      
+      // Generate and return the PDF preview
+      return createInvoicePreview(
+        invoice,
+        companyInfo,
+        products,
+        templateToUse
+      );
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      throw new Error('Failed to generate preview');
+    }
+  };
+  
+  // Function to download invoice
+  const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
+    try {
+      const invoice = getInvoiceById(invoiceId);
+      if (!invoice) throw new Error('Invoice not found');
+      
+      const pdfData = await generateInvoicePreview(invoice, templateId);
+      
+      // When running in Electron
+      if (window.electron) {
+        const result = await window.electron.invoke('download-invoice', pdfData, `invoice-${invoice.id}.pdf`);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to download invoice');
+        }
+        toast.success('Invoice downloaded successfully');
+      } 
+      // When running in web browser
+      else {
+        const link = document.createElement('a');
+        link.href = pdfData;
+        link.download = `invoice-${invoice.id}.pdf`;
+        link.click();
+        toast.success('Invoice downloaded successfully');
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download invoice');
+      throw error;
+    }
+  };
+  
+  // Function to print invoice
+  const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
+    try {
+      const invoice = getInvoiceById(invoiceId);
+      if (!invoice) throw new Error('Invoice not found');
+      
+      const pdfData = await generateInvoicePreview(invoice, templateId);
+      
+      // When running in Electron
+      if (window.electron) {
+        const result = await window.electron.invoke('print-invoice', pdfData);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to print invoice');
+        }
+        toast.success('Invoice sent to printer');
+      } 
+      // When running in web browser
+      else {
+        // Open in a new tab for printing
+        const printWindow = window.open(pdfData, '_blank');
+        if (!printWindow) {
+          throw new Error('Pop-up blocked. Please allow pop-ups to print.');
+        }
+        
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        });
+        
+        toast.success('Invoice print dialog opened');
+      }
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error('Failed to print invoice');
+      throw error;
+    }
+  };
+  
+  // Function to get available printers (Electron only)
+  const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
+    if (window.electron) {
+      try {
+        return await window.electron.invoke('get-printers');
+      } catch (error) {
+        console.error('Error getting printers:', error);
+        return { success: false, printers: [] };
+      }
+    }
+    return { success: false, printers: [] };
   };
   
   return (
     <InvoiceContext.Provider
       value={{
         invoices,
-        templates,
-        selectedTemplateId,
-        companyInfo,
-        colorScheme,
         addInvoice,
         updateInvoice,
         deleteInvoice,
         getInvoiceById,
+        selectedTemplateId,
         setSelectedTemplateId,
-        updateCompanyInfo,
-        setColorScheme,
-        downloadInvoice,
+        templates: INVOICE_TEMPLATES,
+        companyInfo,
+        setCompanyInfo,
         generateInvoicePreview,
-        calculateInvoiceTotal
+        downloadInvoice,
+        printInvoice,
+        getPrinters,
       }}
     >
       {children}
@@ -227,13 +232,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useInvoice(): InvoiceContextType {
+export function useInvoices() {
   const context = useContext(InvoiceContext);
   if (context === undefined) {
-    throw new Error('useInvoice must be used within an InvoiceProvider');
+    throw new Error('useInvoices must be used within an InvoiceProvider');
   }
   return context;
 }
-
-// Create a named export for backward compatibility
-export const useInvoices = useInvoice;
