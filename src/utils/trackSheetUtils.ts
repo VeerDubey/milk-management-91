@@ -111,17 +111,20 @@ export function exportTrackSheetToExcel(trackSheet: TrackSheet, productNames: st
     wsData.push([
       row.name,
       ...productNames.map(product => row.quantities[product] || ''),
-      row.total,
-      row.amount
+      row.total.toString(), // Convert number to string
+      row.amount.toString() // Convert number to string
     ]);
   });
   
   // Add totals row
+  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
+  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
+  
   wsData.push([
     'Total',
-    ...productNames.map(product => productTotals[product] || 0),
-    trackSheet.rows.reduce((sum, row) => sum + row.total, 0),
-    trackSheet.rows.reduce((sum, row) => sum + row.amount, 0)
+    ...productNames.map(product => (productTotals[product] || 0).toString()), // Convert numbers to strings
+    totalQuantity.toString(), // Convert number to string
+    totalAmount.toString() // Convert number to string
   ]);
   
   wsData.push([]);
