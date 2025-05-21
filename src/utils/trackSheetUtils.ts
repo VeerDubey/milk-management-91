@@ -108,12 +108,18 @@ export function exportTrackSheetToExcel(trackSheet: TrackSheet, productNames: st
   
   // Add table data
   trackSheet.rows.forEach(row => {
-    wsData.push([
+    // Ensure all values in the row are strings
+    const rowData = [
       row.name,
-      ...productNames.map(product => row.quantities[product] || ''),
-      row.total.toString(), // Convert number to string
-      row.amount.toString() // Convert number to string
-    ]);
+      ...productNames.map(product => {
+        const quantity = row.quantities[product];
+        // Convert any non-string quantities to strings, or use empty string if undefined
+        return quantity !== undefined ? String(quantity) : '';
+      }),
+      String(row.total), // Convert number to string
+      String(row.amount) // Convert number to string
+    ];
+    wsData.push(rowData);
   });
   
   // Add totals row
@@ -122,9 +128,9 @@ export function exportTrackSheetToExcel(trackSheet: TrackSheet, productNames: st
   
   wsData.push([
     'Total',
-    ...productNames.map(product => (productTotals[product] || 0).toString()), // Convert numbers to strings
-    totalQuantity.toString(), // Convert number to string
-    totalAmount.toString() // Convert number to string
+    ...productNames.map(product => String(productTotals[product] || 0)), // Convert numbers to strings
+    String(totalQuantity), // Convert number to string
+    String(totalAmount) // Convert number to string
   ]);
   
   wsData.push([]);
