@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
 import { useOrderState } from './useOrderState';
@@ -100,3 +99,29 @@ export function useData(): DataContextType {
 }
 
 export type { DataContextType };
+
+// We need to update the function to return the proper type
+export function useCustomerProductRate() {
+  const [customerProductRates, setCustomerProductRates] = useState<CustomerProductRate[]>(() => {
+    const saved = localStorage.getItem("customerProductRates");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("customerProductRates", JSON.stringify(customerProductRates));
+  }, [customerProductRates]);
+
+  const addCustomerProductRate = (rate: Omit<CustomerProductRate, "id">) => {
+    const newRate = {
+      ...rate,
+      id: `cpr${Date.now()}`
+    };
+    setCustomerProductRates([...customerProductRates, newRate]);
+    return newRate; // Return the newly created rate
+  };
+
+  return {
+    customerProductRates,
+    addCustomerProductRate
+  };
+}
