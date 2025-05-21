@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,10 +56,10 @@ import { toast } from 'sonner';
 import { exportToPdf } from '@/utils/pdfUtils';
 
 // Augment the Payment type
-interface ExtendedPayment extends Payment {
+interface ExtendedPayment extends Omit<Payment, 'paymentMethod'> {
   status?: string;
   referenceNumber?: string;
-  paymentMethod?: string;
+  paymentMethod?: 'cash' | 'bank' | 'upi' | 'other' | string;
 }
 
 export default function PaymentListView() {

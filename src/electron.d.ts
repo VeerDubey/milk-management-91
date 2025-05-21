@@ -53,6 +53,11 @@ interface ElectronAPI {
     readFromClipboard: () => Promise<string>;
     isPlatform: (platform: string) => Promise<boolean>;
   };
+
+  // Invoice operations
+  downloadInvoice: (data: string, filename: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+  printInvoice: (data: string) => Promise<{ success: boolean; error?: string }>;
+  getPrinters: () => Promise<{ success: boolean; printers: any[] }>;
 }
 
 declare interface Window {

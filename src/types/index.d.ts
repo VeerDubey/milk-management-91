@@ -1,5 +1,4 @@
 
-
 // Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
 import { ReactNode } from 'react';
@@ -32,6 +31,9 @@ declare global {
       };
       onMenuExportData?: (callback: () => void) => void;
       onMenuImportData?: (callback: () => void) => void;
+      downloadInvoice?: (data: string, filename: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      printInvoice?: (data: string) => Promise<{ success: boolean; error?: string }>;
+      getPrinters?: () => Promise<{ success: boolean; printers: any[] }>;
     };
   }
 }
@@ -124,6 +126,8 @@ declare module '@/types' {
     paymentMethod: string; // Added for compatibility
     reference?: string; // Added for compatibility
     isRecurring?: boolean; // Added for compatibility with existing code
+    createdAt?: string;
+    updatedAt?: string;
   }
 
   // Updated Vehicle interface with the missing properties
@@ -171,6 +175,7 @@ declare module '@/types' {
     vehicleName?: string;
     salesmanName?: string;
     savedAt?: string;
+    notes?: string; // Added for compatibility with OrderHistory
   }
 
   // Updated TrackSheetRow interface with all required properties

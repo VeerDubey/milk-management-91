@@ -111,9 +111,16 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       // Use specified template or fallback to selected template
       const templateToUse = templateId || selectedTemplateId;
       
+      // Add totalAmount property for compatibility with generateInvoicePreview
+      const adaptedInvoice = {
+        ...invoice,
+        totalAmount: invoice.total,
+        customerName: invoice.customerId, // This will be resolved in generateInvoicePreview
+      };
+      
       // Generate and return the PDF preview
       return generateInvoicePreview(
-        invoice,
+        adaptedInvoice as any,
         companyInfo,
         products,
         templateToUse

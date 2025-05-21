@@ -46,6 +46,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToPdf } from '@/utils/pdfUtils';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   ArrowDown, 
   Calendar, 
@@ -249,30 +250,34 @@ export default function OrderHistory() {
       };
     });
     
-    const newTrackSheet: Omit<TrackSheet, "id"> = {
+    const newTrackSheet = {
       name: `Track Sheet - ${format(tomorrow, 'yyyy-MM-dd')}`,
       date: format(tomorrow, 'yyyy-MM-dd'),
       vehicleId: order.vehicleId || "",
       salesmanId: order.salesmanId || "",
       rows: trackSheetRows,
-      notes: `Carried forward from order ${order.id}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
     
-    const createdSheet = addTrackSheet(newTrackSheet);
-    setIsCarryForwardDialogOpen(false);
-    setSelectedOrderId(null);
-    
-    toast.success("Order carried forward to next day's track sheet successfully");
-    
-    // Offer to navigate to the newly created track sheet
-    setTimeout(() => {
-      const shouldNavigate = window.confirm("Do you want to view the created track sheet?");
-      if (shouldNavigate && createdSheet && createdSheet.id) {
-        navigate(`/track-sheet/${createdSheet.id}`);
-      }
-    }, 500);
+    try {
+      const createdSheet = addTrackSheet(newTrackSheet);
+      setIsCarryForwardDialogOpen(false);
+      setSelectedOrderId(null);
+      
+      toast.success("Order carried forward to next day's track sheet successfully");
+      
+      // Offer to navigate to the newly created track sheet
+      setTimeout(() => {
+        const shouldNavigate = window.confirm("Do you want to view the created track sheet?");
+        if (shouldNavigate && createdSheet && createdSheet.id) {
+          navigate(`/track-sheet/${createdSheet.id}`);
+        }
+      }, 500);
+    } catch (error) {
+      console.error("Error creating track sheet:", error);
+      toast.error("Failed to create track sheet");
+    }
   };
 
   return (

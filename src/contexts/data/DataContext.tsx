@@ -47,9 +47,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...vehicleSalesmanState,
     ...expenseState,
     ...trackSheetState,
-    // Use the actual invoice data
+    // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,
-    addInvoice: invoiceState.addInvoice,
+    addInvoice: (invoice) => {
+      const result = invoiceState.addInvoice(invoice);
+      return result;  // Return result directly instead of trying to cast to string
+    },
     updateInvoice: invoiceState.updateInvoice,
     deleteInvoice: invoiceState.deleteInvoice,
     
