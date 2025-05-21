@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,9 +54,9 @@ import {
 import { toast } from 'sonner';
 import { exportToPdf } from '@/utils/pdfUtils';
 
-// Augment the Payment type
+// Augment the Payment type with a properly typed status
 interface ExtendedPayment extends Omit<Payment, 'paymentMethod'> {
-  status?: string;
+  status?: 'completed' | 'pending' | 'failed';
   referenceNumber?: string;
   paymentMethod?: 'cash' | 'bank' | 'upi' | 'other' | string;
 }

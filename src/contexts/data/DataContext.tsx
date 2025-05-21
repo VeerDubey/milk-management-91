@@ -50,8 +50,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,
     addInvoice: (invoice) => {
-      const result = invoiceState.addInvoice(invoice);
-      return result;  // Return result directly instead of trying to cast to string
+      return invoiceState.addInvoice(invoice);
+      // Return type issue fixed by removing the cast to string
     },
     updateInvoice: invoiceState.updateInvoice,
     deleteInvoice: invoiceState.deleteInvoice,

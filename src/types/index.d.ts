@@ -1,4 +1,3 @@
-
 // Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
 
 import { ReactNode } from 'react';
@@ -160,7 +159,7 @@ declare module '@/types' {
     defaultReportPeriod: string; // Added for compatibility
   }
 
-  // Updated TrackSheet interface with compatible properties
+  // Updated TrackSheet interface with notes property
   export interface TrackSheet {
     id: string;
     date: string;

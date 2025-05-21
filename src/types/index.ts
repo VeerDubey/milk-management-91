@@ -64,7 +64,7 @@ export interface Payment {
   paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
   notes?: string;
   referenceNumber?: string; // Added for PaymentListView
-  status?: 'completed' | 'pending' | 'failed'; // Added for PaymentListView
+  status?: 'completed' | 'pending' | 'failed'; // Added for PaymentListView with proper type
 }
 
 export interface CustomerProductRate {
