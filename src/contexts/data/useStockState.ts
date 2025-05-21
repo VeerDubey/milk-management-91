@@ -44,10 +44,11 @@ export function useStockState(updateSupplier: Function) {
   };
   
   const addStockEntry = (entry: Omit<StockEntry, "id">) => {
-    // Generate ID only if not provided
+    // Generate a new ID since it might not be provided
+    const newEntryId = `se${Date.now()}`;
     const newEntry = {
       ...entry,
-      id: entry.id || `se${Date.now()}`
+      id: newEntryId
     };
     
     setStockEntries([...stockEntries, newEntry]);

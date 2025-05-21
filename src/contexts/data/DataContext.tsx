@@ -68,7 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addInvoice: (invoice) => {
       const result = invoiceState.addInvoice(invoice);
       // Return the id as a string to match expected type
-      return typeof result === 'object' && result !== null ? result.id : String(result);
+      return typeof result === 'object' && result !== null && 'id' in result ? result.id : String(result);
     },
     updateInvoice: invoiceState.updateInvoice,
     deleteInvoice: invoiceState.deleteInvoice,
@@ -76,8 +76,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Adding missing properties
     getProductRateForCustomer,
     deleteMultiplePayments,
-    addStockEntry: stockState.addStockEntry,
-    stockEntries: stockState.stockEntries || [],
     
     // Add supplier payments functionality
     supplierPayments: supplierState.supplierPayments || [],

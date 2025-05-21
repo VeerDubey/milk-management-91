@@ -18,6 +18,7 @@ export function useCustomerState() {
       id: `c${Date.now()}`
     };
     setCustomers([...customers, newCustomer]);
+    return newCustomer; // Return the newCustomer to match type expectations
   };
 
   const updateCustomer = (id: string, customerData: Partial<Customer>) => {
