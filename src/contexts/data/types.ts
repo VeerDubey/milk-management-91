@@ -1,5 +1,5 @@
 
-import { Customer, Product, Order, Payment, CustomerProductRate, SupplierProductRate, Stock, StockEntry, StockRecord, Supplier, UISettings, Vehicle, Salesman, TrackSheet, Expense, Invoice } from '@/types';
+import { Customer, Product, Order, Payment, CustomerProductRate, SupplierProductRate, StockEntry, StockRecord, Supplier, UISettings, Vehicle, Salesman, TrackSheet, Expense, Invoice, SupplierPayment } from '@/types';
 
 export interface DataContextType {
   // Customer state
@@ -7,6 +7,7 @@ export interface DataContextType {
   addCustomer: (customer: Omit<Customer, "id">) => Customer;
   updateCustomer: (id: string, customerData: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
+  getProductRateForCustomer?: (customerId: string, productId: string) => number | null;
 
   // Product state
   products: Product[];
@@ -25,6 +26,7 @@ export interface DataContextType {
   addPayment: (payment: Omit<Payment, "id">) => Payment;
   updatePayment: (id: string, paymentData: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
+  deleteMultiplePayments?: (ids: string[]) => void;
 
   // Product rate state
   customerProductRates: CustomerProductRate[];
@@ -34,9 +36,13 @@ export interface DataContextType {
   
   // Stock state
   stockRecords: StockRecord[];
+  stockEntries: StockEntry[];
   addStockRecord: (record: Omit<StockRecord, "id">) => StockRecord;
   updateStockRecord: (id: string, recordData: Partial<StockRecord>) => void;
   deleteStockRecord: (id: string) => void;
+  addStockEntry: (entry: Omit<StockEntry, "id">) => StockEntry;
+  updateStockEntry?: (id: string, entryData: Partial<StockEntry>) => void;
+  deleteStockEntry?: (id: string) => void;
   addStock: (entry: Omit<StockEntry, "id">) => StockEntry;
   
   // Supplier state
@@ -48,6 +54,12 @@ export interface DataContextType {
   addSupplier: (supplier: Omit<Supplier, "id">) => Supplier;
   updateSupplier: (id: string, supplierData: Partial<Supplier>) => void;
   deleteSupplier: (id: string) => void;
+  
+  // Supplier payments
+  supplierPayments: SupplierPayment[];
+  addSupplierPayment: (payment: Omit<SupplierPayment, "id">) => SupplierPayment;
+  updateSupplierPayment: (id: string, paymentData: Partial<SupplierPayment>) => void;
+  deleteSupplierPayment: (id: string) => void;
   
   // UI Settings state
   uiSettings: UISettings;

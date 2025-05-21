@@ -28,6 +28,7 @@ export function useStockState(updateSupplier: Function) {
       id: `sr${Date.now()}`
     };
     setStockRecords([...stockRecords, newRecord]);
+    return newRecord;
   };
 
   const updateStockRecord = (id: string, recordData: Partial<StockRecord>) => {
@@ -46,7 +47,7 @@ export function useStockState(updateSupplier: Function) {
     // Generate ID only if not provided
     const newEntry = {
       ...entry,
-      id: `se${Date.now()}`
+      id: entry.id || `se${Date.now()}`
     };
     
     setStockEntries([...stockEntries, newEntry]);
@@ -94,6 +95,8 @@ export function useStockState(updateSupplier: Function) {
         outstandingBalance: newBalance
       });
     }
+    
+    return newEntry;
   };
 
   const updateStockEntry = (id: string, entryData: Partial<StockEntry>) => {
@@ -108,23 +111,9 @@ export function useStockState(updateSupplier: Function) {
     setStockEntries(stockEntries.filter((entry) => entry.id !== id));
   };
 
-  // Simple addStock function to satisfy the interface
-  const addStock = (supplierId: string, productId: string, quantity: number, pricePerUnit: number, date: string) => {
-    const stockItem: StockEntryItem = {
-      productId,
-      quantity,
-      unitPrice: pricePerUnit,
-      total: quantity * pricePerUnit
-    };
-    
-    const entry: Omit<StockEntry, "id"> = {
-      date,
-      supplierId,
-      items: [stockItem],
-      totalAmount: stockItem.total,
-    };
-    
-    addStockEntry(entry);
+  // Add stock function that matches the interface
+  const addStock = (entry: Omit<StockEntry, "id">) => {
+    return addStockEntry(entry);
   };
 
   return {

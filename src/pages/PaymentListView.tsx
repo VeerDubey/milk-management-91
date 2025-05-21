@@ -55,10 +55,9 @@ import { toast } from 'sonner';
 import { exportToPdf } from '@/utils/pdfUtils';
 
 // Augment the Payment type with a properly typed status
-interface ExtendedPayment extends Omit<Payment, 'paymentMethod'> {
-  status?: 'completed' | 'pending' | 'failed';
-  referenceNumber?: string;
-  paymentMethod?: 'cash' | 'bank' | 'upi' | 'other' | string;
+interface ExtendedPayment extends Omit<Payment, "paymentMethod" | "status"> {
+  paymentMethod: string;
+  status: "completed" | "pending" | "failed";
 }
 
 export default function PaymentListView() {
@@ -129,14 +128,20 @@ export default function PaymentListView() {
   };
 
   // Handle bulk delete
-  const handleBulkDelete = () => {
-    if (selectedPayments.length === 0) {
-      toast.error("No payments selected");
-      return;
+  const handleDeleteSelected = () => {
+    if (selectedPayments.length > 0) {
+      // Use the deleteMultiplePayments function from context
+      if (deleteMultiplePayments) {
+        deleteMultiplePayments(selectedPayments);
+        setSelectedPayments([]);
+        toast.success("Selected payments deleted successfully");
+      } else {
+        // Fallback to deleting one by one
+        selectedPayments.forEach(id => deletePayment(id));
+        setSelectedPayments([]);
+        toast.success("Selected payments deleted successfully");
+      }
     }
-    
-    deleteMultiplePayments(selectedPayments);
-    setSelectedPayments([]);
   };
 
   // Handle export PDF
@@ -322,7 +327,7 @@ export default function PaymentListView() {
               <Button 
                 variant="destructive" 
                 size="sm" 
-                onClick={handleBulkDelete}
+                onClick={handleDeleteSelected}
                 className="flex-1"
               >
                 <Trash2 className="mr-2 h-4 w-4" /> Delete ({selectedPayments.length})

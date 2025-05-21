@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { StockEntry } from "@/types";
 
 const PurchaseHistory = () => {
-  const { suppliers, products, stockEntries } = useData();
+  const { suppliers, products, stockEntries = [] } = useData();
   const [date, setDate] = useState<Date | undefined>(undefined);
 
   // When creating stock entries, ensure items use unitPrice instead of rate
@@ -70,12 +70,12 @@ const PurchaseHistory = () => {
 
   // Filter stock entries by date
   const filteredStockEntries = date
-    ? mockStockEntries.filter(
+    ? stockEntries.filter(
         (entry) =>
           format(new Date(entry.date), "yyyy-MM-dd") ===
           format(date, "yyyy-MM-dd")
       )
-    : mockStockEntries;
+    : stockEntries;
 
   // Reference cell component
   const ReferenceCell = ({ entry }: { entry: StockEntry }) => (

@@ -34,7 +34,6 @@ import {
 import { CalendarIcon, PackagePlus, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
 
 const StockManagement = () => {
   const { suppliers, products, addStockEntry } = useData();
@@ -70,7 +69,7 @@ const StockManagement = () => {
     value: string | number
   ) => {
     const newStockItems = [...stockItems];
-    newStockItems[index][field] =
+    newStockItems[index][field as keyof typeof newStockItems[0]] =
       field === "quantity" || field === "rate" ? Number(value) : value;
     setStockItems(newStockItems);
   };
@@ -111,8 +110,7 @@ const StockManagement = () => {
       total: item.quantity * item.rate
     }));
 
-    const entry: StockEntry = {
-      id: `se${Date.now()}`, // Add an ID to the entry
+    const entry: Omit<StockEntry, "id"> = {
       date: format(entryDate || new Date(), "yyyy-MM-dd"),
       supplierId: selectedSupplierId,
       totalAmount: calculateTotal(),
@@ -121,9 +119,13 @@ const StockManagement = () => {
       referenceNumber: referenceNumber // Now properly part of StockEntry type
     };
 
-    addStockEntry(entry);
-    toast.success("Stock entry added successfully");
-    resetForm();
+    const result = addStockEntry(entry);
+    if (result) {
+      toast.success("Stock entry added successfully");
+      resetForm();
+    } else {
+      toast.error("Failed to add stock entry");
+    }
   };
 
   return (

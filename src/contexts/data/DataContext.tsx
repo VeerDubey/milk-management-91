@@ -34,6 +34,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Use the actual invoice context data
   const invoiceState = useInvoices();
 
+  // Helper function to get product rate for a customer
+  const getProductRateForCustomer = (customerId: string, productId: string): number | null => {
+    const rate = productRateState.customerProductRates.find(
+      (rate) => rate.customerId === customerId && rate.productId === productId && rate.isActive
+    );
+    return rate ? rate.rate : null;
+  };
+
+  // Helper function to delete multiple payments
+  const deleteMultiplePayments = (ids: string[]): void => {
+    if (ids && ids.length > 0) {
+      ids.forEach(id => paymentState.deletePayment(id));
+    }
+  };
+
   // Combine all state objects into one
   const contextValue: DataContextType = {
     ...customerState,
@@ -59,7 +74,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deleteInvoice: invoiceState.deleteInvoice,
     
     // Adding missing properties
-    addStock: stockState.addStock,
+    getProductRateForCustomer,
+    deleteMultiplePayments,
+    addStockEntry: stockState.addStockEntry,
+    stockEntries: stockState.stockEntries || [],
+    
+    // Add supplier payments functionality
+    supplierPayments: supplierState.supplierPayments || [],
+    addSupplierPayment: supplierState.addSupplierPayment,
+    updateSupplierPayment: supplierState.updateSupplierPayment,
+    deleteSupplierPayment: supplierState.deleteSupplierPayment,
   };
 
   return (
