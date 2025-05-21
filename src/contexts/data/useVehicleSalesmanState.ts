@@ -27,6 +27,7 @@ export function useVehicleSalesmanState() {
       id: `v${Date.now()}`
     };
     setVehicles([...vehicles, newVehicle]);
+    return newVehicle; // Return the newly created vehicle
   };
   
   const updateVehicle = (id: string, vehicleData: Partial<Vehicle>) => {
@@ -47,6 +48,7 @@ export function useVehicleSalesmanState() {
       id: `sm${Date.now()}`
     };
     setSalesmen([...salesmen, newSalesman]);
+    return newSalesman; // Return the newly created salesman
   };
   
   const updateSalesman = (id: string, salesmanData: Partial<Salesman>) => {
