@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CustomerProductRate, SupplierProductRate, Product } from '@/types';
 
@@ -28,6 +27,7 @@ export function useProductRateState(products: Product[]) {
       id: `cpr${Date.now()}`
     };
     setCustomerProductRates([...customerProductRates, newRate]);
+    return newRate; // Return the newly created rate object
   };
 
   const updateCustomerProductRate = (id: string, rateData: Partial<CustomerProductRate>) => {
@@ -66,6 +66,7 @@ export function useProductRateState(products: Product[]) {
       id: `spr${Date.now()}`
     };
     setSupplierProductRates([...supplierProductRates, newRate]);
+    return newRate; // Return the newly created rate object
   };
 
   const updateSupplierProductRate = (id: string, rateData: Partial<SupplierProductRate>) => {

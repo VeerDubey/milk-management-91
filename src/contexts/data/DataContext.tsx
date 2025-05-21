@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -13,6 +14,7 @@ import { useTrackSheetState } from './useTrackSheetState';
 import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 import { useInvoices } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
+import { CustomerProductRate } from '@/types';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -111,7 +113,7 @@ export function useCustomerProductRate() {
     localStorage.setItem("customerProductRates", JSON.stringify(customerProductRates));
   }, [customerProductRates]);
 
-  const addCustomerProductRate = (rate: Omit<CustomerProductRate, "id">) => {
+  const addCustomerProductRate = (rate: Omit<CustomerProductRate, "id">): CustomerProductRate => {
     const newRate = {
       ...rate,
       id: `cpr${Date.now()}`
