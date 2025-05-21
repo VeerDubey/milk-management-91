@@ -32,6 +32,8 @@ function findScript(startDir) {
 const scriptPath = findScript(__dirname);
 if (scriptPath) {
   console.log(`Please run: node ${scriptPath} [command]`);
+  console.log(`If you're having issues with installation, please run: node force-npm.js`);
 } else {
   console.error('Error: Could not locate electron-scripts.js');
+  console.log(`If you're having issues with installation, please run: node force-npm.js`);
 }

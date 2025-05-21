@@ -24,7 +24,11 @@ try {
   
   console.log('Installing main dependencies...');
   // Using all safety flags to maximize compatibility and avoid git
-  execSync('npm install --no-git-tag-version --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/', { stdio: 'inherit' });
+  execSync('npm install --no-git-tag-version --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
+  
+  // First install @electron/node-gyp explicitly without git and with exact version
+  console.log('Installing @electron/node-gyp explicitly from npm registry...');
+  execSync('npm install @electron/node-gyp@latest --save-exact --no-git-tag-version --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
   
   // Explicitly handle problematic packages with special flags
   console.log('Handling potentially problematic packages...');
@@ -44,9 +48,9 @@ try {
   console.log('Installing node-gyp explicitly from npm registry...');
   execSync('npm install node-gyp@latest --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
   
-  // Install @electron/node-gyp explicitly from npm registry - this fixes the git clone issue
-  console.log('Installing @electron/node-gyp explicitly from npm registry...');
-  execSync('npm install @electron/node-gyp@latest --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
+  // Reinstall @electron/node-gyp explicitly from npm registry again as a final step
+  console.log('Reinstalling @electron/node-gyp explicitly from npm registry to finalize...');
+  execSync('npm install @electron/node-gyp@latest --save-exact --ignore-scripts --no-fund --no-audit --legacy-peer-deps --registry=https://registry.npmjs.org/ --no-git', { stdio: 'inherit' });
 
   // Install lovable-tagger explicitly
   console.log('Installing Lovable tagger plugin...');
@@ -56,6 +60,9 @@ try {
   console.log('You can now run the application using:');
   console.log('  node electron-scripts.js start   - to run in development mode');
   console.log('  node electron-scripts.js build   - to build for your current platform');
+  
+  console.log('\nIf you encounter any issues with bun install, please run:');
+  console.log('  node force-npm.js');
 } catch (error) {
   console.error('Error during installation:');
   console.error(error.message);
@@ -63,6 +70,9 @@ try {
   if (error.message.includes('npm --version')) {
     console.error('npm is not installed or not in your PATH.');
     console.error('Please install npm (comes with Node.js) from https://nodejs.org/');
+  } else {
+    console.error('\nTrying alternative approach...');
+    console.error('Please run: node force-npm.js');
   }
   
   process.exit(1);
