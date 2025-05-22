@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useData } from "@/contexts/data/DataContext";
 import { Button } from "@/components/ui/button";
@@ -71,8 +70,7 @@ const ProductList = () => {
     }
 
     addProduct({
-      ...newProduct,
-      id: `prod-${Date.now()}`
+      ...newProduct
     });
     
     setNewProduct({

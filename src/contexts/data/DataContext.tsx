@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -113,7 +112,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fixed: Pass only the order object
+      // Fixed: Pass only the order object to match the expected function signature
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
