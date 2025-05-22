@@ -76,22 +76,13 @@ async function installDependencies() {
   console.log('\n⚡ Installing Electron and related packages first with NPM...');
   runCommand('npm install --no-save electron electron-builder electron-is-dev electron-log --legacy-peer-deps');
   
-  // Install remaining dependencies with the package manager available (could be bun or npm)
-  const usingBun = runCommand('command -v bun', { silent: true, ignoreError: true });
+  // Force install the problematic node-gyp package with npm
+  console.log('\n🔨 Force installing node-gyp related packages with NPM...');
+  runCommand('npm install --no-save @electron/node-gyp --legacy-peer-deps --no-git --force');
   
-  console.log('\nInstalling main dependencies...');
-  if (usingBun) {
-    console.log('Using Bun for remaining dependencies (except Electron packages)...');
-    const baseInstallSuccess = runCommand('bun install --no-save');
-    
-    if (!baseInstallSuccess) {
-      console.log('\n⚠️ Bun installation had issues. Falling back to npm...');
-      runCommand('npm install --legacy-peer-deps');
-    }
-  } else {
-    console.log('Using npm for all dependencies...');
-    runCommand('npm install --legacy-peer-deps');
-  }
+  // Install remaining dependencies with npm to avoid git clone issues
+  console.log('\nInstalling main dependencies with npm...');
+  runCommand('npm install --legacy-peer-deps --no-git');
   
   // Create necessary directories
   console.log('\n📁 Ensuring all required directories exist...');

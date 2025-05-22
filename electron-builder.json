@@ -26,7 +26,7 @@
   },
   "asar": true,
   "mac": {
-    "category": "public.app-category.business",
+    "category": "public.app.category.business",
     "target": ["dmg", "zip"],
     "icon": "public/icon-512x512.png"
   },
