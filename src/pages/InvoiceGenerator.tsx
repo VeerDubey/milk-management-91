@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -185,15 +184,23 @@ export default function InvoiceGenerator() {
       status: "Draft"
     };
     
-    const previewUrl = generateInvoicePreview(
-      invoiceData, 
-      companyFormValues, 
-      products,
-      selectedTemplate
-    );
-    
-    setPreviewUrl(previewUrl);
-    setShowPreview(true);
+    try {
+      // Generate the PDF preview - this returns a jsPDF object
+      const pdfDoc = generateInvoicePreview(
+        invoiceData, 
+        companyFormValues, 
+        products,
+        selectedTemplate
+      );
+      
+      // Convert to data URI for iframe display
+      const dataUri = pdfDoc.output('datauristring');
+      setPreviewUrl(dataUri);
+      setShowPreview(true);
+    } catch (error) {
+      console.error("Error generating preview:", error);
+      toast.error("Failed to generate preview");
+    }
   };
 
   // Generate and save invoice

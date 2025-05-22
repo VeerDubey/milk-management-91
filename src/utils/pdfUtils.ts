@@ -18,6 +18,7 @@ export interface PdfExportOptions {
   autoPrint?: boolean; // Added option for automatic printing
   dateInfo?: string; // Added for date information
   additionalInfo?: Array<{label: string, value: string}>; // Added for additional information
+  landscape?: boolean; // Added for backward compatibility
 }
 
 // Export function to create PDF from tabular data
@@ -34,12 +35,13 @@ export const exportToPdf = (
     pageSize = 'a4',
     margins = { top: 30, right: 15, bottom: 20, left: 15 },
     autoPrint = false, // Default to false
-    dateInfo = ''
+    dateInfo = '',
+    landscape = false // Handle the landscape option
   } = options;
 
   // Initialize PDF document
   const doc = new jsPDF({
-    orientation,
+    orientation: landscape ? 'landscape' : orientation, // Use landscape option if provided
     unit: 'mm',
     format: pageSize,
   });
@@ -133,6 +135,7 @@ export const generatePdfPreview = (
     dateInfo,
     additionalInfo,
     filename,
+    landscape,
     orientation: landscape ? 'landscape' : 'portrait',
     pageSize: 'a4'
   };

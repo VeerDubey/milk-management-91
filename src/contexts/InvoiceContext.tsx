@@ -122,16 +122,20 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         customerName: invoice.customerId, // This will be resolved in generateInvoicePreview
       };
       
-      // Generate and return the PDF preview
-      const previewUrl = generateInvoicePreview(
+      // Generate the PDF preview - this returns a jsPDF object
+      const pdfDoc = generateInvoicePreview(
         adaptedInvoice as any,
         companyInfo,
         products,
         templateToUse
       );
       
-      console.log('Preview URL generated successfully');
-      return previewUrl;
+      console.log('Preview generated successfully');
+      
+      // Convert jsPDF to a data URL string that can be used in iframes
+      const pdfDataUrl = pdfDoc.output('datauristring');
+      
+      return pdfDataUrl;
     } catch (error) {
       console.error('Error generating preview:', error);
       throw new Error('Failed to generate preview');
