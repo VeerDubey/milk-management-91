@@ -56,15 +56,17 @@ export function useOrderState() {
       return null;
     }
 
-    const duplicatedOrder: Omit<Order, "id"> = {
+    const duplicatedOrder = {
       ...existingOrder,
-      id: undefined as any, // Will be replaced in addOrder function
       date: newDate || new Date().toISOString(),
       status: 'pending',
       paymentStatus: 'pending',
     };
+    
+    // Remove the id property before passing to addOrder since it's excluded in the type
+    const { id, ...orderWithoutId } = duplicatedOrder;
 
-    const newOrder = addOrder(duplicatedOrder);
+    const newOrder = addOrder(orderWithoutId);
     toast.success("Order duplicated successfully");
     
     return newOrder;

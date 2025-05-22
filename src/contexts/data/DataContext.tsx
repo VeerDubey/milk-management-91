@@ -88,7 +88,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
         total: order.total || items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
       };
 
-      const invoiceId = invoiceState.addInvoice(InvoiceService.createInvoice(invoiceData));
+      // Fixed: Convert the returned invoice (or its id) to string
+      const result = invoiceState.addInvoice(InvoiceService.createInvoice(invoiceData));
+      const invoiceId = typeof result === 'string' ? result : result.id;
+      
       toast.success("Invoice created from order successfully");
       
       return invoiceId;
@@ -137,7 +140,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addInvoice: (invoice) => {
       const result = invoiceState.addInvoice(invoice);
       // Return the id as a string to match expected type
-      return typeof result === 'object' && result !== null && 'id' in result ? result.id : String(result);
+      return typeof result === 'string' ? result : String(result.id);
     },
     updateInvoice: invoiceState.updateInvoice,
     deleteInvoice: invoiceState.deleteInvoice,
