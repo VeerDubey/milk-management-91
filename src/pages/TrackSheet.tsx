@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -12,6 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { toast } from 'sonner';
 import { FileText, Save, Plus, X, Printer } from 'lucide-react';
 import { generateTrackSheetPdf, savePdf, getBlankRow } from '@/utils/trackSheetUtils';
+import { TrackSheetRow } from '@/types';
 
 export default function TrackSheet() {
   const navigate = useNavigate();
@@ -57,7 +57,9 @@ export default function TrackSheet() {
   const calculateRowTotals = (updatedRows: any[]) => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
-        return sum + (qty !== '' ? Number(qty) : 0);
+        // Convert to number before addition
+        const numValue = qty !== '' ? Number(qty) : 0;
+        return sum + numValue;
       }, 0);
       
       // You might want to calculate amounts based on product prices later
@@ -89,7 +91,20 @@ export default function TrackSheet() {
   
   // Add blank row
   const addRow = () => {
-    setRows(prev => [...prev, getBlankRow(productNames)]);
+    // Create a new blank row with the correct type
+    const newRow = {
+      customerId: '',
+      name: '',
+      quantities: productNames.reduce((acc, name) => {
+        acc[name] = '';
+        return acc;
+      }, {} as Record<string, string | number>),
+      total: 0,
+      amount: 0,
+      products: productNames
+    };
+    
+    setRows(prev => [...prev, newRow]);
   };
   
   // Remove row

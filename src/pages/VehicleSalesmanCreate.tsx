@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -43,7 +42,7 @@ export default function VehicleSalesmanCreate() {
       registrationNumber: regNumber,
       type: vehicleType,
       capacity: capacity ? parseInt(capacity, 10) : undefined,
-      driver: driverName,
+      driverName,
       isActive: isVehicleActive,
       createdAt: new Date().toISOString()
     };
@@ -71,6 +70,7 @@ export default function VehicleSalesmanCreate() {
     
     const newSalesman = {
       name: salesmanName,
+      phone: contactNumber, // Use the contactNumber as the phone field
       contactNumber,
       email,
       isActive: isSalesmanActive,

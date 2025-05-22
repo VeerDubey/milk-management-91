@@ -13,7 +13,8 @@ import {
   Expense,
   TrackSheet,
   TrackSheetRow,
-  SupplierPayment
+  SupplierPayment,
+  StockEntry
 } from '@/types';
 
 export interface DataContextType {
@@ -52,6 +53,10 @@ export interface DataContextType {
   deleteProductRate: (id: string) => void;
   getProductRateForCustomer: (customerId: string, productId: string) => number | null;
   
+  // Customer product rates - adding to address missing properties
+  addCustomerProductRate: (rate: Omit<ProductRate, "id">) => ProductRate;
+  updateCustomerProductRate: (id: string, rateData: Partial<ProductRate>) => void;
+  
   // Stock state
   stockTransactions: StockTransaction[];
   addStockTransaction: (transaction: Omit<StockTransaction, "id">) => StockTransaction;
@@ -59,11 +64,19 @@ export interface DataContextType {
   deleteStockTransaction: (id: string) => void;
   getProductStock?: (productId: string) => number;
   
+  // Stock entries
+  stockEntries: StockEntry[];
+  addStockEntry: (entry: Omit<StockEntry, "id">) => StockEntry;
+  
   // Supplier state
   suppliers: any[];
   addSupplier: (supplier: any) => any;
   updateSupplier: (id: string, supplierData: any) => void;
   deleteSupplier: (id: string) => void;
+  
+  // Supplier product rates
+  supplierProductRates: any[];
+  addSupplierProductRate: (rate: any) => any;
   
   // Supplier payment state
   supplierPayments: SupplierPayment[];

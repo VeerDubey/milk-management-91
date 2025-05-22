@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -289,4 +288,32 @@ export interface TaxSetting {
   isDefault: boolean;
   applicableOn?: string[]; // Changed from string to string[]
   appliedTo?: string[]; // Changed from string to string[]
+}
+
+// Define ProductRate type since it's missing
+export type ProductRate = CustomerProductRate;
+
+// Define StockTransaction type
+export interface StockTransaction {
+  id: string;
+  productId: string;
+  quantity: number;
+  date: string;
+  type: 'in' | 'out' | 'adjustment';
+  notes?: string;
+  referenceNumber?: string;
+}
+
+// Define VehicleTrip type
+export interface VehicleTrip {
+  id: string;
+  vehicleId: string;
+  salesmanId?: string;
+  date: string;
+  startLocation?: string;
+  endLocation?: string;
+  distance?: number;
+  purpose?: string;
+  notes?: string;
+  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
 }
