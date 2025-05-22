@@ -138,7 +138,7 @@ export function useTrackSheetState() {
   };
 
   // Create track sheet from order data
-  // Updated to accept a single order parameter
+  // Fixed: Accept a single order object parameter
   const createTrackSheetFromOrder = (order: any) => {
     try {
       if (!order || !order.items || order.items.length === 0) {
@@ -146,9 +146,27 @@ export function useTrackSheetState() {
         return null;
       }
       
-      // This functionality will be implemented in DataContext
-      // where we have access to the customers and products lists
-      return null;
+      // Create basic tracksheet structure from order
+      const trackSheetRows = order.items.map((item: any, index: number) => ({
+        id: `row-${Date.now()}-${index}`,
+        customerId: order.customerId,
+        productId: item.productId,
+        quantity: item.quantity,
+        delivered: false,
+        notes: ''
+      }));
+      
+      const trackSheet = {
+        name: `Track Sheet from Order ${order.id}`,
+        date: new Date().toISOString(),
+        rows: trackSheetRows,
+        vehicleId: '',
+        salesmanId: '',
+        status: 'pending',
+        notes: `Created from Order ${order.id}`
+      };
+      
+      return addTrackSheet(trackSheet);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
       toast.error("Failed to create track sheet from order");

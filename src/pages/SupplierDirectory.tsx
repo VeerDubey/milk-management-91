@@ -1,324 +1,260 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState } from "react";
+import { useData } from "@/contexts/data/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Truck, Phone, Mail, MapPin, Plus, Search, Edit, Trash } from "lucide-react";
-import { useData } from "@/contexts/data/DataContext";
-import { toast } from "sonner";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter,
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { Supplier } from "@/types";
-
-interface SupplierFormData {
-  name: string;
-  contactName: string;
-  phone: string;
-  email: string;
-  address: string;
-  status?: string;
-  outstandingBalance?: number;
-  isActive: boolean;
-  products: string[];
-}
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Search, 
+  Plus, 
+  Phone, 
+  Mail, 
+  Edit, 
+  Trash,
+  FileText,
+  Store
+} from "lucide-react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 const SupplierDirectory = () => {
   const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useData();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<string | null>(null);
-  const [formData, setFormData] = useState<SupplierFormData>({
-    name: '',
-    contactName: '',
-    phone: '',
-    email: '',
-    address: '',
-    status: 'Active',
-    outstandingBalance: 0,
-    isActive: true,
-    products: []
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newSupplier, setNewSupplier] = useState({
+    name: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    address: "",
+    notes: "",
+    isActive: true
   });
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<any>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'outstandingBalance' ? parseFloat(value) || 0 : value
-    }));
-  };
+  const filteredSuppliers = suppliers?.filter(supplier => 
+    supplier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.phone?.includes(searchTerm) ||
+    supplier.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateSupplier = () => {
+    if (!newSupplier.name) {
+      toast.error("Supplier name is required");
+      return;
+    }
+
+    addSupplier({
+      ...newSupplier,
+      id: `sup-${Date.now()}`
+    });
     
-    try {
-      if (editingSupplier) {
-        updateSupplier(editingSupplier, formData);
-        toast.success("Supplier updated successfully");
-      } else {
-        addSupplier(formData);
-        toast.success("Supplier added successfully");
-      }
-      
-      handleCloseDialog();
-    } catch (error) {
-      toast.error("An error occurred while saving the supplier");
-      console.error(error);
+    setNewSupplier({
+      name: "",
+      contactPerson: "",
+      phone: "",
+      email: "",
+      address: "",
+      notes: "",
+      isActive: true
+    });
+    
+    setIsAddDialogOpen(false);
+    toast.success("Supplier created successfully");
+  };
+
+  const handleUpdateSupplier = () => {
+    if (!editingSupplier?.name) {
+      toast.error("Supplier name is required");
+      return;
+    }
+
+    updateSupplier(editingSupplier.id, editingSupplier);
+    setIsEditDialogOpen(false);
+    toast.success("Supplier updated successfully");
+  };
+
+  const handleDeleteSupplier = () => {
+    if (supplierToDelete) {
+      deleteSupplier(supplierToDelete.id);
+      setIsDeleteDialogOpen(false);
+      toast.success("Supplier deleted successfully");
     }
   };
 
-  const handleEdit = (supplier: Supplier) => {
-    setFormData({
-      name: supplier.name,
-      contactName: supplier.contactName,
-      phone: supplier.phone,
-      email: supplier.email || '',
-      address: supplier.address,
-      status: supplier.status || 'Active',
-      outstandingBalance: supplier.outstandingBalance || 0,
-      isActive: supplier.isActive,
-      products: supplier.products || []
-    });
-    setEditingSupplier(supplier.id);
-    setIsDialogOpen(true);
+  const startEdit = (supplier: any) => {
+    setEditingSupplier({...supplier});
+    setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this supplier?")) {
-      try {
-        deleteSupplier(id);
-        toast.success("Supplier deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete supplier");
-        console.error(error);
-      }
-    }
+  const confirmDelete = (supplier: any) => {
+    setSupplierToDelete(supplier);
+    setIsDeleteDialogOpen(true);
   };
-
-  const handleCloseDialog = () => {
-    setFormData({
-      name: '',
-      contactName: '',
-      phone: '',
-      email: '',
-      address: '',
-      status: 'Active',
-      outstandingBalance: 0,
-      isActive: true,
-      products: []
-    });
-    setEditingSupplier(null);
-    setIsDialogOpen(false);
-  };
-
-  const filteredSuppliers = searchQuery.trim() === '' 
-    ? suppliers 
-    : suppliers.filter(supplier => 
-        supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        supplier.phone.includes(searchQuery) ||
-        (supplier.email && supplier.email.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Supplier Directory</h1>
-          <p className="text-muted-foreground">
-            Manage your suppliers and their contact information
-          </p>
+          <h1 className="text-3xl font-bold">Supplier Directory</h1>
+          <p className="text-muted-foreground">Manage your suppliers and their contact information</p>
         </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingSupplier(null);
-              setFormData({
-                name: '',
-                contactName: '',
-                phone: '',
-                email: '',
-                address: '',
-                status: 'Active',
-                outstandingBalance: 0,
-                isActive: true,
-                products: []
-              });
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Supplier
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search suppliers..."
+              className="pl-8 min-w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Supplier
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[525px]">
+              <DialogHeader>
+                <DialogTitle>Add New Supplier</DialogTitle>
+                <DialogDescription>
+                  Enter the details of the new supplier. Click save when you're done.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Supplier Name *</Label>
+                    <Input
+                      id="name"
+                      value={newSupplier.name}
+                      onChange={(e) => setNewSupplier({...newSupplier, name: e.target.value})}
+                      placeholder="Enter supplier name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPerson">Contact Person</Label>
+                    <Input
+                      id="contactPerson"
+                      value={newSupplier.contactPerson}
+                      onChange={(e) => setNewSupplier({...newSupplier, contactPerson: e.target.value})}
+                      placeholder="Primary contact name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      value={newSupplier.phone}
+                      onChange={(e) => setNewSupplier({...newSupplier, phone: e.target.value})}
+                      placeholder="Phone number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newSupplier.email}
+                      onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
+                      placeholder="Email address"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Supplier Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
+                  <Label htmlFor="address">Address</Label>
+                  <Textarea
+                    id="address"
+                    value={newSupplier.address}
+                    onChange={(e) => setNewSupplier({...newSupplier, address: e.target.value})}
+                    placeholder="Full address"
+                    rows={2}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="contactName">Contact Name</Label>
-                  <Input
-                    id="contactName"
-                    name="contactName"
-                    value={formData.contactName}
-                    onChange={handleInputChange}
-                    required
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={newSupplier.notes}
+                    onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
+                    placeholder="Additional notes"
+                    rows={3}
                   />
                 </div>
               </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Input
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="outstandingBalance">Outstanding Balance</Label>
-                  <Input
-                    id="outstandingBalance"
-                    name="outstandingBalance"
-                    type="number"
-                    value={formData.outstandingBalance.toString()}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="isActive">Active</Label>
-                <Input
-                  id="isActive"
-                  name="isActive"
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    isActive: e.target.checked
-                  }))}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="products">Products</Label>
-                <Input
-                  id="products"
-                  name="products"
-                  type="text"
-                  value={formData.products.join(', ')}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    products: e.target.value.split(', ').map(product => product.trim())
-                  }))}
-                  required
-                />
-              </div>
-              
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingSupplier ? 'Update Supplier' : 'Add Supplier'}
-                </Button>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleCreateSupplier}>Save Supplier</Button>
               </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Suppliers</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search suppliers..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl flex items-center">
+            <Store className="mr-2 h-5 w-5" />
+            Suppliers
+          </CardTitle>
+          <CardDescription>
+            You have {filteredSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} in your directory
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredSuppliers.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-muted-foreground">No suppliers found</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setIsDialogOpen(true)}
-              >
-                Add your first supplier
-              </Button>
+              <Store className="mx-auto h-12 w-12 text-muted-foreground opacity-30" />
+              <h3 className="mt-4 text-lg font-semibold">No suppliers found</h3>
+              <p className="text-muted-foreground mt-2">
+                {searchTerm ? "Try adjusting your search" : "Add your first supplier to get started"}
+              </p>
+              {searchTerm && (
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => setSearchTerm("")}
+                >
+                  Clear search
+                </Button>
+              )}
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">
@@ -326,36 +262,56 @@ const SupplierDirectory = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Supplier Name</TableHead>
-                    <TableHead>Contact Person</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Address</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Balance</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredSuppliers.map((supplier) => (
                     <TableRow key={supplier.id}>
-                      <TableCell className="font-medium">{supplier.name}</TableCell>
-                      <TableCell>{supplier.contactName || supplier.contact || '-'}</TableCell>
-                      <TableCell>{supplier.phone}</TableCell>
-                      <TableCell>{supplier.email || '-'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          supplier.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {supplier.status || 'Active'}
-                        </span>
+                      <TableCell className="font-medium">
+                        <div className="font-medium">{supplier.name}</div>
+                        {supplier.contactPerson && (
+                          <div className="text-sm text-muted-foreground">{supplier.contactPerson}</div>
+                        )}
                       </TableCell>
-                      <TableCell>₹{supplier.outstandingBalance?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          {supplier.phone && (
+                            <div className="flex items-center text-sm">
+                              <Phone className="mr-2 h-3 w-3 text-muted-foreground" />
+                              {supplier.phone}
+                            </div>
+                          )}
+                          {supplier.email && (
+                            <div className="flex items-center text-sm">
+                              <Mail className="mr-2 h-3 w-3 text-muted-foreground" />
+                              {supplier.email}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs truncate">{supplier.address}</div>
+                      </TableCell>
+                      <TableCell>
+                        {supplier.isActive !== false ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50 border-green-200">Active</Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-700 hover:bg-gray-50 border-gray-200">Inactive</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(supplier)}>
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(supplier)}>
                             <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(supplier.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => confirmDelete(supplier)}>
                             <Trash className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
                           </Button>
                         </div>
                       </TableCell>
@@ -368,43 +324,104 @@ const SupplierDirectory = () => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredSuppliers.slice(0, 3).map((supplier) => (
-          <Card key={supplier.id} className="overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-indigo-800 to-purple-800 text-white">
-              <CardTitle className="flex items-center justify-between">
-                <span>{supplier.name}</span>
-                <Truck className="h-5 w-5" />
-              </CardTitle>
-              <p className="text-sm text-gray-200">{supplier.status || 'Active'}</p>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Supplier</DialogTitle>
+            <DialogDescription>
+              Update the supplier details. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          {editingSupplier && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Supplier Name *</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingSupplier.name}
+                    onChange={(e) => setEditingSupplier({...editingSupplier, name: e.target.value})}
+                    placeholder="Enter supplier name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-contactPerson">Contact Person</Label>
+                  <Input
+                    id="edit-contactPerson"
+                    value={editingSupplier.contactPerson || ''}
+                    onChange={(e) => setEditingSupplier({...editingSupplier, contactPerson: e.target.value})}
+                    placeholder="Primary contact name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Phone Number</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingSupplier.phone || ''}
+                    onChange={(e) => setEditingSupplier({...editingSupplier, phone: e.target.value})}
+                    placeholder="Phone number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email Address</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editingSupplier.email || ''}
+                    onChange={(e) => setEditingSupplier({...editingSupplier, email: e.target.value})}
+                    placeholder="Email address"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
-                <p className="font-medium">Contact Person</p>
-                <p className="text-sm text-muted-foreground">{supplier.contactName || supplier.contact || '-'}</p>
+                <Label htmlFor="edit-address">Address</Label>
+                <Textarea
+                  id="edit-address"
+                  value={editingSupplier.address || ''}
+                  onChange={(e) => setEditingSupplier({...editingSupplier, address: e.target.value})}
+                  placeholder="Full address"
+                  rows={2}
+                />
               </div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{supplier.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{supplier.email || '-'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{supplier.address}</span>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes">Notes</Label>
+                <Textarea
+                  id="edit-notes"
+                  value={editingSupplier.notes || ''}
+                  onChange={(e) => setEditingSupplier({...editingSupplier, notes: e.target.value})}
+                  placeholder="Additional notes"
+                  rows={3}
+                />
               </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(supplier)}>Edit</Button>
-                <Button size="sm">Contact</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleUpdateSupplier}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Supplier</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {supplierToDelete?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button variant="destructive" onClick={handleDeleteSupplier}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

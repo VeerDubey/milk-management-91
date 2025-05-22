@@ -113,7 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fixed: Pass the whole order object instead of separate arguments
+      // Fixed: Pass only the order object
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
