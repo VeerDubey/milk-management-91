@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -112,7 +113,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Call createTrackSheetFromOrder with the order object
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
@@ -192,7 +192,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addSalesman: vehicleSalesmanState.addSalesman,
     updateSalesman: vehicleSalesmanState.updateSalesman,
     deleteSalesman: vehicleSalesmanState.deleteSalesman,
-    addVehicleTrip,
+    addVehicleTrip: vehicleSalesmanState.addVehicleTrip,
     
     // Expense state
     expenses: expenseState.expenses,
@@ -202,7 +202,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getExpensesByCategory: expenseState.getExpensesByCategory,
     getExpensesByDateRange: expenseState.getExpensesByDateRange,
     getTotalExpenses: expenseState.getTotalExpenses,
-    getExpenseStatsByCategory,
+    getExpenseStatsByCategory: expenseState.getExpenseStatsByCategory,
     
     // Stock entries
     stockEntries: stockState.stockEntries || [],

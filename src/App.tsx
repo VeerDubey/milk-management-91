@@ -53,7 +53,6 @@ function App() {
 
   return (
     <AuthProvider>
-      {/* Move InvoiceProvider outside of DataProvider so it's available to DataProvider */}
       <InvoiceProvider>
         <DataProvider>
           <Routes>

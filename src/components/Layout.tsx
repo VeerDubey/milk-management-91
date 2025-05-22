@@ -5,7 +5,6 @@ import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { MoonIcon, SunIcon, BellIcon, UserIcon, MenuIcon } from "lucide-react";
-import { useData } from "@/contexts/DataContext";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -18,7 +17,6 @@ import {
 
 export function Layout() {
   const { theme, toggleTheme } = useTheme();
-  const { uiSettings } = useData();
   const isDarkTheme = theme === 'dark';
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
