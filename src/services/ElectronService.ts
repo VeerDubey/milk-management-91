@@ -104,6 +104,78 @@ export class ElectronService {
   }
 
   /**
+   * Download invoice to file
+   */
+  static async downloadInvoice(pdfDataUri: string, filename: string): Promise<{ success: boolean; filePath?: string; error?: string }> {
+    if (this.isElectron() && window.electron?.downloadInvoice) {
+      try {
+        console.log('Downloading invoice via Electron');
+        return await window.electron.downloadInvoice(pdfDataUri, filename);
+      } catch (error) {
+        console.error('Electron invoice download error:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Error downloading invoice'
+        };
+      }
+    } else {
+      try {
+        // Fallback for web: download as file
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', pdfDataUri);
+        linkElement.setAttribute('download', filename || 'invoice.pdf');
+        linkElement.click();
+        
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error during invoice download'
+        };
+      }
+    }
+  }
+
+  /**
+   * Print invoice
+   */
+  static async printInvoice(pdfDataUri: string): Promise<{ success: boolean; error?: string }> {
+    if (this.isElectron() && window.electron?.printInvoice) {
+      try {
+        console.log('Printing invoice via Electron');
+        return await window.electron.printInvoice(pdfDataUri);
+      } catch (error) {
+        console.error('Electron invoice print error:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Error printing invoice'
+        };
+      }
+    } else {
+      try {
+        // Fallback for web: open in new tab for printing
+        const printWindow = window.open(pdfDataUri, '_blank');
+        if (!printWindow) {
+          throw new Error('Pop-up blocked. Please allow pop-ups for printing.');
+        }
+        
+        printWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        });
+        
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error during invoice printing'
+        };
+      }
+    }
+  }
+
+  /**
    * Get app version
    */
   static async getAppVersion(): Promise<string> {
@@ -196,6 +268,27 @@ export class ElectronService {
   }
 
   /**
+   * Read text from clipboard
+   */
+  static async readFromClipboard(): Promise<string> {
+    if (this.isElectron()) {
+      try {
+        return await window.electron!.system.readFromClipboard();
+      } catch (error) {
+        console.error('Error reading from clipboard:', error);
+        return '';
+      }
+    } else {
+      try {
+        return await navigator.clipboard.readText();
+      } catch (error) {
+        console.error('Error reading from clipboard:', error);
+        return '';
+      }
+    }
+  }
+
+  /**
    * Check if running on a specific platform
    */
   static async isPlatform(platform: 'win32' | 'darwin' | 'linux'): Promise<boolean> {
@@ -207,7 +300,40 @@ export class ElectronService {
         return false;
       }
     } else {
-      return false; // Not running in Electron
+      // For web, try to detect from user agent
+      const userAgent = navigator.userAgent.toLowerCase();
+      switch (platform) {
+        case 'win32':
+          return userAgent.includes('windows');
+        case 'darwin':
+          return userAgent.includes('mac');
+        case 'linux':
+          return userAgent.includes('linux');
+        default:
+          return false;
+      }
     }
+  }
+  
+  /**
+   * Get available printers
+   */
+  static async getPrinters(): Promise<{ success: boolean; printers: any[] }> {
+    if (this.isElectron() && window.electron?.getPrinters) {
+      try {
+        return await window.electron.getPrinters();
+      } catch (error) {
+        console.error('Error getting printers:', error);
+        return { success: false, printers: [] };
+      }
+    }
+    return { success: false, printers: [] };
+  }
+  
+  /**
+   * Check connectivity status
+   */
+  static isOnline(): boolean {
+    return navigator.onLine;
   }
 }

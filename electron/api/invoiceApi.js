@@ -1,96 +1,134 @@
 
-import { dialog } from 'electron';
+import { dialog, BrowserWindow, shell } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { app } from 'electron';
+import os from 'os';
+import { fileURLToPath } from 'url';
+import electron from 'electron';
+import log from 'electron-log';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
- * API for handling invoice operations in the Electron app
+ * Invoice API functions for Electron
  */
-class InvoiceAPI {
+const invoiceApi = {
   /**
-   * Download an invoice as PDF
-   * @param {Object} event - IPC event
-   * @param {string} data - PDF data as base64 string
-   * @param {string} filename - Default filename
-   * @returns {Promise<Object>} Result with success status and file path
+   * Download invoice as PDF
+   * @param {Event} event - IPC event
+   * @param {string} pdfDataUri - PDF data URI string
+   * @param {string} filename - Suggested filename
+   * @returns {Promise<{success: boolean, filePath?: string, error?: string}>}
    */
-  static async downloadInvoice(event, data, filename = 'invoice.pdf') {
+  async downloadInvoice(event, pdfDataUri, filename) {
     try {
-      // Show save dialog
-      const { filePath } = await dialog.showSaveDialog({
-        title: 'Save Invoice',
-        defaultPath: path.join(app.getPath('downloads'), filename),
-        filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
-        properties: ['createDirectory']
-      });
-      
-      if (!filePath) {
-        return { success: false, error: 'Download cancelled' };
+      if (!pdfDataUri) {
+        throw new Error('Invalid PDF data');
       }
+
+      // Extract base64 data from dataURI
+      const base64Data = pdfDataUri.split(',')[1];
+      if (!base64Data) {
+        throw new Error('Invalid PDF data format');
+      }
+
+      // Default path for saving
+      const documentsDir = app.getPath('documents');
+      const defaultPath = path.join(documentsDir, filename || 'invoice.pdf');
       
-      // Convert base64 data to buffer and write to file
-      const pdfData = data.split(';base64,').pop();
-      fs.writeFileSync(filePath, Buffer.from(pdfData, 'base64'));
+      // Show save dialog
+      const { canceled, filePath } = await dialog.showSaveDialog({
+        title: 'Save Invoice',
+        defaultPath,
+        filters: [
+          { name: 'PDF Documents', extensions: ['pdf'] }
+        ]
+      });
+
+      if (canceled || !filePath) {
+        return { success: false, error: 'Save canceled' };
+      }
+
+      // Write file
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      log.info(`Invoice saved to: ${filePath}`);
+      
+      // Open the containing folder
+      shell.showItemInFolder(filePath);
       
       return { success: true, filePath };
     } catch (error) {
-      console.error('Download invoice error:', error);
+      log.error('Error saving invoice:', error);
       return { success: false, error: error.message };
     }
-  }
-  
+  },
+
   /**
-   * Print an invoice directly
-   * @param {Object} event - IPC event
-   * @param {Uint8Array} data - PDF data as binary array
-   * @returns {Promise<Object>} Result with success status
+   * Print invoice directly
+   * @param {Event} event - IPC event
+   * @param {string} pdfDataUri - PDF data URI string
+   * @returns {Promise<{success: boolean, error?: string}>}
    */
-  static async printInvoice(event, data) {
+  async printInvoice(event, pdfDataUri) {
     try {
-      // Create a temporary file for printing
-      const tempPath = path.join(app.getPath('temp'), `print-${Date.now()}.pdf`);
-      
-      // Handle base64 data if provided in that format
-      if (typeof data === 'string' && data.includes('base64')) {
-        const pdfData = data.split(';base64,').pop();
-        fs.writeFileSync(tempPath, Buffer.from(pdfData, 'base64'));
-      } else {
-        fs.writeFileSync(tempPath, Buffer.from(data));
+      if (!pdfDataUri) {
+        throw new Error('Invalid PDF data');
       }
+
+      // Create a hidden browser window for printing
+      const win = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+        }
+      });
+
+      // Load the PDF data
+      await win.loadURL(pdfDataUri);
       
-      // Open the PDF file with the default PDF viewer
-      const { shell } = require('electron');
-      await shell.openPath(tempPath);
-      
-      return { success: true };
+      // Print the PDF
+      try {
+        await win.webContents.print({}, (success, errorType) => {
+          win.close();
+          if (!success) {
+            log.error(`Print failed: ${errorType}`);
+            return { success: false, error: `Print failed: ${errorType}` };
+          }
+        });
+        
+        return { success: true };
+      } catch (printError) {
+        win.close();
+        throw printError;
+      }
     } catch (error) {
-      console.error('Print invoice error:', error);
+      log.error('Error printing invoice:', error);
       return { success: false, error: error.message };
     }
-  }
-  
+  },
+
   /**
-   * Get list of available printers
-   * @param {Object} event - IPC event
-   * @returns {Promise<Object>} Result with success status and printers list
+   * Get available printers
+   * @returns {Promise<{success: boolean, printers: any[], error?: string}>}
    */
-  static async getPrinters(event) {
+  async getPrinters() {
     try {
-      // In a real implementation, we would use webContents.getPrinters()
-      // But this needs to be called from a renderer process, so we return a placeholder
+      const printerList = electron.webContents 
+        ? electron.webContents.getAllWebContents()[0]?.getPrinters() 
+        : [];
+      
       return { 
         success: true, 
-        printers: [
-          { name: 'System Default', isDefault: true },
-          { name: 'PDF Writer', isDefault: false },
-        ] 
+        printers: printerList || [] 
       };
     } catch (error) {
-      console.error('Get printers error:', error);
-      return { success: false, error: error.message };
+      log.error('Error getting printers:', error);
+      return { success: false, printers: [], error: error.message };
     }
   }
-}
+};
 
-export default InvoiceAPI;
+export default invoiceApi;

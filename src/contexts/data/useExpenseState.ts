@@ -1,43 +1,192 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Expense } from '@/types';
 import { initialExpenses } from '@/data/initialData';
+import { toast } from 'sonner';
+
+export type ExpenseCategory = 
+  | "Utilities" 
+  | "Maintenance" 
+  | "Salaries" 
+  | "Equipment" 
+  | "Inventory" 
+  | "Transportation"
+  | "Marketing" 
+  | "Rent" 
+  | "Insurance" 
+  | "Taxes" 
+  | "Miscellaneous";
+
+export type ExpensePaymentMethod = 
+  | "Cash" 
+  | "Credit Card" 
+  | "Bank Transfer" 
+  | "UPI" 
+  | "Check" 
+  | "Online Payment";
+
+export interface ExpenseCreateData {
+  title: string;
+  amount: number;
+  date: string;
+  category: ExpenseCategory;
+  paymentMethod?: ExpensePaymentMethod;
+  reference?: string;
+  notes?: string;
+  receipt?: string;
+}
 
 export function useExpenseState() {
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     const saved = localStorage.getItem("expenses");
-    return saved ? JSON.parse(saved) : initialExpenses;
+    try {
+      const parsed = saved ? JSON.parse(saved) : initialExpenses;
+      return Array.isArray(parsed) ? parsed : initialExpenses;
+    } catch (error) {
+      console.error("Error parsing expenses from localStorage:", error);
+      return initialExpenses;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem("expenses", JSON.stringify(expenses));
+    try {
+      localStorage.setItem("expenses", JSON.stringify(expenses));
+    } catch (error) {
+      console.error("Error saving expenses to localStorage:", error);
+      toast.error("Failed to save expenses data");
+    }
   }, [expenses]);
 
-  const addExpense = (expense: Omit<Expense, "id">) => {
-    const newExpense = {
-      ...expense,
-      id: `exp${Date.now()}`
-    };
-    setExpenses([...expenses, newExpense]);
-    return newExpense; // Return the newly created expense
-  };
+  const addExpense = useCallback((expenseData: ExpenseCreateData): Expense => {
+    try {
+      const newExpense: Expense = {
+        ...expenseData,
+        id: `exp${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      setExpenses(prev => [...prev, newExpense]);
+      return newExpense;
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      toast.error("Failed to add expense");
+      throw error;
+    }
+  }, []);
 
-  const updateExpense = (id: string, expenseData: Partial<Expense>) => {
-    setExpenses(
-      expenses.map((expense) =>
-        expense.id === id ? { ...expense, ...expenseData } : expense
-      )
-    );
-  };
+  const updateExpense = useCallback((id: string, expenseData: Partial<Expense>): boolean => {
+    try {
+      let updated = false;
+      
+      setExpenses(prev => {
+        const index = prev.findIndex(expense => expense.id === id);
+        if (index === -1) return prev;
+        
+        updated = true;
+        const updatedExpenses = [...prev];
+        updatedExpenses[index] = { 
+          ...updatedExpenses[index], 
+          ...expenseData,
+          updatedAt: new Date().toISOString()
+        };
+        
+        return updatedExpenses;
+      });
+      
+      return updated;
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      toast.error("Failed to update expense");
+      return false;
+    }
+  }, []);
 
-  const deleteExpense = (id: string) => {
-    setExpenses(expenses.filter((expense) => expense.id !== id));
-  };
-
+  const deleteExpense = useCallback((id: string): boolean => {
+    try {
+      let deleted = false;
+      
+      setExpenses(prev => {
+        const index = prev.findIndex(expense => expense.id === id);
+        if (index === -1) return prev;
+        
+        deleted = true;
+        const updatedExpenses = [...prev];
+        updatedExpenses.splice(index, 1);
+        
+        return updatedExpenses;
+      });
+      
+      return deleted;
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to delete expense");
+      return false;
+    }
+  }, []);
+  
+  const getExpenseById = useCallback((id: string): Expense | undefined => {
+    return expenses.find(expense => expense.id === id);
+  }, [expenses]);
+  
+  const getExpensesByCategory = useCallback((category: ExpenseCategory): Expense[] => {
+    return expenses.filter(expense => expense.category === category);
+  }, [expenses]);
+  
+  const getExpensesByDateRange = useCallback((startDate: string, endDate: string): Expense[] => {
+    return expenses.filter(expense => {
+      const expenseDate = new Date(expense.date).getTime();
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+      
+      return expenseDate >= start && expenseDate <= end;
+    });
+  }, [expenses]);
+  
+  const getTotalExpenses = useCallback((startDate?: string, endDate?: string): number => {
+    if (startDate && endDate) {
+      const filteredExpenses = getExpensesByDateRange(startDate, endDate);
+      return filteredExpenses.reduce((total, expense) => total + expense.amount, 0);
+    }
+    
+    return expenses.reduce((total, expense) => total + expense.amount, 0);
+  }, [expenses, getExpensesByDateRange]);
+  
+  const getExpenseStatsByCategory = useCallback((): Record<ExpenseCategory, number> => {
+    const stats = {
+      "Utilities": 0,
+      "Maintenance": 0,
+      "Salaries": 0,
+      "Equipment": 0,
+      "Inventory": 0,
+      "Transportation": 0,
+      "Marketing": 0,
+      "Rent": 0,
+      "Insurance": 0,
+      "Taxes": 0,
+      "Miscellaneous": 0
+    } as Record<ExpenseCategory, number>;
+    
+    expenses.forEach(expense => {
+      if (expense.category in stats) {
+        stats[expense.category as ExpenseCategory] += expense.amount;
+      } else {
+        stats["Miscellaneous"] += expense.amount;
+      }
+    });
+    
+    return stats;
+  }, [expenses]);
+  
   return {
     expenses,
     addExpense,
     updateExpense,
-    deleteExpense
+    deleteExpense,
+    getExpenseById,
+    getExpensesByCategory,
+    getExpensesByDateRange,
+    getTotalExpenses,
+    getExpenseStatsByCategory
   };
 }
