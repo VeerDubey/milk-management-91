@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -126,7 +127,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Wrapper function for addVehicleTrip to match the expected signature
   const addVehicleTrip = (trip: Omit<VehicleTrip, "id">): VehicleTrip => {
-    // Fixed: Use the correct signature that matches useVehicleSalesmanState
+    // Fixed: Use the correct signature based on useVehicleSalesmanState implementation
     const result = vehicleSalesmanState.addVehicleTrip(trip);
     
     if (!result) {
