@@ -34,6 +34,8 @@ export interface ExpenseCreateData {
   reference?: string;
   notes?: string;
   receipt?: string;
+  description?: string;
+  recurring?: boolean;
 }
 
 export function useExpenseState() {
@@ -62,8 +64,8 @@ export function useExpenseState() {
       const newExpense: Expense = {
         ...expenseData,
         id: `exp${Date.now()}`,
-        description: expenseData.notes || '',
-        recurring: false,
+        description: expenseData.description || expenseData.notes || '',
+        recurring: expenseData.recurring || false,
         paymentMethod: expenseData.paymentMethod || 'Cash',
       };
       

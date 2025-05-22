@@ -1,6 +1,7 @@
 
 import { Customer, Product, Order, Payment, CustomerProductRate, SupplierProductRate, StockEntry, StockRecord, Supplier, UISettings, Vehicle, Salesman, TrackSheet, Expense, Invoice, SupplierPayment } from '@/types';
 import { VehicleCreateData, SalesmanCreateData } from './useVehicleSalesmanState';
+import { ExpenseCreateData } from './useExpenseState';
 
 export interface DataContextType {
   // Customer state
@@ -79,7 +80,7 @@ export interface DataContextType {
   
   // Expense state
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, "id">) => Expense;
+  addExpense: (expense: ExpenseCreateData) => Expense;
   updateExpense: (id: string, expenseData: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
   

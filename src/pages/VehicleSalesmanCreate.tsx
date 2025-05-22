@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/DataContext';
@@ -332,8 +331,8 @@ export default function VehicleSalesmanCreate() {
                   <div className="space-y-2">
                     <Label htmlFor="joiningDate">Joining Date*</Label>
                     <DatePicker
-                      selected={watchSalesman('joiningDate') ? new Date(watchSalesman('joiningDate')) : undefined}
-                      onChange={handleJoiningDateChange}
+                      date={watchSalesman('joiningDate') ? new Date(watchSalesman('joiningDate')) : undefined}
+                      onDateChange={handleJoiningDateChange}
                     />
                     {salesmanErrors.joiningDate && <p className="text-sm text-red-500">Joining date is required</p>}
                   </div>

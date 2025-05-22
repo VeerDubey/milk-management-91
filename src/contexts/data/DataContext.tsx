@@ -58,7 +58,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...stockState,
     ...supplierState,
     ...uiSettingsState,
-    ...expenseState,
     ...trackSheetState,
     
     // Vehicle and Salesman state
@@ -71,6 +70,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateSalesman: vehicleSalesmanState.updateSalesman,
     deleteSalesman: vehicleSalesmanState.deleteSalesman,
     addVehicleTrip: vehicleSalesmanState.addVehicleTrip,
+    
+    // Expense state
+    expenses: expenseState.expenses,
+    addExpense: expenseState.addExpense,
+    updateExpense: expenseState.updateExpense,
+    deleteExpense: expenseState.deleteExpense,
     
     // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,

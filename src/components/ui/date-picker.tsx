@@ -13,18 +13,37 @@ import {
 } from "@/components/ui/popover"
 
 export interface DatePickerProps {
-  date: Date
-  onDateChange?: (date: Date) => void
-  setDate?: (date: Date) => void
-  className?: string
-  id?: string
+  date: Date | undefined;
+  onDateChange?: (date: Date | undefined) => void;
+  setDate?: (date: Date | undefined) => void;
+  selected?: Date | undefined;
+  onChange?: (date: Date | undefined) => void;
+  onSelect?: React.Dispatch<React.SetStateAction<Date | undefined>>;
+  className?: string;
+  id?: string;
+  placeholder?: string;
 }
 
-export function DatePicker({ date, onDateChange, setDate, className, id }: DatePickerProps) {
+export function DatePicker({ 
+  date, 
+  onDateChange, 
+  setDate, 
+  selected, 
+  onChange, 
+  onSelect,
+  className, 
+  id,
+  placeholder = "Pick a date"
+}: DatePickerProps) {
+  // Support multiple prop patterns for better compatibility
+  const selectedDate = date || selected;
+  
   const handleDateChange = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       if (onDateChange) onDateChange(selectedDate);
       if (setDate) setDate(selectedDate);
+      if (onChange) onChange(selectedDate);
+      if (onSelect) onSelect(selectedDate);
     }
   };
 
@@ -36,18 +55,18 @@ export function DatePicker({ date, onDateChange, setDate, className, id }: DateP
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground",
+            !selectedDate && "text-muted-foreground",
             className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>Pick a date</span>}
+          {selectedDate ? format(selectedDate, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={date}
+          selected={selectedDate}
           onSelect={handleDateChange}
           initialFocus
           className={cn("p-3 pointer-events-auto")}
