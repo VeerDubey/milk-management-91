@@ -104,6 +104,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   // Helper function to create track sheet from order
+  // Fixed: Update the function to match the expected signature in type definition
   const createTrackSheetFromOrder = (orderId: string) => {
     try {
       const order = orderState.orders.find(o => o.id === orderId);
@@ -112,7 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fixed: Use the no-argument function signature
+      // Pass the entire order object as a single argument to match the updated function signature
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
