@@ -19,6 +19,8 @@ export interface PdfExportOptions {
   dateInfo?: string; // Added for date information
   additionalInfo?: Array<{label: string, value: string}>; // Added for additional information
   landscape?: boolean; // Added for backward compatibility
+  columnStyles?: Record<string, any>; // Added for column styling
+  rowStyles?: Record<number, any>; // Added for row styling
 }
 
 // Export function to create PDF from tabular data
@@ -36,7 +38,9 @@ export const exportToPdf = (
     margins = { top: 30, right: 15, bottom: 20, left: 15 },
     autoPrint = false, // Default to false
     dateInfo = '',
-    landscape = false // Handle the landscape option
+    landscape = false, // Handle the landscape option
+    columnStyles = {},
+    rowStyles = {}
   } = options;
 
   // Initialize PDF document
@@ -83,6 +87,13 @@ export const exportToPdf = (
     headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     alternateRowStyles: { fillColor: [240, 240, 240] },
     styles: { fontSize: 8 },
+    columnStyles: columnStyles, // Apply column-specific styling
+    didParseCell: function(data) {
+      // Apply row-specific styling
+      if (data.row.index in rowStyles) {
+        Object.assign(data.cell.styles, rowStyles[data.row.index]);
+      }
+    }
   });
 
   // Auto print if requested
@@ -115,6 +126,7 @@ export const generatePdfPreview = (
       showFooter?: boolean;
     };
     logoUrl?: string;
+    columnStyles?: Record<string, any>; // Added for column styling
   } = {}
 ) => {
   const {
@@ -125,7 +137,8 @@ export const generatePdfPreview = (
     landscape = false,
     fontSizeAdjustment = 0,
     filename = 'preview.pdf',
-    style = {}
+    style = {},
+    columnStyles = {}
   } = options;
 
   // Export settings
@@ -137,9 +150,36 @@ export const generatePdfPreview = (
     filename,
     landscape,
     orientation: landscape ? 'landscape' : 'portrait',
-    pageSize: 'a4'
+    pageSize: 'a4',
+    columnStyles
   };
 
   // Create PDF
   return exportToPdf(columns, data, pdfOptions);
+};
+
+// Function to safely format numbers to currency
+export const formatCurrency = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') {
+    return '₹0.00';
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numValue)) {
+    return '₹0.00';
+  }
+  
+  return `₹${numValue.toFixed(2)}`;
+};
+
+// Function to safely get number value
+export const safeNumber = (value: number | string | null | undefined): number => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  return isNaN(numValue) ? 0 : numValue;
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Order, OrderItem } from '@/types';
 import { initialOrders } from '@/data/initialData';
@@ -24,10 +25,24 @@ export function useOrderState() {
     }
   }, [orders]);
 
+  // Calculate total for an order
+  const calculateOrderTotal = (items: OrderItem[]): number => {
+    return items.reduce((sum, item) => {
+      // Ensure item.quantity and item.unitPrice are numbers and not null
+      const quantity = typeof item.quantity === 'number' ? item.quantity : 0;
+      const unitPrice = typeof item.unitPrice === 'number' ? item.unitPrice : 0;
+      return sum + (quantity * unitPrice);
+    }, 0);
+  };
+
   const addOrder = (order: Omit<Order, "id">) => {
+    // Calculate total if not provided
+    const total = order.total || calculateOrderTotal(order.items);
+    
     const newOrder = {
       ...order,
-      id: `o${Date.now()}`
+      id: `o${Date.now()}`,
+      total: total
     };
     
     setOrders(prev => [...prev, newOrder]);
@@ -37,10 +52,16 @@ export function useOrderState() {
 
   // Batch add multiple orders
   const addBatchOrders = (newOrders: Omit<Order, "id">[]) => {
-    const createdOrders = newOrders.map(order => ({
-      ...order,
-      id: `o${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    }));
+    const createdOrders = newOrders.map(order => {
+      // Calculate total if not provided
+      const total = order.total || calculateOrderTotal(order.items);
+      
+      return {
+        ...order,
+        id: `o${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        total: total
+      };
+    });
     
     setOrders(prev => [...prev, ...createdOrders]);
     
@@ -88,7 +109,18 @@ export function useOrderState() {
         orders.map((order) => {
           if (order.id === id) {
             updated = true;
-            return { ...order, ...orderData };
+            // If items were updated, recalculate the total
+            const updatedItems = orderData.items || order.items;
+            const total = orderData.total !== undefined ? 
+              orderData.total : 
+              calculateOrderTotal(updatedItems);
+            
+            return { 
+              ...order, 
+              ...orderData, 
+              total: total,
+              items: updatedItems
+            };
           }
           return order;
         })
@@ -119,6 +151,7 @@ export function useOrderState() {
     updateOrder,
     deleteOrder,
     addBatchOrders,
-    duplicateOrder
+    duplicateOrder,
+    calculateOrderTotal
   };
 }

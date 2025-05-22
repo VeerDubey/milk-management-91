@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/data/DataContext';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TrackSheetDetails } from '@/components/track-sheet/TrackSheetDetails';
+import { Printer, Download, FileText } from 'lucide-react';
+import { generateTrackSheetPdf, savePdf } from '@/utils/trackSheetUtils';
 
 export default function TrackSheetHistory() {
   const { trackSheets, vehicles, salesmen, deleteTrackSheet } = useData();
@@ -70,6 +73,25 @@ export default function TrackSheetHistory() {
     if (window.confirm("Are you sure you want to delete this track sheet?")) {
       deleteTrackSheet(id);
     }
+  };
+
+  const handlePrintTrackSheet = (trackSheet: any) => {
+    // Get all product names used in the track sheet
+    const usedProductNames = new Set<string>();
+    trackSheet.rows.forEach((row: any) => {
+      if (row.quantities) {
+        Object.keys(row.quantities).forEach(productName => {
+          if (row.quantities[productName] !== '' && row.quantities[productName] !== 0) {
+            usedProductNames.add(productName);
+          }
+        });
+      }
+    });
+    
+    const productNames = Array.from(usedProductNames);
+    const doc = generateTrackSheetPdf(trackSheet, productNames, []);
+    doc.autoPrint();
+    savePdf(doc, `tracksheet-${format(new Date(trackSheet.date), 'yyyy-MM-dd')}.pdf`);
   };
 
   return (
@@ -169,7 +191,7 @@ export default function TrackSheetHistory() {
                   sortedTrackSheets.map(sheet => {
                     const vehicle = vehicles.find(v => v.id === sheet.vehicleId);
                     const salesman = salesmen.find(s => s.id === sheet.salesmanId);
-                    const totalItems = sheet.rows.reduce((total: number, row: any) => total + row.total, 0);
+                    const totalItems = sheet.rows.reduce((total: number, row: any) => total + (row.total || 0), 0);
                     
                     return (
                       <TableRow key={sheet.id}>
@@ -182,7 +204,12 @@ export default function TrackSheetHistory() {
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button variant="ghost" size="sm" onClick={() => handleViewDetails(sheet)}>
+                              <FileText className="mr-2 h-4 w-4" />
                               View
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handlePrintTrackSheet(sheet)}>
+                              <Printer className="mr-2 h-4 w-4" />
+                              Print
                             </Button>
                             <Button variant="destructive" size="sm" onClick={() => handleDelete(sheet.id)}>
                               Delete

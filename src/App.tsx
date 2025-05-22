@@ -39,6 +39,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import Signup from './pages/Signup';
 import { InvoiceProvider } from './contexts/InvoiceContext';
 import { DataProvider } from './contexts/data/DataContext';
+import TrackSheet from './pages/TrackSheet';
+import TrackSheetHistory from './pages/TrackSheetHistory';
+import VehicleSalesmanCreate from './pages/VehicleSalesmanCreate';
+import VehicleTracking from './pages/VehicleTracking';
 
 function App() {
   useEffect(() => {
@@ -98,6 +102,12 @@ function App() {
                 <Route path="/messaging" element={<Messaging />} />
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/bulk-communication" element={<BulkCommunication />} />
+                
+                {/* Delivery Routes */}
+                <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
+                <Route path="/vehicle-tracking" element={<VehicleTracking />} />
+                <Route path="/track-sheet" element={<TrackSheet />} />
+                <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
                 
                 {/* Settings Routes */}
                 <Route path="/area-management" element={<AreaManagement />} />

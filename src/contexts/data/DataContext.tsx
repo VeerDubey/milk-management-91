@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -101,6 +102,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Helper function to create track sheet from order
+  const createTrackSheetFromOrder = (orderId: string) => {
+    try {
+      const order = orderState.orders.find(o => o.id === orderId);
+      if (!order) {
+        toast.error("Order not found");
+        return null;
+      }
+
+      return trackSheetState.createTrackSheetFromOrder(
+        order,
+        productState.products,
+        customerState.customers
+      );
+    } catch (error) {
+      console.error("Error creating track sheet from order:", error);
+      toast.error("Failed to create track sheet from order");
+      return null;
+    }
+  };
+
   // Combine all state objects into one
   const contextValue: DataContextType = {
     ...customerState,
@@ -148,6 +170,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getProductRateForCustomer,
     deleteMultiplePayments,
     generateInvoiceFromOrder,
+    createTrackSheetFromOrder,
     
     // Add supplier payments functionality
     supplierPayments: supplierState.supplierPayments || [],

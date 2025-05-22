@@ -1,42 +1,79 @@
+
 import React from 'react';
-import { TrackSheet } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useData } from '@/contexts/DataContext';
 import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Printer } from 'lucide-react';
-import { calculateProductTotals } from '@/utils/trackSheetUtils';
+import { Printer, Download, FileText } from 'lucide-react';
+import { generateTrackSheetPdf, savePdf } from '@/utils/trackSheetUtils';
 
 interface TrackSheetDetailsProps {
-  trackSheet: TrackSheet;
+  trackSheet: any;
 }
 
-export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
-  // Extract product names from the first row's quantities
-  const productNames = trackSheet.rows.length > 0 
-    ? Object.keys(trackSheet.rows[0].quantities) 
-    : [];
+export const TrackSheetDetails = ({ trackSheet }: TrackSheetDetailsProps) => {
+  const { products, vehicles, salesmen } = useData();
   
-  // Calculate product totals
-  const productTotals = calculateProductTotals(trackSheet.rows, productNames);
+  const vehicle = vehicles.find(v => v.id === trackSheet.vehicleId);
+  const salesman = salesmen.find(s => s.id === trackSheet.salesmanId);
   
-  // Calculate grand totals
-  const totalQuantity = trackSheet.rows.reduce((sum, row) => sum + row.total, 0);
-  const totalAmount = trackSheet.rows.reduce((sum, row) => sum + row.amount, 0);
+  // Get all product names used in the track sheet
+  const usedProductNames = new Set<string>();
+  trackSheet.rows.forEach((row: any) => {
+    if (row.quantities) {
+      Object.keys(row.quantities).forEach(productName => {
+        if (row.quantities[productName] !== '' && row.quantities[productName] !== 0) {
+          usedProductNames.add(productName);
+        }
+      });
+    }
+  });
   
+  const productNames = Array.from(usedProductNames);
+  
+  // Calculate totals
+  const productTotals: Record<string, number> = {};
+  productNames.forEach(name => {
+    productTotals[name] = 0;
+  });
+  
+  trackSheet.rows.forEach((row: any) => {
+    if (row.quantities) {
+      productNames.forEach(name => {
+        const qty = row.quantities[name];
+        if (qty !== '' && qty !== undefined) {
+          productTotals[name] += Number(qty);
+        }
+      });
+    }
+  });
+  
+  const totalQuantity = Object.values(productTotals).reduce((sum, val) => sum + Number(val), 0);
+  
+  // Handle printing
   const handlePrint = () => {
-    window.print();
+    const doc = generateTrackSheetPdf(trackSheet, productNames, []);
+    doc.autoPrint();
+    savePdf(doc, `tracksheet-${format(new Date(trackSheet.date), 'yyyy-MM-dd')}.pdf`);
   };
   
+  // Handle download
   const handleDownload = () => {
-    // This would be implemented in a real app
-    console.log('Download functionality would be implemented here');
+    const doc = generateTrackSheetPdf(trackSheet, productNames, []);
+    savePdf(doc, `tracksheet-${format(new Date(trackSheet.date), 'yyyy-MM-dd')}.pdf`);
   };
-
+  
   return (
-    <div className="space-y-6 print:p-10">
-      <div className="flex justify-between items-center print:hidden">
-        <h2 className="text-2xl font-bold">{trackSheet.name}</h2>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">{trackSheet.name || 'Track Sheet'}</h3>
+          <p className="text-sm text-muted-foreground">
+            {trackSheet.date && format(new Date(trackSheet.date), 'PP')}
+          </p>
+        </div>
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
@@ -44,109 +81,83 @@ export function TrackSheetDetails({ trackSheet }: TrackSheetDetailsProps) {
           </Button>
           <Button variant="outline" size="sm" onClick={handleDownload}>
             <Download className="mr-2 h-4 w-4" />
-            Download
+            Download PDF
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Date</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{format(new Date(trackSheet.date), 'PPP')}</p>
-          </CardContent>
-        </Card>
-        
-        {trackSheet.vehicleName && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Vehicle</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{trackSheet.vehicleName}</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        {trackSheet.salesmanName && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Salesman</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{trackSheet.salesmanName}</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        {trackSheet.routeName && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Route</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{trackSheet.routeName}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      
       <Card>
-        <CardHeader>
-          <CardTitle>Distribution Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  {productNames.map(product => (
-                    <TableHead key={product} className="text-center">{product}</TableHead>
-                  ))}
-                  <TableHead className="text-center">Total</TableHead>
-                  <TableHead className="text-center">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trackSheet.rows.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
-                    {productNames.map(product => (
-                      <TableCell key={product} className="text-center">
-                        {row.quantities[product] || ''}
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-center">{row.total}</TableCell>
-                    <TableCell className="text-center">₹{row.amount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <tfoot>
-                <TableRow>
-                  <TableCell className="font-bold">Total</TableCell>
-                  {productNames.map(product => (
-                    <TableCell key={product} className="text-center font-bold">
-                      {productTotals[product] || 0}
-                    </TableCell>
-                  ))}
-                  <TableCell className="text-center font-bold">{totalQuantity}</TableCell>
-                  <TableCell className="text-center font-bold">₹{totalAmount}</TableCell>
-                </TableRow>
-              </tfoot>
-            </Table>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <p className="text-sm font-medium">Vehicle</p>
+              <p>{vehicle?.name || 'Not assigned'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Salesman</p>
+              <p>{salesman?.name || 'Not assigned'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Route</p>
+              <p>{trackSheet.routeName || 'Not specified'}</p>
+            </div>
           </div>
+          
+          {trackSheet.notes && (
+            <div className="mb-4">
+              <p className="text-sm font-medium">Notes</p>
+              <p className="text-sm">{trackSheet.notes}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
-      {trackSheet.createdAt && (
-        <div className="text-sm text-muted-foreground text-right print:hidden">
-          Created: {format(new Date(trackSheet.createdAt), 'PPP p')}
-          {trackSheet.savedAt && ` • Last saved: ${format(new Date(trackSheet.savedAt), 'PPP p')}`}
-        </div>
-      )}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Customer</TableHead>
+              {productNames.map((name, idx) => (
+                <TableHead key={idx}>{name}</TableHead>
+              ))}
+              <TableHead>Total</TableHead>
+              <TableHead>Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {trackSheet.rows.map((row: any, idx: number) => (
+              <TableRow key={idx}>
+                <TableCell className="font-medium">{row.name}</TableCell>
+                {productNames.map((name, productIdx) => (
+                  <TableCell key={productIdx}>
+                    {row.quantities && row.quantities[name] !== '' ? (
+                      <Badge variant="outline">
+                        {row.quantities[name]}
+                      </Badge>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                ))}
+                <TableCell>{row.total}</TableCell>
+                <TableCell>₹{row.amount?.toFixed(2) || '0.00'}</TableCell>
+              </TableRow>
+            ))}
+            <TableRow className="font-semibold bg-muted/50">
+              <TableCell>TOTAL</TableCell>
+              {productNames.map((name, productIdx) => (
+                <TableCell key={productIdx}>
+                  <Badge>{productTotals[name] || 0}</Badge>
+                </TableCell>
+              ))}
+              <TableCell>{totalQuantity}</TableCell>
+              <TableCell>
+                ₹{trackSheet.rows.reduce((sum: number, row: any) => sum + (row.amount || 0), 0).toFixed(2)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
-}
+};

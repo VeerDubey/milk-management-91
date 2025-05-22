@@ -1,424 +1,242 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useData } from '@/contexts/data/DataContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { format } from 'date-fns';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { DatePicker } from '@/components/ui/date-picker';
-import { useForm } from 'react-hook-form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SalesmanCreateData, VehicleCreateData } from '@/contexts/data/useVehicleSalesmanState';
-
-import { 
-  Truck, 
-  User,
-  Phone, 
-  Calendar, 
-  Mail,
-  MapPin, 
-  ClipboardCheck,
-  Clock
-} from 'lucide-react';
+import { Truck, User } from 'lucide-react';
 
 export default function VehicleSalesmanCreate() {
   const navigate = useNavigate();
   const { addVehicle, addSalesman } = useData();
-  const [activeTab, setActiveTab] = useState('vehicle');
   
-  // Vehicle form
-  const {
-    register: registerVehicle,
-    handleSubmit: handleVehicleSubmit,
-    formState: { errors: vehicleErrors },
-    reset: resetVehicle,
-    setValue: setVehicleValue,
-    watch: watchVehicle
-  } = useForm<VehicleCreateData>({
-    defaultValues: {
-      registrationNumber: '',
-      model: '',
-      type: '',
-      capacity: 0,
-      status: 'Available',
-      name: '',
-      isActive: true
-    }
-  });
+  // Vehicle form state
+  const [vehicleName, setVehicleName] = useState('');
+  const [regNumber, setRegNumber] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [driverName, setDriverName] = useState('');
+  const [isVehicleActive, setIsVehicleActive] = useState(true);
   
-  // Salesman form
-  const {
-    register: registerSalesman,
-    handleSubmit: handleSalesmanSubmit,
-    formState: { errors: salesmanErrors },
-    reset: resetSalesman,
-    setValue: setSalesmanValue,
-    watch: watchSalesman
-  } = useForm<SalesmanCreateData>({
-    defaultValues: {
-      name: '',
-      phone: '',
-      contactNumber: '',
-      joiningDate: format(new Date(), 'yyyy-MM-dd'),
-      status: 'Active',
-      isActive: true
-    }
-  });
+  // Salesman form state
+  const [salesmanName, setSalesmanName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [isSalesmanActive, setIsSalesmanActive] = useState(true);
   
   // Handle vehicle form submission
-  const onVehicleSubmit = handleVehicleSubmit(async (data) => {
-    try {
-      // Convert model name to vehicle name if name is not provided
-      if (!data.name) {
-        data.name = data.model || data.registrationNumber;
-      }
-      
-      await addVehicle(data);
-      toast.success(`Vehicle ${data.registrationNumber} added successfully`);
-      resetVehicle();
-      
-      // Option to add another or go to list
-      const wantToAddAnother = window.confirm('Vehicle added successfully. Do you want to add another vehicle?');
-      if (!wantToAddAnother) {
-        navigate('/vehicle-tracking');
-      }
-      
-    } catch (error) {
-      toast.error('Failed to add vehicle');
-      console.error(error);
+  const handleVehicleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!vehicleName || !regNumber) {
+      toast.error("Please fill in all required fields");
+      return;
     }
-  });
+    
+    const newVehicle = {
+      name: vehicleName,
+      registrationNumber: regNumber,
+      type: vehicleType,
+      capacity: capacity ? parseInt(capacity, 10) : undefined,
+      driver: driverName,
+      isActive: isVehicleActive,
+      createdAt: new Date().toISOString()
+    };
+    
+    addVehicle(newVehicle);
+    toast.success("Vehicle added successfully");
+    
+    // Reset form
+    setVehicleName('');
+    setRegNumber('');
+    setVehicleType('');
+    setCapacity('');
+    setDriverName('');
+    setIsVehicleActive(true);
+  };
   
   // Handle salesman form submission
-  const onSalesmanSubmit = handleSalesmanSubmit(async (data) => {
-    try {
-      // Convert contactNumber to phone if phone is not provided
-      if (!data.phone) {
-        data.phone = data.contactNumber || '';
-      }
-      
-      await addSalesman(data);
-      toast.success(`Salesman ${data.name} added successfully`);
-      resetSalesman();
-      
-      // Option to add another or go to list
-      const wantToAddAnother = window.confirm('Salesman added successfully. Do you want to add another salesman?');
-      if (!wantToAddAnother) {
-        navigate('/vehicle-tracking');
-      }
-      
-    } catch (error) {
-      toast.error('Failed to add salesman');
-      console.error(error);
+  const handleSalesmanSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!salesmanName) {
+      toast.error("Please enter salesman name");
+      return;
     }
-  });
-  
-  // Handle date change for salesman joining date
-  const handleJoiningDateChange = (date: Date | undefined) => {
-    if (date) {
-      setSalesmanValue('joiningDate', format(date, 'yyyy-MM-dd'));
-    }
+    
+    const newSalesman = {
+      name: salesmanName,
+      contactNumber,
+      email,
+      isActive: isSalesmanActive,
+      createdAt: new Date().toISOString()
+    };
+    
+    addSalesman(newSalesman);
+    toast.success("Salesman added successfully");
+    
+    // Reset form
+    setSalesmanName('');
+    setContactNumber('');
+    setEmail('');
+    setIsSalesmanActive(true);
   };
   
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Add Resources</h1>
-          <p className="text-muted-foreground">
-            Add new vehicles and salesmen to your system
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">Add Vehicle/Salesman</h1>
+          <p className="text-muted-foreground">Add new delivery personnel and vehicles</p>
         </div>
+        
+        <Button variant="outline" onClick={() => navigate('/vehicle-tracking')}>
+          Back to Vehicle Tracking
+        </Button>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="vehicle" className="flex items-center">
-            <Truck className="mr-2 h-4 w-4" />
+      <Tabs defaultValue="vehicle" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="vehicle" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" /> 
             Add Vehicle
           </TabsTrigger>
-          <TabsTrigger value="salesman" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
+          <TabsTrigger value="salesman" className="flex items-center gap-2">
+            <User className="h-4 w-4" /> 
             Add Salesman
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="vehicle" className="mt-4">
+        <TabsContent value="vehicle">
           <Card>
             <CardHeader>
-              <CardTitle>Add New Vehicle</CardTitle>
-              <CardDescription>
-                Enter the details of the vehicle to add to the system
-              </CardDescription>
+              <CardTitle>Vehicle Information</CardTitle>
             </CardHeader>
-            <form onSubmit={onVehicleSubmit}>
-              <CardContent className="space-y-4">
+            <CardContent>
+              <form onSubmit={handleVehicleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="registrationNumber">Registration Number*</Label>
-                    <Input 
-                      id="registrationNumber"
-                      placeholder="KA01AB1234"
-                      {...registerVehicle('registrationNumber', { required: true })}
+                    <Label htmlFor="vehicle-name">Vehicle Name *</Label>
+                    <Input
+                      id="vehicle-name"
+                      value={vehicleName}
+                      onChange={(e) => setVehicleName(e.target.value)}
+                      required
                     />
-                    {vehicleErrors.registrationNumber && <p className="text-sm text-red-500">Registration number is required</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="model">Model*</Label>
-                    <Input 
-                      id="model"
-                      placeholder="Tata Ace"
-                      {...registerVehicle('model', { required: true })}
+                    <Label htmlFor="reg-number">Registration Number *</Label>
+                    <Input
+                      id="reg-number"
+                      value={regNumber}
+                      onChange={(e) => setRegNumber(e.target.value)}
+                      required
                     />
-                    {vehicleErrors.model && <p className="text-sm text-red-500">Model is required</p>}
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Vehicle Name*</Label>
-                    <Input 
-                      id="name"
-                      placeholder="Delivery Van 1"
-                      {...registerVehicle('name', { required: true })}
+                    <Label htmlFor="vehicle-type">Vehicle Type</Label>
+                    <Input
+                      id="vehicle-type"
+                      value={vehicleType}
+                      onChange={(e) => setVehicleType(e.target.value)}
                     />
-                    {vehicleErrors.name && <p className="text-sm text-red-500">Vehicle name is required</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="type">Type*</Label>
-                    <Select 
-                      onValueChange={(value) => setVehicleValue('type', value)}
-                    >
-                      <SelectTrigger id="type">
-                        <SelectValue placeholder="Select vehicle type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Mini Van">Mini Van</SelectItem>
-                        <SelectItem value="Pickup Truck">Pickup Truck</SelectItem>
-                        <SelectItem value="Delivery Van">Delivery Van</SelectItem>
-                        <SelectItem value="Refrigerated Truck">Refrigerated Truck</SelectItem>
-                        <SelectItem value="Motorcycle">Motorcycle</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {vehicleErrors.type && <p className="text-sm text-red-500">Type is required</p>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity (Liters)*</Label>
-                    <Input 
+                    <Label htmlFor="capacity">Capacity</Label>
+                    <Input
                       id="capacity"
                       type="number"
-                      placeholder="500"
-                      {...registerVehicle('capacity', { 
-                        valueAsNumber: true,
-                        min: { value: 0, message: 'Capacity must be positive' } 
-                      })}
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
                     />
-                    {vehicleErrors.capacity && (
-                      <p className="text-sm text-red-500">
-                        {vehicleErrors.capacity.type === 'required' ? 'Capacity is required' : vehicleErrors.capacity.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="driverName">Driver Name</Label>
-                    <Input 
-                      id="driverName"
-                      placeholder="John Doe"
-                      {...registerVehicle('driverName')}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="driverContactNumber">Driver Contact Number</Label>
-                    <Input 
-                      id="driverContactNumber"
-                      placeholder="+91 98765 43210"
-                      {...registerVehicle('driverContactNumber')}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status*</Label>
-                    <Select 
-                      onValueChange={(value) => setVehicleValue('status', value as 'Available' | 'In Use' | 'Under Maintenance')}
-                      defaultValue="Available"
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Available">Available</SelectItem>
-                        <SelectItem value="In Use">In Use</SelectItem>
-                        <SelectItem value="Under Maintenance">Under Maintenance</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea 
-                    id="notes"
-                    placeholder="Additional information about the vehicle"
-                    className="min-h-[100px]"
-                    {...registerVehicle('notes')}
+                  <Label htmlFor="driver-name">Driver Name</Label>
+                  <Input
+                    id="driver-name"
+                    value={driverName}
+                    onChange={(e) => setDriverName(e.target.value)}
                   />
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" type="button" onClick={() => navigate('/vehicle-tracking')}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  <Truck className="mr-2 h-4 w-4" />
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="vehicle-active"
+                    checked={isVehicleActive}
+                    onCheckedChange={setIsVehicleActive}
+                  />
+                  <Label htmlFor="vehicle-active">Active</Label>
+                </div>
+                
+                <Button type="submit" className="w-full">
                   Add Vehicle
                 </Button>
-              </CardFooter>
-            </form>
+              </form>
+            </CardContent>
           </Card>
         </TabsContent>
         
-        <TabsContent value="salesman" className="mt-4">
+        <TabsContent value="salesman">
           <Card>
             <CardHeader>
-              <CardTitle>Add New Salesman</CardTitle>
-              <CardDescription>
-                Enter the details of the salesman to add to the system
-              </CardDescription>
+              <CardTitle>Salesman Information</CardTitle>
             </CardHeader>
-            <form onSubmit={onSalesmanSubmit}>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name*</Label>
-                    <Input 
-                      id="name"
-                      placeholder="John Doe"
-                      {...registerSalesman('name', { required: true })}
-                    />
-                    {salesmanErrors.name && <p className="text-sm text-red-500">Name is required</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number*</Label>
-                    <Input 
-                      id="phone"
-                      placeholder="+91 98765 43210"
-                      {...registerSalesman('phone', { required: true })}
-                    />
-                    {salesmanErrors.phone && <p className="text-sm text-red-500">Phone number is required</p>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email"
-                      type="email"
-                      placeholder="john.doe@example.com"
-                      {...registerSalesman('email')}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="joiningDate">Joining Date*</Label>
-                    <DatePicker
-                      date={watchSalesman('joiningDate') ? new Date(watchSalesman('joiningDate')) : undefined}
-                      onDateChange={handleJoiningDateChange}
-                    />
-                    {salesmanErrors.joiningDate && <p className="text-sm text-red-500">Joining date is required</p>}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status*</Label>
-                    <Select 
-                      onValueChange={(value) => setSalesmanValue('status', value as 'Active' | 'Inactive' | 'On Leave')}
-                      defaultValue="Active"
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="On Leave">On Leave</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="targetAmount">Monthly Target (₹)</Label>
-                    <Input 
-                      id="targetAmount"
-                      type="number"
-                      placeholder="50000"
-                      {...registerSalesman('targetAmount', { 
-                        valueAsNumber: true,
-                        min: { value: 0, message: 'Target must be positive' } 
-                      })}
-                    />
-                    {salesmanErrors.targetAmount && (
-                      <p className="text-sm text-red-500">{salesmanErrors.targetAmount.message}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="commission">Commission Rate (%)</Label>
-                    <Input 
-                      id="commission"
-                      type="number"
-                      placeholder="5"
-                      {...registerSalesman('commission', { 
-                        valueAsNumber: true,
-                        min: { value: 0, message: 'Commission must be positive' },
-                        max: { value: 100, message: 'Commission cannot exceed 100%' }
-                      })}
-                    />
-                    {salesmanErrors.commission && (
-                      <p className="text-sm text-red-500">{salesmanErrors.commission.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input 
-                      id="address"
-                      placeholder="123 Main St, City"
-                      {...registerSalesman('address')}
-                    />
-                  </div>
-                </div>
-                
+            <CardContent>
+              <form onSubmit={handleSalesmanSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea 
-                    id="notes"
-                    placeholder="Additional information about the salesman"
-                    className="min-h-[100px]"
-                    {...registerSalesman('notes')}
+                  <Label htmlFor="salesman-name">Salesman Name *</Label>
+                  <Input
+                    id="salesman-name"
+                    value={salesmanName}
+                    onChange={(e) => setSalesmanName(e.target.value)}
+                    required
                   />
                 </div>
-              </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" type="button" onClick={() => navigate('/vehicle-tracking')}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  <User className="mr-2 h-4 w-4" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-number">Contact Number</Label>
+                    <Input
+                      id="contact-number"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="salesman-active"
+                    checked={isSalesmanActive}
+                    onCheckedChange={setIsSalesmanActive}
+                  />
+                  <Label htmlFor="salesman-active">Active</Label>
+                </div>
+                
+                <Button type="submit" className="w-full">
                   Add Salesman
                 </Button>
-              </CardFooter>
-            </form>
+              </form>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

@@ -1,213 +1,292 @@
-// Include the missing types for TrackSheet, TrackSheetRow, Invoice, etc.
-
-import { ReactNode } from 'react';
-
-// Extend Window interface for Electron
-declare global {
-  interface Window {
-    electron?: {
-      isElectron: boolean;
-      appInfo?: {
-        getVersion: () => Promise<string>;
-        getPlatform: () => string;
-        getSystemInfo: () => Promise<Record<string, any>>;
-        getAppPaths: () => Promise<Record<string, string>>;
-      };
-      exportData?: (data: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      importData?: () => Promise<{ success: boolean; data?: string; error?: string }>;
-      saveLog?: (logData: string) => Promise<{ success: boolean; path?: string; error?: string }>;
-      system?: {
-        openExternal: (url: string) => Promise<boolean>;
-        openPath: (path: string) => Promise<boolean>;
-        copyToClipboard: (text: string) => Promise<boolean>;
-        readFromClipboard: () => Promise<string>;
-        isPlatform: (platform: 'win32' | 'darwin' | 'linux') => Promise<boolean>;
-      };
-      updates?: {
-        checkForUpdates: () => Promise<any>;
-        downloadUpdate: () => Promise<any>;
-        installUpdate: () => Promise<any>;
-      };
-      onMenuExportData?: (callback: () => void) => void;
-      onMenuImportData?: (callback: () => void) => void;
-      downloadInvoice?: (data: string, filename: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
-      printInvoice?: (data: string) => Promise<{ success: boolean; error?: string }>;
-      getPrinters?: () => Promise<{ success: boolean; printers: any[] }>;
-    };
-  }
+// Customer Types
+export interface Customer {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  pinCode?: string;
+  balance: number;
+  createdAt: string;
+  updatedAt?: string;
+  notes?: string;
+  isActive: boolean;
+  type?: 'regular' | 'wholesale' | 'retail';
+  customerCode?: string;
+  routeId?: string;
+  areaId?: string;
+  customFields?: Record<string, any>;
 }
 
-// Extend the existing types
-declare module '@/types' {
-  export interface Invoice {
-    id: string;
-    customerId: string;
-    invoiceNumber?: string;
-    number: string;
-    date: string;
-    dueDate: string;
-    items: Array<{
-      productId: string;
-      description: string;
-      quantity: number;
-      unitPrice: number;
-      amount: number;
-    }>;
-    subtotal: number;
-    taxRate: number;
-    taxAmount: number;
-    total: number;
-    status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
-    notes: string;
-    termsAndConditions: string;
-    createdAt: string;
-    updatedAt: string;
-    discount?: number;
-    shipping?: number;
-  }
+// Product Types
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  unit: string;
+  price: number;
+  costPrice?: number;
+  stock?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  imageUrl?: string;
+  hasVariants: boolean;
+  variants?: ProductVariant[];
+  attributes?: string[];
+  taxRate?: number;
+  hsnCode?: string;
+  customFields?: Record<string, any>;
+}
 
-  export interface StockRecord {
-    id: string;
-    productId: string;
-    quantity: number;
-    date: string;
-    type: 'in' | 'out' | 'adjustment';
-    notes?: string;
-    relatedEntryId?: string;
-    // Added properties
-    openingStock?: number;
-    received?: number;
-    dispatched?: number;
-    closingStock?: number;
-    minStockLevel?: number;
-  }
+export interface ProductVariant {
+  id: string;
+  name: string;
+  attributeValues: Record<string, string>;
+  price: number;
+  costPrice?: number;
+  stock?: number;
+  sku?: string;
+}
 
-  export interface StockEntryItem {
-    id?: string;
-    productId: string;
-    quantity: number;
-    unitPrice: number;
-    totalPrice?: number;
-    total?: number; // For compatibility with existing code
-  }
+// Order Types
+export interface Order {
+  id: string;
+  customerId: string;
+  customerName?: string;
+  date: string;
+  items: OrderItem[];
+  total?: number;
+  totalAmount?: number;
+  status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+  paymentStatus?: 'pending' | 'partial' | 'paid' | 'overdue';
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  vehicleId?: string;
+  salesmanId?: string;
+  discount?: number;
+  tax?: number;
+  deliveryDate?: string;
+  deliveryAddress?: string;
+  invoiceId?: string;
+  paymentMethod?: string;
+  customFields?: Record<string, any>;
+}
 
-  export interface StockEntry {
-    id: string;
-    supplierId: string;
-    date: string;
-    items: StockEntryItem[];
-    notes?: string;
-    totalAmount: number;
-    paymentStatus?: 'paid' | 'partial' | 'unpaid';
-    createdAt?: string;
-  }
+export interface OrderItem {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  total?: number;
+  notes?: string;
+  variantId?: string;
+  taxRate?: number;
+  taxAmount?: number;
+}
 
-  export interface TaxSetting {
-    id: string;
-    name: string;
-    rate: number;
-    isActive: boolean;
-    isDefault: boolean;
-  }
+// Track Sheet Types
+export interface TrackSheet {
+  id: string;
+  name?: string;
+  title?: string;
+  date: string;
+  vehicleId?: string;
+  salesmanId?: string;
+  routeName?: string;
+  rows: TrackSheetRow[];
+  notes?: string;
+  createdAt?: string;
+  status?: 'draft' | 'completed';
+  summary?: TrackSheetSummary;
+}
 
-  // Make sure the Expense interface has the correct properties
-  export interface Expense {
-    id: string;
-    category: string;
-    amount: number;
-    date: string;
-    recurring: boolean;
-    recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-    title: string;
-    notes?: string;
-    paidTo?: string;
-    description: string; // Added for compatibility
-    paymentMethod: string; // Added for compatibility
-    reference?: string; // Added for compatibility
-    isRecurring?: boolean; // Added for compatibility with existing code
-    createdAt?: string;
-    updatedAt?: string;
-  }
+export interface TrackSheetRow {
+  customerId: string;
+  name: string;
+  quantities: Record<string, number | string>;
+  total: number;
+  amount: number;
+  products?: string[]; // Product names array
+}
 
-  // Updated Vehicle interface with the missing properties
-  export interface Vehicle {
-    id: string;
-    name: string;
-    type: string;
-    registrationNumber: string;
-    driverName?: string;
-    isActive: boolean;
-    capacity?: number;
-    description?: string;
-  }
+export interface TrackSheetSummary {
+  totalItems: number;
+  totalAmount: number;
+  productTotals: Record<string, number>;
+}
 
-  // Updated UISettings interface with the missing properties
-  export interface UISettings {
-    theme: 'light' | 'dark' | 'system';
-    language: string;
-    dateFormat: string;
-    currencyFormat: string;
-    fontSize?: 'small' | 'medium' | 'large';
-    colorScheme?: string;
-    sidebarStyle?: 'compact' | 'expanded';
-    tableStyle?: 'bordered' | 'minimal' | 'striped';
-    notificationFrequency?: 'high' | 'medium' | 'low' | 'off';
-    compactMode: boolean; // Added for compatibility
-    currency: string; // Added for compatibility
-    sidebarCollapsed: boolean; // Added for compatibility
-    defaultPaymentMethod: string; // Added for compatibility
-    defaultReportPeriod: string; // Added for compatibility
-  }
+// Invoice Types
+export interface Invoice {
+  id: string;
+  customerId: string;
+  customerName?: string;
+  date: string;
+  dueDate?: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  discount?: number;
+  tax?: number;
+  total: number;
+  amountPaid?: number;
+  balance?: number;
+  notes?: string;
+  terms?: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  paymentMethod?: string;
+  referenceNumber?: string;
+  orderId?: string;
+  trackSheetId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  customFields?: Record<string, any>;
+}
 
-  // Updated TrackSheet interface with notes property
-  export interface TrackSheet {
-    id: string;
-    date: string;
-    vehicleId?: string;
-    salesmanId?: string;
-    rows: TrackSheetRow[];
-    routeName?: string;
-    name: string; // Required property
-    title?: string; // For backward compatibility
-    createdAt?: string;
-    updatedAt?: string;
-    vehicleName?: string;
-    salesmanName?: string;
-    savedAt?: string;
-    notes?: string; // Added for compatibility with OrderHistory
-  }
+export interface InvoiceItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  unit?: string;
+  discount?: number;
+  tax?: number;
+  total: number;
+  description?: string;
+}
 
-  // Updated TrackSheetRow interface with all required properties
-  export interface TrackSheetRow {
-    name: string;
-    customerName?: string; // Made optional for compatibility
-    customerId?: string;
-    quantities: Record<string, number | string>;
-    total: number;
-    amount: number;
-    products?: string[];
-  }
+// Payment Types
+export interface Payment {
+  id: string;
+  customerId: string;
+  customerName?: string;
+  date: string;
+  amount: number;
+  method: string;
+  referenceNumber?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  status?: 'completed' | 'pending' | 'failed';
+  invoiceId?: string;
+  orderId?: string;
+  attachment?: string;
+  customFields?: Record<string, any>;
+  receiptNumber?: string;
+}
 
-  // Updated Salesman interface with necessary properties
-  export interface Salesman {
-    id: string;
-    name: string;
-    phone: string;
-    email?: string;
-    address?: string;
-    isActive: boolean;
-    vehicleId?: string;
-  }
+// Vehicle and Salesman Types
+export interface Vehicle {
+  id: string;
+  name: string;
+  registrationNumber: string;
+  type?: string;
+  capacity?: number;
+  driver?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-  // Updated SupplierPayment interface with method property
-  export interface SupplierPayment {
-    id: string;
-    supplierId: string;
-    amount: number;
-    date: string;
-    paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-    referenceNumber?: string;
-    notes?: string;
-    method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
-  }
+export interface Salesman {
+  id: string;
+  name: string;
+  contactNumber?: string;
+  email?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface VehicleTrip {
+  id: string;
+  vehicleId: string;
+  salesmanId?: string;
+  date: string;
+  startTime: string;
+  endTime?: string;
+  startReading?: number;
+  endReading?: number;
+  status: 'planned' | 'in-progress' | 'completed';
+  routes?: string[];
+  notes?: string;
+}
+
+// Other Types
+export interface ProductRate {
+  id: string;
+  productId: string;
+  customerId: string;
+  rate: number;
+  effectiveDate: string;
+  endDate?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SupplierPayment {
+  id: string;
+  supplierId: string;
+  supplierName?: string;
+  amount: number;
+  date: string;
+  paymentMethod: string;
+  referenceNumber?: string;
+  notes?: string;
+  status: 'completed' | 'pending' | 'failed';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StockTransaction {
+  id: string;
+  productId: string;
+  type: 'purchase' | 'sale' | 'adjustment' | 'transfer' | 'return';
+  quantity: number;
+  date: string;
+  referenceId?: string;
+  notes?: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  unitCost?: number;
+  totalCost?: number;
+  supplierId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Area {
+  id: string;
+  name: string;
+  description?: string;
+  city?: string;
+  pinCodes?: string[];
+  isActive: boolean;
+}
+
+export interface Route {
+  id: string;
+  name: string;
+  areas: string[];
+  description?: string;
+  isActive: boolean;
+}
+
+export interface Expense {
+  id: string;
+  date: string;
+  amount: number;
+  category: string;
+  description?: string;
+  paymentMethod?: string;
+  referenceNumber?: string;
+  attachment?: string;
+  isRecurring?: boolean;
+  recurringPeriod?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  nextDueDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
