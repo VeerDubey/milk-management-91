@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -57,8 +58,8 @@ export default function TrackSheet() {
   const calculateRowTotals = (updatedRows: TrackSheetRow[]): TrackSheetRow[] => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
-        // Ensure proper type conversion before addition
-        const numValue = typeof qty === 'string' ? (qty !== '' ? Number(qty) : 0) : qty;
+        // Fix for TS2365: Ensure proper type conversion before addition
+        const numValue = typeof qty === 'string' ? (qty !== '' ? Number(qty) : 0) : Number(qty);
         return sum + numValue;
       }, 0);
       

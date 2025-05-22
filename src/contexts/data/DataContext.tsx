@@ -113,6 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
+      // Fixed: Pass the complete order object instead of individual parameters
       return trackSheetState.createTrackSheetFromOrder(
         order,
         productState.products,
