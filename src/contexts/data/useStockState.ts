@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { StockRecord, StockEntry, StockEntryItem } from '@/types';
+import { StockRecord, StockEntry, StockEntryItem, StockTransaction } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function useStockState(updateSupplier: Function) {
@@ -13,6 +13,11 @@ export function useStockState(updateSupplier: Function) {
     const saved = localStorage.getItem("stockEntries");
     return saved ? JSON.parse(saved) : [];
   });
+  
+  const [stockTransactions, setStockTransactions] = useState<StockTransaction[]>(() => {
+    const saved = localStorage.getItem("stockTransactions");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     localStorage.setItem("stockRecords", JSON.stringify(stockRecords));
@@ -21,6 +26,10 @@ export function useStockState(updateSupplier: Function) {
   useEffect(() => {
     localStorage.setItem("stockEntries", JSON.stringify(stockEntries));
   }, [stockEntries]);
+  
+  useEffect(() => {
+    localStorage.setItem("stockTransactions", JSON.stringify(stockTransactions));
+  }, [stockTransactions]);
 
   const addStockRecord = (record: Omit<StockRecord, "id">) => {
     const newRecord = {
@@ -41,6 +50,27 @@ export function useStockState(updateSupplier: Function) {
 
   const deleteStockRecord = (id: string) => {
     setStockRecords(stockRecords.filter((record) => record.id !== id));
+  };
+  
+  const addStockTransaction = (transaction: Omit<StockTransaction, "id">) => {
+    const newTransaction = {
+      ...transaction,
+      id: `st${Date.now()}`
+    };
+    setStockTransactions(prev => [...prev, newTransaction]);
+    return newTransaction;
+  };
+  
+  const updateStockTransaction = (id: string, transactionData: Partial<StockTransaction>) => {
+    setStockTransactions(prev => 
+      prev.map(transaction => 
+        transaction.id === id ? { ...transaction, ...transactionData } : transaction
+      )
+    );
+  };
+  
+  const deleteStockTransaction = (id: string) => {
+    setStockTransactions(prev => prev.filter(transaction => transaction.id !== id));
   };
   
   const addStockEntry = (entry: Omit<StockEntry, "id">) => {
@@ -120,9 +150,13 @@ export function useStockState(updateSupplier: Function) {
   return {
     stockRecords,
     stockEntries,
+    stockTransactions,
     addStockRecord,
     updateStockRecord,
     deleteStockRecord,
+    addStockTransaction,
+    updateStockTransaction,
+    deleteStockTransaction,
     addStockEntry,
     updateStockEntry,
     deleteStockEntry,

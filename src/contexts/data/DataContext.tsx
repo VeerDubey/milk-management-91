@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -126,8 +125,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Wrapper function for addVehicleTrip to match the expected signature
   const addVehicleTrip = (trip: Omit<VehicleTrip, "id">): VehicleTrip => {
-    // Fixed: Use the vehicleId from the trip object and pass the trip directly
-    const result = vehicleSalesmanState.addVehicleTrip(trip);
+    // Fixed: Check vehicleSalesmanState.addVehicleTrip implementation
+    const result = vehicleSalesmanState.addVehicleTrip({
+      vehicleId: trip.vehicleId,
+      date: trip.date,
+      salesmanId: trip.salesmanId,
+      startLocation: trip.startLocation,
+      endLocation: trip.endLocation,
+      distance: trip.distance,
+      purpose: trip.purpose,
+      notes: trip.notes,
+      status: trip.status
+    });
     
     if (!result) {
       throw new Error("Failed to add vehicle trip");
@@ -184,7 +193,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     supplierProductRates: productRateState.supplierProductRates || [],
     addSupplierProductRate: productRateState.addSupplierProductRate,
     
-    // Stock transactions
+    // Stock transactions - fixed to use stockState properties
     stockTransactions: stockState.stockTransactions || [],
     addStockTransaction: stockState.addStockTransaction,
     updateStockTransaction: stockState.updateStockTransaction,

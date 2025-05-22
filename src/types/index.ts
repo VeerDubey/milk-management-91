@@ -304,7 +304,7 @@ export interface StockTransaction {
   referenceNumber?: string;
 }
 
-// Define VehicleTrip type
+// Update VehicleTrip type to match what we need
 export interface VehicleTrip {
   id: string;
   vehicleId: string;
@@ -316,4 +316,9 @@ export interface VehicleTrip {
   purpose?: string;
   notes?: string;
   status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  startTime?: string;
+  endTime?: string;
+  startReading?: number;
+  endReading?: number;
+  routes?: string[];
 }
