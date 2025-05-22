@@ -57,7 +57,7 @@ export default function TrackSheet() {
   const calculateRowTotals = (updatedRows: TrackSheetRow[]): TrackSheetRow[] => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
-        // Convert to number before addition
+        // Convert to number before addition, ensuring proper type handling
         const numValue = qty !== '' ? Number(qty) : 0;
         return sum + numValue;
       }, 0);

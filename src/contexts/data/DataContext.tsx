@@ -35,6 +35,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Use the actual invoice context data - this will now work since InvoiceProvider is available
   const invoiceState = useInvoices();
 
+  // Helper functions
   // Helper function to get product rate for a customer
   const getProductRateForCustomer = (customerId: string, productId: string): number | null => {
     const rate = productRateState.customerProductRates.find(
@@ -125,28 +126,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Wrapper function for addVehicleTrip to match the expected signature
   const addVehicleTrip = (trip: Omit<VehicleTrip, "id">): VehicleTrip => {
-    // Fixed: Check vehicleSalesmanState.addVehicleTrip implementation
-    const result = vehicleSalesmanState.addVehicleTrip({
-      vehicleId: trip.vehicleId,
-      date: trip.date,
-      salesmanId: trip.salesmanId,
-      startLocation: trip.startLocation,
-      endLocation: trip.endLocation,
-      distance: trip.distance,
-      purpose: trip.purpose,
-      notes: trip.notes,
-      status: trip.status
-    });
+    // Fixed: Use the correct signature that matches useVehicleSalesmanState
+    const result = vehicleSalesmanState.addVehicleTrip(trip);
     
     if (!result) {
       throw new Error("Failed to add vehicle trip");
     }
     
-    // Return a constructed VehicleTrip with generated id
-    return {
-      id: `trip${Date.now()}`,
-      ...trip
-    };
+    return result;
   };
   
   // Wrapper for expense stats by category
@@ -168,7 +155,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  // Combine all state objects into one
+  // Combine all state objects into one context value
   const contextValue: DataContextType = {
     ...customerState,
     ...productState,
@@ -193,7 +180,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     supplierProductRates: productRateState.supplierProductRates || [],
     addSupplierProductRate: productRateState.addSupplierProductRate,
     
-    // Stock transactions - fixed to use stockState properties
+    // Stock transactions - using stockState properties
     stockTransactions: stockState.stockTransactions || [],
     addStockTransaction: stockState.addStockTransaction,
     updateStockTransaction: stockState.updateStockTransaction,
