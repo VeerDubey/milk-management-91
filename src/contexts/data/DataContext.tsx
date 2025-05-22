@@ -113,6 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
+      // Fixed: Pass the whole order object instead of separate arguments
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
@@ -133,7 +134,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return result;
   };
   
-  // Wrapper for expense stats by category
+  // Fixed: Implement getExpenseStatsByCategory to return the expected array format
   const getExpenseStatsByCategory = (startDate?: string, endDate?: string): { category: string; total: number }[] => {
     // Get the raw stats (assuming this returns Record<string, number>)
     const rawStats = expenseState.getExpenseStatsByCategory 
@@ -202,7 +203,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getExpensesByCategory: expenseState.getExpensesByCategory,
     getExpensesByDateRange: expenseState.getExpensesByDateRange,
     getTotalExpenses: expenseState.getTotalExpenses,
-    getExpenseStatsByCategory: expenseState.getExpenseStatsByCategory,
+    getExpenseStatsByCategory, // Use our fixed implementation
     
     // Stock entries
     stockEntries: stockState.stockEntries || [],
