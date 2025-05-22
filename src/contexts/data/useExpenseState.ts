@@ -29,8 +29,8 @@ export interface ExpenseCreateData {
   title: string;
   amount: number;
   date: string;
-  category: ExpenseCategory;
-  paymentMethod?: ExpensePaymentMethod;
+  category: string; // Changed from ExpenseCategory to string for flexibility
+  paymentMethod?: ExpensePaymentMethod | string; // Made more flexible
   reference?: string;
   notes?: string;
   receipt?: string;

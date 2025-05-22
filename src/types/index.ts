@@ -183,7 +183,7 @@ export interface Expense {
   id: string;
   date: string;
   amount: number;
-  category: string;
+  category: string; // Changed from specific type to string for flexibility
   description: string;
   paymentMethod: string;
   reference?: string;

@@ -80,7 +80,7 @@ export interface DataContextType {
   
   // Expense state
   expenses: Expense[];
-  addExpense: (expense: ExpenseCreateData) => Expense;
+  addExpense: (expense: ExpenseCreateData) => Expense; // Using ExpenseCreateData instead of Omit<Expense, "id">
   updateExpense: (id: string, expenseData: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
   
