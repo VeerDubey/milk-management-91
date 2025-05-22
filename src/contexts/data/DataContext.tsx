@@ -32,7 +32,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const expenseState = useExpenseState();
   const trackSheetState = useTrackSheetState();
   
-  // Use the actual invoice context data - this will now work since InvoiceProvider is available
+  // Use the actual invoice context data
   const invoiceState = useInvoices();
 
   // Helper functions
@@ -112,7 +112,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fixed: Pass the complete order object as a single argument
+      // Fixed: Use the no-argument function signature
       return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);

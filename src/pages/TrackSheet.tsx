@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -36,7 +35,7 @@ export default function TrackSheet() {
   // Just use names for simplicity
   const productNames = activeProducts.map(p => p.name);
   
-  // Track sheet rows state
+  // Track sheet rows state with fixed typing
   const [rows, setRows] = useState<TrackSheetRow[]>(() => {
     // Initialize with empty rows for each customer
     return customers
@@ -48,13 +47,13 @@ export default function TrackSheet() {
           acc[name] = '';
           return acc;
         }, {} as Record<string, string | number>),
-        total: 0,
-        amount: 0,
+        total: 0, // Explicitly setting as number
+        amount: 0, // Explicitly setting as number
         products: productNames
       }));
   });
   
-  // Update totals when quantities change
+  // Update totals when quantities change with fixed typing
   const calculateRowTotals = (updatedRows: TrackSheetRow[]): TrackSheetRow[] => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
@@ -64,11 +63,11 @@ export default function TrackSheet() {
         return numSum + numValue;
       }, 0);
       
-      // You might want to calculate amounts based on product prices later
+      // Explicitly returning all properties with proper types
       return {
         ...row,
-        total,
-        amount: total // Simplified, in reality you'd multiply by price
+        total: Number(total), // Ensure total is a number
+        amount: Number(total) // Simplified, in reality you'd multiply by price
       };
     });
   };
@@ -101,8 +100,8 @@ export default function TrackSheet() {
         acc[name] = '';
         return acc;
       }, {} as Record<string, string | number>),
-      total: 0,
-      amount: 0,
+      total: 0, // Explicitly as number
+      amount: 0, // Explicitly as number
       products: productNames
     };
     

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { toast } from 'sonner';
@@ -137,17 +138,17 @@ export function useTrackSheetState() {
   };
 
   // Create track sheet from order data
-  const createTrackSheetFromOrder = (orderData: any) => {
+  // Update signature to accept a single order object parameter
+  const createTrackSheetFromOrder = (order: any) => {
     try {
-      if (!orderData || !orderData.items || orderData.items.length === 0) {
+      if (!order || !order.items || order.items.length === 0) {
         toast.error("No order data available");
         return null;
       }
       
-      // We'll need to fetch products and customers from a higher context
-      // For now we'll assume they're passed through the DataContext
-      
-      return null; // This will be replaced when called with proper arguments from DataContext
+      // This functionality will be implemented in DataContext
+      // where we have access to the customers and products lists
+      return null;
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
       toast.error("Failed to create track sheet from order");
