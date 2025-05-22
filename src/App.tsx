@@ -37,6 +37,8 @@ import InvoiceTemplates from './pages/InvoiceTemplates';
 import FinancialYear from './pages/FinancialYear';
 import { AuthProvider } from './contexts/AuthContext';
 import Signup from './pages/Signup';
+import { InvoiceProvider } from './contexts/InvoiceContext';
+import { DataProvider } from './contexts/data/DataContext';
 
 function App() {
   useEffect(() => {
@@ -47,65 +49,69 @@ function App() {
 
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/master" element={<Master />} />
-            
-            {/* Customer Routes */}
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/customer-list" element={<CustomerList />} />
-            <Route path="/customer-directory" element={<CustomerDirectory />} />
-            <Route path="/customer-detail/:id" element={<CustomerDetail />} />
-            <Route path="/customer-statement/:id" element={<CustomerStatement />} />
-            <Route path="/customer-ledger" element={<CustomerLedger />} />
-            <Route path="/customer-rates" element={<CustomerRates />} />
-            <Route path="/customer-ledger-report" element={<CustomerLedgerReport />} />
-            
-            {/* Inventory Routes */}
-            <Route path="/inventory" element={<Inventory />} />
-            
-            {/* Order Routes */}
-            <Route path="/order-list" element={<OrderList />} />
-            <Route path="/order-entry" element={<OrderEntry />} />
-            <Route path="/orders" element={<OrderHistory />} />
-            <Route path="/order-history" element={<OrderHistory />} />
-            
-            {/* Payment Routes */}
-            <Route path="/payments" element={<PaymentListView />} />
-            <Route path="/payment-list" element={<PaymentListView />} />
-            
-            {/* Invoice Routes */}
-            <Route path="/invoices" element={<InvoiceHistory />} />
-            <Route path="/invoice-create" element={<InvoiceCreate />} />
-            <Route path="/invoice-templates" element={<InvoiceTemplates />} />
-            <Route path="/invoice/:id" element={<InvoiceDetail />} />
-            
-            {/* Bulk Update Routes */}
-            <Route path="/bulk-rates" element={<BulkRateUpdate />} />
-            
-            {/* Communication Routes */}
-            <Route path="/communication" element={<Communication />} />
-            <Route path="/messaging" element={<Messaging />} />
-            <Route path="/email-templates" element={<EmailTemplates />} />
-            <Route path="/bulk-communication" element={<BulkCommunication />} />
-            
-            {/* Settings Routes */}
-            <Route path="/area-management" element={<AreaManagement />} />
-            <Route path="/expenses" element={<ExpensesRevamped />} />
-            <Route path="/company-profile" element={<CompanyProfile />} />
-            <Route path="/financial-year" element={<FinancialYear />} />
-            
-            {/* Analytics */}
-            <Route path="/analytics" element={<Analytics />} />
-          </Route>
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <InvoiceProvider>
+        <DataProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/master" element={<Master />} />
+                
+                {/* Customer Routes */}
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/customer-list" element={<CustomerList />} />
+                <Route path="/customer-directory" element={<CustomerDirectory />} />
+                <Route path="/customer-detail/:id" element={<CustomerDetail />} />
+                <Route path="/customer-statement/:id" element={<CustomerStatement />} />
+                <Route path="/customer-ledger" element={<CustomerLedger />} />
+                <Route path="/customer-rates" element={<CustomerRates />} />
+                <Route path="/customer-ledger-report" element={<CustomerLedgerReport />} />
+                
+                {/* Inventory Routes */}
+                <Route path="/inventory" element={<Inventory />} />
+                
+                {/* Order Routes */}
+                <Route path="/order-list" element={<OrderList />} />
+                <Route path="/order-entry" element={<OrderEntry />} />
+                <Route path="/orders" element={<OrderHistory />} />
+                <Route path="/order-history" element={<OrderHistory />} />
+                
+                {/* Payment Routes */}
+                <Route path="/payments" element={<PaymentListView />} />
+                <Route path="/payment-list" element={<PaymentListView />} />
+                
+                {/* Invoice Routes */}
+                <Route path="/invoices" element={<InvoiceHistory />} />
+                <Route path="/invoice-create" element={<InvoiceCreate />} />
+                <Route path="/invoice-templates" element={<InvoiceTemplates />} />
+                <Route path="/invoice/:id" element={<InvoiceDetail />} />
+                
+                {/* Bulk Update Routes */}
+                <Route path="/bulk-rates" element={<BulkRateUpdate />} />
+                
+                {/* Communication Routes */}
+                <Route path="/communication" element={<Communication />} />
+                <Route path="/messaging" element={<Messaging />} />
+                <Route path="/email-templates" element={<EmailTemplates />} />
+                <Route path="/bulk-communication" element={<BulkCommunication />} />
+                
+                {/* Settings Routes */}
+                <Route path="/area-management" element={<AreaManagement />} />
+                <Route path="/expenses" element={<ExpensesRevamped />} />
+                <Route path="/company-profile" element={<CompanyProfile />} />
+                <Route path="/financial-year" element={<FinancialYear />} />
+                
+                {/* Analytics */}
+                <Route path="/analytics" element={<Analytics />} />
+              </Route>
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </DataProvider>
+      </InvoiceProvider>
     </AuthProvider>
   );
 }

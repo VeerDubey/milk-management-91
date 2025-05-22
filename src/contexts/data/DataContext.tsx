@@ -31,7 +31,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const expenseState = useExpenseState();
   const trackSheetState = useTrackSheetState();
   
-  // Use the actual invoice context data
+  // Use the actual invoice context data - this will now work since InvoiceProvider is available
   const invoiceState = useInvoices();
 
   // Helper function to get product rate for a customer
