@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Expense } from '@/types';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { v4 as uuidv4 } from 'uuid';
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +42,8 @@ const ExpensesRevamped = () => {
     const newExpense = {
       ...data,
       id: uuidv4(),
+      // Ensure amount is stored as a number
+      amount: Number(data.amount)
     };
     addExpense(newExpense);
     setShowExpenseForm(false);
@@ -51,6 +54,8 @@ const ExpensesRevamped = () => {
   const handleUpdateExpense = (id: string, data: Partial<Expense>) => {
     updateExpense(id, {
       ...data,
+      // Ensure amount is stored as a number when updating
+      amount: data.amount !== undefined ? Number(data.amount) : undefined
     });
     setEditingExpenseId(null);
     reset();
@@ -88,7 +93,7 @@ const ExpensesRevamped = () => {
               {expenses.map(expense => (
                 <TableRow key={expense.id}>
                   <TableCell>{expense.title}</TableCell>
-                  <TableCell>₹{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell>₹{(typeof expense.amount === 'number' ? expense.amount.toFixed(2) : Number(expense.amount).toFixed(2))}</TableCell>
                   <TableCell>{format(new Date(expense.date), 'PPP')}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell>
@@ -121,7 +126,7 @@ const ExpensesRevamped = () => {
               </div>
               <div>
                 <Label htmlFor="amount">Amount</Label>
-                <Input id="amount" type="number" {...register("amount", { required: true })} />
+                <Input id="amount" type="number" step="0.01" {...register("amount", { required: true, valueAsNumber: true })} />
               </div>
               <div>
                 <Label htmlFor="date">Date</Label>

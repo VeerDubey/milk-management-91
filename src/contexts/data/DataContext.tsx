@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -135,20 +136,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
   
   // Fixed: Implement getExpenseStatsByCategory to return the expected array format
   const getExpenseStatsByCategory = (startDate?: string, endDate?: string): { category: string; total: number }[] => {
-    // Get the raw stats (assuming this returns Record<string, number>)
-    const rawStats = expenseState.getExpenseStatsByCategory 
-      ? expenseState.getExpenseStatsByCategory(startDate, endDate)
-      : {};
-      
-    if (Array.isArray(rawStats)) {
-      // If it's already in the right format, return it
-      return rawStats;
+    // Get filtered expenses based on date range if provided
+    let filteredExpenses = expenses;
+    
+    if (startDate && endDate) {
+      filteredExpenses = expenseState.getExpensesByDateRange 
+        ? expenseState.getExpensesByDateRange(startDate, endDate)
+        : expenses;
     }
     
-    // Otherwise, convert the Record<string, number> to array format
-    return Object.entries(rawStats).map(([category, total]) => ({ 
-      category, 
-      total 
+    // Group expenses by category and calculate totals
+    const categoryTotals: Record<string, number> = {};
+    
+    filteredExpenses.forEach(expense => {
+      const category = expense.category || "Miscellaneous";
+      categoryTotals[category] = (categoryTotals[category] || 0) + Number(expense.amount);
+    });
+    
+    // Convert to the required array format
+    return Object.entries(categoryTotals).map(([category, total]) => ({
+      category,
+      total
     }));
   };
 
