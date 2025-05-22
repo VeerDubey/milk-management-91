@@ -121,7 +121,7 @@ export default function InvoiceDownloadButton({
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Download with Template</DropdownMenuLabel>
           {/* Download with specific template */}
-          {templates.length > 0 ? templates.map(template => (
+          {templates && templates.length > 0 ? templates.map(template => (
             <DropdownMenuItem 
               key={template.id} 
               onClick={() => handleDownload(template.id)}

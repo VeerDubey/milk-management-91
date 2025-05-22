@@ -22,6 +22,8 @@ export interface DataContextType {
   addOrder: (order: Omit<Order, "id">) => Order;
   updateOrder: (id: string, orderData: Partial<Order>) => void;
   deleteOrder: (id: string) => void;
+  addBatchOrders?: (orders: Omit<Order, "id">[]) => Order[];
+  duplicateOrder?: (orderId: string, newDate?: string) => Order | null;
 
   // Payment state
   payments: Payment[];
@@ -29,6 +31,7 @@ export interface DataContextType {
   updatePayment: (id: string, paymentData: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
   deleteMultiplePayments?: (ids: string[]) => void;
+  addBatchPayments?: (payments: Omit<Payment, "id">[]) => Payment[];
 
   // Product rate state
   customerProductRates: CustomerProductRate[];
@@ -83,6 +86,10 @@ export interface DataContextType {
   addExpense: (expense: ExpenseCreateData) => Expense; // Using ExpenseCreateData instead of Omit<Expense, "id">
   updateExpense: (id: string, expenseData: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
+  getExpensesByCategory?: (category: string) => Expense[];
+  getExpensesByDateRange?: (startDate: string, endDate: string) => Expense[];
+  getTotalExpenses?: (startDate?: string, endDate?: string) => number;
+  getExpenseStatsByCategory?: () => Record<string, number>;
   
   // TrackSheet state
   trackSheets: TrackSheet[];
@@ -95,4 +102,6 @@ export interface DataContextType {
   addInvoice: (invoice: Omit<Invoice, "id">) => string; // Return type is string (invoice ID)
   updateInvoice: (id: string, invoiceData: Partial<Invoice>) => void;
   deleteInvoice: (id: string) => void;
+  generateInvoiceFromOrder?: (orderId: string) => string | null;
 }
+

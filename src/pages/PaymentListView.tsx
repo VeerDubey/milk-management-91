@@ -1,32 +1,27 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useData } from '@/contexts/DataContext';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from '@/components/ui/table';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -34,463 +29,456 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { format } from 'date-fns';
-import { useData } from '@/contexts/data/DataContext';
-import { Payment } from '@/types';
 import { 
-  Plus, 
   Search, 
-  Calendar, 
-  Check, 
-  AlertCircle, 
+  Filter, 
   Download, 
-  Printer, 
   MoreVertical, 
-  FileText, 
-  Filter,
-  ArrowUpDown,
-  Trash2
+  Trash, 
+  Edit, 
+  Eye, 
+  Calendar,
+  Printer,
+  CheckCircle2,
+  ArrowDownUp,
+  FileText,
+  RefreshCw
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Payment } from '@/types';
 import { exportToPdf } from '@/utils/pdfUtils';
-
-// Augment the Payment type with a properly typed status
-interface ExtendedPayment extends Omit<Payment, "paymentMethod" | "status"> {
-  paymentMethod: string;
-  status: "completed" | "pending" | "failed";
-}
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 
 export default function PaymentListView() {
-  const { payments, customers, deletePayment, deleteMultiplePayments } = useData();
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const { payments, customers, orders, deletePayment, deleteMultiplePayments } = useData();
   const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCustomer, setFilterCustomer] = useState<string>('');
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [sortColumn, setSortColumn] = useState<string>('date');
 
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 2
-    }).format(amount);
+  // Handle payment selection
+  const togglePaymentSelection = (paymentId: string) => {
+    if (selectedPayments.includes(paymentId)) {
+      setSelectedPayments(selectedPayments.filter(id => id !== paymentId));
+    } else {
+      setSelectedPayments([...selectedPayments, paymentId]);
+    }
   };
 
-  // Handle sort
+  // Handle select all payments
+  const toggleSelectAll = () => {
+    if (selectedPayments.length === filteredPayments.length) {
+      setSelectedPayments([]);
+    } else {
+      setSelectedPayments(filteredPayments.map(payment => payment.id));
+    }
+  };
+
+  // Handle sorting
   const handleSort = (column: string) => {
-    if (sortColumn === column) {
+    if (sortBy === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-      setSortColumn(column);
+      setSortBy(column);
       setSortDirection('asc');
     }
   };
 
-  // Filter and sort payments
-  const filteredPayments = (payments as ExtendedPayment[])
-    .filter(payment => {
-      const customerName = customers.find(c => c.id === payment.customerId)?.name || '';
-      const matchesSearch = 
-        customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        payment.amount.toString().includes(searchQuery);
-      
-      const matchesStatus = !statusFilter || payment.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortColumn === 'date') {
-        return sortDirection === 'asc' 
-          ? new Date(a.date).getTime() - new Date(b.date).getTime() 
-          : new Date(b.date).getTime() - new Date(a.date).getTime();
-      } else if (sortColumn === 'amount') {
-        return sortDirection === 'asc' ? a.amount - b.amount : b.amount - a.amount;
-      } else if (sortColumn === 'customerName') {
-        const nameA = customers.find(c => c.id === a.customerId)?.name || '';
-        const nameB = customers.find(c => c.id === b.customerId)?.name || '';
-        return sortDirection === 'asc' 
-          ? nameA.localeCompare(nameB) 
-          : nameB.localeCompare(nameA);
-      }
-      return 0;
-    });
-
-  // Handle payment selection
-  const togglePaymentSelection = (id: string) => {
-    setSelectedPayments(prev => 
-      prev.includes(id) 
-        ? prev.filter(paymentId => paymentId !== id) 
-        : [...prev, id]
-    );
-  };
-
-  // Handle bulk delete
+  // Delete selected payments
   const handleDeleteSelected = () => {
-    if (selectedPayments.length > 0) {
-      // Use the deleteMultiplePayments function from context
-      if (deleteMultiplePayments) {
-        deleteMultiplePayments(selectedPayments);
-        setSelectedPayments([]);
-        toast.success("Selected payments deleted successfully");
-      } else {
-        // Fallback to deleting one by one
-        selectedPayments.forEach(id => deletePayment(id));
-        setSelectedPayments([]);
-        toast.success("Selected payments deleted successfully");
-      }
+    if (!selectedPayments.length) {
+      toast.error("No payments selected");
+      return;
+    }
+
+    if (deleteMultiplePayments) {
+      deleteMultiplePayments(selectedPayments);
+      setSelectedPayments([]);
+      toast.success(`${selectedPayments.length} payment(s) deleted`);
+    } else {
+      // Fallback if deleteMultiplePayments isn't available
+      selectedPayments.forEach(id => deletePayment(id));
+      setSelectedPayments([]);
+      toast.success(`${selectedPayments.length} payment(s) deleted`);
     }
   };
 
-  // Handle export PDF
-  const handleExportPdf = () => {
-    const headers = ["Date", "Customer", "Amount", "Status", "Method", "Reference"];
+  // Export payments to PDF
+  const handleExport = () => {
+    const paymentsToExport = selectedPayments.length > 0 
+      ? payments.filter(p => selectedPayments.includes(p.id))
+      : filteredPayments;
     
-    const rows = filteredPayments.map(payment => {
+    const headers = ['Payment ID', 'Date', 'Customer', 'Order', 'Amount', 'Method', 'Reference'];
+    
+    const rows = paymentsToExport.map(payment => {
       const customer = customers.find(c => c.id === payment.customerId);
+      const order = payment.orderId ? orders.find(o => o.id === payment.orderId) : null;
+      
       return [
-        format(new Date(payment.date), 'dd/MM/yyyy'),
-        customer ? customer.name : 'Unknown',
-        formatCurrency(payment.amount),
-        payment.status || 'completed',
-        payment.paymentMethod || 'cash',
-        payment.referenceNumber || '-'
+        payment.id,
+        payment.date ? format(new Date(payment.date), 'PP') : 'N/A',
+        customer?.name || 'Unknown',
+        order ? order.id : 'N/A',
+        `₹${payment.amount.toFixed(2)}`,
+        payment.paymentMethod,
+        payment.referenceNumber || 'N/A'
       ];
     });
     
     exportToPdf(headers, rows, {
-      title: 'Payment List',
-      subtitle: `Generated on ${format(new Date(), 'dd/MM/yyyy')}`,
-      filename: `payment-list-${format(new Date(), 'yyyy-MM-dd')}.pdf`
+      title: 'Payment Report',
+      subtitle: `Generated on ${format(new Date(), 'PPP')}`,
+      filename: `payments-export-${format(new Date(), 'yyyy-MM-dd')}.pdf`
     });
     
-    toast.success("PDF exported successfully");
+    toast.success("Payment report exported successfully");
   };
 
-  // Handle print
+  // Print payments
   const handlePrint = () => {
-    // Prepare a printable version
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error("Could not open print window. Please allow popups.");
-      return;
-    }
+    const paymentsToExport = selectedPayments.length > 0 
+      ? payments.filter(p => selectedPayments.includes(p.id))
+      : filteredPayments;
     
-    const customerMap = new Map(customers.map(c => [c.id, c.name]));
+    const headers = ['Payment ID', 'Date', 'Customer', 'Amount', 'Method', 'Reference'];
     
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Payment List</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 8px; }
-            th { background-color: #f2f2f2; text-align: left; }
-            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-            h1 { margin: 0; }
-            .print-date { text-align: right; }
-            @media print {
-              .no-print { display: none; }
-              body { margin: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Payment List</h1>
-            <div class="print-date">Generated: ${format(new Date(), 'PPP')}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Method</th>
-                <th>Reference</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredPayments.map(payment => `
-                <tr>
-                  <td>${format(new Date(payment.date), 'dd/MM/yyyy')}</td>
-                  <td>${customerMap.get(payment.customerId) || 'Unknown'}</td>
-                  <td>${formatCurrency(payment.amount)}</td>
-                  <td>${payment.status || 'completed'}</td>
-                  <td>${payment.paymentMethod || 'cash'}</td>
-                  <td>${payment.referenceNumber || '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="no-print" style="margin-top: 20px; text-align: center;">
-            <button onclick="window.print()">Print</button>
-            <button onclick="window.close()">Close</button>
-          </div>
-        </body>
-      </html>
-    `);
+    const rows = paymentsToExport.map(payment => {
+      const customer = customers.find(c => c.id === payment.customerId);
+      
+      return [
+        payment.id,
+        payment.date ? format(new Date(payment.date), 'PP') : 'N/A',
+        customer?.name || 'Unknown',
+        `₹${payment.amount.toFixed(2)}`,
+        payment.paymentMethod,
+        payment.referenceNumber || 'N/A'
+      ];
+    });
     
-    printWindow.document.close();
-    
-    // Automatically trigger print dialog
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+    exportToPdf(headers, rows, {
+      title: 'Payment Report',
+      subtitle: `Generated on ${format(new Date(), 'PPP')}`,
+      filename: `payments-print-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
+      autoPrint: true
+    });
   };
 
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'completed':
-        return <Badge className="bg-green-500"><Check className="mr-1 h-3 w-3" /> Completed</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500"><Calendar className="mr-1 h-3 w-3" /> Pending</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-500"><AlertCircle className="mr-1 h-3 w-3" /> Failed</Badge>;
+  // Filter payments
+  const filteredPayments = payments.filter(payment => {
+    // Search term filter
+    const searchMatch = 
+      payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (payment.referenceNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customers.find(c => c.id === payment.customerId)?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Customer filter
+    const customerMatch = !filterCustomer || payment.customerId === filterCustomer;
+    
+    // Date filter
+    const dateMatch = !filterDate || 
+      (payment.date && new Date(payment.date).toDateString() === filterDate.toDateString());
+    
+    // Payment method filter
+    const methodMatch = !filterPaymentMethod || payment.paymentMethod === filterPaymentMethod;
+    
+    return searchMatch && customerMatch && dateMatch && methodMatch;
+  });
+
+  // Sort payments
+  const sortedPayments = [...filteredPayments].sort((a, b) => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    
+    switch (sortBy) {
+      case 'date':
+        return direction * (new Date(a.date).getTime() - new Date(b.date).getTime());
+      case 'customer':
+        const customerA = customers.find(c => c.id === a.customerId)?.name || '';
+        const customerB = customers.find(c => c.id === b.customerId)?.name || '';
+        return direction * customerA.localeCompare(customerB);
+      case 'amount':
+        return direction * (a.amount - b.amount);
+      case 'method':
+        return direction * a.paymentMethod.localeCompare(b.paymentMethod);
       default:
-        return <Badge>{status}</Badge>;
+        return 0;
     }
-  };
+  });
+
+  // Get unique payment methods for filter dropdown
+  const paymentMethods = [...new Set(payments.map(p => p.paymentMethod))];
+
+  // Get total amount of filtered payments
+  const totalAmount = sortedPayments.reduce((sum, payment) => sum + payment.amount, 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payment History</h1>
-          <p className="text-muted-foreground">Manage and track all customer payments</p>
+          <h1 className="text-3xl font-bold tracking-tight">Payments</h1>
+          <p className="text-muted-foreground">Manage customer payments and transaction records</p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => navigate('/payment-create')} className="bg-gradient-to-r from-primary to-secondary hover:opacity-90">
-            <Plus className="mr-2 h-4 w-4" /> Record Payment
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handlePrint} disabled={filteredPayments.length === 0}>
+            <Printer className="mr-2 h-4 w-4" />
+            Print
+          </Button>
+          <Button variant="outline" onClick={handleExport} disabled={filteredPayments.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          <Button variant="default" onClick={() => window.location.href = '/payment-create'}>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            New Payment
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(payments.reduce((sum, payment) => sum + payment.amount, 0))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {payments.length} payments recorded
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const now = new Date();
-              const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-              const monthlyTotal = payments
-                .filter(p => new Date(p.date) >= startOfMonth)
-                .reduce((sum, payment) => sum + payment.amount, 0);
-                
-              return (
-                <>
-                  <div className="text-2xl font-bold">
-                    {formatCurrency(monthlyTotal)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {format(startOfMonth, 'MMMM yyyy')}
-                  </p>
-                </>
-              );
-            })()}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={handleExportPdf} className="flex-1">
-              <Download className="mr-2 h-4 w-4" /> Export
-            </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="flex-1">
-              <Printer className="mr-2 h-4 w-4" /> Print
-            </Button>
-            {selectedPayments.length > 0 && (
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={handleDeleteSelected}
-                className="flex-1"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete ({selectedPayments.length})
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search payments..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Select
-            value={statusFilter || ""}
-            onValueChange={(value) => setStatusFilter(value === "" ? null : value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <div className="flex items-center">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="All statuses" />
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Payment List</CardTitle>
+          <CardDescription>
+            View all payment transactions with filtering and search options
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search payments..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <Button variant="outline" size="icon" onClick={() => setSearchTerm('')} disabled={!searchTerm}>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
               </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All statuses</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30px]">
-                <input 
-                  type="checkbox" 
-                  className="h-4 w-4 rounded border-gray-300"
-                  checked={selectedPayments.length > 0 && selectedPayments.length === filteredPayments.length}
-                  onChange={() => {
-                    if (selectedPayments.length === filteredPayments.length) {
-                      setSelectedPayments([]);
-                    } else {
-                      setSelectedPayments(filteredPayments.map(p => p.id));
-                    }
-                  }}
-                />
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('date')}
-              >
-                <div className="flex items-center">
-                  Date
-                  {sortColumn === 'date' && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
+              
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Label>Filter:</Label>
+                </div>
+                
+                <Select value={filterCustomer} onValueChange={setFilterCustomer}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Customers</SelectItem>
+                    {customers.map(customer => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <DatePicker
+                    date={filterDate}
+                    setDate={setFilterDate}
+                    placeholder="Filter by date"
+                  />
+                  {filterDate && (
+                    <Button variant="ghost" size="icon" onClick={() => setFilterDate(undefined)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('customerName')}
-              >
-                <div className="flex items-center">
-                  Customer
-                  {sortColumn === 'customerName' && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </div>
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => handleSort('amount')}
-              >
-                <div className="flex items-center">
-                  Amount
-                  {sortColumn === 'amount' && (
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  )}
-                </div>
-              </TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPayments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  No payments found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPayments.map((payment) => {
-                const customer = customers.find(c => c.id === payment.customerId);
-                return (
-                  <TableRow key={payment.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <input 
-                        type="checkbox" 
-                        className="h-4 w-4 rounded border-gray-300"
-                        checked={selectedPayments.includes(payment.id)}
-                        onChange={() => togglePaymentSelection(payment.id)}
+                
+                <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Payment Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Methods</SelectItem>
+                    {paymentMethods.map(method => (
+                      <SelectItem key={method} value={method}>
+                        {method}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {(filterCustomer || filterDate || filterPaymentMethod) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setFilterCustomer('');
+                      setFilterDate(undefined);
+                      setFilterPaymentMethod('');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <ScrollArea className="border rounded-md h-[calc(100vh-360px)]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox 
+                        checked={filteredPayments.length > 0 && selectedPayments.length === filteredPayments.length} 
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all payments"
                       />
-                    </TableCell>
-                    <TableCell>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
                       <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {format(new Date(payment.date), 'dd/MM/yyyy')}
+                        Date {sortBy === 'date' && <ArrowDownUp className="ml-1 h-3 w-3" />}
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{customer ? customer.name : 'Unknown'}</TableCell>
-                    <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell>{getStatusBadge(payment.status || 'completed')}</TableCell>
-                    <TableCell>
-                      {payment.paymentMethod || 'Cash'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => navigate(`/payment/${payment.id}`)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => {
-                              deletePayment(payment.id);
-                              toast.success("Payment deleted successfully");
-                            }}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('customer')}>
+                      <div className="flex items-center">
+                        Customer {sortBy === 'customer' && <ArrowDownUp className="ml-1 h-3 w-3" />}
+                      </div>
+                    </TableHead>
+                    <TableHead>Reference</TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('amount')}>
+                      <div className="flex items-center">
+                        Amount {sortBy === 'amount' && <ArrowDownUp className="ml-1 h-3 w-3" />}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('method')}>
+                      <div className="flex items-center">
+                        Method {sortBy === 'method' && <ArrowDownUp className="ml-1 h-3 w-3" />}
+                      </div>
+                    </TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {sortedPayments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        No payments found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    sortedPayments.map(payment => {
+                      const customer = customers.find(c => c.id === payment.customerId);
+                      return (
+                        <TableRow key={payment.id}>
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedPayments.includes(payment.id)} 
+                              onCheckedChange={() => togglePaymentSelection(payment.id)}
+                              aria-label={`Select payment ${payment.id}`}
+                            />
+                          </TableCell>
+                          <TableCell>{format(new Date(payment.date), 'PP')}</TableCell>
+                          <TableCell>{customer?.name || 'Unknown'}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {payment.referenceNumber ? (
+                                <Badge variant="outline">{payment.referenceNumber}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                              {payment.orderId && (
+                                <Badge variant="secondary" className="ml-2">
+                                  Order: {payment.orderId}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">₹{payment.amount.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={
+                                payment.paymentMethod === 'cash' ? 'default' : 
+                                payment.paymentMethod === 'bank' ? 'outline' : 
+                                payment.paymentMethod === 'upi' ? 'secondary' : 'destructive'
+                              }
+                            >
+                              {payment.paymentMethod}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => window.location.href = `/payment/${payment.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.location.href = `/payment-edit/${payment.id}`}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-destructive" 
+                                  onClick={() => {
+                                    deletePayment(payment.id);
+                                    toast.success("Payment deleted");
+                                  }}
+                                >
+                                  <Trash className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+            
+            {/* Payment summary and batch actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  {filteredPayments.length} payment{filteredPayments.length !== 1 ? 's' : ''} found • Total: 
+                  <span className="font-medium text-foreground ml-1">₹{totalAmount.toFixed(2)}</span>
+                </p>
+              </div>
+              {selectedPayments.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{selectedPayments.length} selected</span>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={handleDeleteSelected}
+                  >
+                    <Trash className="mr-2 h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedPayments([])}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

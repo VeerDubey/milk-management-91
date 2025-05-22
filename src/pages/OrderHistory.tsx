@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -24,7 +25,11 @@ import {
   Filter,
   Download,
   Users,
-  Check
+  Check,
+  Copy,
+  Printer,
+  FileUp,
+  ChevronsRight
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -32,16 +37,44 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { exportToPdf } from '@/utils/pdfUtils';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle 
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
 
 const OrderHistory = () => {
   const navigate = useNavigate();
-  const { orders, customers, products, addTrackSheet } = useData();
+  const { 
+    orders, 
+    customers, 
+    products, 
+    addTrackSheet, 
+    duplicateOrder,
+    generateInvoiceFromOrder
+  } = useData();
+  
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCustomer, setFilterCustomer] = useState<string>('');
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterStatus, setFilterStatus] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [duplicateDate, setDuplicateDate] = useState<Date | undefined>(new Date());
+  const [orderToDuplicate, setOrderToDuplicate] = useState<string | null>(null);
   
   // Handle order selection
   const toggleOrderSelection = (orderId: string) => {
@@ -61,7 +94,48 @@ const OrderHistory = () => {
     }
   };
 
-  // Add type checking for the return value of addTrackSheet
+  // Handle order duplication
+  const handleDuplicateOrder = (orderId: string) => {
+    setOrderToDuplicate(orderId);
+    setDuplicateDate(new Date());
+    setShowDuplicateDialog(true);
+  };
+  
+  // Confirm order duplication with selected date
+  const confirmDuplicateOrder = () => {
+    if (!orderToDuplicate || !duplicateDate) return;
+    
+    const formattedDate = format(duplicateDate, 'yyyy-MM-dd');
+    const newOrder = duplicateOrder?.(orderToDuplicate, formattedDate);
+    
+    if (newOrder) {
+      toast.success("Order duplicated successfully");
+      // Clear selections and close dialog
+      setOrderToDuplicate(null);
+      setShowDuplicateDialog(false);
+      
+      // Navigate to the new order
+      navigate(`/orders/${newOrder.id}`);
+    } else {
+      toast.error("Failed to duplicate order");
+    }
+  };
+
+  // Create invoice from order
+  const handleCreateInvoice = (orderId: string) => {
+    if (!generateInvoiceFromOrder) {
+      toast.error("Invoice generation functionality not available");
+      return;
+    }
+    
+    const invoiceId = generateInvoiceFromOrder(orderId);
+    if (invoiceId) {
+      toast.success("Invoice created successfully");
+      navigate(`/invoice/${invoiceId}`);
+    }
+  };
+
+  // Create track sheet from selected orders
   const handleCreateTrackSheet = () => {
     if (!selectedOrders.length) {
       toast.error("Please select at least one order");
@@ -142,7 +216,10 @@ const OrderHistory = () => {
     const dateMatch = !filterDate || 
       (order.date && new Date(order.date).toDateString() === filterDate.toDateString());
     
-    return searchMatch && customerMatch && dateMatch;
+    // Status filter
+    const statusMatch = !filterStatus || order.status === filterStatus;
+    
+    return searchMatch && customerMatch && dateMatch && statusMatch;
   });
   
   // Sort orders
@@ -158,6 +235,8 @@ const OrderHistory = () => {
         return direction * customerA.localeCompare(customerB);
       case 'total':
         return direction * ((a.total || 0) - (b.total || 0));
+      case 'status':
+        return direction * (a.status || '').localeCompare(b.status || '');
       default:
         return 0;
     }
@@ -172,7 +251,7 @@ const OrderHistory = () => {
     
     const ordersToExport = sortedOrders.filter(order => selectedOrders.includes(order.id));
     
-    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total'];
+    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Status'];
     const rows = ordersToExport.map(order => [
       order.id,
       order.date || '',
@@ -181,7 +260,8 @@ const OrderHistory = () => {
         const product = products.find(p => p.id === item.productId);
         return `${item.quantity} x ${product?.name || 'Unknown Product'}`;
       }).join(', '),
-      `₹${order.total?.toFixed(2) || '0.00'}`
+      `₹${order.total?.toFixed(2) || '0.00'}`,
+      order.status || 'pending'
     ]);
     
     exportToPdf(headers, rows, {
@@ -192,6 +272,70 @@ const OrderHistory = () => {
     
     toast.success(`Exported ${selectedOrders.length} orders to PDF`);
   };
+
+  // Print selected orders
+  const handlePrintOrders = () => {
+    if (selectedOrders.length === 0) {
+      toast.error("Please select at least one order to print");
+      return;
+    }
+    
+    const ordersToPrint = sortedOrders.filter(order => selectedOrders.includes(order.id));
+    
+    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Status'];
+    const rows = ordersToPrint.map(order => [
+      order.id,
+      order.date || '',
+      customers.find(c => c.id === order.customerId)?.name || order.customerName || '',
+      order.items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return `${item.quantity} x ${product?.name || 'Unknown Product'}`;
+      }).join(', '),
+      `₹${order.total?.toFixed(2) || '0.00'}`,
+      order.status || 'pending'
+    ]);
+    
+    exportToPdf(headers, rows, {
+      title: 'Order History',
+      subtitle: `Generated on ${format(new Date(), 'PPP')}`,
+      filename: `orders-print-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
+      autoPrint: true // This will trigger print dialog
+    });
+  };
+  
+  // Create invoices for selected orders
+  const handleCreateInvoicesForSelected = () => {
+    if (!selectedOrders.length) {
+      toast.error("Please select at least one order");
+      return;
+    }
+    
+    if (!generateInvoiceFromOrder) {
+      toast.error("Invoice generation functionality not available");
+      return;
+    }
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    selectedOrders.forEach(orderId => {
+      const invoiceId = generateInvoiceFromOrder(orderId);
+      if (invoiceId) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    });
+    
+    if (successCount > 0) {
+      toast.success(`Created ${successCount} invoice(s) successfully`);
+      navigate('/invoices');
+    }
+    
+    if (failCount > 0) {
+      toast.error(`Failed to create ${failCount} invoice(s)`);
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -201,21 +345,48 @@ const OrderHistory = () => {
           <p className="text-muted-foreground">View and manage order history</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleExportOrders} 
-            disabled={selectedOrders.length === 0}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export Selected
-          </Button>
-          <Button 
-            onClick={handleCreateTrackSheet} 
-            disabled={selectedOrders.length === 0}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Create Track Sheet
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportOrders} disabled={selectedOrders.length === 0}>
+                <Download className="mr-2 h-4 w-4" />
+                Export Selected to PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePrintOrders} disabled={selectedOrders.length === 0}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print Selected
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <FileText className="mr-2 h-4 w-4" />
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleCreateTrackSheet} disabled={selectedOrders.length === 0}>
+                <FileText className="mr-2 h-4 w-4" />
+                Create Track Sheet
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCreateInvoicesForSelected} disabled={selectedOrders.length === 0}>
+                <FileUp className="mr-2 h-4 w-4" />
+                Create Invoices for Selected
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/order-entry')}>
+                <ChevronsRight className="mr-2 h-4 w-4" />
+                New Order Entry
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       
@@ -259,6 +430,21 @@ const OrderHistory = () => {
                 </Select>
               </div>
               <div className="flex items-center space-x-2">
+                <Label>Filter by status:</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
                 <Label>Filter by date:</Label>
                 <DatePicker
                   date={filterDate}
@@ -276,10 +462,11 @@ const OrderHistory = () => {
                   </Button>
                 )}
               </div>
-              {(filterCustomer || filterDate) && (
+              {(filterCustomer || filterDate || filterStatus) && (
                 <Button variant="ghost" onClick={() => {
                   setFilterCustomer('');
                   setFilterDate(undefined);
+                  setFilterStatus('');
                 }} size="sm">
                   Clear filters
                 </Button>
@@ -326,6 +513,17 @@ const OrderHistory = () => {
                     </TableHead>
                     <TableHead>Items</TableHead>
                     <TableHead 
+                      className="cursor-pointer"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Status</span>
+                        {sortBy === 'status' && (
+                          <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead 
                       className="text-right cursor-pointer"
                       onClick={() => handleSort('total')}
                     >
@@ -342,7 +540,7 @@ const OrderHistory = () => {
                 <TableBody>
                   {sortedOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={7} className="h-24 text-center">
                         No orders found.
                       </TableCell>
                     </TableRow>
@@ -381,18 +579,49 @@ const OrderHistory = () => {
                               )}
                             </div>
                           </TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              order.status === 'completed' ? 'default' :
+                              order.status === 'processing' ? 'secondary' :
+                              order.status === 'cancelled' ? 'destructive' : 'outline'
+                            }>
+                              {order.status || 'pending'}
+                            </Badge>
+                            {order.paymentStatus && (
+                              <Badge variant={
+                                order.paymentStatus === 'paid' ? 'default' :
+                                order.paymentStatus === 'partial' ? 'secondary' : 'outline'
+                              } className="ml-2">
+                                {order.paymentStatus}
+                              </Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             ₹{order.total?.toFixed(2) || '0.00'}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/orders/${order.id}`)}
-                            >
-                              <FileText className="h-4 w-4" />
-                              <span className="sr-only">View</span>
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <FileText className="h-4 w-4" />
+                                  <span className="sr-only">Actions</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}`)}>
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDuplicateOrder(order.id)}>
+                                  <Copy className="mr-2 h-4 w-4" />
+                                  Duplicate Order
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleCreateInvoice(order.id)}>
+                                  <FileUp className="mr-2 h-4 w-4" />
+                                  Create Invoice
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       );
@@ -422,12 +651,59 @@ const OrderHistory = () => {
                     <Check className="mr-1 h-4 w-4" />
                     Create Track Sheet
                   </Button>
+                  <Button 
+                    size="sm"
+                    variant="secondary" 
+                    onClick={handleCreateInvoicesForSelected}
+                  >
+                    <FileUp className="mr-1 h-4 w-4" />
+                    Create Invoices
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+      
+      {/* Duplicate Order Dialog */}
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicate Order</DialogTitle>
+            <DialogDescription>
+              Choose a date for the duplicated order
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              <div className="flex flex-col space-y-2">
+                <Label htmlFor="date">Order Date</Label>
+                <DatePicker 
+                  date={duplicateDate} 
+                  setDate={setDuplicateDate} 
+                  placeholder="Select date" 
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDuplicateDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDuplicateOrder}
+              disabled={!duplicateDate}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Duplicate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

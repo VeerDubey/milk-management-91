@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +33,7 @@ interface InvoicePreviewDialogProps {
 
 export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: InvoicePreviewDialogProps) {
   const { getInvoiceById, generateInvoicePreview, downloadInvoice, printInvoice, templates } = useInvoices();
-  const { customers } = useData();
+  const { customers, products } = useData();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -57,6 +58,9 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
       if (!invoice) {
         throw new Error('Invoice not found');
       }
+      
+      // Log the invoice data to help with debugging
+      console.log('Invoice to preview:', invoice);
       
       const preview = await generateInvoicePreview(invoice, selectedTemplateId);
       setPreviewUrl(preview);
@@ -180,7 +184,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">Invoice Details</h3>
-            <p className="text-lg font-medium">Invoice #{invoice.id}</p>
+            <p className="text-lg font-medium">Invoice #{invoice.number || invoice.id}</p>
             <p className="text-sm">Date: {invoice.date || 'N/A'}</p>
             <p className="text-sm">Due Date: {invoice.dueDate || 'N/A'}</p>
             <p className="text-sm">Status: <span className={
@@ -212,14 +216,17 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
                 </tr>
               </thead>
               <tbody>
-                {invoice.items?.map((item, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="p-2">{item.productId}</td>
-                    <td className="p-2 text-center">{item.quantity}</td>
-                    <td className="p-2 text-center">₹{item.unitPrice?.toFixed(2) || '0.00'}</td>
-                    <td className="p-2 text-right">₹{item.amount?.toFixed(2) || '0.00'}</td>
-                  </tr>
-                ))}
+                {invoice.items?.map((item, index) => {
+                  const product = products.find(p => p.id === item.productId);
+                  return (
+                    <tr key={index} className="border-t">
+                      <td className="p-2">{product?.name || item.description || item.productId}</td>
+                      <td className="p-2 text-center">{item.quantity}</td>
+                      <td className="p-2 text-center">₹{item.unitPrice?.toFixed(2) || '0.00'}</td>
+                      <td className="p-2 text-right">₹{item.amount?.toFixed(2) || '0.00'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot className="border-t bg-muted/50">
                 <tr>
@@ -245,7 +252,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Invoice #{invoiceId}</DialogTitle>
+          <DialogTitle>Invoice {invoiceId}</DialogTitle>
           <DialogDescription>
             Preview and manage your invoice
           </DialogDescription>
@@ -270,7 +277,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
                       onChange={(e) => setSelectedTemplateId(e.target.value || undefined)}
                     >
                       <option value="">Default Template</option>
-                      {templates.map(template => (
+                      {templates && templates.map(template => (
                         <option key={template.id} value={template.id}>{template.name}</option>
                       ))}
                     </select>
@@ -289,11 +296,23 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         
         <DialogFooter className="flex justify-between items-center">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleShare}>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (getInvoiceById(invoiceId)) {
+                handleShare();
+              } else {
+                toast.error("Invoice not found");
+              }
+            }}>
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSendEmail}>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (getInvoiceById(invoiceId)) {
+                handleSendEmail();
+              } else {
+                toast.error("Invoice not found");
+              }
+            }}>
               <Send className="h-4 w-4 mr-1" />
               Email
             </Button>
@@ -304,7 +323,13 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
             </Button>
             <Button 
               variant="outline" 
-              onClick={handlePrint} 
+              onClick={() => {
+                if (getInvoiceById(invoiceId)) {
+                  handlePrint();
+                } else {
+                  toast.error("Invoice not found");
+                }
+              }} 
               disabled={isLoading || !previewUrl || isActionInProgress}
             >
               {isActionInProgress ? (
@@ -315,7 +340,13 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
               Print
             </Button>
             <Button 
-              onClick={handleDownload} 
+              onClick={() => {
+                if (getInvoiceById(invoiceId)) {
+                  handleDownload();
+                } else {
+                  toast.error("Invoice not found");
+                }
+              }} 
               disabled={isLoading || isActionInProgress}
             >
               {isActionInProgress ? (
@@ -331,3 +362,4 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
     </Dialog>
   );
 }
+

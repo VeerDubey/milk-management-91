@@ -39,10 +39,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import Signup from './pages/Signup';
 
 function App() {
-  // React hooks can be added here for state management or side effects
   useEffect(() => {
     // Example: Load initial data from local storage or an API
     // You can dispatch actions to update the state in your contexts
+    console.log("App initialized");
   }, []);
 
   return (
@@ -85,6 +85,9 @@ function App() {
             <Route path="/invoice-templates" element={<InvoiceTemplates />} />
             <Route path="/invoice/:id" element={<InvoiceDetail />} />
             
+            {/* Bulk Update Routes */}
+            <Route path="/bulk-rates" element={<BulkRateUpdate />} />
+            
             {/* Communication Routes */}
             <Route path="/communication" element={<Communication />} />
             <Route path="/messaging" element={<Messaging />} />
@@ -94,7 +97,6 @@ function App() {
             {/* Settings Routes */}
             <Route path="/area-management" element={<AreaManagement />} />
             <Route path="/expenses" element={<ExpensesRevamped />} />
-            <Route path="/bulk-rates" element={<BulkRateUpdate />} />
             <Route path="/company-profile" element={<CompanyProfile />} />
             <Route path="/financial-year" element={<FinancialYear />} />
             

@@ -67,9 +67,12 @@ export function useExpenseState() {
         description: expenseData.description || expenseData.notes || '',
         recurring: expenseData.recurring || false,
         paymentMethod: expenseData.paymentMethod || 'Cash',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
       setExpenses(prev => [...prev, newExpense]);
+      toast.success("Expense added successfully");
       return newExpense;
     } catch (error) {
       console.error("Error adding expense:", error);
@@ -90,12 +93,16 @@ export function useExpenseState() {
         const updatedExpenses = [...prev];
         updatedExpenses[index] = { 
           ...updatedExpenses[index], 
-          ...expenseData
+          ...expenseData,
+          updatedAt: new Date().toISOString() 
         };
         
         return updatedExpenses;
       });
       
+      if (updated) {
+        toast.success("Expense updated successfully");
+      }
       return updated;
     } catch (error) {
       console.error("Error updating expense:", error);
@@ -119,6 +126,9 @@ export function useExpenseState() {
         return updatedExpenses;
       });
       
+      if (deleted) {
+        toast.success("Expense deleted successfully");
+      }
       return deleted;
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -131,7 +141,7 @@ export function useExpenseState() {
     return expenses.find(expense => expense.id === id);
   }, [expenses]);
   
-  const getExpensesByCategory = useCallback((category: ExpenseCategory): Expense[] => {
+  const getExpensesByCategory = useCallback((category: string): Expense[] => {
     return expenses.filter(expense => expense.category === category);
   }, [expenses]);
   
@@ -154,27 +164,12 @@ export function useExpenseState() {
     return expenses.reduce((total, expense) => total + expense.amount, 0);
   }, [expenses, getExpensesByDateRange]);
   
-  const getExpenseStatsByCategory = useCallback((): Record<ExpenseCategory, number> => {
-    const stats = {
-      "Utilities": 0,
-      "Maintenance": 0,
-      "Salaries": 0,
-      "Equipment": 0,
-      "Inventory": 0,
-      "Transportation": 0,
-      "Marketing": 0,
-      "Rent": 0,
-      "Insurance": 0,
-      "Taxes": 0,
-      "Miscellaneous": 0
-    } as Record<ExpenseCategory, number>;
+  const getExpenseStatsByCategory = useCallback((): Record<string, number> => {
+    const stats: Record<string, number> = {};
     
     expenses.forEach(expense => {
-      if (expense.category in stats) {
-        stats[expense.category as ExpenseCategory] += expense.amount;
-      } else {
-        stats["Miscellaneous"] += expense.amount;
-      }
+      const category = expense.category || "Miscellaneous";
+      stats[category] = (stats[category] || 0) + expense.amount;
     });
     
     return stats;

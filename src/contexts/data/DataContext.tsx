@@ -13,6 +13,8 @@ import { useExpenseState } from './useExpenseState';
 import { useTrackSheetState } from './useTrackSheetState';
 import { useInvoices } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
+import { toast } from 'sonner';
+import InvoiceService from '@/services/InvoiceService';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
@@ -43,8 +45,57 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Helper function to delete multiple payments
   const deleteMultiplePayments = (ids: string[]): void => {
-    if (ids && ids.length > 0) {
+    if (paymentState.deleteMultiplePayments) {
+      paymentState.deleteMultiplePayments(ids);
+    } else if (ids && ids.length > 0) {
       ids.forEach(id => paymentState.deletePayment(id));
+    }
+  };
+
+  // Helper function to generate invoice from order
+  const generateInvoiceFromOrder = (orderId: string): string | null => {
+    try {
+      const order = orderState.orders.find(o => o.id === orderId);
+      if (!order) {
+        toast.error("Order not found");
+        return null;
+      }
+
+      const customer = customerState.customers.find(c => c.id === order.customerId);
+      if (!customer) {
+        toast.error("Customer not found for this order");
+        return null;
+      }
+
+      // Map order items with product names
+      const items = order.items.map(item => {
+        const product = productState.products.find(p => p.id === item.productId);
+        return {
+          ...item,
+          productName: product?.name || "Unknown Product",
+          unit: product?.unit || "unit"
+        };
+      });
+
+      // Create invoice using the service
+      const invoiceData = {
+        id: `INV-${Date.now()}`,
+        customerId: customer.id,
+        customerName: customer.name,
+        date: new Date().toISOString(),
+        items: items,
+        orderId: order.id,
+        total: order.total || items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
+      };
+
+      const invoiceId = invoiceState.addInvoice(InvoiceService.createInvoice(invoiceData));
+      toast.success("Invoice created from order successfully");
+      
+      return invoiceId;
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      toast.error("Failed to generate invoice");
+      return null;
     }
   };
 
@@ -76,6 +127,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addExpense: expenseState.addExpense,
     updateExpense: expenseState.updateExpense,
     deleteExpense: expenseState.deleteExpense,
+    getExpensesByCategory: expenseState.getExpensesByCategory,
+    getExpensesByDateRange: expenseState.getExpensesByDateRange,
+    getTotalExpenses: expenseState.getTotalExpenses,
+    getExpenseStatsByCategory: expenseState.getExpenseStatsByCategory,
     
     // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,
@@ -90,6 +145,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Adding missing properties
     getProductRateForCustomer,
     deleteMultiplePayments,
+    generateInvoiceFromOrder,
     
     // Add supplier payments functionality
     supplierPayments: supplierState.supplierPayments || [],
