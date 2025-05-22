@@ -5,25 +5,29 @@ import { toast } from 'sonner';
 
 export interface VehicleCreateData {
   registrationNumber: string;
-  model: string;
+  model?: string;
   type: string;
-  capacity: number;
+  capacity?: number;
   driverName?: string;
   driverContactNumber?: string;
-  status: 'Available' | 'In Use' | 'Under Maintenance';
+  status?: 'Available' | 'In Use' | 'Under Maintenance';
   notes?: string;
+  name: string; // Required by Vehicle interface
+  isActive: boolean; // Required by Vehicle interface
 }
 
 export interface SalesmanCreateData {
   name: string;
-  contactNumber: string;
+  contactNumber?: string;
   email?: string;
   address?: string;
-  joiningDate: string;
-  status: 'Active' | 'Inactive' | 'On Leave';
+  joiningDate?: string;
+  status?: 'Active' | 'Inactive' | 'On Leave';
   targetAmount?: number;
   commission?: number;
   notes?: string;
+  isActive: boolean; // Required by Salesman interface
+  phone: string; // Required by Salesman interface
 }
 
 export function useVehicleSalesmanState() {
@@ -76,10 +80,17 @@ export function useVehicleSalesmanState() {
       }
       
       const newVehicle: Vehicle = {
-        ...vehicleData,
         id: `v${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        lastMaintenanceDate: null,
+        name: vehicleData.name,
+        registrationNumber: vehicleData.registrationNumber,
+        type: vehicleData.type,
+        isActive: vehicleData.isActive,
+        model: vehicleData.model,
+        capacity: vehicleData.capacity,
+        driverName: vehicleData.driverName,
+        driverContactNumber: vehicleData.driverContactNumber,
+        status: vehicleData.status || 'Available',
+        notes: vehicleData.notes,
         trips: []
       };
       
@@ -115,8 +126,7 @@ export function useVehicleSalesmanState() {
         const updatedVehicles = [...prev];
         updatedVehicles[index] = { 
           ...updatedVehicles[index], 
-          ...vehicleData,
-          updatedAt: new Date().toISOString()
+          ...vehicleData
         };
         
         return updatedVehicles;
@@ -186,8 +196,7 @@ export function useVehicleSalesmanState() {
         
         updatedVehicles[index] = {
           ...vehicle,
-          trips: [...(vehicle.trips || []), newTrip],
-          updatedAt: new Date().toISOString()
+          trips: [...(vehicle.trips || []), newTrip]
         };
         
         return updatedVehicles;
@@ -205,11 +214,19 @@ export function useVehicleSalesmanState() {
   const addSalesman = useCallback((salesmanData: SalesmanCreateData): Salesman => {
     try {
       const newSalesman: Salesman = {
-        ...salesmanData,
         id: `sm${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        orders: [],
-        achievements: []
+        name: salesmanData.name,
+        phone: salesmanData.phone,
+        email: salesmanData.email,
+        address: salesmanData.address,
+        isActive: salesmanData.isActive,
+        joiningDate: salesmanData.joiningDate,
+        status: salesmanData.status || 'Active',
+        targetAmount: salesmanData.targetAmount,
+        commission: salesmanData.commission,
+        notes: salesmanData.notes,
+        contactNumber: salesmanData.contactNumber,
+        orders: []
       };
       
       setSalesmen(prev => [...prev, newSalesman]);
@@ -233,8 +250,7 @@ export function useVehicleSalesmanState() {
         const updatedSalesmen = [...prev];
         updatedSalesmen[index] = { 
           ...updatedSalesmen[index], 
-          ...salesmanData,
-          updatedAt: new Date().toISOString()
+          ...salesmanData
         };
         
         return updatedSalesmen;
@@ -294,8 +310,7 @@ export function useVehicleSalesmanState() {
         
         updatedSalesmen[index] = {
           ...salesman,
-          orders: [...(salesman.orders || []), orderData],
-          updatedAt: new Date().toISOString()
+          orders: [...(salesman.orders || []), orderData]
         };
         
         return updatedSalesmen;

@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   name: string;
@@ -120,9 +121,17 @@ export interface Vehicle {
   registrationNumber: string;
   type: string;
   description?: string;
-  driverName?: string; // Adding driverName property
-  capacity?: number; // Adding capacity property
+  driverName?: string;
+  capacity?: number;
   isActive: boolean;
+  model?: string;
+  status?: 'Available' | 'In Use' | 'Under Maintenance';
+  driverContactNumber?: string;
+  notes?: string;
+  lastMaintenanceDate?: string | null;
+  trips?: Array<any>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Salesman {
@@ -131,8 +140,17 @@ export interface Salesman {
   phone: string;
   address?: string;
   email?: string;
-  vehicleId?: string; // Adding vehicleId property
+  vehicleId?: string;
   isActive: boolean;
+  status?: 'Active' | 'Inactive' | 'On Leave';
+  orders?: Array<any>;
+  contactNumber?: string;
+  joiningDate?: string;
+  targetAmount?: number;
+  commission?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TrackSheetRow {
@@ -171,11 +189,13 @@ export interface Expense {
   reference?: string;
   recurring: boolean;
   recurringFrequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  title: string; // Adding title property
-  paidTo?: string; // Adding paidTo property
-  notes?: string; // Adding notes property
-  isRecurring?: boolean; // Adding isRecurring for compatibility
+  title: string;
+  paidTo?: string;
+  notes?: string;
+  isRecurring?: boolean;
   nextDueDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UISettings {

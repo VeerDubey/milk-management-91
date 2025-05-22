@@ -1,5 +1,5 @@
 
-import { dialog, BrowserWindow, shell } from 'electron';
+import { dialog, BrowserWindow, shell, app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

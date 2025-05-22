@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -217,7 +216,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
                   <tr key={index} className="border-t">
                     <td className="p-2">{item.productId}</td>
                     <td className="p-2 text-center">{item.quantity}</td>
-                    <td className="p-2 text-center">₹{item.rate?.toFixed(2) || '0.00'}</td>
+                    <td className="p-2 text-center">₹{item.unitPrice?.toFixed(2) || '0.00'}</td>
                     <td className="p-2 text-right">₹{item.amount?.toFixed(2) || '0.00'}</td>
                   </tr>
                 ))}

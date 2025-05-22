@@ -62,8 +62,9 @@ export function useExpenseState() {
       const newExpense: Expense = {
         ...expenseData,
         id: `exp${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        description: expenseData.notes || '',
+        recurring: false,
+        paymentMethod: expenseData.paymentMethod || 'Cash',
       };
       
       setExpenses(prev => [...prev, newExpense]);
@@ -87,8 +88,7 @@ export function useExpenseState() {
         const updatedExpenses = [...prev];
         updatedExpenses[index] = { 
           ...updatedExpenses[index], 
-          ...expenseData,
-          updatedAt: new Date().toISOString()
+          ...expenseData
         };
         
         return updatedExpenses;

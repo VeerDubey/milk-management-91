@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
 import { useOrderState } from './useOrderState';
@@ -11,15 +11,13 @@ import { useUISettingsState } from './useUISettingsState';
 import { useVehicleSalesmanState } from './useVehicleSalesmanState';
 import { useExpenseState } from './useExpenseState';
 import { useTrackSheetState } from './useTrackSheetState';
-import { initialCustomers, initialProducts, initialOrders, initialPayments, initialExpenses, initialSuppliers } from '@/data/initialData';
 import { useInvoices } from '@/contexts/InvoiceContext';
 import { DataContextType } from './types';
-import { CustomerProductRate } from '@/types';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  // Initialize all the state hooks with proper arguments
+  // Initialize all the state hooks
   const customerState = useCustomerState();
   const productState = useProductState();
   const orderState = useOrderState();
@@ -60,12 +58,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ...stockState,
     ...supplierState,
     ...uiSettingsState,
-    ...vehicleSalesmanState,
     ...expenseState,
     ...trackSheetState,
+    
+    // Vehicle and Salesman state
+    vehicles: vehicleSalesmanState.vehicles,
+    addVehicle: vehicleSalesmanState.addVehicle,
+    updateVehicle: vehicleSalesmanState.updateVehicle,
+    deleteVehicle: vehicleSalesmanState.deleteVehicle,
+    salesmen: vehicleSalesmanState.salesmen,
+    addSalesman: vehicleSalesmanState.addSalesman,
+    updateSalesman: vehicleSalesmanState.updateSalesman,
+    deleteSalesman: vehicleSalesmanState.deleteSalesman,
+    addVehicleTrip: vehicleSalesmanState.addVehicleTrip,
+    
     // Explicitly define invoiceState properties to prevent type errors
     invoices: invoiceState.invoices,
-    // Type correction: Cast the return value to string for compatibility
     addInvoice: (invoice) => {
       const result = invoiceState.addInvoice(invoice);
       // Return the id as a string to match expected type
@@ -101,29 +109,3 @@ export function useData(): DataContextType {
 }
 
 export type { DataContextType };
-
-// We need to update the function to return the proper type
-export function useCustomerProductRate() {
-  const [customerProductRates, setCustomerProductRates] = useState<CustomerProductRate[]>(() => {
-    const saved = localStorage.getItem("customerProductRates");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("customerProductRates", JSON.stringify(customerProductRates));
-  }, [customerProductRates]);
-
-  const addCustomerProductRate = (rate: Omit<CustomerProductRate, "id">): CustomerProductRate => {
-    const newRate = {
-      ...rate,
-      id: `cpr${Date.now()}`
-    };
-    setCustomerProductRates([...customerProductRates, newRate]);
-    return newRate; // Return the newly created rate
-  };
-
-  return {
-    customerProductRates,
-    addCustomerProductRate
-  };
-}

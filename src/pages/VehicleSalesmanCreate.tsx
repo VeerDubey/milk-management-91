@@ -45,7 +45,9 @@ export default function VehicleSalesmanCreate() {
       model: '',
       type: '',
       capacity: 0,
-      status: 'Available'
+      status: 'Available',
+      name: '',
+      isActive: true
     }
   });
   
@@ -60,15 +62,22 @@ export default function VehicleSalesmanCreate() {
   } = useForm<SalesmanCreateData>({
     defaultValues: {
       name: '',
+      phone: '',
       contactNumber: '',
       joiningDate: format(new Date(), 'yyyy-MM-dd'),
-      status: 'Active'
+      status: 'Active',
+      isActive: true
     }
   });
   
   // Handle vehicle form submission
   const onVehicleSubmit = handleVehicleSubmit(async (data) => {
     try {
+      // Convert model name to vehicle name if name is not provided
+      if (!data.name) {
+        data.name = data.model || data.registrationNumber;
+      }
+      
       await addVehicle(data);
       toast.success(`Vehicle ${data.registrationNumber} added successfully`);
       resetVehicle();
@@ -88,6 +97,11 @@ export default function VehicleSalesmanCreate() {
   // Handle salesman form submission
   const onSalesmanSubmit = handleSalesmanSubmit(async (data) => {
     try {
+      // Convert contactNumber to phone if phone is not provided
+      if (!data.phone) {
+        data.phone = data.contactNumber || '';
+      }
+      
       await addSalesman(data);
       toast.success(`Salesman ${data.name} added successfully`);
       resetSalesman();
@@ -167,6 +181,15 @@ export default function VehicleSalesmanCreate() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label htmlFor="name">Vehicle Name*</Label>
+                    <Input 
+                      id="name"
+                      placeholder="Delivery Van 1"
+                      {...registerVehicle('name', { required: true })}
+                    />
+                    {vehicleErrors.name && <p className="text-sm text-red-500">Vehicle name is required</p>}
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="type">Type*</Label>
                     <Select 
                       onValueChange={(value) => setVehicleValue('type', value)}
@@ -185,6 +208,9 @@ export default function VehicleSalesmanCreate() {
                     </Select>
                     {vehicleErrors.type && <p className="text-sm text-red-500">Type is required</p>}
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="capacity">Capacity (Liters)*</Label>
                     <Input 
@@ -192,7 +218,6 @@ export default function VehicleSalesmanCreate() {
                       type="number"
                       placeholder="500"
                       {...registerVehicle('capacity', { 
-                        required: true, 
                         valueAsNumber: true,
                         min: { value: 0, message: 'Capacity must be positive' } 
                       })}
@@ -203,9 +228,6 @@ export default function VehicleSalesmanCreate() {
                       </p>
                     )}
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="driverName">Driver Name</Label>
                     <Input 
@@ -214,6 +236,9 @@ export default function VehicleSalesmanCreate() {
                       {...registerVehicle('driverName')}
                     />
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="driverContactNumber">Driver Contact Number</Label>
                     <Input 
@@ -222,23 +247,22 @@ export default function VehicleSalesmanCreate() {
                       {...registerVehicle('driverContactNumber')}
                     />
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status*</Label>
-                  <Select 
-                    onValueChange={(value) => setVehicleValue('status', value as 'Available' | 'In Use' | 'Under Maintenance')}
-                    defaultValue="Available"
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Available">Available</SelectItem>
-                      <SelectItem value="In Use">In Use</SelectItem>
-                      <SelectItem value="Under Maintenance">Under Maintenance</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status*</Label>
+                    <Select 
+                      onValueChange={(value) => setVehicleValue('status', value as 'Available' | 'In Use' | 'Under Maintenance')}
+                      defaultValue="Available"
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Available">Available</SelectItem>
+                        <SelectItem value="In Use">In Use</SelectItem>
+                        <SelectItem value="Under Maintenance">Under Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -285,13 +309,13 @@ export default function VehicleSalesmanCreate() {
                     {salesmanErrors.name && <p className="text-sm text-red-500">Name is required</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contactNumber">Contact Number*</Label>
+                    <Label htmlFor="phone">Phone Number*</Label>
                     <Input 
-                      id="contactNumber"
+                      id="phone"
                       placeholder="+91 98765 43210"
-                      {...registerSalesman('contactNumber', { required: true })}
+                      {...registerSalesman('phone', { required: true })}
                     />
-                    {salesmanErrors.contactNumber && <p className="text-sm text-red-500">Contact number is required</p>}
+                    {salesmanErrors.phone && <p className="text-sm text-red-500">Phone number is required</p>}
                   </div>
                 </div>
                 
@@ -307,12 +331,10 @@ export default function VehicleSalesmanCreate() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="joiningDate">Joining Date*</Label>
-                    <div className="flex">
-                      <DatePicker 
-                        date={watchSalesman('joiningDate') ? new Date(watchSalesman('joiningDate')) : undefined} 
-                        onSelect={handleJoiningDateChange} 
-                      />
-                    </div>
+                    <DatePicker
+                      selected={watchSalesman('joiningDate') ? new Date(watchSalesman('joiningDate')) : undefined}
+                      onChange={handleJoiningDateChange}
+                    />
                     {salesmanErrors.joiningDate && <p className="text-sm text-red-500">Joining date is required</p>}
                   </div>
                 </div>
