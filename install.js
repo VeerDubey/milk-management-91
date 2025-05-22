@@ -72,17 +72,25 @@ async function installDependencies() {
   console.log('Setting up build tools...');
   runCommand('npm install --no-save node-gyp@latest --quiet', { ignoreError: true });
   
-  // Always use npm for Electron packages - they have complex native dependencies
-  console.log('\n⚡ Installing Electron and related packages first...');
+  // ALWAYS use npm for Electron packages - they have complex native dependencies
+  console.log('\n⚡ Installing Electron and related packages first with NPM...');
   runCommand('npm install --no-save electron electron-builder electron-is-dev electron-log --legacy-peer-deps');
   
-  // Install base dependencies
-  console.log('\nInstalling main dependencies...');
-  const baseInstallSuccess = runCommand('npm install --legacy-peer-deps');
+  // Install remaining dependencies with the package manager available (could be bun or npm)
+  const usingBun = runCommand('command -v bun', { silent: true, ignoreError: true });
   
-  if (!baseInstallSuccess) {
-    console.log('\n⚠️ Main installation had issues. Trying with more permissive flags...');
-    runCommand('npm install --legacy-peer-deps --force');
+  console.log('\nInstalling main dependencies...');
+  if (usingBun) {
+    console.log('Using Bun for remaining dependencies (except Electron packages)...');
+    const baseInstallSuccess = runCommand('bun install --no-save');
+    
+    if (!baseInstallSuccess) {
+      console.log('\n⚠️ Bun installation had issues. Falling back to npm...');
+      runCommand('npm install --legacy-peer-deps');
+    }
+  } else {
+    console.log('Using npm for all dependencies...');
+    runCommand('npm install --legacy-peer-deps');
   }
   
   // Create necessary directories
@@ -137,7 +145,7 @@ function ensureElectronBuilderConfig() {
         "electron/**/*"
       ],
       "mac": {
-        "category": "public.app-category.business",
+        "category": "public.app.category.business",
         "icon": "build/icon-512x512.png"
       },
       "win": {
