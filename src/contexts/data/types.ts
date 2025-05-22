@@ -5,7 +5,6 @@ import {
   Order, 
   OrderItem, 
   Payment, 
-  ProductRate, 
   StockTransaction,
   Vehicle,
   Salesman,
@@ -14,7 +13,8 @@ import {
   TrackSheet,
   TrackSheetRow,
   SupplierPayment,
-  StockEntry
+  StockEntry,
+  ProductRate
 } from '@/types';
 
 export interface DataContextType {

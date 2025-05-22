@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -36,7 +37,7 @@ export default function TrackSheet() {
   const productNames = activeProducts.map(p => p.name);
   
   // Track sheet rows state
-  const [rows, setRows] = useState(() => {
+  const [rows, setRows] = useState<TrackSheetRow[]>(() => {
     // Initialize with empty rows for each customer
     return customers
       .filter(c => c.isActive)
@@ -54,7 +55,7 @@ export default function TrackSheet() {
   });
   
   // Update totals when quantities change
-  const calculateRowTotals = (updatedRows: any[]) => {
+  const calculateRowTotals = (updatedRows: TrackSheetRow[]): TrackSheetRow[] => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
         // Convert to number before addition
@@ -92,7 +93,7 @@ export default function TrackSheet() {
   // Add blank row
   const addRow = () => {
     // Create a new blank row with the correct type
-    const newRow = {
+    const newRow: TrackSheetRow = {
       customerId: '',
       name: '',
       quantities: productNames.reduce((acc, name) => {
