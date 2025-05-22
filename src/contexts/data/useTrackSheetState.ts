@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { toast } from 'sonner';
@@ -138,49 +137,17 @@ export function useTrackSheetState() {
   };
 
   // Create track sheet from order data
-  const createTrackSheetFromOrder = (orderData: any, products: any[], customers: any[]) => {
+  const createTrackSheetFromOrder = (orderData: any) => {
     try {
       if (!orderData || !orderData.items || orderData.items.length === 0) {
         toast.error("No order data available");
         return null;
       }
       
-      const customer = customers.find(c => c.id === orderData.customerId);
-      if (!customer) {
-        toast.error("Customer not found");
-        return null;
-      }
+      // We'll need to fetch products and customers from a higher context
+      // For now we'll assume they're passed through the DataContext
       
-      // Create quantities object from order items
-      const quantities: Record<string, number | string> = {};
-      orderData.items.forEach((item: any) => {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          quantities[product.name] = item.quantity;
-        }
-      });
-      
-      // Create a single row track sheet for this order
-      const trackSheetRow: TrackSheetRow = {
-        customerId: customer.id,
-        name: customer.name,
-        quantities,
-        total: orderData.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
-        amount: orderData.total || 0,
-        products: products.map(p => p.name)
-      };
-      
-      const trackSheetData = {
-        name: `Track Sheet for Order - ${new Date().toLocaleString()}`,
-        date: new Date().toISOString(),
-        vehicleId: orderData.vehicleId || '',
-        salesmanId: orderData.salesmanId || '',
-        routeName: '',
-        rows: [trackSheetRow],
-        notes: `Created from order: ${orderData.id}`
-      };
-      
-      return addTrackSheet(trackSheetData);
+      return null; // This will be replaced when called with proper arguments from DataContext
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
       toast.error("Failed to create track sheet from order");

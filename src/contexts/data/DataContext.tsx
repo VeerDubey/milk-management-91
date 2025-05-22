@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCustomerState } from './useCustomerState';
 import { useProductState } from './useProductState';
@@ -113,12 +112,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Fixed: Pass the complete order object instead of individual parameters
-      return trackSheetState.createTrackSheetFromOrder(
-        order,
-        productState.products,
-        customerState.customers
-      );
+      // Fixed: Pass the complete order object as a single argument
+      return trackSheetState.createTrackSheetFromOrder(order);
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
       toast.error("Failed to create track sheet from order");

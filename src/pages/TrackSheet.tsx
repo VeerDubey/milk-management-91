@@ -58,9 +58,10 @@ export default function TrackSheet() {
   const calculateRowTotals = (updatedRows: TrackSheetRow[]): TrackSheetRow[] => {
     return updatedRows.map(row => {
       const total = Object.values(row.quantities).reduce((sum, qty) => {
-        // Fix for TS2365: Ensure proper type conversion before addition
+        // Fix for TS2365: Properly cast both operands to numbers before addition
         const numValue = typeof qty === 'string' ? (qty !== '' ? Number(qty) : 0) : Number(qty);
-        return sum + numValue;
+        const numSum = Number(sum); // Ensure sum is also a number
+        return numSum + numValue;
       }, 0);
       
       // You might want to calculate amounts based on product prices later
