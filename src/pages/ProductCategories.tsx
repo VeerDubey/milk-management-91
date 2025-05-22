@@ -1,496 +1,471 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Package, Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
-import { toast } from "sonner";
-import { useData } from "@/contexts/data/DataContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { 
+  Dialog, DialogContent, DialogDescription, DialogFooter, 
+  DialogHeader, DialogTitle, DialogClose 
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useData } from '@/contexts/data/DataContext';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from 'sonner';
+import { Folder, Plus, Edit, Trash, Search, Pencil } from 'lucide-react';
 
-interface Category {
+// This is a placeholder until you implement product categories in your data context
+interface ProductCategory {
   id: string;
   name: string;
   description?: string;
-  status: 'active' | 'inactive';
-  productsCount: number;
-  taxRate?: number;
-  parentId?: string;
+  slug: string;
+  productCount: number;
 }
 
-// Mock categories data
-const mockCategories: Category[] = [
-  { 
-    id: 'cat1', 
-    name: 'Milk', 
-    description: 'Fresh milk products',
-    status: 'active',
-    productsCount: 12,
-    taxRate: 5
-  },
-  { 
-    id: 'cat2', 
-    name: 'Yogurt',
-    description: 'Yogurt and curd products',
-    status: 'active',
-    productsCount: 8,
-    taxRate: 5
-  },
-  { 
-    id: 'cat3', 
-    name: 'Cheese',
-    description: 'Cheese varieties',
-    status: 'active',
-    productsCount: 5,
-    taxRate: 12
-  },
-  { 
-    id: 'cat4', 
-    name: 'Butter',
-    description: 'Butter and margarine',
-    status: 'active',
-    productsCount: 3,
-    taxRate: 12
-  },
-  { 
-    id: 'cat5', 
-    name: 'Ghee',
-    description: 'Clarified butter',
-    status: 'active',
-    productsCount: 2,
-    taxRate: 12
-  },
-  { 
-    id: 'cat6', 
-    name: 'Seasonal',
-    description: 'Seasonal dairy products',
-    status: 'inactive',
-    productsCount: 0,
-    taxRate: 5
-  }
-];
-
-const ProductCategories = () => {
-  const { products } = useData();
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+export default function ProductCategories() {
+  const { products, updateProduct } = useData();
+  const [categories, setCategories] = useState<ProductCategory[]>([
+    { 
+      id: 'cat_milk', 
+      name: 'Milk', 
+      description: 'Different varieties of milk products', 
+      slug: 'milk',
+      productCount: products.filter(p => p.category === 'milk').length
+    },
+    { 
+      id: 'cat_curd', 
+      name: 'Curd', 
+      description: 'Yogurt and curd products', 
+      slug: 'curd',
+      productCount: products.filter(p => p.category === 'curd').length
+    },
+    { 
+      id: 'cat_butter', 
+      name: 'Butter', 
+      description: 'Butter and butter-based products', 
+      slug: 'butter',
+      productCount: products.filter(p => p.category === 'butter').length
+    },
+    { 
+      id: 'cat_cheese', 
+      name: 'Cheese', 
+      description: 'Various cheese products', 
+      slug: 'cheese',
+      productCount: products.filter(p => p.category === 'cheese').length
+    },
+    { 
+      id: 'cat_paneer', 
+      name: 'Paneer', 
+      description: 'Cottage cheese and paneer products', 
+      slug: 'paneer',
+      productCount: products.filter(p => p.category === 'paneer').length
+    },
+    { 
+      id: 'cat_ghee', 
+      name: 'Ghee', 
+      description: 'Clarified butter products', 
+      slug: 'ghee',
+      productCount: products.filter(p => p.category === 'ghee').length
+    },
+    { 
+      id: 'cat_ice_cream', 
+      name: 'Ice Cream', 
+      description: 'Frozen dessert products', 
+      slug: 'ice_cream',
+      productCount: products.filter(p => p.category === 'ice_cream').length
+    },
+    { 
+      id: 'cat_other', 
+      name: 'Other', 
+      description: 'Other dairy products', 
+      slug: 'other',
+      productCount: products.filter(p => p.category === 'other').length
+    }
+  ]);
   
-  const [formData, setFormData] = useState({
+  const [search, setSearch] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
+  const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
-    status: 'active' as 'active' | 'inactive',
-    taxRate: 5,
-    parentId: ''
+    slug: ''
   });
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'taxRate' ? parseFloat(value) || 0 : value
-    }));
-  };
+  const [isReassignDialogOpen, setIsReassignDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<ProductCategory | null>(null);
+  const [reassignTo, setReassignTo] = useState('');
+
+  const filteredCategories = categories.filter(category => 
+    category.name.toLowerCase().includes(search.toLowerCase()) ||
+    (category.description && category.description.toLowerCase().includes(search.toLowerCase()))
+  );
   
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      if (editingCategory) {
-        // Update existing category
-        setCategories(prev => 
-          prev.map(category => 
-            category.id === editingCategory ? 
-            { ...category, ...formData, taxRate: formData.taxRate || category.taxRate } : 
-            category
-          )
-        );
-        toast.success("Category updated successfully");
-      } else {
-        // Create new category
-        const newCategory: Category = {
-          id: `cat${Date.now()}`,
-          name: formData.name,
-          description: formData.description,
-          status: formData.status,
-          productsCount: 0,
-          taxRate: formData.taxRate
-        };
-        if (formData.parentId) {
-          newCategory.parentId = formData.parentId;
-        }
-        setCategories(prev => [...prev, newCategory]);
-        toast.success("Category created successfully");
-      }
-      
-      handleCloseDialog();
-    } catch (error) {
-      toast.error("Failed to save category");
-      console.error(error);
-    }
-  };
-  
-  const handleEdit = (category: Category) => {
-    setFormData({
-      name: category.name,
-      description: category.description || '',
-      status: category.status,
-      taxRate: category.taxRate || 0,
-      parentId: category.parentId || ''
-    });
-    setEditingCategory(category.id);
-    setIsDialogOpen(true);
-  };
-  
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
-    setIsConfirmDialogOpen(true);
-  };
-  
-  const confirmDelete = () => {
-    if (!deleteId) return;
-    
-    try {
-      setCategories(prev => prev.filter(category => category.id !== deleteId));
-      toast.success("Category deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete category");
-      console.error(error);
+  const handleCreateCategory = () => {
+    if (!newCategory.name.trim()) {
+      toast.error('Category name is required');
+      return;
     }
     
-    setIsConfirmDialogOpen(false);
-    setDeleteId(null);
-  };
-  
-  const handleCloseDialog = () => {
-    setFormData({
+    // Generate slug if not provided
+    const slug = newCategory.slug.trim() || newCategory.name.toLowerCase().replace(/\s+/g, '_');
+    
+    // Check for duplicate slugs
+    if (categories.some(c => c.slug === slug)) {
+      toast.error('A category with this slug already exists');
+      return;
+    }
+    
+    const category = {
+      id: `cat_${uuidv4().slice(0, 8)}`,
+      name: newCategory.name.trim(),
+      description: newCategory.description.trim(),
+      slug,
+      productCount: 0
+    };
+    
+    setCategories([...categories, category]);
+    setNewCategory({
       name: '',
       description: '',
-      status: 'active',
-      taxRate: 5,
-      parentId: ''
+      slug: ''
     });
-    setEditingCategory(null);
-    setIsDialogOpen(false);
+    
+    setIsAddDialogOpen(false);
+    toast.success(`Category "${category.name}" created successfully`);
   };
   
-  // Filter categories based on search query and status filter
-  const filteredCategories = categories.filter(category => {
-    const matchesSearch = 
-      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (category.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+  const handleEditCategory = () => {
+    if (!selectedCategory) return;
     
-    const matchesStatus = statusFilter === 'all' || category.status === statusFilter;
+    if (!selectedCategory.name.trim()) {
+      toast.error('Category name is required');
+      return;
+    }
     
-    return matchesSearch && matchesStatus;
-  });
+    // Generate slug if not provided
+    const slug = selectedCategory.slug.trim() || selectedCategory.name.toLowerCase().replace(/\s+/g, '_');
+    
+    // Check for duplicate slugs (excluding the current category)
+    if (categories.some(c => c.slug === slug && c.id !== selectedCategory.id)) {
+      toast.error('A category with this slug already exists');
+      return;
+    }
+    
+    setCategories(categories.map(c => 
+      c.id === selectedCategory.id 
+        ? { ...selectedCategory, slug } 
+        : c
+    ));
+    
+    setIsEditDialogOpen(false);
+    toast.success(`Category "${selectedCategory.name}" updated successfully`);
+  };
   
+  const initiateDelete = (category: ProductCategory) => {
+    setCategoryToDelete(category);
+    
+    // If has products, show reassign dialog, otherwise confirm delete
+    if (category.productCount > 0) {
+      setIsReassignDialogOpen(true);
+    } else {
+      // No products to reassign, proceed with deletion
+      handleDeleteCategory(category.id, null);
+    }
+  };
+  
+  const handleDeleteCategory = (categoryId: string, reassignToCategoryId: string | null) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return;
+    
+    if (category.productCount > 0 && reassignToCategoryId) {
+      // Reassign products to another category
+      const targetCategory = categories.find(c => c.id === reassignToCategoryId);
+      if (!targetCategory) return;
+      
+      // Get the slug of the category to reassign to
+      const targetSlug = targetCategory.slug;
+      
+      // Update all products in this category
+      products
+        .filter(p => p.category === category.slug)
+        .forEach(product => {
+          updateProduct(product.id, { category: targetSlug });
+        });
+        
+      // Update product counts
+      setCategories(categories.map(c => {
+        if (c.id === reassignToCategoryId) {
+          return { ...c, productCount: c.productCount + category.productCount };
+        }
+        return c;
+      }));
+    }
+    
+    // Remove the category
+    setCategories(categories.filter(c => c.id !== categoryId));
+    
+    setCategoryToDelete(null);
+    setIsReassignDialogOpen(false);
+    setReassignTo('');
+    
+    toast.success(`Category "${category.name}" deleted successfully`);
+  };
+  
+  const handleEditClick = (category: ProductCategory) => {
+    setSelectedCategory({ ...category });
+    setIsEditDialogOpen(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Product Categories</h1>
-          <p className="text-muted-foreground">
-            Manage product categories and classifications
-          </p>
+          <p className="text-muted-foreground">Organize your products with categories</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Category
         </Button>
       </div>
-      
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Categories</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {categories.filter(c => c.status === 'active').length} active, {
-                categories.filter(c => c.status === 'inactive').length
-              } inactive
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Products Categorized</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {categories.reduce((sum, category) => sum + category.productsCount, 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Out of {products.length} total products
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Products/Category</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {categories.length > 0 
-                ? Math.round(categories.reduce((sum, category) => sum + category.productsCount, 0) / categories.length) 
-                : 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Products per category
-            </p>
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Category Management</CardTitle>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+            <div>
+              <CardTitle>Categories</CardTitle>
+              <CardDescription>Manage your product categories</CardDescription>
+            </div>
+            <div className="relative w-full md:w-[250px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                type="search" 
+                placeholder="Search categories..." 
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
-              <div className="relative flex-1 md:max-w-sm">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search categories..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[160px]">
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead className="text-center">Products</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCategories.length === 0 ? (
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Tax Rate</TableHead>
-                    <TableHead>Products</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                      No categories found. {search && "Try adjusting your search."}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCategories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-6">
-                        No categories found
+                ) : (
+                  filteredCategories.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <Folder className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {category.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>{category.description || "—"}</TableCell>
+                      <TableCell className="font-mono text-sm">{category.slug}</TableCell>
+                      <TableCell className="text-center">{category.productCount}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditClick(category)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => initiateDelete(category)}
+                            disabled={category.slug === 'other'} // Prevent deleting the "Other" category
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredCategories.map(category => (
-                      <TableRow key={category.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{category.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{category.description || "—"}</TableCell>
-                        <TableCell>{category.taxRate}%</TableCell>
-                        <TableCell>{category.productsCount}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            category.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {category.status === 'active' ? 'Active' : 'Inactive'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleEdit(category)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete(category.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
       
-      {/* Add/Edit Category Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      {/* Add Category Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</DialogTitle>
-            <DialogDescription>
-              {editingCategory 
-                ? 'Update category details and preferences' 
-                : 'Create a new product category'}
-            </DialogDescription>
+            <DialogTitle>Add Category</DialogTitle>
+            <DialogDescription>Create a new product category</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Category Name</Label>
+              <Label htmlFor="name">Category Name *</Label>
               <Input
                 id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                placeholder="e.g., Dairy Products"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
+                value={newCategory.description}
+                onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                placeholder="Brief description of the category"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                <Input
-                  id="taxRate"
-                  name="taxRate"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.taxRate.toString()}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
             <div className="space-y-2">
-              <Label htmlFor="parentId">Parent Category (Optional)</Label>
-              <Select 
-                value={formData.parentId} 
-                onValueChange={(value) => handleSelectChange('parentId', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select parent category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None (Top Level)</SelectItem>
-                  {categories
-                    .filter(c => c.id !== editingCategory) // Prevent circular reference
-                    .map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
+              <Label htmlFor="slug">Slug (optional)</Label>
+              <Input
+                id="slug"
+                value={newCategory.slug}
+                onChange={(e) => setNewCategory({...newCategory, slug: e.target.value.toLowerCase().replace(/\s+/g, '_')})}
+                placeholder="category-slug"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                URL-friendly version of name. Generated automatically if left blank.
+              </p>
             </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {editingCategory ? 'Update Category' : 'Create Category'}
-              </Button>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleCreateCategory}>Create Category</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Confirm Delete Dialog */}
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Edit Category Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>Update category details</DialogDescription>
+          </DialogHeader>
+          {selectedCategory && (
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Category Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={selectedCategory.name}
+                  onChange={(e) => setSelectedCategory({...selectedCategory, name: e.target.value})}
+                  placeholder="e.g., Dairy Products"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Input
+                  id="edit-description"
+                  value={selectedCategory.description || ''}
+                  onChange={(e) => setSelectedCategory({...selectedCategory, description: e.target.value})}
+                  placeholder="Brief description of the category"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-slug">Slug</Label>
+                <Input
+                  id="edit-slug"
+                  value={selectedCategory.slug}
+                  onChange={(e) => setSelectedCategory({...selectedCategory, slug: e.target.value.toLowerCase().replace(/\s+/g, '_')})}
+                  placeholder="category-slug"
+                  className="font-mono"
+                  disabled={selectedCategory.slug === 'other'}
+                />
+                {selectedCategory.slug === 'other' && (
+                  <p className="text-xs text-muted-foreground">
+                    The "other" category cannot be renamed as it's used as a default category.
+                  </p>
+                )}
+              </div>
+              <div className="pt-2">
+                <p className="text-sm font-medium">Products in this category: {selectedCategory.productCount}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleEditCategory}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Reassign Dialog */}
+      <Dialog open={isReassignDialogOpen} onOpenChange={setIsReassignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reassign Products</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this category? This action cannot be undone.
+              {categoryToDelete && (
+                <>
+                  Category "{categoryToDelete.name}" has {categoryToDelete.productCount} products. 
+                  Choose where to move them before deleting the category.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <div className="pt-4">
-            <p className="mb-4">
-              {deleteId && 
-                categories.find(c => c.id === deleteId)?.productsCount 
-                ? `This category contains ${categories.find(c => c.id === deleteId)?.productsCount} products that will be uncategorized.` 
-                : null
-              }
-            </p>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reassign-to">Reassign to Category</Label>
+              <select
+                id="reassign-to"
+                value={reassignTo}
+                onChange={(e) => setReassignTo(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select a category</option>
+                {categories
+                  .filter(c => categoryToDelete && c.id !== categoryToDelete.id)
+                  .map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button 
+              variant="destructive" 
+              onClick={() => categoryToDelete && handleDeleteCategory(categoryToDelete.id, reassignTo)}
+              disabled={!reassignTo}
+            >
+              Reassign and Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-};
-
-export default ProductCategories;
+}

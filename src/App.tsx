@@ -15,6 +15,11 @@ import CustomerLedger from './pages/CustomerLedger';
 import CustomerRates from './pages/CustomerRates';
 import CustomerLedgerReport from './pages/CustomerLedgerReport';
 import Inventory from './pages/Inventory';
+import ProductList from './pages/ProductList';
+import ProductRates from './pages/ProductRates';
+import StockManagement from './pages/StockManagement';
+import StockSettings from './pages/StockSettings';
+import ProductCategories from './pages/ProductCategories';
 import Communication from './pages/Communication';
 import Messaging from './pages/Messaging';
 import EmailTemplates from './pages/EmailTemplates';
@@ -76,6 +81,11 @@ function App() {
                 
                 {/* Inventory Routes */}
                 <Route path="/inventory" element={<Inventory />} />
+                <Route path="/product-list" element={<ProductList />} />
+                <Route path="/product-rates" element={<ProductRates />} />
+                <Route path="/stock-management" element={<StockManagement />} />
+                <Route path="/stock-settings" element={<StockSettings />} />
+                <Route path="/product-categories" element={<ProductCategories />} />
                 
                 {/* Order Routes */}
                 <Route path="/order-list" element={<OrderList />} />
@@ -86,11 +96,13 @@ function App() {
                 {/* Payment Routes */}
                 <Route path="/payments" element={<PaymentListView />} />
                 <Route path="/payment-list" element={<PaymentListView />} />
+                <Route path="/payment-create" element={<PaymentCreate />} />
                 
                 {/* Invoice Routes */}
                 <Route path="/invoices" element={<InvoiceHistory />} />
                 <Route path="/invoice-create" element={<InvoiceCreate />} />
                 <Route path="/invoice-templates" element={<InvoiceTemplates />} />
+                <Route path="/invoice-history" element={<InvoiceHistory />} />
                 <Route path="/invoice/:id" element={<InvoiceDetail />} />
                 
                 {/* Bulk Update Routes */}
@@ -101,6 +113,7 @@ function App() {
                 <Route path="/messaging" element={<Messaging />} />
                 <Route path="/email-templates" element={<EmailTemplates />} />
                 <Route path="/bulk-communication" element={<BulkCommunication />} />
+                <Route path="/sms-templates" element={<SMSTemplates />} />
                 
                 {/* Delivery Routes */}
                 <Route path="/vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
@@ -108,14 +121,29 @@ function App() {
                 <Route path="/track-sheet" element={<TrackSheet />} />
                 <Route path="/track-sheet-history" element={<TrackSheetHistory />} />
                 
+                {/* Supplier Routes */}
+                <Route path="/supplier-directory" element={<SupplierDirectory />} />
+                <Route path="/supplier-ledger" element={<SupplierLedger />} />
+                <Route path="/supplier-payments" element={<SupplierPayments />} />
+                <Route path="/supplier-rates" element={<SupplierRates />} />
+                
+                {/* Outstanding Routes */}
+                <Route path="/outstanding-dues" element={<OutstandingDues />} />
+                <Route path="/outstanding-amounts" element={<OutstandingAmounts />} />
+                
+                {/* Reports Routes */}
+                <Route path="/sales-report" element={<SalesReport />} />
+                <Route path="/customer-report" element={<CustomerReport />} />
+                <Route path="/analytics" element={<Analytics />} />
+                
                 {/* Settings Routes */}
                 <Route path="/area-management" element={<AreaManagement />} />
                 <Route path="/expenses" element={<ExpensesRevamped />} />
                 <Route path="/company-profile" element={<CompanyProfile />} />
                 <Route path="/financial-year" element={<FinancialYear />} />
-                
-                {/* Analytics */}
-                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/tax-settings" element={<TaxSettings />} />
+                <Route path="/ui-settings" element={<UISettings />} />
+                <Route path="/user-access" element={<UserAccess />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
