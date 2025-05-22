@@ -64,6 +64,8 @@ export default defineConfig(({ mode }) => ({
         'process.env.NODE_ENV': JSON.stringify(mode),
         'process.env.VITE_ALLOW_MISSING_DEPENDENCIES': JSON.stringify('true'),
       }
-    }
+    },
+    // Exclude Electron from optimization
+    exclude: ['electron', 'electron-is-dev', 'electron-log']
   }
 }));

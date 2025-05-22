@@ -53,5 +53,8 @@
       "to": "resources",
       "filter": ["**/*"]
     }
-  ]
+  ],
+  "npmRebuild": false,
+  "buildDependenciesFromSource": true,
+  "nodeGypRebuild": false
 }

@@ -68,9 +68,13 @@ async function installDependencies() {
   console.log('Cleaning npm cache...');
   runCommand('npm cache clean --force', { silent: true, ignoreError: true });
   
-  // Make sure node-gyp is properly installed
-  console.log('Setting up node-gyp...');
+  // Use npm instead of node-gyp directly
+  console.log('Setting up build tools...');
   runCommand('npm install --no-save node-gyp@latest --quiet', { ignoreError: true });
+  
+  // Always use npm for Electron packages - they have complex native dependencies
+  console.log('\n⚡ Installing Electron and related packages first...');
+  runCommand('npm install --no-save electron electron-builder electron-is-dev electron-log --legacy-peer-deps');
   
   // Install base dependencies
   console.log('\nInstalling main dependencies...');
@@ -80,10 +84,6 @@ async function installDependencies() {
     console.log('\n⚠️ Main installation had issues. Trying with more permissive flags...');
     runCommand('npm install --legacy-peer-deps --force');
   }
-  
-  // Install Electron separately with specific options
-  console.log('\n⚡ Installing Electron-related packages...');
-  runCommand('npm install --no-save electron@latest electron-builder@latest electron-is-dev@latest electron-log@latest --legacy-peer-deps');
   
   // Create necessary directories
   console.log('\n📁 Ensuring all required directories exist...');
@@ -148,7 +148,8 @@ function ensureElectronBuilderConfig() {
         "target": ["AppImage", "deb"],
         "category": "Office",
         "icon": "build/icon-512x512.png"
-      }
+      },
+      "npmRebuild": false
     };
     
     fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
