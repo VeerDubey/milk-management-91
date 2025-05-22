@@ -137,12 +137,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Fixed: Implement getExpenseStatsByCategory to return the expected array format
   const getExpenseStatsByCategory = (startDate?: string, endDate?: string): { category: string; total: number }[] => {
     // Get filtered expenses based on date range if provided
-    let filteredExpenses = expenses;
+    let filteredExpenses = expenseState.expenses;
     
     if (startDate && endDate) {
       filteredExpenses = expenseState.getExpensesByDateRange 
         ? expenseState.getExpensesByDateRange(startDate, endDate)
-        : expenses;
+        : expenseState.expenses;
     }
     
     // Group expenses by category and calculate totals
