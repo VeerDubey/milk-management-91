@@ -1,6 +1,6 @@
 import { Invoice, OrderItem } from "@/types";
 import { format } from "date-fns";
-import { generatePdfPreview } from "./pdfUtils";
+import { exportToPdf, generatePdfPreview } from "./pdfUtils";
 
 // Invoice template definitions with improved previews and descriptions
 export const INVOICE_TEMPLATES = [

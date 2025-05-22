@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Order } from '@/types';
+import { Order, OrderItem } from '@/types';
 import { initialOrders } from '@/data/initialData';
 import { toast } from 'sonner';
 
@@ -56,17 +55,26 @@ export function useOrderState() {
       return null;
     }
 
-    const duplicatedOrder = {
+    // Use type casting to ensure the status is correctly typed
+    const status: "pending" | "processing" | "completed" | "cancelled" = "pending";
+    const paymentStatus: "pending" | "partial" | "paid" | "overdue" = "pending";
+    
+    const duplicatedOrderData: Omit<Order, "id"> = {
       ...existingOrder,
       date: newDate || new Date().toISOString(),
-      status: 'pending',
-      paymentStatus: 'pending',
+      status: status,
+      paymentStatus: paymentStatus,
+      // Only include the fields that are in Omit<Order, "id">
+      items: [...existingOrder.items],
+      vehicleId: existingOrder.vehicleId,
+      salesmanId: existingOrder.salesmanId,
+      customerId: existingOrder.customerId,
+      total: existingOrder.total,
+      customerName: existingOrder.customerName,
+      totalAmount: existingOrder.totalAmount
     };
     
-    // Remove the id property before passing to addOrder since it's excluded in the type
-    const { id, ...orderWithoutId } = duplicatedOrder;
-
-    const newOrder = addOrder(orderWithoutId);
+    const newOrder = addOrder(duplicatedOrderData);
     toast.success("Order duplicated successfully");
     
     return newOrder;

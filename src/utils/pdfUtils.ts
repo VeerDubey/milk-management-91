@@ -1,5 +1,4 @@
 
-// If this file exists, we need to add the autoPrint option to the PdfExportOptions interface
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -17,6 +16,8 @@ export interface PdfExportOptions {
     left?: number;
   };
   autoPrint?: boolean; // Added option for automatic printing
+  dateInfo?: string; // Added for date information
+  additionalInfo?: Array<{label: string, value: string}>; // Added for additional information
 }
 
 // Export function to create PDF from tabular data
@@ -32,7 +33,8 @@ export const exportToPdf = (
     orientation = 'portrait',
     pageSize = 'a4',
     margins = { top: 30, right: 15, bottom: 20, left: 15 },
-    autoPrint = false // Default to false
+    autoPrint = false, // Default to false
+    dateInfo = ''
   } = options;
 
   // Initialize PDF document
@@ -50,13 +52,31 @@ export const exportToPdf = (
   doc.setFontSize(11);
   doc.text(subtitle, 15, 22);
   
+  // Add date info if provided
+  if (dateInfo) {
+    doc.setFontSize(10);
+    doc.text(dateInfo, 15, 28);
+  }
+  
+  // Add additional info if provided
+  if (options.additionalInfo && options.additionalInfo.length > 0) {
+    doc.setFontSize(10);
+    let yPosition = 28;
+    
+    options.additionalInfo.forEach((info, index) => {
+      if (dateInfo && index === 0) yPosition += 5; // Add spacing if date info exists
+      yPosition += 5;
+      doc.text(`${info.label}: ${info.value}`, 15, yPosition);
+    });
+  }
+  
   doc.setFontSize(defaultFontSize);
 
   // Convert headers and rows to expected format
   autoTable(doc, {
     head: [headers],
     body: rows,
-    startY: 30,
+    startY: options.additionalInfo && options.additionalInfo.length > 0 ? 40 : 30,
     margin: { top: margins.top, right: margins.right, bottom: margins.bottom, left: margins.left },
     headStyles: { fillColor: [41, 128, 185], textColor: 255 },
     alternateRowStyles: { fillColor: [240, 240, 240] },
@@ -72,4 +92,51 @@ export const exportToPdf = (
   doc.save(filename);
   
   return doc;
+};
+
+// Function to generate a PDF preview
+export const generatePdfPreview = (
+  columns: string[],
+  data: (string | number)[][],
+  options: {
+    title?: string;
+    subtitle?: string;
+    dateInfo?: string;
+    additionalInfo?: Array<{label: string, value: string}>;
+    landscape?: boolean;
+    fontSizeAdjustment?: number;
+    filename?: string;
+    style?: {
+      primaryColor?: string;
+      fontFamily?: string;
+      showHeader?: boolean;
+      showFooter?: boolean;
+    };
+    logoUrl?: string;
+  } = {}
+) => {
+  const {
+    title = 'Preview',
+    subtitle = '',
+    dateInfo = '',
+    additionalInfo = [],
+    landscape = false,
+    fontSizeAdjustment = 0,
+    filename = 'preview.pdf',
+    style = {}
+  } = options;
+
+  // Export settings
+  const pdfOptions: PdfExportOptions = {
+    title,
+    subtitle,
+    dateInfo,
+    additionalInfo,
+    filename,
+    orientation: landscape ? 'landscape' : 'portrait',
+    pageSize: 'a4'
+  };
+
+  // Create PDF
+  return exportToPdf(columns, data, pdfOptions);
 };
