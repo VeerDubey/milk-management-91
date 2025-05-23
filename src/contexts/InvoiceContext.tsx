@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice, Customer, Product } from '@/types';
 import { 
@@ -103,42 +102,74 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Function to generate PDF preview
+  // Function to generate PDF preview with better error handling
   const generateInvoicePreviewImpl = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('Generating invoice preview for invoice:', invoice.id);
       
-      // Mock data for demo - in a real app, we'd fetch these from the contexts
-      const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
+      // Get products and company info from localStorage as fallback
+      const products = JSON.parse(localStorage.getItem('products') || '[]');
       
       // Use specified template or fallback to selected template
       const templateToUse = templateId || selectedTemplateId;
       console.log('Using template:', templateToUse);
       
-      // Add totalAmount property for compatibility with generateInvoicePreview
-      const adaptedInvoice = {
-        ...invoice,
-        totalAmount: invoice.total,
-        customerName: invoice.customerId, // This will be resolved in generateInvoicePreview
-      };
-      
-      // Generate the PDF preview - this returns a jsPDF object
-      const pdfDoc = generateInvoicePreview(
-        adaptedInvoice as any,
+      // Try to generate preview using the utility function
+      const previewResult = generateInvoicePreview(
+        invoice,
         companyInfo,
         products,
         templateToUse
       );
       
-      console.log('Preview generated successfully');
+      // If the result is a Promise, await it
+      if (previewResult instanceof Promise) {
+        return await previewResult;
+      }
       
-      // Convert jsPDF to a data URL string that can be used in iframes
-      const pdfDataUrl = pdfDoc.output('datauristring');
+      // If it's already a string (data URL), return it
+      if (typeof previewResult === 'string') {
+        return previewResult;
+      }
       
-      return pdfDataUrl;
+      // If it's a jsPDF object, convert to data URL
+      if (previewResult && typeof previewResult.output === 'function') {
+        return previewResult.output('datauristring');
+      }
+      
+      // Fallback: create a simple HTML preview
+      const fallbackHtml = `
+        <html>
+        <head><title>Invoice ${invoice.id}</title></head>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+          <h1>Invoice ${invoice.number || invoice.id}</h1>
+          <p>Customer: ${invoice.customerName || 'Unknown'}</p>
+          <p>Date: ${invoice.date || 'N/A'}</p>
+          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
+          <p style="color: #666; font-size: 12px;">Preview generated in fallback mode</p>
+        </body>
+        </html>
+      `;
+      
+      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
+      
     } catch (error) {
       console.error('Error generating preview:', error);
-      throw new Error('Failed to generate preview');
+      
+      // Last resort fallback
+      const errorHtml = `
+        <html>
+        <head><title>Invoice Preview Error</title></head>
+        <body style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+          <h2>Preview Unavailable</h2>
+          <p>Unable to generate invoice preview at this time.</p>
+          <p>Invoice ID: ${invoice.id}</p>
+          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
+        </body>
+        </html>
+      `;
+      
+      return `data:text/html;charset=utf-8,${encodeURIComponent(errorHtml)}`;
     }
   };
   

@@ -1,67 +1,138 @@
+
 import { Invoice, OrderItem } from "@/types";
 import { format } from "date-fns";
-import { exportToPdf, generatePdfPreview } from "./pdfUtils";
 
-// Invoice template definitions with improved previews and descriptions
+// Fallback for when PDF generation fails
+const generateHTMLPreview = (
+  invoice: Invoice,
+  companyInfo: any,
+  products: any[]
+) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Invoice ${invoice.id}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .company-info h1 { margin: 0; color: #333; }
+        .invoice-info { text-align: right; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total-row { font-weight: bold; background-color: #f9f9f9; }
+        .notes { margin-top: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-info">
+          <h1>${companyInfo.companyName || 'Company Name'}</h1>
+          <p>${companyInfo.address || 'Company Address'}</p>
+          <p>Phone: ${companyInfo.contactNumber || 'Contact Number'}</p>
+          <p>Email: ${companyInfo.email || 'Email'}</p>
+          <p>GST: ${companyInfo.gstNumber || 'GST Number'}</p>
+        </div>
+        <div class="invoice-info">
+          <h2>Invoice #${invoice.number || invoice.id}</h2>
+          <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
+          <p>Due Date: ${invoice.dueDate || 'N/A'}</p>
+          <p>Status: ${invoice.status || 'Draft'}</p>
+        </div>
+      </div>
+      
+      <div class="customer-info">
+        <h3>Bill To:</h3>
+        <p><strong>${invoice.customerName || 'Customer Name'}</strong></p>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Rate</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(invoice.items || []).map((item: any) => {
+            const product = products.find(p => p.id === item.productId);
+            return `
+              <tr>
+                <td>${product?.name || item.description || item.productId || 'Item'}</td>
+                <td>${item.quantity || 0}</td>
+                <td>₹${(item.unitPrice || 0).toFixed(2)}</td>
+                <td>₹${(item.amount || 0).toFixed(2)}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
+            <td><strong>₹${(invoice.total || 0).toFixed(2)}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      ${invoice.notes ? `
+        <div class="notes">
+          <h4>Notes:</h4>
+          <p>${invoice.notes}</p>
+        </div>
+      ` : ''}
+      
+      ${invoice.termsAndConditions ? `
+        <div class="notes">
+          <h4>Terms & Conditions:</h4>
+          <p>${invoice.termsAndConditions}</p>
+        </div>
+      ` : ''}
+      
+      <div style="margin-top: 30px; font-size: 12px; color: #666;">
+        <p>Bank Details: ${companyInfo.bankDetails || 'Bank Details Not Available'}</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Convert HTML to data URL
+  const encodedHtml = encodeURIComponent(html);
+  return `data:text/html;charset=utf-8,${encodedHtml}`;
+};
+
+// Invoice template definitions
 export const INVOICE_TEMPLATES = [
   {
     id: "standard",
     name: "Standard Invoice",
-    description: "Classic invoice format with company details and logo",
+    description: "Classic invoice format with company details",
     previewImage: "standard-invoice.png",
-    primaryColor: "#4f46e5", // Indigo
+    primaryColor: "#4f46e5",
     fontFamily: "Arial",
     showHeader: true,
     showFooter: true
   },
   {
     id: "modern",
-    name: "Modern Invoice",
-    description: "Clean, contemporary design with minimalist layout",
-    previewImage: "modern-invoice.png", 
-    primaryColor: "#0ea5e9", // Sky blue
+    name: "Modern Invoice", 
+    description: "Clean, contemporary design",
+    previewImage: "modern-invoice.png",
+    primaryColor: "#0ea5e9",
     fontFamily: "Helvetica",
     showHeader: true,
     showFooter: false
   },
   {
-    id: "detailed",
-    name: "Detailed Invoice",
-    description: "Comprehensive format with item details and tax breakdown",
-    previewImage: "detailed-invoice.png",
-    primaryColor: "#10b981", // Emerald
-    fontFamily: "Georgia",
-    showHeader: true,
-    showFooter: true
-  },
-  {
     id: "simple",
     name: "Simple Invoice",
-    description: "Streamlined format with just the essentials",
+    description: "Streamlined format with essentials",
     previewImage: "simple-invoice.png",
-    primaryColor: "#f59e0b", // Amber
+    primaryColor: "#f59e0b",
     fontFamily: "Calibri",
     showHeader: false,
-    showFooter: true
-  },
-  {
-    id: "professional",
-    name: "Professional Invoice",
-    description: "Elegant design suitable for corporations and professionals",
-    previewImage: "professional-invoice.png",
-    primaryColor: "#6366f1", // Indigo
-    fontFamily: "Times New Roman",
-    showHeader: true,
-    showFooter: true
-  },
-  {
-    id: "creative",
-    name: "Creative Invoice",
-    description: "Artistic layout perfect for creative professionals",
-    previewImage: "creative-invoice.png",
-    primaryColor: "#ec4899", // Pink
-    fontFamily: "Verdana",
-    showHeader: true,
     showFooter: true
   }
 ];
@@ -74,344 +145,102 @@ export const generateInvoiceNumber = () => {
   return `${prefix}-${timestamp}-${randomNum}`;
 };
 
-// Function to calculate subtotal, taxes, and total
-export const calculateInvoiceAmounts = (
-  items: Array<{
-    productId: string;
-    quantity: number;
-    rate: number;
-    amount: number;
-  }>,
-  discountPercentage = 0,
-  taxRate = 0
-) => {
-  const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
-  const discountAmount = (subtotal * discountPercentage) / 100;
-  const afterDiscount = subtotal - discountAmount;
-  const taxAmount = (afterDiscount * taxRate) / 100;
-  const total = afterDiscount + taxAmount;
-  
-  return {
-    subtotal,
-    discountAmount,
-    afterDiscount,
-    taxAmount,
-    total: Math.round(total * 100) / 100 // Round to 2 decimal places
-  };
-};
-
-// Function to generate a PDF preview for an invoice
+// Function to generate invoice preview - with fallback to HTML
 export const generateInvoicePreview = (
-  invoice: {
-    id: string;
-    customerName: string;
-    date: string;
-    items: Array<{
-      productId: string;
-      quantity: number;
-      rate: number;
-      amount: number;
-    }>;
-    totalAmount: number;
-    notes?: string;
-    terms?: string;
-    status?: string;
-    discountPercentage?: number;
-    taxRate?: number;
-  },
-  companyInfo: {
-    companyName: string;
-    address: string;
-    contactNumber: string;
-    email: string;
-    gstNumber: string;
-    bankDetails: string;
-    logoUrl?: string;
-  },
-  products: Array<{
-    id: string;
-    name: string;
-    price: number;
-    description?: string;
-  }>,
-  templateId: string = "standard",
+  invoice: Invoice,
+  companyInfo: any = {},
+  products: any[] = [],
+  templateId: string = "standard"
 ) => {
-  // Get template configuration
-  const template = INVOICE_TEMPLATES.find(t => t.id === templateId) || INVOICE_TEMPLATES[0];
-  
-  // Create column headers based on template
-  const columns = ["Item", "Quantity", "Rate", "Amount"];
-  if (templateId === "detailed") {
-    columns.splice(2, 0, "Description");
-  }
-  
-  // Map items to rows with product names
-  const data = invoice.items.map(item => {
-    const product = products.find(p => p.id === item.productId);
-    const row = [
-      product ? product.name : "Unknown Product",
-      item.quantity.toString(),
-      `₹${item.rate.toFixed(2)}`,
-      `₹${item.amount.toFixed(2)}`
-    ];
+  try {
+    console.log('Generating invoice preview for:', invoice.id);
     
-    // Add description column for detailed template
-    if (templateId === "detailed") {
-      // Fix: Check if product exists and has description property before accessing it
-      row.splice(2, 0, (product && 'description' in product && product.description) ? product.description : "-");
+    // Try to use jsPDF if available
+    if (typeof window !== 'undefined') {
+      try {
+        // Dynamic import of PDF utils
+        import('./pdfUtils').then(pdfModule => {
+          return pdfModule.generatePdfPreview(
+            ["Item", "Quantity", "Rate", "Amount"],
+            (invoice.items || []).map((item: any) => {
+              const product = products.find(p => p.id === item.productId);
+              return [
+                product?.name || item.description || item.productId || 'Item',
+                (item.quantity || 0).toString(),
+                `₹${(item.unitPrice || 0).toFixed(2)}`,
+                `₹${(item.amount || 0).toFixed(2)}`
+              ];
+            }),
+            {
+              title: companyInfo.companyName || 'Invoice',
+              subtitle: `Invoice #${invoice.number || invoice.id}`,
+              dateInfo: `Date: ${invoice.date || new Date().toLocaleDateString()}`,
+              additionalInfo: [
+                { label: "Customer", value: invoice.customerName || "Unknown" },
+                { label: "Status", value: invoice.status || "Draft" }
+              ]
+            }
+          );
+        }).catch(() => {
+          // PDF generation failed, use HTML fallback
+          return generateHTMLPreview(invoice, companyInfo, products);
+        });
+      } catch (pdfError) {
+        console.warn('PDF generation failed, using HTML fallback:', pdfError);
+        return generateHTMLPreview(invoice, companyInfo, products);
+      }
     }
     
-    return row;
-  });
-  
-  // Calculate all amounts
-  const { subtotal, discountAmount, taxAmount, total } = calculateInvoiceAmounts(
-    invoice.items, 
-    invoice.discountPercentage || 0,
-    invoice.taxRate || 0
-  );
-  
-  // Add subtotal row
-  data.push(["", "", "", `₹${subtotal.toFixed(2)}`]);
-  
-  // Add discount row if applicable
-  if ((invoice.discountPercentage || 0) > 0) {
-    data.push(["Discount", `${invoice.discountPercentage}%`, "", `-₹${discountAmount.toFixed(2)}`]);
-  }
-  
-  // Add tax row if applicable
-  if ((invoice.taxRate || 0) > 0) {
-    data.push(["Tax", `${invoice.taxRate}%`, "", `₹${taxAmount.toFixed(2)}`]);
-  }
-  
-  // Add total row
-  data.push(["", "", "Total", `₹${total.toFixed(2)}`]);
-  
-  // Generate additional info based on template
-  const additionalInfo = [
-    { label: "Customer", value: invoice.customerName || "Unknown" },
-    { label: "Status", value: invoice.status || "Draft" },
-    { label: "GST No.", value: companyInfo.gstNumber }
-  ];
-  
-  if (invoice.notes) {
-    additionalInfo.push({ label: "Notes", value: invoice.notes });
-  }
-  
-  if (invoice.terms) {
-    additionalInfo.push({ label: "Terms", value: invoice.terms });
-  }
-  
-  // Generate PDF preview with different styling based on template
-  return generatePdfPreview(
-    columns,
-    data,
-    {
-      title: companyInfo.companyName,
-      subtitle: `Invoice #: ${invoice.id}`,
-      dateInfo: `Date: ${format(new Date(invoice.date), "dd MMMM yyyy")}`,
-      additionalInfo: additionalInfo,
-      landscape: templateId === "detailed",
-      fontSizeAdjustment: templateId === "modern" ? -1 : 0,
-      filename: `invoice-${invoice.id}.pdf`,
-      style: {
-        primaryColor: template.primaryColor,
-        fontFamily: template.fontFamily,
-        showHeader: template.showHeader,
-        showFooter: template.showFooter
-      },
-      logoUrl: companyInfo.logoUrl
-    }
-  );
-};
-
-// Function to create an invoice object from form data
-export const createInvoiceFromFormData = (
-  formData: {
-    invoiceNumber: string;
-    invoiceDate: string;
-    dueDate: string;
-    customerId: string;
-    customerName: string;
-    items: Array<{
-      productId: string;
-      quantity: number;
-      rate: number;
-      amount: number;
-    }>;
-    notes?: string;
-    terms?: string;
-    discountPercentage?: number;
-    taxRate?: number;
-    templateId?: string;
-  }
-): Invoice => {
-  const { total } = calculateInvoiceAmounts(
-    formData.items, 
-    formData.discountPercentage || 0, 
-    formData.taxRate || 0
-  );
-  
-  return {
-    id: formData.invoiceNumber,
-    number: formData.invoiceNumber,
-    customerId: formData.customerId,
-    date: formData.invoiceDate,
-    dueDate: formData.dueDate,
-    items: formData.items.map(item => ({
-      productId: item.productId,
-      description: "Product", // Add required field
-      quantity: item.quantity,
-      unitPrice: item.rate,
-      amount: item.amount
-    })),
-    status: "draft",
-    subtotal: total - ((formData.taxRate || 0) * total / 100),
-    taxRate: formData.taxRate || 0,
-    taxAmount: ((formData.taxRate || 0) * total / 100),
-    total,
-    notes: formData.notes || "",
-    termsAndConditions: formData.terms || "",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    // Extra fields for compatibility
-    customerName: formData.customerName,
-    amount: total,
-    orderId: `ORD-${Date.now().toString().substring(7)}`
-  };
-};
-
-// Function to create an invoice from an existing order
-export const createInvoiceFromOrder = (
-  order: {
-    id: string;
-    date: string;
-    items: Array<{
-      customerId: string;
-      productId: string;
-      quantity: number;
-    }>;
-    customerName?: string;
-  },
-  products: Array<{
-    id: string;
-    name: string;
-    price: number;
-  }>,
-  customerId: string,
-  customerName: string
-): Invoice => {
-  // Map order items to invoice items with calculated amounts
-  const invoiceItems = order.items.map(item => {
-    const product = products.find(p => p.id === item.productId);
-    const rate = product ? product.price : 0;
+    // Fallback to HTML preview
+    return generateHTMLPreview(invoice, companyInfo, products);
     
-    return {
-      productId: item.productId,
-      description: product?.name || "Product",
-      quantity: item.quantity,
-      unitPrice: rate,
-      amount: item.quantity * rate
-    };
-  });
-
-  // Calculate total amount
-  const total = invoiceItems.reduce((sum, item) => sum + item.amount, 0);
-  
-  // Get current date
-  const currentDate = new Date().toISOString().split('T')[0];
-  // Create due date 15 days from now
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 15);
-  const formattedDueDate = dueDate.toISOString().split('T')[0];
-  
-  return {
-    id: generateInvoiceNumber(),
-    number: generateInvoiceNumber(),
-    customerId: customerId,
-    date: order.date,
-    dueDate: formattedDueDate,
-    items: invoiceItems,
-    status: "draft",
-    subtotal: total,
-    taxRate: 0,
-    taxAmount: 0,
-    total: total,
-    notes: "",
-    termsAndConditions: "",
-    createdAt: currentDate,
-    updatedAt: currentDate,
-    // Additional fields for compatibility
-    orderId: order.id,
-    invoiceNumber: generateInvoiceNumber(),
-    customerName: customerName || order.customerName || "Unknown Customer",
-    amount: total
-  };
+  } catch (error) {
+    console.error('Error in generateInvoicePreview:', error);
+    return generateHTMLPreview(invoice, companyInfo, products);
+  }
 };
 
-// Generate a formatted date string in YYYY-MM-DD format
+// Function to format date for input
 export const formatDateForInput = (date: Date): string => {
-  return format(date, "yyyy-MM-dd");
+  return date.toISOString().split('T')[0];
 };
 
-// Generate due date (typically 15 days after invoice date)
-export const generateDueDate = (invoiceDate: string, daysToAdd = 15): string => {
-  const date = new Date(invoiceDate);
-  date.setDate(date.getDate() + daysToAdd);
+// Function to generate due date
+export const generateDueDate = (dateStr: string, days: number = 30): string => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
   return formatDateForInput(date);
 };
 
-// Partial update to fix status errors
-export const generateInvoiceFromData = (data: any) => {
-  // Get current date
-  const currentDate = new Date().toISOString().split('T')[0];
-  // Create due date 15 days from now
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 15);
-  const formattedDueDate = dueDate.toISOString().split('T')[0];
+// Function to create invoice from form data
+export const createInvoiceFromFormData = (data: any): Invoice => {
+  const currentDate = new Date().toISOString();
   
   return {
-    id: `INV-${Date.now()}`,
-    customerId: data.customerId || "",
-    customerName: data.customerName || "",
-    date: currentDate,
-    dueDate: formattedDueDate, // Added dueDate property
-    items: data.items.map((item: any) => ({
+    id: data.invoiceNumber || generateInvoiceNumber(),
+    number: data.invoiceNumber || generateInvoiceNumber(),
+    date: data.invoiceDate || currentDate,
+    dueDate: data.dueDate || generateDueDate(data.invoiceDate || currentDate),
+    customerId: data.customerId || '',
+    items: (data.items || []).map((item: any) => ({
       productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice || 0,
-      productName: "Product", // Include required property
-      unit: "unit" // Include required property
+      description: item.description || 'Product',
+      quantity: item.quantity || 0,
+      unitPrice: item.unitPrice || item.rate || 0,
+      amount: item.amount || (item.quantity * (item.unitPrice || item.rate || 0))
     })),
-    status: "draft", // Fix: Using valid status value
-    subtotal: data.subtotal || 0,
-    total: data.total || 0,
-    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
-  };
-};
-
-// Function to create a mock invoice
-export const createMockInvoice = () => {
-  return {
-    id: `INV-${Date.now()}`,
-    customerId: "CUST-001",
-    customerName: "Sample Customer",
-    date: new Date().toISOString(),
-    items: [
-      {
-        id: `ITEM-${Date.now()}-1`,
-        productId: "PROD-001",
-        productName: "Sample Product",
-        quantity: 5,
-        unitPrice: 100,
-        unit: "unit"
-      }
-    ],
-    status: "draft", // Fix: Using valid status value
-    subtotal: 500,
-    tax: 50,
-    discount: 0,
-    total: 550,
-    invoiceNumber: `INV-${Date.now().toString().slice(-6)}`
+    subtotal: (data.items || []).reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
+    taxRate: data.taxRate || 0,
+    taxAmount: 0,
+    total: (data.items || []).reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
+    status: 'draft',
+    notes: data.notes || '',
+    termsAndConditions: data.terms || '',
+    createdAt: currentDate,
+    updatedAt: currentDate,
+    // Additional compatibility fields
+    customerName: data.customerName || '',
+    amount: (data.items || []).reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
+    orderId: data.orderId || `ORD-${Date.now()}`
   };
 };
