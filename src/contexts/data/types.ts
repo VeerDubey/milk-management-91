@@ -1,3 +1,4 @@
+
 import { 
   Customer, 
   Product, 
@@ -22,18 +23,21 @@ export interface DataContextType {
   addCustomer: (customer: Omit<Customer, "id">) => Customer;
   updateCustomer: (id: string, customerData: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
+  getCustomerById: (id: string) => Customer | undefined;
   
   // Product state
   products: Product[];
   addProduct: (product: Omit<Product, "id">) => Product;
   updateProduct: (id: string, productData: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+  getProductById: (id: string) => Product | undefined;
   
   // Order state
   orders: Order[];
   addOrder: (order: Omit<Order, "id">) => Order;
   updateOrder: (id: string, orderData: Partial<Order>) => void;
   deleteOrder: (id: string) => void;
+  getOrderById: (id: string) => Order | undefined;
   addBatchOrders?: (orders: Omit<Order, "id">[]) => Order[];
   duplicateOrder?: (orderId: string, newDate?: string) => Order | null;
   calculateOrderTotal?: (items: OrderItem[]) => number;
@@ -127,5 +131,6 @@ export interface DataContextType {
   addInvoice: (invoice: any) => string;
   updateInvoice: (id: string, invoiceData: any) => void;
   deleteInvoice: (id: string) => void;
+  getInvoiceById: (id: string) => any;
   generateInvoiceFromOrder: (orderId: string) => string | null;
 }
