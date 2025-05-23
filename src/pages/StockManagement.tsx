@@ -36,14 +36,20 @@ export default function StockManagement() {
       return;
     }
     
+    // Get product to find its price
+    const product = products.find(p => p.id === selectedProduct);
+    const unitPrice = product?.price || 0;
+    
     // Create new stock entry with items array containing the product
     addStockEntry({
       date: new Date().toISOString(),
       type: 'addition',
       totalAmount: 0,
+      supplierId: '', // Adding a default empty string for supplierId which is required
       items: [{
         productId: selectedProduct,
-        quantity: Number(stockQuantity)
+        quantity: Number(stockQuantity),
+        unitPrice: unitPrice // Adding the required unitPrice property
       }]
     });
     
