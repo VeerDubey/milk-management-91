@@ -108,7 +108,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     try {
       console.log('Generating invoice preview for invoice:', invoice.id);
       
-      // Get products and company info from localStorage as fallback
+      // Get products from localStorage as fallback
       const products = JSON.parse(localStorage.getItem('products') || '[]');
       
       // Use specified template or fallback to selected template
@@ -116,34 +116,104 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       console.log('Using template:', templateToUse);
       
       // Try to generate preview using the utility function
-      const previewResult = generateInvoicePreview(
-        invoice,
-        companyInfo,
-        products,
-        templateToUse
-      );
-      
-      // Handle different return types from generateInvoicePreview
-      if (typeof previewResult === 'string') {
-        // Already a data URL string
-        return previewResult;
-      }
-      
-      // If it's a Promise, await it
-      if (previewResult && typeof previewResult === 'object' && 'then' in previewResult) {
-        return await previewResult;
+      let previewResult;
+      try {
+        previewResult = generateInvoicePreview(
+          invoice,
+          companyInfo,
+          products,
+          templateToUse
+        );
+        
+        // Handle different return types from generateInvoicePreview
+        if (typeof previewResult === 'string') {
+          // Already a data URL string
+          return previewResult;
+        }
+        
+        // If it's a Promise, await it
+        if (previewResult && typeof previewResult === 'object' && 'then' in previewResult) {
+          return await previewResult;
+        }
+        
+        // If it's a jsPDF object, try to get data URL (in a type-safe way)
+        if (previewResult && typeof previewResult === 'object' && 'output' in previewResult) {
+          const output = previewResult.output as unknown as Function;
+          if (typeof output === 'function') {
+            return output.call(previewResult, 'datauristring');
+          }
+        }
+      } catch (innerError) {
+        console.error('Error generating PDF preview:', innerError);
+        // Continue to fallback
       }
       
       // Fallback: create a simple HTML preview
       const fallbackHtml = `
         <html>
-        <head><title>Invoice ${invoice.id}</title></head>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-          <h1>Invoice ${invoice.number || invoice.id}</h1>
-          <p>Customer: ${invoice.customerName || 'Unknown'}</p>
-          <p>Date: ${invoice.date || 'N/A'}</p>
-          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
-          <p style="color: #666; font-size: 12px;">Preview generated in fallback mode</p>
+        <head>
+          <title>Invoice ${invoice.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 30px; }
+            h1 { color: #333; }
+            .invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+            .invoice-body { margin-bottom: 40px; }
+            table { width: 100%; border-collapse: collapse; }
+            table th, table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+            .total-row td { font-weight: bold; border-top: 2px solid #000; }
+            .footer { margin-top: 60px; font-size: 14px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-header">
+            <div>
+              <h1>${companyInfo.companyName}</h1>
+              <p>${companyInfo.address}</p>
+              <p>GST: ${companyInfo.gstNumber}</p>
+            </div>
+            <div>
+              <h2>INVOICE</h2>
+              <p>Invoice #: ${invoice.number || invoice.id}</p>
+              <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
+              <p>Due Date: ${invoice.dueDate || 'N/A'}</p>
+            </div>
+          </div>
+          
+          <div class="invoice-body">
+            <h3>Bill To:</h3>
+            <p>${invoice.customerName || 'Customer'}</p>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Quantity</th>
+                  <th>Rate</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoice.items.map(item => `
+                  <tr>
+                    <td>${products.find((p: any) => p.id === item.productId)?.name || 'Product'}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${typeof item.unitPrice !== 'undefined' ? item.unitPrice : item.rate}</td>
+                    <td>₹${item.amount}</td>
+                  </tr>
+                `).join('')}
+                <tr class="total-row">
+                  <td colspan="3" style="text-align: right;">Total:</td>
+                  <td>₹${invoice.total || invoice.subtotal || '0.00'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="footer">
+            <p><strong>Notes:</strong> ${invoice.notes || 'No notes'}</p>
+            <p><strong>Terms:</strong> ${invoice.termsAndConditions || 'Standard terms and conditions apply'}</p>
+            <p>Thank you for your business!</p>
+          </div>
         </body>
         </html>
       `;
