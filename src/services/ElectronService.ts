@@ -124,7 +124,7 @@ export const ElectronService = {
   
   // Data import/export operations
   exportData: async (data: string, filename: string) => {
-    if (typeof window !== 'undefined' && window.electron && window.electron.exportData) {
+    if (typeof window !== 'undefined' && window.electron) {
       return await window.electron.exportData(data, filename);
     }
     
@@ -140,7 +140,7 @@ export const ElectronService = {
   },
   
   importData: async () => {
-    if (typeof window !== 'undefined' && window.electron && window.electron.importData) {
+    if (typeof window !== 'undefined' && window.electron) {
       return await window.electron.importData();
     }
     
@@ -188,7 +188,7 @@ export const ElectronService = {
   
   // Log saving operation
   saveLog: async (data: string, filename: string) => {
-    if (typeof window !== 'undefined' && window.electron && window.electron.saveLog) {
+    if (typeof window !== 'undefined' && window.electron) {
       return await window.electron.saveLog(data, filename);
     }
     
