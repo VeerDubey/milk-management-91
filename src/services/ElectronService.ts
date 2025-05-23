@@ -1,4 +1,3 @@
-
 // ElectronService.ts - Unified interface for Electron functionality with web fallbacks
 
 // Define the interface for the Electron API

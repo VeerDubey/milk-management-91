@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -449,7 +448,7 @@ const OrderHistory = () => {
                 <DatePicker
                   date={filterDate}
                   setDate={setFilterDate}
-                  placeholder="Select date"
+                  placeholderText="Select date"
                 />
                 {filterDate && (
                   <Button 
@@ -682,7 +681,7 @@ const OrderHistory = () => {
                 <DatePicker 
                   date={duplicateDate} 
                   setDate={setDuplicateDate} 
-                  placeholder="Select date" 
+                  placeholderText="Select date" 
                 />
               </div>
             </div>

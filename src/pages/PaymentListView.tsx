@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -288,7 +287,7 @@ export default function PaymentListView() {
                   <DatePicker
                     date={filterDate}
                     setDate={setFilterDate}
-                    placeholder="Filter by date"
+                    placeholderText="Filter by date"
                   />
                   {filterDate && (
                     <Button variant="ghost" size="icon" onClick={() => setFilterDate(undefined)}>
