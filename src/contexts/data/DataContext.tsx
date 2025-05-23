@@ -145,11 +145,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const customer = getCustomerById(order.customerId || '');
     if (!customer) return null;
 
+    const currentDate = new Date().toISOString();
     const invoiceData: Omit<Invoice, 'id'> = {
       customerId: order.customerId || '',
       customerName: customer.name,
       number: `INV-${Date.now()}`,
-      date: new Date().toISOString(),
+      date: currentDate,
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       items: order.items.map(item => ({
         productId: item.productId,
@@ -159,10 +160,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         amount: item.quantity * item.unitPrice
       })),
       subtotal: order.total || 0,
+      taxRate: 0,
+      taxAmount: 0,
       total: order.total || 0,
       status: 'draft' as const,
       notes: '',
       termsAndConditions: '',
+      createdAt: currentDate,
+      updatedAt: currentDate,
     };
 
     return addInvoice(invoiceData);
@@ -256,7 +261,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         getExpensesByCategory: expenseState.getExpensesByCategory,
         getExpensesByDateRange: expenseState.getExpensesByDateRange,
         getTotalExpenses: expenseState.getTotalExpenses,
-        getExpenseStatsByCategory: expenseState.getExpenseStatsByCategory,
+        getExpenseStatsByCategory: () => {
+          const stats = expenseState.getExpenseStatsByCategory();
+          return Object.entries(stats).map(([category, total]) => ({
+            category,
+            total
+          }));
+        },
 
         // TrackSheet state
         trackSheets: trackSheetState.trackSheets,
