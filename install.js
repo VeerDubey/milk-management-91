@@ -52,17 +52,38 @@ function runCommand(command, options = {}) {
   }
 }
 
+// Set npm configuration to avoid Git usage
+function configureNpm() {
+  console.log('\nConfiguring npm for better compatibility...');
+  
+  // Create or update .npmrc file with appropriate settings
+  const npmrcPath = path.join(__dirname, '.npmrc');
+  const npmrcContent = `
+registry=https://registry.npmjs.org/
+fetch-timeout=600000
+fetch-retry-mintimeout=60000
+fetch-retry-maxtimeout=300000
+legacy-peer-deps=true
+prefer-offline=true
+git=false
+git-tag-version=false
+`;
+  
+  fs.writeFileSync(npmrcPath, npmrcContent.trim());
+  console.log('Created .npmrc file to optimize installation');
+  
+  // Set npm config via CLI as well for this session
+  runCommand('npm config set git-tag-version false');
+  runCommand('npm config set registry https://registry.npmjs.org/');
+  runCommand('npm config set git false');
+}
+
 // Clean install function
 async function installDependencies() {
   console.log('\n📦 Installing dependencies...');
   
   // Configure npm options for better compatibility
-  console.log('Configuring npm for better compatibility...');
-  runCommand('npm config set git-tag-version false');
-  runCommand('npm config set registry https://registry.npmjs.org/');
-  
-  // IMPORTANT: Disable git for package installation
-  runCommand('npm config set git false');
+  configureNpm();
   
   // Clear npm cache if needed
   console.log('Cleaning npm cache...');
@@ -78,14 +99,35 @@ async function installDependencies() {
     const forceSuccess = runCommand('npm install --legacy-peer-deps --force --no-git');
     
     if (!forceSuccess) {
-      console.log('\n⚠️ Force install also failed. Trying alternative approach...');
+      console.log('\n⚠️ Force install also failed. Trying with minimal core dependencies...');
       
-      // Skip problematic packages for now
-      runCommand('npm install --no-save --no-package-lock --no-optional --no-git');
+      // Try installing just the core dependencies
+      const corePackages = [
+        'react', 
+        'react-dom', 
+        'react-router-dom',
+        '@radix-ui/react-popover', 
+        '@radix-ui/react-tabs', 
+        'react-day-picker', 
+        'date-fns'
+      ];
       
-      // Create a minimal configuration to run the application without Electron
-      console.log('\nCreating fallback configuration for web-only mode...');
-      createFallbackConfig();
+      console.log('\nInstalling core dependencies individually...');
+      let individualSuccess = true;
+      
+      for (const pkg of corePackages) {
+        const pkgSuccess = runCommand(`npm install --no-save --no-git ${pkg}`, { ignoreError: true });
+        if (!pkgSuccess) {
+          console.warn(`⚠️ Failed to install ${pkg}`);
+          individualSuccess = false;
+        }
+      }
+      
+      if (!individualSuccess) {
+        // Create a minimal configuration to run the application without problematic dependencies
+        console.log('\n⚠️ Some package installations failed. Creating fallback configuration for web-only mode...');
+        createFallbackConfig();
+      }
     }
   }
   
