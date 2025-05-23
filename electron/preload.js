@@ -8,17 +8,17 @@ log.info('Preload script initializing...');
 // Use a more efficient way to expose methods
 const API = {
   // Data import/export
-  exportData: (data) => {
+  exportData: (data, filename) => {
     log.info('exportData called from renderer');
-    return ipcRenderer.invoke('export-data', data);
+    return ipcRenderer.invoke('export-data', data, filename);
   },
   importData: () => {
     log.info('importData called from renderer'); 
     return ipcRenderer.invoke('import-data');
   },
-  saveLog: (logData) => {
+  saveLog: (logData, filename) => {
     log.info('saveLog called from renderer');
-    return ipcRenderer.invoke('save-log', logData);
+    return ipcRenderer.invoke('save-log', logData, filename);
   },
   isElectron: true,
   
@@ -94,6 +94,20 @@ const API = {
     isPlatform: (platform) => {
       return ipcRenderer.invoke('is-platform', platform);
     },
+  },
+  
+  // Invoice operations
+  downloadInvoice: (data, filename) => {
+    log.info('downloadInvoice called from renderer');
+    return ipcRenderer.invoke('download-invoice', data, filename);
+  },
+  printInvoice: (data) => {
+    log.info('printInvoice called from renderer');
+    return ipcRenderer.invoke('print-invoice', data);
+  },
+  getPrinters: () => {
+    log.info('getPrinters called from renderer');
+    return ipcRenderer.invoke('get-printers');
   }
 };
 

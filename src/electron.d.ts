@@ -1,9 +1,9 @@
 
 interface ElectronAPI {
   // Data operations
-  exportData: (data: string) => Promise<{ success: boolean; filePath?: string; message?: string; error?: string }>;
+  exportData: (data: string, filename: string) => Promise<{ success: boolean; filePath?: string; message?: string; error?: string }>;
   importData: () => Promise<{ success: boolean; data?: string; message?: string; error?: string }>;
-  saveLog: (logData: string) => Promise<{ success: boolean; path?: string; error?: string }>;
+  saveLog: (logData: string, filename: string) => Promise<{ success: boolean; path?: string; error?: string }>;
   isElectron: boolean;
   
   // Event listeners
@@ -49,8 +49,8 @@ interface ElectronAPI {
   system: {
     openExternal: (url: string) => Promise<boolean>;
     openPath: (path: string) => Promise<boolean>;
-    copyToClipboard: (text: string) => Promise<boolean>;
-    readFromClipboard: () => Promise<string>;
+    copyToClipboard: (text: string) => Promise<{success: boolean, error?: string}>;
+    readFromClipboard: () => Promise<{success: boolean, error?: string, text: string}>;
     isPlatform: (platform: string) => Promise<boolean>;
   };
 
