@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { 
@@ -15,7 +14,7 @@ import {
   Download, ChevronDown, ChevronUp, FilterX, ArrowUpDown 
 } from 'lucide-react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { format, parseISO, isWithinInterval } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfMonth, subMonths } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,14 +24,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
+import { DateRange } from 'react-day-picker';
 
 export default function SupplierLedger() {
   const { toast } = useToast();
   const { suppliers, supplierPayments } = useData();
   
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>('');
-  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth() - 3, 1), // 3 months ago
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subMonths(startOfMonth(new Date()), 3), // 3 months ago
     to: new Date()
   });
   const [sortColumn, setSortColumn] = useState<string>('date');
@@ -169,7 +169,7 @@ export default function SupplierLedger() {
       
       rows.push([
         payment.date,
-        payment.reference || '',
+        payment.reference || payment.referenceNumber || '',
         payment.description || `Payment to ${selectedSupplier?.name}`,
         payment.paymentMethod || '',
         payment.amount.toFixed(2),
@@ -375,7 +375,7 @@ export default function SupplierLedger() {
                                 </Button>
                               </TableCell>
                               <TableCell>{formatDate(payment.date)}</TableCell>
-                              <TableCell>{payment.reference || '-'}</TableCell>
+                              <TableCell>{payment.reference || payment.referenceNumber || '-'}</TableCell>
                               <TableCell>{payment.description || `Payment to ${selectedSupplier.name}`}</TableCell>
                               <TableCell>
                                 {payment.paymentMethod && (

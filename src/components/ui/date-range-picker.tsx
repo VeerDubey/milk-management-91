@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -16,13 +17,17 @@ export type DateRangePickerValue = DateRange;
 interface DateRangePickerProps {
   value?: DateRangePickerValue;
   onValueChange?: (value: DateRangePickerValue) => void;
+  onChange?: (value: DateRangePickerValue) => void;
   className?: string;
+  align?: string;
 }
 
 export function DateRangePicker({
   value,
   onValueChange,
+  onChange,
   className,
+  align = "start",
 }: DateRangePickerProps) {
   const [date, setDate] = React.useState<DateRangePickerValue>(
     value || { from: undefined, to: undefined }
@@ -39,6 +44,9 @@ export function DateRangePicker({
     setDate(selectedDate);
     if (onValueChange) {
       onValueChange(selectedDate);
+    }
+    if (onChange) {
+      onChange(selectedDate);
     }
   };
 
@@ -69,7 +77,7 @@ export function DateRangePicker({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align={align as any}>
           <Calendar
             initialFocus
             mode="range"

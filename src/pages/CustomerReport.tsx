@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { 
@@ -36,6 +35,7 @@ export default function CustomerReport() {
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
 
   // Calculate date ranges based on timeFrame
   const dateRange = useMemo(() => {
@@ -314,6 +314,27 @@ export default function CustomerReport() {
 
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  // When using orders, make sure to use the date property instead of orderDate
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+    
+    if (selectedCustomerId) {
+      result = result.filter(order => order.customerId === selectedCustomerId);
+    }
+    
+    if (dateRange.from && dateRange.to) {
+      result = result.filter(order => {
+        const orderDate = new Date(order.date); // Use date instead of orderDate
+        return isWithinInterval(orderDate, { 
+          start: startOfDay(dateRange.from), 
+          end: endOfDay(dateRange.to) 
+        });
+      });
+    }
+    
+    return result;
+  }, [orders, selectedCustomerId, dateRange]);
 
   return (
     <div className="container mx-auto p-6">

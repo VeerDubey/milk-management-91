@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { 
@@ -67,7 +66,7 @@ export default function SupplierPayments() {
     supplierId: '',
     amount: 0,
     date: format(new Date(), 'yyyy-MM-dd'),
-    paymentMethod: 'cash',
+    paymentMethod: 'cash', // Using string to support more payment methods
     reference: '',
     description: '',
     notes: '',
@@ -144,6 +143,29 @@ export default function SupplierPayments() {
   // Calculate total amount
   const totalAmount = useMemo(() => {
     return sortedPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  }, [sortedPayments]);
+  
+  // Cash and bank transfer calculations
+  const cashPayments = useMemo(() => {
+    return sortedPayments
+      .filter(p => p.paymentMethod === 'cash')
+      .reduce((sum, p) => sum + p.amount, 0);
+  }, [sortedPayments]);
+  
+  const bankTransferPayments = useMemo(() => {
+    return sortedPayments
+      .filter(p => ['bank_transfer', 'online', 'bank'].includes(p.paymentMethod))
+      .reduce((sum, p) => sum + p.amount, 0);
+  }, [sortedPayments]);
+  
+  const cashPaymentCount = useMemo(() => {
+    return sortedPayments.filter(p => p.paymentMethod === 'cash').length;
+  }, [sortedPayments]);
+  
+  const bankTransferCount = useMemo(() => {
+    return sortedPayments.filter(p => 
+      ['bank_transfer', 'online', 'bank'].includes(p.paymentMethod)
+    ).length;
   }, [sortedPayments]);
   
   // Function to handle sorting
@@ -394,13 +416,10 @@ export default function SupplierPayments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ₹{sortedPayments
-                  .filter(p => p.paymentMethod === 'cash')
-                  .reduce((sum, p) => sum + p.amount, 0)
-                  .toFixed(2)}
+                ₹{cashPayments.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {sortedPayments.filter(p => p.paymentMethod === 'cash').length} transactions
+                {cashPaymentCount} transactions
               </p>
             </CardContent>
           </Card>
@@ -411,15 +430,10 @@ export default function SupplierPayments() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ₹{sortedPayments
-                  .filter(p => p.paymentMethod === 'bank_transfer' || p.paymentMethod === 'online')
-                  .reduce((sum, p) => sum + p.amount, 0)
-                  .toFixed(2)}
+                ₹{bankTransferPayments.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
-                {sortedPayments.filter(p => 
-                  p.paymentMethod === 'bank_transfer' || p.paymentMethod === 'online'
-                ).length} transactions
+                {bankTransferCount} transactions
               </p>
             </CardContent>
           </Card>

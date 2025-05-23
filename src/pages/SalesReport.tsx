@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { 
@@ -22,7 +21,7 @@ import {
   LineChart as LineChartIcon, Calendar, Filter 
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, parseISO, subDays, subMonths, isWithinInterval } from 'date-fns';
+import { format, parseISO, subDays, subMonths, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { ElectronService } from '@/services/ElectronService';
 import { useToast } from '@/components/ui/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -52,18 +51,24 @@ export default function SalesReport() {
     return ['all', ...Array.from(uniqueCategories)];
   }, [products]);
 
-  // Filter orders by date range
+  // When filtering by date, use order.date instead of orderDate
   const filteredOrders = useMemo(() => {
     if (!dateRange.from || !dateRange.to) return orders;
     
     return orders.filter(order => {
-      const orderDate = new Date(order.orderDate);
+      const orderDate = new Date(order.date);
       return isWithinInterval(orderDate, {
-        start: dateRange.from,
-        end: dateRange.to
+        start: startOfDay(dateRange.from),
+        end: endOfDay(dateRange.to)
       });
     });
   }, [orders, dateRange]);
+
+  // When calculating revenue, use unitPrice instead of rate for OrderItems
+  const calculateRevenue = (items: OrderItem[]) => {
+    return items.reduce((total, item) => 
+      total + (item.unitPrice * item.quantity), 0);
+  };
 
   // Filter invoices by date range
   const filteredInvoices = useMemo(() => {
@@ -138,7 +143,7 @@ export default function SalesReport() {
             };
             
             currentData.totalQuantity += item.quantity;
-            currentData.totalAmount += item.quantity * item.rate;
+            currentData.totalAmount += item.quantity * item.unitPrice;
             productSalesMap.set(product.id, currentData);
           }
         });

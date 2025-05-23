@@ -1,4 +1,3 @@
-
 import { 
   Customer, 
   Product, 
@@ -77,6 +76,8 @@ export interface DataContextType {
   // Supplier product rates
   supplierProductRates: any[];
   addSupplierProductRate: (rate: any) => any;
+  updateSupplierProductRate: (id: string, rateData: any) => void;
+  deleteSupplierProductRate: (id: string) => void;
   
   // Supplier payment state
   supplierPayments: SupplierPayment[];

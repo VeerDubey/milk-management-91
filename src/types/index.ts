@@ -36,6 +36,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   price?: number; // For dashboard compatibility
+  rate?: number; // Alias for unitPrice
   id?: string; // Added to support InvoiceService
   productName?: string; // Added for InvoiceService
   unit?: string; // Added for InvoiceService
@@ -44,6 +45,7 @@ export interface OrderItem {
 export interface Order {
   id: string;
   date: string;
+  orderDate?: string; // Alias for date
   items: OrderItem[];
   vehicleId: string;
   salesmanId: string;
@@ -61,9 +63,10 @@ export interface Payment {
   orderId?: string; // Made optional for compatibility with PaymentCreate
   date: string;
   amount: number;
-  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
+  paymentMethod: string; // Changed from enum to string to support more payment methods
+  reference?: string;
+  referenceNumber?: string; // For backward compatibility
   notes?: string;
-  referenceNumber?: string; // Added for PaymentListView
   status?: 'completed' | 'pending' | 'failed'; // Added for PaymentListView with proper type
 }
 
@@ -108,10 +111,16 @@ export interface SupplierPayment {
   supplierId: string;
   amount: number;
   date: string;
-  paymentMethod: 'cash' | 'bank' | 'upi' | 'other';
-  referenceNumber?: string;
+  paymentMethod: string; // Changed from enum to string to support more payment methods
+  reference?: string;
+  referenceNumber?: string; // For backward compatibility
   notes?: string;
-  method?: 'cash' | 'bank' | 'upi' | 'other'; // For backward compatibility
+  method?: string; // For backward compatibility
+  status?: 'completed' | 'pending' | 'failed';
+  description?: string;
+  receiptNumber?: string;
+  transactionId?: string;
+  bankDetails?: string;
 }
 
 export interface Vehicle {

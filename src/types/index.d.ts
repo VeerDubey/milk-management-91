@@ -234,11 +234,16 @@ export interface SupplierPayment {
   amount: number;
   date: string;
   paymentMethod: string;
-  referenceNumber?: string;
+  reference?: string;
+  description?: string;
   notes?: string;
-  status: 'completed' | 'pending' | 'failed';
+  status?: 'completed' | 'pending' | 'failed';
   createdAt?: string;
   updatedAt?: string;
+  receiptNumber?: string;
+  transactionId?: string;
+  bankDetails?: string;
+  referenceNumber?: string; // Alias for reference for compatibility
 }
 
 export interface StockTransaction {

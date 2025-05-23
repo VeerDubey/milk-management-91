@@ -14,20 +14,33 @@ import {
 } from "@/components/ui/popover"
 
 export interface DateRangePickerProps {
-  date: DateRange | undefined
-  onDateChange?: (date: DateRange | undefined) => void
-  setDate?: (date: DateRange | undefined) => void
-  className?: string
+  date?: DateRange | undefined;
+  value?: DateRange | undefined;
+  onDateChange?: (date: DateRange | undefined) => void;
+  onChange?: (date: DateRange | undefined) => void;
+  onValueChange?: (date: DateRange | undefined) => void;
+  setDate?: (date: DateRange | undefined) => void;
+  className?: string;
+  align?: string;
 }
 
 export function DatePickerWithRange({
   date,
+  value,
   onDateChange,
+  onChange,
+  onValueChange,
   setDate,
   className,
+  align = "center",
 }: DateRangePickerProps) {
+  // Use value prop if date is not provided
+  const dateValue = date || value;
+  
   const handleDateChange = (range: DateRange | undefined) => {
     if (onDateChange) onDateChange(range);
+    if (onChange) onChange(range);
+    if (onValueChange) onValueChange(range);
     if (setDate) setDate(range);
   };
 
@@ -40,29 +53,29 @@ export function DatePickerWithRange({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !dateValue && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
+            {dateValue?.from ? (
+              dateValue.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                  {format(dateValue.from, "LLL dd, y")} - {format(dateValue.to, "LLL dd, y")}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(dateValue.from, "LLL dd, y")
               )
             ) : (
               <span>Pick a date range</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align={align as any}>
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={date?.from}
-            selected={date}
+            defaultMonth={dateValue?.from}
+            selected={dateValue}
             onSelect={handleDateChange}
             numberOfMonths={2}
             className="pointer-events-auto"
