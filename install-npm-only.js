@@ -22,12 +22,16 @@ process.env.npm_config_git = 'false';
 process.env.npm_config_git_tag_version = 'false';
 process.env.npm_config_no_git_tag_version = 'true';
 
-// Remove any bun files
+// Remove any bun files safely
 const bunFiles = ['bun.lockb', 'bunfig.toml'];
 bunFiles.forEach(file => {
-  if (fs.existsSync(file)) {
-    fs.unlinkSync(file);
-    console.log(`✅ Removed ${file}`);
+  try {
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      console.log(`✅ Removed ${file}`);
+    }
+  } catch (e) {
+    console.log(`Note: ${file} was already removed`);
   }
 });
 

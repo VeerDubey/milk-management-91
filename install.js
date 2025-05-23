@@ -20,31 +20,18 @@ console.log(`
 process.env.npm_config_user_agent = 'npm';
 process.env.npm_config_git = 'false';
 
-// Remove bun files completely
+// Remove bun files if they exist (no error if missing)
 const filesToRemove = ['bun.lockb', 'bunfig.toml'];
 filesToRemove.forEach(file => {
-  if (fs.existsSync(file)) {
-    fs.unlinkSync(file);
-    console.log(`Removed ${file}`);
+  try {
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      console.log(`Removed ${file}`);
+    }
+  } catch (error) {
+    console.log(`Note: ${file} was already removed or doesn't exist`);
   }
 });
-
-// Create .npmrc with strict npm-only configuration
-const npmrcContent = `
-registry=https://registry.npmjs.org/
-fetch-timeout=600000
-legacy-peer-deps=true
-git=false
-git-tag-version=false
-user-agent=npm
-@electron:registry=https://registry.npmjs.org/
-@electron/node-gyp:git=false
-node-gyp:git=false
-electron:git=false
-`;
-
-fs.writeFileSync('.npmrc', npmrcContent.trim());
-console.log('Created .npmrc for npm-only usage');
 
 function runNpmCommand(command) {
   try {
