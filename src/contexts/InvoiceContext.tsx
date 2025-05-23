@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Invoice, Customer, Product } from '@/types';
+import { Invoice } from '@/types';
 import { 
   generateInvoiceNumber,
   INVOICE_TEMPLATES
 } from '../utils/invoiceUtils';
 import { toast } from 'sonner';
-import { ElectronService } from '@/services/ElectronService';
 
 interface InvoiceContextType {
   invoices: Invoice[];

@@ -1,256 +1,267 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useCustomerState } from './useCustomerState';
-import { useProductState } from './useProductState';
-import { useOrderState } from './useOrderState';
-import { usePaymentState } from './usePaymentState';
-import { useProductRateState } from './useProductRateState';
-import { useStockState } from './useStockState';
-import { useSupplierState } from './useSupplierState';
-import { useUISettingsState } from './useUISettingsState';
-import { useVehicleSalesmanState } from './useVehicleSalesmanState';
-import { useExpenseState } from './useExpenseState';
-import { useTrackSheetState } from './useTrackSheetState';
-import { useInvoices } from '@/contexts/InvoiceContext';
-import { DataContextType } from './types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Customer, Product, Order, Invoice } from '@/types';
 import { toast } from 'sonner';
-import InvoiceService from '@/services/InvoiceService';
-import { VehicleTrip } from '@/types';
+
+interface DataContextType {
+  customers: Customer[];
+  products: Product[];
+  orders: Order[];
+  addCustomer: (customer: Omit<Customer, 'id'>) => Customer;
+  updateCustomer: (id: string, customer: Partial<Customer>) => void;
+  deleteCustomer: (id: string) => void;
+  getCustomerById: (id: string) => Customer | undefined;
+  addProduct: (product: Omit<Product, 'id'>) => Product;
+  updateProduct: (id: string, product: Partial<Product>) => void;
+  deleteProduct: (id: string) => void;
+  getProductById: (id: string) => Product | undefined;
+  addOrder: (order: Omit<Order, 'id'>) => Order;
+  updateOrder: (id: string, order: Partial<Order>) => void;
+  deleteOrder: (id: string) => void;
+  getOrderById: (id: string) => Order | undefined;
+  addInvoice: (invoice: Omit<Invoice, 'id'>) => Invoice;
+  updateInvoice: (id: string, invoice: Partial<Invoice>) => void;
+  deleteInvoice: (id: string) => void;
+  getInvoiceById: (id: string) => Invoice | undefined;
+}
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// Sample data
+const sampleCustomers: Customer[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john@example.com',
+    phone: '+91 98765 43210',
+    address: '123 Main St, City, State 12345',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    name: 'Jane Smith',
+    email: 'jane@example.com',
+    phone: '+91 87654 32109',
+    address: '456 Oak Ave, City, State 12345',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
+
+const sampleProducts: Product[] = [
+  {
+    id: '1',
+    name: 'Fresh Milk',
+    price: 30,
+    unit: 'liter',
+    category: 'Dairy',
+    description: 'Fresh cow milk',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    name: 'Yogurt',
+    price: 25,
+    unit: 'cup',
+    category: 'Dairy',
+    description: 'Fresh homemade yogurt',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  // Initialize all the state hooks
-  const customerState = useCustomerState();
-  const productState = useProductState();
-  const orderState = useOrderState();
-  const paymentState = usePaymentState(customerState.customers, customerState.updateCustomer);
-  const productRateState = useProductRateState(productState.products);
-  const supplierState = useSupplierState();
-  const stockState = useStockState(supplierState.updateSupplier);
-  const uiSettingsState = useUISettingsState();
-  const vehicleSalesmanState = useVehicleSalesmanState();
-  const expenseState = useExpenseState();
-  const trackSheetState = useTrackSheetState();
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    const saved = localStorage.getItem('customers');
+    return saved ? JSON.parse(saved) : sampleCustomers;
+  });
   
-  // Use the actual invoice context data
-  const invoiceState = useInvoices();
-
-  // Helper functions
-  // Helper function to get product rate for a customer
-  const getProductRateForCustomer = (customerId: string, productId: string): number | null => {
-    const rate = productRateState.customerProductRates.find(
-      (rate) => rate.customerId === customerId && rate.productId === productId && rate.isActive
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('products');
+    return saved ? JSON.parse(saved) : sampleProducts;
+  });
+  
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const saved = localStorage.getItem('orders');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [invoices, setInvoices] = useState<Invoice[]>(() => {
+    const saved = localStorage.getItem('invoices');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('customers', JSON.stringify(customers));
+  }, [customers]);
+  
+  useEffect(() => {
+    localStorage.setItem('products', JSON.stringify(products));
+  }, [products]);
+  
+  useEffect(() => {
+    localStorage.setItem('orders', JSON.stringify(orders));
+  }, [orders]);
+  
+  useEffect(() => {
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+  }, [invoices]);
+  
+  // Customer operations
+  const addCustomer = (customer: Omit<Customer, 'id'>) => {
+    const newCustomer = {
+      ...customer,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setCustomers(prev => [...prev, newCustomer]);
+    return newCustomer;
+  };
+  
+  const updateCustomer = (id: string, customerData: Partial<Customer>) => {
+    setCustomers(customers =>
+      customers.map(customer =>
+        customer.id === id
+          ? { ...customer, ...customerData, updatedAt: new Date().toISOString() }
+          : customer
+      )
     );
-    return rate ? rate.rate : null;
-  };
-
-  // Helper function to delete multiple payments
-  const deleteMultiplePayments = (ids: string[]): void => {
-    if (paymentState.deleteMultiplePayments) {
-      paymentState.deleteMultiplePayments(ids);
-    } else if (ids && ids.length > 0) {
-      ids.forEach(id => paymentState.deletePayment(id));
-    }
-  };
-
-  // Helper function to generate invoice from order
-  const generateInvoiceFromOrder = (orderId: string): string | null => {
-    try {
-      const order = orderState.orders.find(o => o.id === orderId);
-      if (!order) {
-        toast.error("Order not found");
-        return null;
-      }
-
-      const customer = customerState.customers.find(c => c.id === order.customerId);
-      if (!customer) {
-        toast.error("Customer not found for this order");
-        return null;
-      }
-
-      // Map order items with product names
-      const items = order.items.map(item => {
-        const product = productState.products.find(p => p.id === item.productId);
-        return {
-          ...item,
-          productName: product?.name || "Unknown Product",
-          unit: product?.unit || "unit"
-        };
-      });
-
-      // Create invoice using the service
-      const invoiceData = {
-        id: `INV-${Date.now()}`,
-        customerId: customer.id,
-        customerName: customer.name,
-        date: new Date().toISOString(),
-        items: items,
-        orderId: order.id,
-        total: order.total || items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
-      };
-
-      // Fixed: Convert the returned invoice (or its id) to string
-      const result = invoiceState.addInvoice(InvoiceService.createInvoice(invoiceData));
-      const invoiceId = typeof result === 'string' ? result : result.id;
-      
-      toast.success("Invoice created from order successfully");
-      
-      return invoiceId;
-    } catch (error) {
-      console.error("Error generating invoice:", error);
-      toast.error("Failed to generate invoice");
-      return null;
-    }
-  };
-
-  // Helper function to create track sheet from order
-  const createTrackSheetFromOrder = (orderId: string) => {
-    try {
-      const order = orderState.orders.find(o => o.id === orderId);
-      if (!order) {
-        toast.error("Order not found");
-        return null;
-      }
-
-      // Fixed: Pass only the order object to match the expected function signature
-      return trackSheetState.createTrackSheetFromOrder(order);
-    } catch (error) {
-      console.error("Error creating track sheet from order:", error);
-      toast.error("Failed to create track sheet from order");
-      return null;
-    }
-  };
-
-  // Wrapper function for addVehicleTrip to match the expected signature
-  const addVehicleTrip = (trip: Omit<VehicleTrip, "id">): VehicleTrip => {
-    // Fixed: Use the correct signature based on useVehicleSalesmanState implementation
-    const result = vehicleSalesmanState.addVehicleTrip(trip);
-    
-    if (!result) {
-      throw new Error("Failed to add vehicle trip");
-    }
-    
-    return result;
   };
   
-  // Fixed: Implement getExpenseStatsByCategory to return the expected array format
-  const getExpenseStatsByCategory = (startDate?: string, endDate?: string): { category: string; total: number }[] => {
-    // Get filtered expenses based on date range if provided
-    let filteredExpenses = expenseState.expenses;
-    
-    if (startDate && endDate) {
-      filteredExpenses = expenseState.getExpensesByDateRange 
-        ? expenseState.getExpensesByDateRange(startDate, endDate)
-        : expenseState.expenses;
-    }
-    
-    // Group expenses by category and calculate totals
-    const categoryTotals: Record<string, number> = {};
-    
-    filteredExpenses.forEach(expense => {
-      const category = expense.category || "Miscellaneous";
-      categoryTotals[category] = (categoryTotals[category] || 0) + Number(expense.amount);
-    });
-    
-    // Convert to the required array format
-    return Object.entries(categoryTotals).map(([category, total]) => ({
-      category,
-      total
-    }));
+  const deleteCustomer = (id: string) => {
+    setCustomers(customers => customers.filter(customer => customer.id !== id));
   };
-
-  // Combine all state objects into one context value
-  const contextValue: DataContextType = {
-    ...customerState,
-    ...productState,
-    ...orderState,
-    ...paymentState,
-    ...stockState,
-    ...supplierState,
-    ...uiSettingsState,
-    ...trackSheetState,
-    
-    // Add product rate state
-    customerProductRates: productRateState.customerProductRates,
-    addProductRate: productRateState.addCustomerProductRate,
-    updateProductRate: productRateState.updateCustomerProductRate,
-    deleteProductRate: productRateState.deleteCustomerProductRate,
-    getProductRateForCustomer,
-    // Add customer product rate methods explicitly
-    addCustomerProductRate: productRateState.addCustomerProductRate,
-    updateCustomerProductRate: productRateState.updateCustomerProductRate,
-    
-    // Add supplier product rates
-    supplierProductRates: productRateState.supplierProductRates || [],
-    addSupplierProductRate: productRateState.addSupplierProductRate,
-    
-    // Stock transactions - using stockState properties
-    stockTransactions: stockState.stockTransactions || [],
-    addStockTransaction: stockState.addStockTransaction,
-    updateStockTransaction: stockState.updateStockTransaction,
-    deleteStockTransaction: stockState.deleteStockTransaction,
-    
-    // Vehicle and Salesman state
-    vehicles: vehicleSalesmanState.vehicles,
-    addVehicle: vehicleSalesmanState.addVehicle,
-    updateVehicle: vehicleSalesmanState.updateVehicle,
-    deleteVehicle: vehicleSalesmanState.deleteVehicle,
-    salesmen: vehicleSalesmanState.salesmen,
-    addSalesman: vehicleSalesmanState.addSalesman,
-    updateSalesman: vehicleSalesmanState.updateSalesman,
-    deleteSalesman: vehicleSalesmanState.deleteSalesman,
-    addVehicleTrip: vehicleSalesmanState.addVehicleTrip,
-    
-    // Expense state
-    expenses: expenseState.expenses,
-    addExpense: expenseState.addExpense,
-    updateExpense: expenseState.updateExpense,
-    deleteExpense: expenseState.deleteExpense,
-    getExpensesByCategory: expenseState.getExpensesByCategory,
-    getExpensesByDateRange: expenseState.getExpensesByDateRange,
-    getTotalExpenses: expenseState.getTotalExpenses,
-    getExpenseStatsByCategory, // Use our fixed implementation
-    
-    // Stock entries
-    stockEntries: stockState.stockEntries || [],
-    addStockEntry: stockState.addStockEntry,
-    
-    // Explicitly define invoiceState properties to prevent type errors
-    invoices: invoiceState.invoices,
-    addInvoice: (invoice) => {
-      const result = invoiceState.addInvoice(invoice);
-      // Return the id as a string to match expected type
-      return typeof result === 'string' ? result : String(result.id);
-    },
-    updateInvoice: invoiceState.updateInvoice,
-    deleteInvoice: invoiceState.deleteInvoice,
-    
-    // Adding missing properties
-    deleteMultiplePayments,
-    generateInvoiceFromOrder,
-    createTrackSheetFromOrder,
-    
-    // Add supplier payments functionality
-    supplierPayments: supplierState.supplierPayments || [],
-    addSupplierPayment: supplierState.addSupplierPayment,
-    updateSupplierPayment: supplierState.updateSupplierPayment,
-    deleteSupplierPayment: supplierState.deleteSupplierPayment,
+  
+  const getCustomerById = (id: string) => {
+    return customers.find(customer => customer.id === id);
   };
-
+  
+  // Product operations
+  const addProduct = (product: Omit<Product, 'id'>) => {
+    const newProduct = {
+      ...product,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setProducts(prev => [...prev, newProduct]);
+    return newProduct;
+  };
+  
+  const updateProduct = (id: string, productData: Partial<Product>) => {
+    setProducts(products =>
+      products.map(product =>
+        product.id === id
+          ? { ...product, ...productData, updatedAt: new Date().toISOString() }
+          : product
+      )
+    );
+  };
+  
+  const deleteProduct = (id: string) => {
+    setProducts(products => products.filter(product => product.id !== id));
+  };
+  
+  const getProductById = (id: string) => {
+    return products.find(product => product.id === id);
+  };
+  
+  // Order operations
+  const addOrder = (order: Omit<Order, 'id'>) => {
+    const newOrder = {
+      ...order,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setOrders(prev => [...prev, newOrder]);
+    return newOrder;
+  };
+  
+  const updateOrder = (id: string, orderData: Partial<Order>) => {
+    setOrders(orders =>
+      orders.map(order =>
+        order.id === id
+          ? { ...order, ...orderData, updatedAt: new Date().toISOString() }
+          : order
+      )
+    );
+  };
+  
+  const deleteOrder = (id: string) => {
+    setOrders(orders => orders.filter(order => order.id !== id));
+  };
+  
+  const getOrderById = (id: string) => {
+    return orders.find(order => order.id === id);
+  };
+  
+  // Invoice operations
+  const addInvoice = (invoice: Omit<Invoice, 'id'>) => {
+    const newInvoice = {
+      ...invoice,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setInvoices(prev => [...prev, newInvoice]);
+    return newInvoice;
+  };
+  
+  const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
+    setInvoices(invoices =>
+      invoices.map(invoice =>
+        invoice.id === id
+          ? { ...invoice, ...invoiceData, updatedAt: new Date().toISOString() }
+          : invoice
+      )
+    );
+  };
+  
+  const deleteInvoice = (id: string) => {
+    setInvoices(invoices => invoices.filter(invoice => invoice.id !== id));
+  };
+  
+  const getInvoiceById = (id: string) => {
+    return invoices.find(invoice => invoice.id === id);
+  };
+  
   return (
-    <DataContext.Provider value={contextValue}>
+    <DataContext.Provider
+      value={{
+        customers,
+        products,
+        orders,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
+        getCustomerById,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        getProductById,
+        addOrder,
+        updateOrder,
+        deleteOrder,
+        getOrderById,
+        addInvoice,
+        updateInvoice,
+        deleteInvoice,
+        getInvoiceById,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );
 }
 
-export function useData(): DataContextType {
+export function useData() {
   const context = useContext(DataContext);
   if (context === undefined) {
     throw new Error('useData must be used within a DataProvider');
   }
   return context;
 }
-
-export type { DataContextType };
