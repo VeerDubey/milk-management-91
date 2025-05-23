@@ -2,107 +2,6 @@
 import { Invoice, OrderItem } from "@/types";
 import { format } from "date-fns";
 
-// Fallback for when PDF generation fails
-const generateHTMLPreview = (
-  invoice: Invoice,
-  companyInfo: any,
-  products: any[]
-) => {
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Invoice ${invoice.id}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .company-info h1 { margin: 0; color: #333; }
-        .invoice-info { text-align: right; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .total-row { font-weight: bold; background-color: #f9f9f9; }
-        .notes { margin-top: 20px; padding: 10px; background-color: #f5f5f5; border-radius: 4px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-info">
-          <h1>${companyInfo.companyName || 'Company Name'}</h1>
-          <p>${companyInfo.address || 'Company Address'}</p>
-          <p>Phone: ${companyInfo.contactNumber || 'Contact Number'}</p>
-          <p>Email: ${companyInfo.email || 'Email'}</p>
-          <p>GST: ${companyInfo.gstNumber || 'GST Number'}</p>
-        </div>
-        <div class="invoice-info">
-          <h2>Invoice #${invoice.number || invoice.id}</h2>
-          <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
-          <p>Due Date: ${invoice.dueDate || 'N/A'}</p>
-          <p>Status: ${invoice.status || 'Draft'}</p>
-        </div>
-      </div>
-      
-      <div class="customer-info">
-        <h3>Bill To:</h3>
-        <p><strong>${invoice.customerName || 'Customer Name'}</strong></p>
-      </div>
-      
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Rate</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${(invoice.items || []).map((item: any) => {
-            const product = products.find(p => p.id === item.productId);
-            return `
-              <tr>
-                <td>${product?.name || item.description || item.productId || 'Item'}</td>
-                <td>${item.quantity || 0}</td>
-                <td>₹${(item.unitPrice || 0).toFixed(2)}</td>
-                <td>₹${(item.amount || 0).toFixed(2)}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
-            <td><strong>₹${(invoice.total || 0).toFixed(2)}</strong></td>
-          </tr>
-        </tfoot>
-      </table>
-      
-      ${invoice.notes ? `
-        <div class="notes">
-          <h4>Notes:</h4>
-          <p>${invoice.notes}</p>
-        </div>
-      ` : ''}
-      
-      ${invoice.termsAndConditions ? `
-        <div class="notes">
-          <h4>Terms & Conditions:</h4>
-          <p>${invoice.termsAndConditions}</p>
-        </div>
-      ` : ''}
-      
-      <div style="margin-top: 30px; font-size: 12px; color: #666;">
-        <p>Bank Details: ${companyInfo.bankDetails || 'Bank Details Not Available'}</p>
-      </div>
-    </body>
-    </html>
-  `;
-  
-  // Convert HTML to data URL
-  const encodedHtml = encodeURIComponent(html);
-  return `data:text/html;charset=utf-8,${encodedHtml}`;
-};
-
 // Invoice template definitions
 export const INVOICE_TEMPLATES = [
   {
@@ -145,7 +44,7 @@ export const generateInvoiceNumber = () => {
   return `${prefix}-${timestamp}-${randomNum}`;
 };
 
-// Function to generate invoice preview - with fallback to HTML
+// Simple HTML-based invoice preview generator
 export const generateInvoicePreview = (
   invoice: Invoice,
   companyInfo: any = {},
@@ -153,50 +52,145 @@ export const generateInvoicePreview = (
   templateId: string = "standard"
 ) => {
   try {
-    console.log('Generating invoice preview for:', invoice.id);
+    console.log('Generating HTML invoice preview for:', invoice.id);
     
-    // Try to use jsPDF if available
-    if (typeof window !== 'undefined') {
-      try {
-        // Dynamic import of PDF utils
-        import('./pdfUtils').then(pdfModule => {
-          return pdfModule.generatePdfPreview(
-            ["Item", "Quantity", "Rate", "Amount"],
-            (invoice.items || []).map((item: any) => {
-              const product = products.find(p => p.id === item.productId);
-              return [
-                product?.name || item.description || item.productId || 'Item',
-                (item.quantity || 0).toString(),
-                `₹${(item.unitPrice || 0).toFixed(2)}`,
-                `₹${(item.amount || 0).toFixed(2)}`
-              ];
-            }),
-            {
-              title: companyInfo.companyName || 'Invoice',
-              subtitle: `Invoice #${invoice.number || invoice.id}`,
-              dateInfo: `Date: ${invoice.date || new Date().toLocaleDateString()}`,
-              additionalInfo: [
-                { label: "Customer", value: invoice.customerName || "Unknown" },
-                { label: "Status", value: invoice.status || "Draft" }
-              ]
-            }
-          );
-        }).catch(() => {
-          // PDF generation failed, use HTML fallback
-          return generateHTMLPreview(invoice, companyInfo, products);
-        });
-      } catch (pdfError) {
-        console.warn('PDF generation failed, using HTML fallback:', pdfError);
-        return generateHTMLPreview(invoice, companyInfo, products);
-      }
-    }
+    const template = INVOICE_TEMPLATES.find(t => t.id === templateId) || INVOICE_TEMPLATES[0];
     
-    // Fallback to HTML preview
-    return generateHTMLPreview(invoice, companyInfo, products);
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice ${invoice.id}</title>
+        <style>
+          body { 
+            font-family: ${template.fontFamily}, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            line-height: 1.6; 
+            color: #333;
+          }
+          .invoice-container { max-width: 800px; margin: 0 auto; }
+          .header { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid ${template.primaryColor};
+            padding-bottom: 20px;
+          }
+          .company-info h1 { 
+            margin: 0 0 10px 0; 
+            color: ${template.primaryColor}; 
+            font-size: 24px;
+          }
+          .company-info p { margin: 5px 0; }
+          .invoice-info { text-align: right; }
+          .invoice-info h2 { 
+            margin: 0 0 10px 0; 
+            color: ${template.primaryColor}; 
+            font-size: 20px;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0; 
+          }
+          th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+          }
+          th { 
+            background-color: ${template.primaryColor}; 
+            color: white; 
+            font-weight: bold;
+          }
+          .total-row { 
+            font-weight: bold; 
+            background-color: #f8f9fa; 
+            border-top: 2px solid ${template.primaryColor};
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <div class="header">
+            <div class="company-info">
+              <h1>${companyInfo.companyName || 'Company Name'}</h1>
+              <p>${companyInfo.address || 'Company Address'}</p>
+              <p>Phone: ${companyInfo.contactNumber || 'Contact Number'}</p>
+              <p>Email: ${companyInfo.email || 'Email'}</p>
+              <p>GST: ${companyInfo.gstNumber || 'GST Number'}</p>
+            </div>
+            <div class="invoice-info">
+              <h2>INVOICE</h2>
+              <p><strong>Invoice #:</strong> ${invoice.number || invoice.id}</p>
+              <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
+              <p><strong>Due Date:</strong> ${invoice.dueDate || 'N/A'}</p>
+            </div>
+          </div>
+          
+          <div style="margin: 20px 0;">
+            <h3>Bill To:</h3>
+            <p><strong>${invoice.customerName || 'Customer Name'}</strong></p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th style="text-align: center;">Quantity</th>
+                <th style="text-align: right;">Rate</th>
+                <th style="text-align: right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(invoice.items || []).map((item: any) => {
+                const product = products.find((p: any) => p.id === item.productId);
+                return `
+                  <tr>
+                    <td>${product?.name || item.description || item.productId || 'Item'}</td>
+                    <td style="text-align: center;">${item.quantity || 0}</td>
+                    <td style="text-align: right;">₹${(item.unitPrice || 0).toFixed(2)}</td>
+                    <td style="text-align: right;">₹${(item.amount || 0).toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
+                <td style="text-align: right;"><strong>₹${(invoice.total || 0).toFixed(2)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+          
+          ${invoice.notes ? `
+            <div style="margin-top: 20px;">
+              <h4>Notes:</h4>
+              <p>${invoice.notes}</p>
+            </div>
+          ` : ''}
+          
+          ${invoice.termsAndConditions ? `
+            <div style="margin-top: 20px;">
+              <h4>Terms & Conditions:</h4>
+              <p>${invoice.termsAndConditions}</p>
+            </div>
+          ` : ''}
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Convert HTML to data URL
+    const encodedHtml = encodeURIComponent(html);
+    return `data:text/html;charset=utf-8,${encodedHtml}`;
     
   } catch (error) {
     console.error('Error in generateInvoicePreview:', error);
-    return generateHTMLPreview(invoice, companyInfo, products);
+    // Return minimal fallback
+    const fallbackHtml = `<html><body><h2>Invoice ${invoice.id}</h2><p>Total: ₹${(invoice.total || 0).toFixed(2)}</p></body></html>`;
+    return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
   }
 };
 
@@ -238,7 +232,6 @@ export const createInvoiceFromFormData = (data: any): Invoice => {
     termsAndConditions: data.terms || '',
     createdAt: currentDate,
     updatedAt: currentDate,
-    // Additional compatibility fields
     customerName: data.customerName || '',
     amount: (data.items || []).reduce((sum: number, item: any) => sum + (item.amount || 0), 0),
     orderId: data.orderId || `ORD-${Date.now()}`

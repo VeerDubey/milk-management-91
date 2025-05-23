@@ -1,7 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice, Customer, Product } from '@/types';
 import { 
-  generateInvoicePreview, 
   generateInvoiceNumber,
   INVOICE_TEMPLATES
 } from '../utils/invoiceUtils';
@@ -102,140 +102,187 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Function to generate PDF preview with better error handling
-  const generateInvoicePreviewImpl = async (invoice: Invoice, templateId?: string): Promise<string> => {
+  // Simplified function to generate HTML invoice preview
+  const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Generating invoice preview for invoice:', invoice.id);
+      console.log('Generating simplified HTML preview for invoice:', invoice.id);
       
-      // Get products from localStorage as fallback
+      // Get products from localStorage
       const products = JSON.parse(localStorage.getItem('products') || '[]');
       
-      // Use specified template or fallback to selected template
-      const templateToUse = templateId || selectedTemplateId;
-      console.log('Using template:', templateToUse);
-      
-      // Try to generate preview using the utility function
-      let previewResult;
-      try {
-        previewResult = generateInvoicePreview(
-          invoice,
-          companyInfo,
-          products,
-          templateToUse
-        );
-        
-        // Handle different return types from generateInvoicePreview
-        if (typeof previewResult === 'string') {
-          // Already a data URL string
-          return previewResult;
-        }
-        
-        // If it's a Promise, await it
-        if (previewResult && typeof previewResult === 'object' && 'then' in previewResult) {
-          return await previewResult;
-        }
-        
-        // If it's a jsPDF object, try to get data URL (in a type-safe way)
-        if (previewResult && typeof previewResult === 'object' && 'output' in previewResult) {
-          const output = previewResult.output as unknown as Function;
-          if (typeof output === 'function') {
-            return output.call(previewResult, 'datauristring');
-          }
-        }
-      } catch (innerError) {
-        console.error('Error generating PDF preview:', innerError);
-        // Continue to fallback
-      }
-      
-      // Fallback: create a simple HTML preview
-      const fallbackHtml = `
+      // Create HTML preview directly
+      const html = `
+        <!DOCTYPE html>
         <html>
         <head>
           <title>Invoice ${invoice.id}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 30px; }
-            h1 { color: #333; }
-            .invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
-            .invoice-body { margin-bottom: 40px; }
-            table { width: 100%; border-collapse: collapse; }
-            table th, table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-            .total-row td { font-weight: bold; border-top: 2px solid #000; }
-            .footer { margin-top: 60px; font-size: 14px; color: #666; }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              line-height: 1.6; 
+              color: #333;
+            }
+            .invoice-container { max-width: 800px; margin: 0 auto; }
+            .header { 
+              display: flex; 
+              justify-content: space-between; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #4f46e5;
+              padding-bottom: 20px;
+            }
+            .company-info h1 { 
+              margin: 0 0 10px 0; 
+              color: #4f46e5; 
+              font-size: 24px;
+            }
+            .company-info p { margin: 5px 0; }
+            .invoice-info { text-align: right; }
+            .invoice-info h2 { 
+              margin: 0 0 10px 0; 
+              color: #4f46e5; 
+              font-size: 20px;
+            }
+            .customer-section { 
+              margin: 20px 0; 
+              padding: 15px; 
+              background-color: #f8f9fa; 
+              border-radius: 5px;
+            }
+            .customer-section h3 { margin: 0 0 10px 0; color: #555; }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 20px 0; 
+              box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 12px; 
+              text-align: left; 
+            }
+            th { 
+              background-color: #4f46e5; 
+              color: white; 
+              font-weight: bold;
+            }
+            .total-row { 
+              font-weight: bold; 
+              background-color: #f8f9fa; 
+              border-top: 2px solid #4f46e5;
+            }
+            .footer { 
+              margin-top: 30px; 
+              padding: 20px; 
+              background-color: #f8f9fa; 
+              border-radius: 5px; 
+              font-size: 14px; 
+            }
+            .footer h4 { margin: 0 0 10px 0; color: #555; }
+            @media print {
+              body { margin: 0; }
+              .invoice-container { max-width: none; }
+            }
           </style>
         </head>
         <body>
-          <div class="invoice-header">
-            <div>
-              <h1>${companyInfo.companyName}</h1>
-              <p>${companyInfo.address}</p>
-              <p>GST: ${companyInfo.gstNumber}</p>
+          <div class="invoice-container">
+            <div class="header">
+              <div class="company-info">
+                <h1>${companyInfo.companyName}</h1>
+                <p>${companyInfo.address}</p>
+                <p>Phone: ${companyInfo.contactNumber}</p>
+                <p>Email: ${companyInfo.email}</p>
+                <p>GST: ${companyInfo.gstNumber}</p>
+              </div>
+              <div class="invoice-info">
+                <h2>INVOICE</h2>
+                <p><strong>Invoice #:</strong> ${invoice.number || invoice.id}</p>
+                <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
+                <p><strong>Due Date:</strong> ${invoice.dueDate || 'N/A'}</p>
+                <p><strong>Status:</strong> ${invoice.status || 'Draft'}</p>
+              </div>
             </div>
-            <div>
-              <h2>INVOICE</h2>
-              <p>Invoice #: ${invoice.number || invoice.id}</p>
-              <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
-              <p>Due Date: ${invoice.dueDate || 'N/A'}</p>
+            
+            <div class="customer-section">
+              <h3>Bill To:</h3>
+              <p><strong>${invoice.customerName || 'Customer Name'}</strong></p>
             </div>
-          </div>
-          
-          <div class="invoice-body">
-            <h3>Bill To:</h3>
-            <p>${invoice.customerName || 'Customer'}</p>
             
             <table>
               <thead>
                 <tr>
                   <th>Item</th>
-                  <th>Quantity</th>
-                  <th>Rate</th>
-                  <th>Amount</th>
+                  <th style="text-align: center;">Quantity</th>
+                  <th style="text-align: right;">Rate</th>
+                  <th style="text-align: right;">Amount</th>
                 </tr>
               </thead>
               <tbody>
-                ${invoice.items.map(item => `
-                  <tr>
-                    <td>${products.find((p: any) => p.id === item.productId)?.name || 'Product'}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${item.unitPrice}</td>
-                    <td>₹${item.amount}</td>
-                  </tr>
-                `).join('')}
-                <tr class="total-row">
-                  <td colspan="3" style="text-align: right;">Total:</td>
-                  <td>₹${invoice.total || invoice.subtotal || '0.00'}</td>
-                </tr>
+                ${(invoice.items || []).map((item: any) => {
+                  const product = products.find((p: any) => p.id === item.productId);
+                  return `
+                    <tr>
+                      <td>${product?.name || item.description || item.productId || 'Item'}</td>
+                      <td style="text-align: center;">${item.quantity || 0}</td>
+                      <td style="text-align: right;">₹${(item.unitPrice || 0).toFixed(2)}</td>
+                      <td style="text-align: right;">₹${(item.amount || 0).toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="3" style="text-align: right;"><strong>Total Amount:</strong></td>
+                  <td style="text-align: right;"><strong>₹${(invoice.total || 0).toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
             </table>
+            
+            <div class="footer">
+              ${invoice.notes ? `
+                <h4>Notes:</h4>
+                <p>${invoice.notes}</p>
+              ` : ''}
+              
+              ${invoice.termsAndConditions ? `
+                <h4>Terms & Conditions:</h4>
+                <p>${invoice.termsAndConditions}</p>
+              ` : ''}
+              
+              <h4>Bank Details:</h4>
+              <p style="white-space: pre-line;">${companyInfo.bankDetails}</p>
+              
+              <p style="text-align: center; margin-top: 20px; color: #666;">
+                Thank you for your business!
+              </p>
+            </div>
           </div>
-          
-          <div class="footer">
-            <p><strong>Notes:</strong> ${invoice.notes || 'No notes'}</p>
-            <p><strong>Terms:</strong> ${invoice.termsAndConditions || 'Standard terms and conditions apply'}</p>
-            <p>Thank you for your business!</p>
-          </div>
+        </body>
+        </html>
+      `;
+      
+      // Convert HTML to data URL
+      const encodedHtml = encodeURIComponent(html);
+      return `data:text/html;charset=utf-8,${encodedHtml}`;
+      
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      
+      // Ultra-simple fallback
+      const fallbackHtml = `
+        <html>
+        <body style="padding: 20px; font-family: Arial;">
+          <h2>Invoice ${invoice.id}</h2>
+          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
+          <p>Customer: ${invoice.customerName || 'Unknown'}</p>
+          <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
         </body>
         </html>
       `;
       
       return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
-      
-    } catch (error) {
-      console.error('Error generating preview:', error);
-      
-      // Last resort fallback
-      const errorHtml = `
-        <html>
-        <head><title>Invoice Preview Error</title></head>
-        <body style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
-          <h2>Preview Unavailable</h2>
-          <p>Unable to generate invoice preview at this time.</p>
-          <p>Invoice ID: ${invoice.id}</p>
-          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
-        </body>
-        </html>
-      `;
-      
-      return `data:text/html;charset=utf-8,${encodeURIComponent(errorHtml)}`;
     }
   };
   
@@ -246,19 +293,21 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const pdfData = await generateInvoicePreviewImpl(invoice, templateId);
-      const fileName = `invoice-${invoice.id}.pdf`;
+      const htmlData = await generateInvoicePreview(invoice, templateId);
+      const fileName = `invoice-${invoice.id}.html`;
       
-      const result = await ElectronService.downloadInvoice(pdfData, fileName);
+      // Create download link
+      const link = document.createElement('a');
+      link.href = htmlData;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to download invoice');
-      }
-      
-      console.log('Invoice downloaded successfully');
+      toast.success('Invoice downloaded successfully');
     } catch (error) {
       console.error('Download error:', error);
-      throw error;
+      toast.error('Failed to download invoice');
     }
   };
   
@@ -269,24 +318,26 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const pdfData = await generateInvoicePreviewImpl(invoice, templateId);
+      const htmlData = await generateInvoicePreview(invoice, templateId);
       
-      const result = await ElectronService.printInvoice(pdfData);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to print invoice');
+      // Open in new window and print
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(decodeURIComponent(htmlData.split(',')[1]));
+        printWindow.document.close();
+        printWindow.print();
       }
       
-      console.log('Invoice sent to printer');
+      toast.success('Invoice sent to printer');
     } catch (error) {
       console.error('Print error:', error);
-      throw error;
+      toast.error('Failed to print invoice');
     }
   };
   
-  // Function to get available printers (Electron only)
+  // Function to get available printers (Web fallback)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
-    return await ElectronService.getPrinters();
+    return { success: false, printers: [] };
   };
   
   return (
@@ -302,7 +353,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         templates: INVOICE_TEMPLATES,
         companyInfo,
         setCompanyInfo,
-        generateInvoicePreview: generateInvoicePreviewImpl,
+        generateInvoicePreview,
         downloadInvoice,
         printInvoice,
         getPrinters,
