@@ -1,844 +1,490 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter 
-} from '@/components/ui/card';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from '@/components/ui/select';
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from '@/components/ui/table';
-import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell 
-} from 'recharts';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { 
-  Download, ArrowUpDown, BarChart3, PieChart as PieChartIcon,
-  LineChart as LineChartIcon, Calendar, Filter 
-} from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format, parseISO, subDays, subMonths, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import { ElectronService } from '@/services/ElectronService';
-import { useToast } from '@/components/ui/use-toast';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { 
-  DateRangePicker, DateRangePickerValue 
-} from '@/components/ui/date-range-picker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePickerWithRange as DateRangePicker } from "@/components/ui/date-picker-with-range";
+import { DateRange } from "react-day-picker";
+import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { Calendar, Download, Filter, Loader2, RefreshCcw } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { OrderItem } from '@/types'; // Import OrderItem type
+
+// Import Recharts components for better performance and TypeScript support
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer
+} from "recharts";
+
+// Define chart colors
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#0088fe", "#00C49F"];
+
+// Define types for our data structures
+interface ProductSalesData {
+  name: string;
+  quantity: number;
+  amount: number;
+}
+
+interface CustomerSalesData {
+  name: string;
+  orders: number;
+  totalAmount: number;
+}
+
+// Define daily sales data type
+interface DailySalesData {
+  date: string;
+  amount: number;
+}
 
 export default function SalesReport() {
-  const { toast } = useToast();
-  const { products, orders, invoices, customers } = useData();
-  
-  // State for report configuration
-  const [reportType, setReportType] = useState<'daily' | 'monthly' | 'product' | 'customer'>('daily');
-  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
-  const [dateRange, setDateRange] = useState<DateRangePickerValue>({
-    from: subDays(new Date(), 30),
-    to: new Date()
+  const { orders, products, customers } = useData();
+  const today = new Date();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: subDays(today, 30),
+    to: today
   });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortColumn, setSortColumn] = useState<string>('date');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  
-  // Get unique product categories for filtering
-  const categories = useMemo(() => {
-    const uniqueCategories = new Set(products.map(p => p.category));
-    return ['all', ...Array.from(uniqueCategories)];
-  }, [products]);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [customerFilter, setCustomerFilter] = useState("all");
+  const [productFilter, setProductFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // When filtering by date, use order.date instead of orderDate
+  // Filter orders by date range
   const filteredOrders = useMemo(() => {
-    if (!dateRange.from || !dateRange.to) return orders;
-    
     return orders.filter(order => {
-      const orderDate = new Date(order.date);
-      return isWithinInterval(orderDate, {
-        start: startOfDay(dateRange.from),
-        end: endOfDay(dateRange.to)
-      });
+      // Date filter
+      if (dateRange?.from && dateRange?.to) {
+        const orderDate = new Date(order.date);
+        if (orderDate < dateRange.from || orderDate > dateRange.to) {
+          return false;
+        }
+      }
+      
+      // Customer filter
+      if (customerFilter !== "all" && order.customerId !== customerFilter) {
+        return false;
+      }
+      
+      // Product filter
+      if (productFilter !== "all" && !order.items.some(item => item.productId === productFilter)) {
+        return false;
+      }
+      
+      // Status filter
+      if (statusFilter !== "all") {
+        if (statusFilter === "completed" && order.status !== "completed") {
+          return false;
+        }
+        if (statusFilter === "pending" && order.status !== "pending") {
+          return false;
+        }
+        if (statusFilter === "cancelled" && order.status !== "cancelled") {
+          return false;
+        }
+        if (statusFilter === "processing" && order.status !== "processing") {
+          return false;
+        }
+      }
+      
+      return true;
     });
-  }, [orders, dateRange]);
+  }, [orders, dateRange, customerFilter, productFilter, statusFilter]);
 
-  // When calculating revenue, use unitPrice instead of rate for OrderItems
-  const calculateRevenue = (items: OrderItem[]) => {
-    return items.reduce((total, item) => 
-      total + (item.unitPrice * item.quantity), 0);
-  };
+  // Calculate total sales
+  const totalSales = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  
+  // Calculate total number of orders
+  const totalOrders = filteredOrders.length;
+  
+  // Calculate average order value
+  const avgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-  // Filter invoices by date range
-  const filteredInvoices = useMemo(() => {
-    if (!dateRange.from || !dateRange.to) return invoices;
-    
-    return invoices.filter(invoice => {
-      const invoiceDate = new Date(invoice.date);
-      return isWithinInterval(invoiceDate, {
-        start: dateRange.from,
-        end: dateRange.to
-      });
+  // Group sales by product with proper typing
+  const salesByProduct: Record<string, ProductSalesData> = {};
+  
+  filteredOrders.forEach(order => {
+    order.items.forEach(item => {
+      const productId = item.productId;
+      const product = products.find(p => p.id === productId);
+      if (!product) return;
+      
+      const productName = product.name;
+      const quantity = item.quantity || 0;
+      const amount = product.price * quantity;
+      
+      if (!salesByProduct[productId]) {
+        salesByProduct[productId] = {
+          name: productName,
+          quantity: 0,
+          amount: 0
+        };
+      }
+      
+      salesByProduct[productId].quantity += quantity;
+      salesByProduct[productId].amount += amount;
     });
-  }, [invoices, dateRange]);
+  });
+  
+  // Convert to array for charts ensuring type safety
+  const productSalesData = Object.values(salesByProduct).sort((a, b) => b.amount - a.amount);
+  
+  // Group sales by customer with proper typing
+  const salesByCustomer: Record<string, CustomerSalesData> = {};
+  
+  filteredOrders.forEach(order => {
+    const customerId = order.customerId;
+    if (!customerId) return;
+    
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    if (!salesByCustomer[customerId]) {
+      salesByCustomer[customerId] = {
+        name: customer.name,
+        orders: 0,
+        totalAmount: 0
+      };
+    }
+    
+    salesByCustomer[customerId].orders += 1;
+    salesByCustomer[customerId].totalAmount += (order.totalAmount || 0);
+  });
+  
+  // Convert to array for charts ensuring type safety
+  const customerSalesData = Object.values(salesByCustomer).sort((a, b) => b.totalAmount - a.totalAmount);
 
-  // Generate report data based on reportType
-  const reportData = useMemo(() => {
-    // Daily sales data
-    if (reportType === 'daily') {
-      const dailySalesMap = new Map();
-      
-      filteredInvoices.forEach(invoice => {
-        const dateStr = invoice.date.split('T')[0];
-        const currentTotal = dailySalesMap.get(dateStr) || 0;
-        dailySalesMap.set(dateStr, currentTotal + (invoice.total || 0));
-      });
-      
-      return Array.from(dailySalesMap.entries())
-        .map(([date, amount]) => ({
-          date,
-          amount
-        }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }
-    
-    // Monthly sales data
-    else if (reportType === 'monthly') {
-      const monthlySalesMap = new Map();
-      
-      filteredInvoices.forEach(invoice => {
-        const month = invoice.date.substring(0, 7); // YYYY-MM
-        const currentTotal = monthlySalesMap.get(month) || 0;
-        monthlySalesMap.set(month, currentTotal + (invoice.total || 0));
-      });
-      
-      return Array.from(monthlySalesMap.entries())
-        .map(([month, amount]) => ({
-          month,
-          amount
-        }))
-        .sort((a, b) => a.month.localeCompare(b.month));
-    }
-    
-    // Product-wise sales data
-    else if (reportType === 'product') {
-      const productSalesMap = new Map();
-      
-      filteredOrders.forEach(order => {
-        (order.items || []).forEach(item => {
-          const product = products.find(p => p.id === item.productId);
-          if (product) {
-            // Apply category filter
-            if (filterCategory !== 'all' && product.category !== filterCategory) {
-              return;
-            }
-            
-            const currentData = productSalesMap.get(product.id) || {
-              productId: product.id,
-              productName: product.name,
-              category: product.category,
-              totalQuantity: 0,
-              totalAmount: 0
-            };
-            
-            currentData.totalQuantity += item.quantity;
-            currentData.totalAmount += item.quantity * item.unitPrice;
-            productSalesMap.set(product.id, currentData);
-          }
-        });
-      });
-      
-      return Array.from(productSalesMap.values());
-    }
-    
-    // Customer-wise sales data
-    else if (reportType === 'customer') {
-      const customerSalesMap = new Map();
-      
-      filteredInvoices.forEach(invoice => {
-        const customer = customers.find(c => c.id === invoice.customerId);
-        if (customer) {
-          const currentData = customerSalesMap.get(customer.id) || {
-            customerId: customer.id,
-            customerName: customer.name,
-            totalOrders: 0,
-            totalAmount: 0
-          };
-          
-          currentData.totalOrders++;
-          currentData.totalAmount += invoice.total || 0;
-          customerSalesMap.set(customer.id, currentData);
-        }
-      });
-      
-      return Array.from(customerSalesMap.values());
-    }
-    
-    return [];
-  }, [reportType, filteredInvoices, filteredOrders, products, customers, filterCategory]);
+  // Create data for recharts
+  const barChartData = filteredOrders.map(order => ({
+    name: format(parseISO(order.date), "MMM dd"),
+    amount: order.totalAmount || 0
+  }));
 
-  // Filter data based on searchTerm
-  const filteredData = useMemo(() => {
-    if (!searchTerm) return reportData;
-    
-    return reportData.filter(item => {
-      if (reportType === 'daily' || reportType === 'monthly') {
-        // Search in date/month string
-        return item.date?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               item.month?.toLowerCase().includes(searchTerm.toLowerCase());
-      }
-      else if (reportType === 'product') {
-        // Search in product name and category
-        return item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               item.category.toLowerCase().includes(searchTerm.toLowerCase());
-      }
-      else if (reportType === 'customer') {
-        // Search in customer name
-        return item.customerName.toLowerCase().includes(searchTerm.toLowerCase());
-      }
-      
-      return false;
-    });
-  }, [reportData, searchTerm, reportType]);
+  // Create data for pie chart
+  const pieChartData = productSalesData.slice(0, 5).map(product => ({
+    name: product.name,
+    value: product.amount
+  }));
 
-  // Sort filtered data
-  const sortedData = useMemo(() => {
-    return [...filteredData].sort((a, b) => {
-      let valueA, valueB;
-      
-      if (reportType === 'daily') {
-        if (sortColumn === 'date') {
-          valueA = new Date(a.date).getTime();
-          valueB = new Date(b.date).getTime();
-        } else { // 'amount'
-          valueA = a.amount;
-          valueB = b.amount;
-        }
-      }
-      else if (reportType === 'monthly') {
-        if (sortColumn === 'month') {
-          valueA = a.month;
-          valueB = b.month;
-        } else { // 'amount'
-          valueA = a.amount;
-          valueB = b.amount;
-        }
-      }
-      else if (reportType === 'product') {
-        if (sortColumn === 'name') {
-          valueA = a.productName.toLowerCase();
-          valueB = b.productName.toLowerCase();
-        } else if (sortColumn === 'category') {
-          valueA = a.category.toLowerCase();
-          valueB = b.category.toLowerCase();
-        } else if (sortColumn === 'quantity') {
-          valueA = a.totalQuantity;
-          valueB = b.totalQuantity;
-        } else { // 'amount'
-          valueA = a.totalAmount;
-          valueB = b.totalAmount;
-        }
-      }
-      else if (reportType === 'customer') {
-        if (sortColumn === 'name') {
-          valueA = a.customerName.toLowerCase();
-          valueB = b.customerName.toLowerCase();
-        } else if (sortColumn === 'orders') {
-          valueA = a.totalOrders;
-          valueB = b.totalOrders;
-        } else { // 'amount'
-          valueA = a.totalAmount;
-          valueB = b.totalAmount;
-        }
-      }
-      
-      if (sortDirection === 'asc') {
-        return valueA > valueB ? 1 : -1;
-      } else {
-        return valueA < valueB ? 1 : -1;
-      }
-    });
-  }, [filteredData, sortColumn, sortDirection, reportType]);
-
-  // Calculate summary data
-  const summary = useMemo(() => {
-    let totalSales = 0;
-    let totalOrders = 0;
-    let averageSale = 0;
-    
-    if (reportType === 'daily' || reportType === 'monthly') {
-      totalSales = reportData.reduce((sum, item) => sum + item.amount, 0);
-      totalOrders = filteredOrders.length;
-    } else if (reportType === 'product') {
-      totalSales = reportData.reduce((sum, item) => sum + item.totalAmount, 0);
-      totalOrders = filteredOrders.length;
-    } else if (reportType === 'customer') {
-      totalSales = reportData.reduce((sum, item) => sum + item.totalAmount, 0);
-      totalOrders = reportData.reduce((sum, item) => sum + item.totalOrders, 0);
-    }
-    
-    averageSale = totalOrders > 0 ? totalSales / totalOrders : 0;
-    
-    return { totalSales, totalOrders, averageSale };
-  }, [reportData, filteredOrders, reportType]);
-
-  // Function to handle sorting
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  // Function to export report as CSV
-  const exportReport = async () => {
-    let headers: string[] = [];
-    let rows: string[][] = [];
-    
-    if (reportType === 'daily') {
-      headers = ['Date', 'Amount'];
-      rows = sortedData.map(item => [
-        item.date,
-        item.amount.toFixed(2)
-      ]);
-    } 
-    else if (reportType === 'monthly') {
-      headers = ['Month', 'Amount'];
-      rows = sortedData.map(item => [
-        item.month,
-        item.amount.toFixed(2)
-      ]);
-    }
-    else if (reportType === 'product') {
-      headers = ['Product', 'Category', 'Quantity Sold', 'Total Sales'];
-      rows = sortedData.map(item => [
-        item.productName,
-        item.category,
-        item.totalQuantity.toString(),
-        item.totalAmount.toFixed(2)
-      ]);
-    }
-    else if (reportType === 'customer') {
-      headers = ['Customer', 'Orders', 'Total Spent'];
-      rows = sortedData.map(item => [
-        item.customerName,
-        item.totalOrders.toString(),
-        item.totalAmount.toFixed(2)
-      ]);
-    }
-    
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-    
-    const csvData = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-    
+  // Function to handle PDF export
+  const handleExportPdf = () => {
     try {
-      await ElectronService.exportData(csvData, `sales-report-${reportType}-${new Date().toISOString().split('T')[0]}.csv`);
+      const headers = ["Date", "Order ID", "Customer", "Items", "Amount (₹)"];
+      
+      const rows = filteredOrders.map(order => [
+        format(parseISO(order.date), "yyyy-MM-dd"),
+        order.id,
+        order.customerName || "",
+        order.items.length.toString(),
+        (order.totalAmount || 0).toFixed(2)
+      ]);
+      
+      // Add a summary row
+      rows.push([
+        "",
+        "",
+        "",
+        `Total: ${totalOrders} orders`,
+        `₹${totalSales.toFixed(2)}`
+      ]);
+      
+      // Create PDF export utility
+      const exportToPdf = (headers: string[], rows: string[][], options: any) => {
+        import('@/utils/pdfUtils').then(module => {
+          module.exportToPdf(headers, rows, options);
+        });
+      };
+      
+      exportToPdf(
+        headers, 
+        rows,
+        {
+          title: "Sales Report",
+          subtitle: `Period: ${dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} to ${dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}`,
+          additionalInfo: [
+            { label: "Total Sales", value: `₹${totalSales.toFixed(2)}` },
+            { label: "Total Orders", value: totalOrders.toString() },
+            { label: "Average Order Value", value: `₹${avgOrderValue.toFixed(2)}` }
+          ],
+          filename: `sales-report-${dateRange.from ? format(dateRange.from, "yyyyMMdd") : ""}-to-${dateRange.to ? format(dateRange.to, "yyyyMMdd") : ""}.pdf`,
+          landscape: true
+        }
+      );
+      
       toast({
-        title: 'Report Exported',
-        description: 'Sales report has been exported successfully'
+        title: "Success",
+        description: "Sales report exported as PDF"
       });
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Error exporting sales report:", error);
       toast({
-        title: 'Export Failed',
-        description: 'There was an error exporting the report',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to export sales report",
+        variant: "destructive"
       });
     }
   };
 
-  // Chart colors
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-  // Format dates for charts
-  const formatDate = (dateString: string) => {
-    const date = parseISO(dateString);
-    return format(date, 'MMM dd');
-  };
-
-  // Format months for charts
-  const formatMonth = (monthString: string) => {
-    const date = parseISO(`${monthString}-01`);
-    return format(date, 'MMM yyyy');
+  // Handler for date range change
+  const handleDateChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Sales Report</h1>
-      
-      <div className="flex flex-col space-y-6">
-        {/* Report controls */}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Sales Report</h1>
+          <p className="text-muted-foreground">
+            Analyze sales performance and trends
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DateRangePicker
+            date={dateRange}
+            onDateChange={handleDateChange}
+          />
+          <Button variant="outline" onClick={handleExportPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Report Configuration</CardTitle>
-            <CardDescription>Configure sales report parameters</CardDescription>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Sales
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-3">
-                <label htmlFor="reportType" className="block text-sm font-medium mb-1">Report Type</label>
-                <Select value={reportType} onValueChange={(value) => setReportType(value as any)}>
-                  <SelectTrigger id="reportType">
-                    <SelectValue placeholder="Select report type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily Sales</SelectItem>
-                    <SelectItem value="monthly">Monthly Sales</SelectItem>
-                    <SelectItem value="product">Sales by Product</SelectItem>
-                    <SelectItem value="customer">Sales by Customer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-3">
-                <label htmlFor="chartType" className="block text-sm font-medium mb-1">Chart Type</label>
-                <Select value={chartType} onValueChange={(value) => setChartType(value as any)}>
-                  <SelectTrigger id="chartType">
-                    <SelectValue placeholder="Select chart type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="line">Line Chart</SelectItem>
-                    <SelectItem value="bar">Bar Chart</SelectItem>
-                    <SelectItem value="pie">Pie Chart</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-4">
-                <label className="block text-sm font-medium mb-1">Date Range</label>
-                <DateRangePicker
-                  value={dateRange}
-                  onValueChange={setDateRange}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Actions</label>
-                <Button onClick={exportReport} className="w-full">
-                  <Download className="mr-2 h-4 w-4" />
-                  Export
-                </Button>
-              </div>
-            </div>
-            
-            <div className="mt-4 flex flex-wrap gap-4">
-              {reportType === 'product' && (
-                <div className="w-full sm:w-auto">
-                  <label htmlFor="categoryFilter" className="block text-sm font-medium mb-1">Category Filter</label>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger id="categoryFilter" className="w-[200px]">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category === 'all' ? 'All Categories' : category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              <div className="flex-1">
-                <label htmlFor="search" className="block text-sm font-medium mb-1">Search</label>
-                <Input
-                  id="search"
-                  placeholder={`Search ${reportType === 'product' ? 'products' : reportType === 'customer' ? 'customers' : 'dates'}`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+            <div className="text-3xl font-bold">₹{totalSales.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
+            </p>
           </CardContent>
         </Card>
-
-        {/* Summary cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Sales
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{summary.totalSales.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                For the selected period
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Orders
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.totalOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                For the selected period
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Average Order Value
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{summary.averageSale.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">
-                Per order
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts */}
         <Card>
-          <CardHeader>
-            <CardTitle>
-              {reportType === 'daily' && 'Daily Sales Trend'}
-              {reportType === 'monthly' && 'Monthly Sales Trend'}
-              {reportType === 'product' && 'Product Sales Distribution'}
-              {reportType === 'customer' && 'Customer Sales Distribution'}
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Orders
             </CardTitle>
-            <CardDescription>
-              {reportType === 'daily' && 'Sales performance over days'}
-              {reportType === 'monthly' && 'Sales performance over months'}
-              {reportType === 'product' && 'Sales breakdown by product'}
-              {reportType === 'customer' && 'Sales breakdown by customer'}
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[400px]">
-              {(reportType === 'daily' || reportType === 'monthly') && chartType === 'line' && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={sortedData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey={reportType === 'daily' ? "date" : "month"} 
-                      tickFormatter={reportType === 'daily' ? formatDate : formatMonth}
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={70} 
-                    />
-                    <YAxis />
-                    <RechartsTooltip 
-                      formatter={(value) => [`₹${value}`, 'Sales']}
-                      labelFormatter={(value) => reportType === 'daily' ? formatDate(value as string) : formatMonth(value as string)}
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="amount" name="Sales (₹)" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
+            <div className="text-3xl font-bold">{totalOrders}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Average Order Value
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">₹{avgOrderValue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground mt-2">
+              For period {dateRange.from ? format(dateRange.from, "dd MMM yyyy") : ""} - {dateRange.to ? format(dateRange.to, "dd MMM yyyy") : ""}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-              {(reportType === 'daily' || reportType === 'monthly') && chartType === 'bar' && (
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-8">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="customers">Customers</TabsTrigger>
+          <TabsTrigger value="details">Order Details</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader>
+                <CardTitle>Sales Trend</CardTitle>
+                <CardDescription>Daily sales for selected period</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={sortedData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
+                  <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey={reportType === 'daily' ? "date" : "month"} 
-                      tickFormatter={reportType === 'daily' ? formatDate : formatMonth}
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={70}
-                    />
+                    <XAxis dataKey="name" />
                     <YAxis />
-                    <RechartsTooltip 
-                      formatter={(value) => [`₹${value}`, 'Sales']}
-                      labelFormatter={(value) => reportType === 'daily' ? formatDate(value as string) : formatMonth(value as string)}
-                    />
+                    <Tooltip />
                     <Legend />
-                    <Bar dataKey="amount" name="Sales (₹)" fill="#8884d8" />
+                    <Bar dataKey="amount" name="Sales Amount" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>
-              )}
+              </CardContent>
+            </Card>
 
-              {reportType === 'product' && chartType !== 'pie' && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={sortedData.slice(0, 10)} // Top 10 products
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="productName"
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={100}
-                      interval={0}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis />
-                    <RechartsTooltip formatter={(value) => [`₹${value}`, 'Sales']} />
-                    <Legend />
-                    <Bar dataKey="totalAmount" name="Sales (₹)" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-
-              {reportType === 'customer' && chartType !== 'pie' && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={sortedData.slice(0, 10)} // Top 10 customers
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="customerName"
-                      angle={-45} 
-                      textAnchor="end" 
-                      height={100}
-                      interval={0}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis />
-                    <RechartsTooltip formatter={(value) => [`₹${value}`, 'Sales']} />
-                    <Legend />
-                    <Bar dataKey="totalAmount" name="Sales (₹)" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-
-              {chartType === 'pie' && (
+            <Card className="col-span-2 md:col-span-1">
+              <CardHeader>
+                <CardTitle>Top Products</CardTitle>
+                <CardDescription>Best selling products by revenue</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={
-                        reportType === 'product' 
-                          ? sortedData.slice(0, 10).map(item => ({ 
-                              name: item.productName, 
-                              value: item.totalAmount 
-                            }))
-                          : reportType === 'customer'
-                          ? sortedData.slice(0, 10).map(item => ({
-                              name: item.customerName,
-                              value: item.totalAmount
-                            }))
-                          : sortedData.map(item => ({
-                              name: reportType === 'daily' ? formatDate(item.date) : formatMonth(item.month),
-                              value: item.amount
-                            }))
-                      }
+                      data={pieChartData}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius={150}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                       nameKey="name"
-                      label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
-                      {sortedData.slice(0, 10).map((entry, index) => (
+                      {pieChartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <RechartsTooltip formatter={(value) => [`₹${value}`, 'Sales']} />
+                    <Tooltip />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-        {/* Detailed data table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Detailed Sales Data</CardTitle>
-            <CardDescription>
-              {reportType === 'daily' && 'Sales by date'}
-              {reportType === 'monthly' && 'Sales by month'}
-              {reportType === 'product' && 'Sales by product'}
-              {reportType === 'customer' && 'Sales by customer'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
+        <TabsContent value="products">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product Sales Analysis</CardTitle>
+              <CardDescription>Sales breakdown by product</CardDescription>
+            </CardHeader>
+            <CardContent>
               <Table>
                 <TableHeader>
-                  {reportType === 'daily' && (
-                    <TableRow>
-                      <TableHead 
-                        className="cursor-pointer"
-                        onClick={() => handleSort('date')}
-                      >
-                        Date
-                        {sortColumn === 'date' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('amount')}
-                      >
-                        Sales Amount
-                        {sortColumn === 'amount' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                    </TableRow>
-                  )}
-
-                  {reportType === 'monthly' && (
-                    <TableRow>
-                      <TableHead 
-                        className="cursor-pointer"
-                        onClick={() => handleSort('month')}
-                      >
-                        Month
-                        {sortColumn === 'month' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('amount')}
-                      >
-                        Sales Amount
-                        {sortColumn === 'amount' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                    </TableRow>
-                  )}
-
-                  {reportType === 'product' && (
-                    <TableRow>
-                      <TableHead 
-                        className="cursor-pointer"
-                        onClick={() => handleSort('name')}
-                      >
-                        Product
-                        {sortColumn === 'name' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer"
-                        onClick={() => handleSort('category')}
-                      >
-                        Category
-                        {sortColumn === 'category' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('quantity')}
-                      >
-                        Quantity Sold
-                        {sortColumn === 'quantity' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('amount')}
-                      >
-                        Total Sales
-                        {sortColumn === 'amount' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                    </TableRow>
-                  )}
-
-                  {reportType === 'customer' && (
-                    <TableRow>
-                      <TableHead 
-                        className="cursor-pointer"
-                        onClick={() => handleSort('name')}
-                      >
-                        Customer
-                        {sortColumn === 'name' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('orders')}
-                      >
-                        Orders
-                        {sortColumn === 'orders' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                      <TableHead 
-                        className="cursor-pointer text-right"
-                        onClick={() => handleSort('amount')}
-                      >
-                        Total Spent
-                        {sortColumn === 'amount' && (
-                          <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                        )}
-                      </TableHead>
-                    </TableRow>
-                  )}
+                  <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead className="text-right">Quantity Sold</TableHead>
+                    <TableHead className="text-right">Revenue (₹)</TableHead>
+                    <TableHead className="text-right">% of Total</TableHead>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={reportType === 'product' ? 4 : 3} className="text-center py-8">
-                        No data found for the selected criteria
+                  {productSalesData.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{product.name}</TableCell>
+                      <TableCell className="text-right">{product.quantity}</TableCell>
+                      <TableCell className="text-right">{product.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        {((product.amount / totalSales) * 100).toFixed(2)}%
                       </TableCell>
-                    </TableRow>
-                  ) : (
-                    reportType === 'daily' && sortedData.map((item, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{formatDate(item.date)}</TableCell>
-                        <TableCell className="text-right">₹{item.amount.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                  
-                  {reportType === 'monthly' && sortedData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{formatMonth(item.month)}</TableCell>
-                      <TableCell className="text-right">₹{item.amount.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                  
-                  {reportType === 'product' && sortedData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.productName}</TableCell>
-                      <TableCell>{item.category}</TableCell>
-                      <TableCell className="text-right">{item.totalQuantity}</TableCell>
-                      <TableCell className="text-right">₹{item.totalAmount.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                  
-                  {reportType === 'customer' && sortedData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{item.customerName}</TableCell>
-                      <TableCell className="text-right">{item.totalOrders}</TableCell>
-                      <TableCell className="text-right">₹{item.totalAmount.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Sales Analysis</CardTitle>
+              <CardDescription>Sales breakdown by customer</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead className="text-right">Orders</TableHead>
+                    <TableHead className="text-right">Total Spent (₹)</TableHead>
+                    <TableHead className="text-right">% of Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerSalesData.map((customer, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{customer.name}</TableCell>
+                      <TableCell className="text-right">{customer.orders}</TableCell>
+                      <TableCell className="text-right">{customer.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        {((customer.totalAmount / totalSales) * 100).toFixed(2)}%
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="details">
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Details</CardTitle>
+              <CardDescription>Complete list of orders for selected period</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead className="text-right">Amount (₹)</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{format(parseISO(order.date), "yyyy-MM-dd")}</TableCell>
+                      <TableCell>{order.id}</TableCell>
+                      <TableCell>{order.customerName || "N/A"}</TableCell>
+                      <TableCell>{order.items.length}</TableCell>
+                      <TableCell className="text-right">{order.totalAmount?.toFixed(2) || "0.00"}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          order.status === "completed" ? "success" : 
+                          order.status === "processing" ? "warning" : 
+                          order.status === "pending" ? "default" :
+                          "outline"
+                        }>
+                          {order.status || "N/A"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

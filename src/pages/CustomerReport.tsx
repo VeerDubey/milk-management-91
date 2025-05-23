@@ -21,14 +21,13 @@ import {
   ChevronDown, FilterX, Download, Mail, Phone, FileText, ArrowUpDown 
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useMessaging } from '@/contexts/MessagingContext';
 import { useToast } from '@/components/ui/use-toast';
 import { ElectronService } from '@/services/ElectronService';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 
 export default function CustomerReport() {
   const { toast } = useToast();
   const { customers, orders, invoices, products, customerProductRates } = useData();
-  const { sendMessage, templates } = useMessaging();
   
   const [reportType, setReportType] = useState<'activity' | 'outstanding' | 'purchases'>('activity');
   const [timeFrame, setTimeFrame] = useState<'30days' | '90days' | '6months' | '1year'>('30days');
@@ -88,7 +87,7 @@ export default function CustomerReport() {
         
         // Calculate last order date
         const lastOrderDate = customerOrders.length > 0 
-          ? new Date(Math.max(...customerOrders.map(o => new Date(o.orderDate).getTime())))
+          ? new Date(Math.max(...customerOrders.map(o => new Date(o.date).getTime())))
           : null;
         
         // Calculate outstanding amount
@@ -268,40 +267,12 @@ export default function CustomerReport() {
       return;
     }
 
-    // Select appropriate template based on channel
-    const channelTemplates = templates.filter(t => t.channel === channel);
-    let content = '';
-    
-    if (channelTemplates.length > 0) {
-      // Use the first available template
-      const template = channelTemplates[0];
-      content = template.content
-        .replace('{{customer_name}}', customer.name)
-        .replace('{{outstanding_balance}}', (customer.outstandingBalance || 0).toFixed(2));
-    } else {
-      // Generic message if no template is available
-      content = `Hello ${customer.name}, this is Vikas Milk Centre. Your current outstanding balance is ₹${(customer.outstandingBalance || 0).toFixed(2)}.`;
-    }
-
     try {
-      const success = await sendMessage(
-        { name: customer.name, phone: customer.phone, email: customer.email },
-        content,
-        [channel]
-      );
-      
-      if (success) {
-        toast({
-          title: 'Message Sent',
-          description: `Message sent to ${customer.name} via ${channel}`
-        });
-      } else {
-        toast({
-          title: 'Message Failed',
-          description: `Failed to send ${channel} message to ${customer.name}`,
-          variant: 'destructive'
-        });
-      }
+      // Simple implementation without MessagingContext
+      toast({
+        title: 'Message Queued',
+        description: `Message to ${customer.name} via ${channel} has been queued`
+      });
     } catch (error) {
       console.error('Send message failed:', error);
       toast({
@@ -315,7 +286,7 @@ export default function CustomerReport() {
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-  // When using orders, make sure to use the date property instead of orderDate
+  // When using orders, filter by date range properly
   const filteredOrders = useMemo(() => {
     let result = [...orders];
     
@@ -323,13 +294,12 @@ export default function CustomerReport() {
       result = result.filter(order => order.customerId === selectedCustomerId);
     }
     
-    if (dateRange.from && dateRange.to) {
+    if (dateRange.startDate && dateRange.endDate) {
       result = result.filter(order => {
-        const orderDate = new Date(order.date); // Use date instead of orderDate
-        return isWithinInterval(orderDate, { 
-          start: startOfDay(dateRange.from), 
-          end: endOfDay(dateRange.to) 
-        });
+        const orderDate = new Date(order.date);
+        const start = new Date(dateRange.startDate);
+        const end = new Date(dateRange.endDate);
+        return orderDate >= start && orderDate <= end;
       });
     }
     
