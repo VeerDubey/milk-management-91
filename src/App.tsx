@@ -48,6 +48,19 @@ import TrackSheet from './pages/TrackSheet';
 import TrackSheetHistory from './pages/TrackSheetHistory';
 import VehicleSalesmanCreate from './pages/VehicleSalesmanCreate';
 import VehicleTracking from './pages/VehicleTracking';
+import PaymentCreate from './pages/PaymentCreate';
+import SMSTemplates from './pages/SMSTemplates';
+import SupplierDirectory from './pages/SupplierDirectory';
+import SupplierLedger from './pages/SupplierLedger';
+import SupplierPayments from './pages/SupplierPayments';
+import SupplierRates from './pages/SupplierRates';
+import OutstandingDues from './pages/OutstandingDues';
+import OutstandingAmounts from './pages/OutstandingAmounts';
+import SalesReport from './pages/SalesReport';
+import CustomerReport from './pages/CustomerReport';
+import TaxSettings from './pages/TaxSettings';
+import UISettings from './pages/UISettings';
+import UserAccess from './pages/UserAccess';
 
 function App() {
   useEffect(() => {
