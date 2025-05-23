@@ -104,12 +104,13 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   // Simplified web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Generating web-only HTML preview for invoice:', invoice.id);
+      console.log('Generating web-only HTML preview for invoice:', invoice);
       const htmlPreview = generateInvoiceHtml(invoice, companyInfo);
       console.log('HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
       console.error('Error generating preview:', error);
+      toast.error('Failed to generate preview. Please try again.');
       
       // Simple fallback
       const simpleFallback = `
@@ -153,7 +154,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Simplified print function for web-only mode
+  // Pure web print function
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       console.log('Printing invoice:', invoiceId);
@@ -164,15 +165,13 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       // Open in new window and print
       const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(decodeURIComponent(htmlData.split(',')[1]));
-        printWindow.document.close();
-        printWindow.onload = function() {
-          printWindow.print();
-        };
-      } else {
-        throw new Error('Could not open print window');
-      }
+      if (!printWindow) throw new Error('Could not open print window');
+      
+      printWindow.document.write(decodeURIComponent(htmlData.split(',')[1]));
+      printWindow.document.close();
+      printWindow.onload = function() {
+        printWindow.print();
+      };
       
       toast.success('Invoice sent to printer');
     } catch (error) {
