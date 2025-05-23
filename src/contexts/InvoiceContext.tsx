@@ -101,41 +101,40 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Modified generate invoice preview function with fallback mechanism
+  // Modified generate invoice preview function with better fallback
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('Generating preview for invoice:', invoice.id);
       
-      // Try to use jspdf method if available
-      try {
-        // Import dynamically to avoid build errors when jspdf is not available
-        const invoiceUtils = await import('../utils/invoiceUtils').catch(() => null);
-        if (invoiceUtils && invoiceUtils.generatePdfPreview) {
-          const pdfPreview = await invoiceUtils.generatePdfPreview(invoice, companyInfo);
-          if (pdfPreview) return pdfPreview;
-        }
-        throw new Error('PDF generation not available');
-      } catch (pdfError) {
-        console.warn('PDF generation failed, using fallback HTML preview', pdfError);
-        // Use HTML fallback instead
-        return generateFallbackPreview(invoice);
-      }
+      // Always use HTML fallback to avoid git dependency issues
+      const htmlPreview = generateFallbackPreview(invoice);
+      console.log('HTML preview generated successfully');
+      return htmlPreview;
     } catch (error) {
       console.error('Error generating preview:', error);
       
       // Ultra-simple fallback as last resort
-      const fallbackHtml = `
+      const simpleFallback = `
         <html>
-        <body style="padding: 20px; font-family: Arial;">
-          <h2>Invoice ${invoice.id}</h2>
-          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
-          <p>Customer: ${invoice.customerName || 'Unknown'}</p>
-          <p>Date: ${invoice.date || new Date().toLocaleDateString()}</p>
+        <head><title>Invoice ${invoice.id}</title></head>
+        <body style="padding: 20px; font-family: Arial, sans-serif;">
+          <h1>Invoice ${invoice.id}</h1>
+          <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown'}</p>
+          <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
+          <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+          <div style="margin-top: 20px;">
+            <h3>Items:</h3>
+            ${(invoice.items || []).map(item => `
+              <div style="margin: 5px 0;">
+                ${item.description || 'Item'} - Qty: ${item.quantity} - Rate: ₹${item.unitPrice?.toFixed(2)} - Amount: ₹${item.amount?.toFixed(2)}
+              </div>
+            `).join('')}
+          </div>
         </body>
         </html>
       `;
       
-      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
+      return `data:text/html;charset=utf-8,${encodeURIComponent(simpleFallback)}`;
     }
   };
   
