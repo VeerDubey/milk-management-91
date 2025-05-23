@@ -101,10 +101,21 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Simplified web-only preview generation
+  // Completely web-only preview generation with robust error handling
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('Generating web-only HTML preview for invoice:', invoice);
+      
+      // Add debug logging
+      console.log('Company info:', companyInfo);
+      console.log('Invoice data:', {
+        id: invoice.id,
+        number: invoice.number,
+        customerName: invoice.customerName,
+        total: invoice.total,
+        items: invoice.items
+      });
+      
       const htmlPreview = generateInvoiceHtml(invoice, companyInfo);
       console.log('HTML preview generated successfully');
       return htmlPreview;
@@ -112,15 +123,27 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       console.error('Error generating preview:', error);
       toast.error('Failed to generate preview. Please try again.');
       
-      // Simple fallback
+      // Robust fallback that always works
       const simpleFallback = `
         <html>
-        <head><title>Invoice ${invoice.id}</title></head>
-        <body style="padding: 20px; font-family: Arial, sans-serif;">
-          <h1>Invoice ${invoice.id}</h1>
-          <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown'}</p>
-          <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
-          <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+        <head>
+          <title>Invoice ${invoice.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+            .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Invoice ${invoice.number || invoice.id}</h1>
+            <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
+          </div>
+          <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}</p>
+          <p><strong>Items:</strong> ${(invoice.items || []).length} item(s)</p>
+          <div class="total">
+            <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+          </div>
         </body>
         </html>
       `;
@@ -129,7 +152,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Simplified download function for web-only mode
+  // Web-only download function
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       console.log('Downloading invoice:', invoiceId);
@@ -154,7 +177,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Pure web print function
+  // Web-only print function
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       console.log('Printing invoice:', invoiceId);
