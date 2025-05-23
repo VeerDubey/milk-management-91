@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice, Customer, Product } from '@/types';
 import { 
@@ -122,19 +123,15 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         templateToUse
       );
       
-      // If the result is a Promise, await it
-      if (previewResult instanceof Promise) {
-        return await previewResult;
-      }
-      
-      // If it's already a string (data URL), return it
+      // Handle different return types from generateInvoicePreview
       if (typeof previewResult === 'string') {
+        // Already a data URL string
         return previewResult;
       }
       
-      // If it's a jsPDF object, convert to data URL
-      if (previewResult && typeof previewResult.output === 'function') {
-        return previewResult.output('datauristring');
+      // If it's a Promise, await it
+      if (previewResult && typeof previewResult === 'object' && 'then' in previewResult) {
+        return await previewResult;
       }
       
       // Fallback: create a simple HTML preview

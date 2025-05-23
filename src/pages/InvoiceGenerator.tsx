@@ -18,11 +18,13 @@ import { useData } from "@/contexts/DataContext";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { INVOICE_TEMPLATES, generateInvoiceNumber, generateInvoicePreview, createInvoiceFromFormData } from "@/utils/invoiceUtils";
+import { INVOICE_TEMPLATES, generateInvoiceNumber, createInvoiceFromFormData } from "@/utils/invoiceUtils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useInvoices } from "@/contexts/InvoiceContext";
 
 export default function InvoiceGenerator() {
   const { customers, products, orders, addOrder } = useData();
+  const { generateInvoicePreview } = useInvoices();
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedItems, setSelectedItems] = useState([{ productId: "", quantity: 1, rate: 0, amount: 0 }]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -155,7 +157,7 @@ export default function InvoiceGenerator() {
   }, [selectedCustomerId, customers]);
 
   // Show preview of the invoice
-  const handleShowPreview = () => {
+  const handleShowPreview = async () => {
     if (!selectedCustomerId) {
       toast.error("Please select a customer");
       return;
@@ -173,28 +175,35 @@ export default function InvoiceGenerator() {
       return;
     }
     
+    // Create a proper Invoice object that matches the Invoice type
     const invoiceData = {
       id: invoiceNumber,
+      customerId: selectedCustomerId,
       customerName: customer.name,
+      number: invoiceNumber,
       date: invoiceDate,
-      items: selectedItems,
-      totalAmount: totalAmount,
+      dueDate: dueDate,
+      items: selectedItems.map(item => ({
+        productId: item.productId,
+        description: products.find(p => p.id === item.productId)?.name || "",
+        quantity: item.quantity,
+        unitPrice: item.rate,
+        amount: item.amount
+      })),
+      subtotal: selectedItems.reduce((sum, item) => sum + item.amount, 0),
+      taxRate: taxRate,
+      taxAmount: (selectedItems.reduce((sum, item) => sum + item.amount, 0) * taxRate) / 100,
+      total: totalAmount,
+      status: 'draft' as const,
       notes: notes,
-      terms: terms,
-      status: "Draft"
+      termsAndConditions: terms,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
     try {
-      // Generate the PDF preview - this returns a jsPDF object
-      const pdfDoc = generateInvoicePreview(
-        invoiceData, 
-        companyFormValues, 
-        products,
-        selectedTemplate
-      );
-      
-      // Convert to data URI for iframe display
-      const dataUri = pdfDoc.output('datauristring');
+      // Generate the preview using the context function
+      const dataUri = await generateInvoicePreview(invoiceData, selectedTemplate);
       setPreviewUrl(dataUri);
       setShowPreview(true);
     } catch (error) {
