@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice, Customer, Product } from '@/types';
 import { 
@@ -197,7 +196,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
                   <tr>
                     <td>${products.find((p: any) => p.id === item.productId)?.name || 'Product'}</td>
                     <td>${item.quantity}</td>
-                    <td>₹${typeof item.unitPrice !== 'undefined' ? item.unitPrice : item.rate}</td>
+                    <td>₹${item.unitPrice}</td>
                     <td>₹${item.amount}</td>
                   </tr>
                 `).join('')}
