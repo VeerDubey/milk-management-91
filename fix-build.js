@@ -18,6 +18,7 @@ try {
 process.env.npm_config_user_agent = 'npm';
 process.env.npm_config_git = 'false';
 process.env.npm_config_no_git_tag_version = 'true';
+process.env.npm_config_registry = 'https://registry.npmjs.org/';
 delete process.env.BUN_INSTALL;
 delete process.env.YARN_ENABLE;
 
@@ -41,7 +42,43 @@ try {
   console.log('Cache clear failed, continuing...');
 }
 
-// Install with npm only, avoiding git dependencies
+// Create robust .npmrc to prevent git usage
+const npmrcContent = `
+# Force npm usage and disable all git operations
+registry=https://registry.npmjs.org/
+fetch-timeout=600000
+fetch-retry-mintimeout=60000
+fetch-retry-maxtimeout=300000
+legacy-peer-deps=true
+prefer-offline=false
+git=false
+git-tag-version=false
+no-git-tag-version=true
+strict-ssl=true
+user-agent=npm
+
+# Completely disable git for all packages
+@electron:registry=https://registry.npmjs.org/
+@electron/node-gyp:registry=https://registry.npmjs.org/
+@electron/node-gyp:git=false
+@electron/node-gyp:node-gyp-git=false
+node-gyp:git=false
+electron:git=false
+electron-builder:git=false
+
+# Force tarball downloads
+@electron/node-gyp:tarball=true
+node-gyp:tarball=true
+
+# Disable bun entirely
+user-agent=npm
+npm_config_user_agent=npm
+`;
+
+fs.writeFileSync('.npmrc', npmrcContent);
+console.log('✅ Created enhanced .npmrc file');
+
+// Install with npm only, avoiding git dependencies completely
 console.log('Installing dependencies with npm...');
 try {
   execSync('npm install --legacy-peer-deps --no-git --prefer-offline', { 
@@ -49,7 +86,8 @@ try {
     env: {
       ...process.env,
       npm_config_git: 'false',
-      npm_config_user_agent: 'npm'
+      npm_config_user_agent: 'npm',
+      npm_config_registry: 'https://registry.npmjs.org/'
     }
   });
   console.log('✅ Dependencies installed successfully');
