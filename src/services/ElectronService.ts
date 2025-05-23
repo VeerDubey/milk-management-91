@@ -1,30 +1,6 @@
 
 // ElectronService.ts - Unified interface for Electron functionality with web fallbacks
 
-// Define the interface for the Electron API
-interface ElectronAPI {
-  isElectron: boolean;
-  downloadInvoice: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
-  printInvoice: (data: string) => Promise<{success: boolean, error?: string}>;
-  getPrinters: () => Promise<{success: boolean, printers: any[]}>;
-  system: {
-    openExternal: (url: string) => Promise<boolean>;
-    copyToClipboard: (text: string) => Promise<{success: boolean, error?: string}>;
-    readFromClipboard: () => Promise<{success: boolean, error?: string, text: string}>;
-    isPlatform: (platform: string) => Promise<boolean>;
-  };
-  exportData: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
-  importData: () => Promise<{success: boolean, data?: string, error?: string}>;
-  saveLog: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
-}
-
-// Type declaration for the global Window object
-declare global {
-  interface Window {
-    electron?: ElectronAPI;
-  }
-}
-
 /**
  * This service provides a unified interface for Electron functionality,
  * with fallbacks for web-only mode.
