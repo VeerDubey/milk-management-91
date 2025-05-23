@@ -1,51 +1,40 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Customer, Product, Order, Invoice } from '@/types';
-import { toast } from 'sonner';
-
-interface DataContextType {
-  customers: Customer[];
-  products: Product[];
-  orders: Order[];
-  addCustomer: (customer: Omit<Customer, 'id'>) => Customer;
-  updateCustomer: (id: string, customer: Partial<Customer>) => void;
-  deleteCustomer: (id: string) => void;
-  getCustomerById: (id: string) => Customer | undefined;
-  addProduct: (product: Omit<Product, 'id'>) => Product;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  getProductById: (id: string) => Product | undefined;
-  addOrder: (order: Omit<Order, 'id'>) => Order;
-  updateOrder: (id: string, order: Partial<Order>) => void;
-  deleteOrder: (id: string) => void;
-  getOrderById: (id: string) => Order | undefined;
-  addInvoice: (invoice: Omit<Invoice, 'id'>) => Invoice;
-  updateInvoice: (id: string, invoice: Partial<Invoice>) => void;
-  deleteInvoice: (id: string) => void;
-  getInvoiceById: (id: string) => Invoice | undefined;
-}
+import { useCustomerState } from './useCustomerState';
+import { useProductState } from './useProductState';
+import { useOrderState } from './useOrderState';
+import { usePaymentState } from './usePaymentState';
+import { useSupplierState } from './useSupplierState';
+import { useStockState } from './useStockState';
+import { useExpenseState } from './useExpenseState';
+import { useTrackSheetState } from './useTrackSheetState';
+import { useVehicleSalesmanState } from './useVehicleSalesmanState';
+import { useProductRateState } from './useProductRateState';
+import { useUISettingsState } from './useUISettingsState';
+import { DataContextType } from './types';
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Sample data
+// Sample data without createdAt/updatedAt fields
 const sampleCustomers: Customer[] = [
   {
     id: '1',
     name: 'John Doe',
-    email: 'john@example.com',
     phone: '+91 98765 43210',
     address: '123 Main St, City, State 12345',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    isActive: true,
+    outstandingBalance: 500,
+    email: 'john@example.com',
   },
   {
     id: '2',
     name: 'Jane Smith',
-    email: 'jane@example.com',
     phone: '+91 87654 32109',
     address: '456 Oak Ave, City, State 12345',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    isActive: true,
+    outstandingBalance: 300,
+    email: 'jane@example.com',
   }
 ];
 
@@ -55,202 +44,237 @@ const sampleProducts: Product[] = [
     name: 'Fresh Milk',
     price: 30,
     unit: 'liter',
-    category: 'Dairy',
     description: 'Fresh cow milk',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    isActive: true,
+    category: 'Dairy',
   },
   {
     id: '2',
     name: 'Yogurt',
     price: 25,
     unit: 'cup',
-    category: 'Dairy',
     description: 'Fresh homemade yogurt',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    isActive: true,
+    category: 'Dairy',
   }
 ];
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('customers');
-    return saved ? JSON.parse(saved) : sampleCustomers;
-  });
-  
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('products');
-    return saved ? JSON.parse(saved) : sampleProducts;
-  });
-  
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('orders');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [invoices, setInvoices] = useState<Invoice[]>(() => {
+  // Initialize all state hooks
+  const customerState = useCustomerState();
+  const productState = useProductState();
+  const orderState = useOrderState();
+  const vehicleSalesmanState = useVehicleSalesmanState();
+  const paymentState = usePaymentState(customerState.customers, customerState.updateCustomer);
+  const supplierState = useSupplierState();
+  const stockState = useStockState(supplierState.updateSupplier);
+  const expenseState = useExpenseState();
+  const trackSheetState = useTrackSheetState();
+  const productRateState = useProductRateState(productState.products);
+  const uiSettingsState = useUISettingsState();
+
+  // Initialize customers and products with sample data if empty
+  React.useEffect(() => {
+    if (customerState.customers.length === 0) {
+      sampleCustomers.forEach(customer => {
+        customerState.addCustomer(customer);
+      });
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (productState.products.length === 0) {
+      sampleProducts.forEach(product => {
+        productState.addProduct(product);
+      });
+    }
+  }, []);
+
+  // Helper functions
+  const getCustomerById = (id: string) => {
+    return customerState.customers.find(customer => customer.id === id);
+  };
+
+  const getProductById = (id: string) => {
+    return productState.products.find(product => product.id === id);
+  };
+
+  const getOrderById = (id: string) => {
+    return orderState.orders.find(order => order.id === id);
+  };
+
+  // Invoice management (simplified)
+  const [invoices, setInvoices] = React.useState<Invoice[]>(() => {
     const saved = localStorage.getItem('invoices');
     return saved ? JSON.parse(saved) : [];
   });
-  
-  useEffect(() => {
-    localStorage.setItem('customers', JSON.stringify(customers));
-  }, [customers]);
-  
-  useEffect(() => {
-    localStorage.setItem('products', JSON.stringify(products));
-  }, [products]);
-  
-  useEffect(() => {
-    localStorage.setItem('orders', JSON.stringify(orders));
-  }, [orders]);
-  
-  useEffect(() => {
+
+  React.useEffect(() => {
     localStorage.setItem('invoices', JSON.stringify(invoices));
   }, [invoices]);
-  
-  // Customer operations
-  const addCustomer = (customer: Omit<Customer, 'id'>) => {
-    const newCustomer = {
-      ...customer,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setCustomers(prev => [...prev, newCustomer]);
-    return newCustomer;
-  };
-  
-  const updateCustomer = (id: string, customerData: Partial<Customer>) => {
-    setCustomers(customers =>
-      customers.map(customer =>
-        customer.id === id
-          ? { ...customer, ...customerData, updatedAt: new Date().toISOString() }
-          : customer
-      )
-    );
-  };
-  
-  const deleteCustomer = (id: string) => {
-    setCustomers(customers => customers.filter(customer => customer.id !== id));
-  };
-  
-  const getCustomerById = (id: string) => {
-    return customers.find(customer => customer.id === id);
-  };
-  
-  // Product operations
-  const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = {
-      ...product,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setProducts(prev => [...prev, newProduct]);
-    return newProduct;
-  };
-  
-  const updateProduct = (id: string, productData: Partial<Product>) => {
-    setProducts(products =>
-      products.map(product =>
-        product.id === id
-          ? { ...product, ...productData, updatedAt: new Date().toISOString() }
-          : product
-      )
-    );
-  };
-  
-  const deleteProduct = (id: string) => {
-    setProducts(products => products.filter(product => product.id !== id));
-  };
-  
-  const getProductById = (id: string) => {
-    return products.find(product => product.id === id);
-  };
-  
-  // Order operations
-  const addOrder = (order: Omit<Order, 'id'>) => {
-    const newOrder = {
-      ...order,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setOrders(prev => [...prev, newOrder]);
-    return newOrder;
-  };
-  
-  const updateOrder = (id: string, orderData: Partial<Order>) => {
-    setOrders(orders =>
-      orders.map(order =>
-        order.id === id
-          ? { ...order, ...orderData, updatedAt: new Date().toISOString() }
-          : order
-      )
-    );
-  };
-  
-  const deleteOrder = (id: string) => {
-    setOrders(orders => orders.filter(order => order.id !== id));
-  };
-  
-  const getOrderById = (id: string) => {
-    return orders.find(order => order.id === id);
-  };
-  
-  // Invoice operations
+
   const addInvoice = (invoice: Omit<Invoice, 'id'>) => {
     const newInvoice = {
       ...invoice,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      id: `inv-${Date.now()}`,
     };
     setInvoices(prev => [...prev, newInvoice]);
-    return newInvoice;
+    return newInvoice.id;
   };
-  
+
   const updateInvoice = (id: string, invoiceData: Partial<Invoice>) => {
     setInvoices(invoices =>
       invoices.map(invoice =>
-        invoice.id === id
-          ? { ...invoice, ...invoiceData, updatedAt: new Date().toISOString() }
-          : invoice
+        invoice.id === id ? { ...invoice, ...invoiceData } : invoice
       )
     );
   };
-  
+
   const deleteInvoice = (id: string) => {
     setInvoices(invoices => invoices.filter(invoice => invoice.id !== id));
   };
-  
+
   const getInvoiceById = (id: string) => {
     return invoices.find(invoice => invoice.id === id);
   };
-  
+
+  const generateInvoiceFromOrder = (orderId: string): string | null => {
+    const order = getOrderById(orderId);
+    if (!order) return null;
+
+    const customer = getCustomerById(order.customerId || '');
+    if (!customer) return null;
+
+    const invoiceData: Omit<Invoice, 'id'> = {
+      customerId: order.customerId || '',
+      customerName: customer.name,
+      number: `INV-${Date.now()}`,
+      date: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      items: order.items.map(item => ({
+        productId: item.productId,
+        description: getProductById(item.productId)?.name || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        amount: item.quantity * item.unitPrice
+      })),
+      subtotal: order.total || 0,
+      total: order.total || 0,
+      status: 'draft' as const,
+      notes: '',
+      termsAndConditions: '',
+    };
+
+    return addInvoice(invoiceData);
+  };
+
   return (
     <DataContext.Provider
       value={{
-        customers,
-        products,
-        orders,
-        addCustomer,
-        updateCustomer,
-        deleteCustomer,
+        // Customer state
+        customers: customerState.customers,
+        addCustomer: customerState.addCustomer,
+        updateCustomer: customerState.updateCustomer,
+        deleteCustomer: customerState.deleteCustomer,
         getCustomerById,
-        addProduct,
-        updateProduct,
-        deleteProduct,
+
+        // Product state
+        products: productState.products,
+        addProduct: productState.addProduct,
+        updateProduct: productState.updateProduct,
+        deleteProduct: productState.deleteProduct,
         getProductById,
-        addOrder,
-        updateOrder,
-        deleteOrder,
+
+        // Order state
+        orders: orderState.orders,
+        addOrder: orderState.addOrder,
+        updateOrder: orderState.updateOrder,
+        deleteOrder: orderState.deleteOrder,
         getOrderById,
+        addBatchOrders: orderState.addBatchOrders,
+        duplicateOrder: orderState.duplicateOrder,
+        calculateOrderTotal: orderState.calculateOrderTotal,
+
+        // Payment state
+        payments: paymentState.payments,
+        addPayment: paymentState.addPayment,
+        updatePayment: paymentState.updatePayment,
+        deletePayment: paymentState.deletePayment,
+        deleteMultiplePayments: paymentState.deleteMultiplePayments,
+
+        // Product rate state
+        customerProductRates: productRateState.customerProductRates,
+        addProductRate: productRateState.addCustomerProductRate,
+        updateProductRate: productRateState.updateCustomerProductRate,
+        deleteProductRate: productRateState.deleteCustomerProductRate,
+        getProductRateForCustomer: productRateState.getProductRateForCustomer,
+        addCustomerProductRate: productRateState.addCustomerProductRate,
+        updateCustomerProductRate: productRateState.updateCustomerProductRate,
+
+        // Stock state
+        stockTransactions: stockState.stockTransactions,
+        addStockTransaction: stockState.addStockTransaction,
+        updateStockTransaction: stockState.updateStockTransaction,
+        deleteStockTransaction: stockState.deleteStockTransaction,
+        stockEntries: stockState.stockEntries,
+        addStockEntry: stockState.addStockEntry,
+
+        // Supplier state
+        suppliers: supplierState.suppliers,
+        addSupplier: supplierState.addSupplier,
+        updateSupplier: supplierState.updateSupplier,
+        deleteSupplier: supplierState.deleteSupplier,
+        supplierProductRates: supplierState.supplierProductRates,
+        addSupplierProductRate: supplierState.addSupplierProductRate,
+        updateSupplierProductRate: supplierState.updateSupplierProductRate,
+        deleteSupplierProductRate: supplierState.deleteSupplierProductRate,
+        supplierPayments: supplierState.supplierPayments,
+        addSupplierPayment: supplierState.addSupplierPayment,
+        updateSupplierPayment: supplierState.updateSupplierPayment,
+        deleteSupplierPayment: supplierState.deleteSupplierPayment,
+
+        // UI settings state
+        uiSettings: uiSettingsState.uiSettings,
+        updateUISettings: uiSettingsState.updateUISettings,
+
+        // Vehicle and Salesman state
+        vehicles: vehicleSalesmanState.vehicles,
+        addVehicle: vehicleSalesmanState.addVehicle,
+        updateVehicle: vehicleSalesmanState.updateVehicle,
+        deleteVehicle: vehicleSalesmanState.deleteVehicle,
+        salesmen: vehicleSalesmanState.salesmen,
+        addSalesman: vehicleSalesmanState.addSalesman,
+        updateSalesman: vehicleSalesmanState.updateSalesman,
+        deleteSalesman: vehicleSalesmanState.deleteSalesman,
+        addVehicleTrip: vehicleSalesmanState.addVehicleTrip,
+
+        // Expense state
+        expenses: expenseState.expenses,
+        addExpense: expenseState.addExpense,
+        updateExpense: expenseState.updateExpense,
+        deleteExpense: expenseState.deleteExpense,
+        getExpensesByCategory: expenseState.getExpensesByCategory,
+        getExpensesByDateRange: expenseState.getExpensesByDateRange,
+        getTotalExpenses: expenseState.getTotalExpenses,
+        getExpenseStatsByCategory: expenseState.getExpenseStatsByCategory,
+
+        // TrackSheet state
+        trackSheets: trackSheetState.trackSheets,
+        addTrackSheet: trackSheetState.addTrackSheet,
+        updateTrackSheet: trackSheetState.updateTrackSheet,
+        deleteTrackSheet: trackSheetState.deleteTrackSheet,
+        trackSheetTemplates: trackSheetState.trackSheetTemplates,
+        createTemplate: trackSheetState.createTemplate,
+        deleteTemplate: trackSheetState.deleteTemplate,
+        createTrackSheetFromOrder: trackSheetState.createTrackSheetFromOrder,
+
+        // Invoice state
+        invoices,
         addInvoice,
         updateInvoice,
         deleteInvoice,
         getInvoiceById,
+        generateInvoiceFromOrder,
       }}
     >
       {children}
@@ -265,3 +289,5 @@ export function useData() {
   }
   return context;
 }
+
+export type { DataContextType };
