@@ -14,7 +14,7 @@ interface ElectronAPI {
     isPlatform: (platform: string) => Promise<boolean>;
   };
   exportData: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
-  importData: (filePath?: string) => Promise<{success: boolean, data?: string, error?: string}>;
+  importData: () => Promise<{success: boolean, data?: string, error?: string}>;
   saveLog: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
 }
 
@@ -115,9 +115,8 @@ export const ElectronService = {
   
   // Data import/export operations
   exportData: async (data: string, filename: string) => {
-    if (typeof window !== 'undefined' && window.electron) {
-      return await window.electron.exportData?.(data, filename) || 
-        { success: false, error: 'Export function not available' };
+    if (typeof window !== 'undefined' && window.electron && window.electron.exportData) {
+      return await window.electron.exportData(data);
     }
     
     // Web fallback for data export (same as download)
@@ -131,10 +130,9 @@ export const ElectronService = {
     return { success: true };
   },
   
-  importData: async (filePath?: string) => {
-    if (typeof window !== 'undefined' && window.electron) {
-      return await window.electron.importData?.(filePath) || 
-        { success: false, error: 'Import function not available' };
+  importData: async () => {
+    if (typeof window !== 'undefined' && window.electron && window.electron.importData) {
+      return await window.electron.importData();
     }
     
     // Web fallback for data import
@@ -181,9 +179,8 @@ export const ElectronService = {
   
   // Log saving operation
   saveLog: async (data: string, filename: string) => {
-    if (typeof window !== 'undefined' && window.electron) {
-      return await window.electron.saveLog?.(data, filename) || 
-        { success: false, error: 'Log saving function not available' };
+    if (typeof window !== 'undefined' && window.electron && window.electron.saveLog) {
+      return await window.electron.saveLog(data);
     }
     
     // Web fallback for log saving (same as download)

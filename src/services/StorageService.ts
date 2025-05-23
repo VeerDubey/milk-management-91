@@ -8,6 +8,29 @@ import { toast } from 'sonner';
  */
 export const StorageService = {
   /**
+   * Get estimated localStorage usage in KB
+   * @returns Storage usage in KB
+   */
+  getStorageUsage: (): number => {
+    try {
+      let total = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          // Get the size of the key + value
+          const value = localStorage.getItem(key) || '';
+          total += (key.length + value.length) * 2; // Approximate size in bytes (UTF-16 = 2 bytes per char)
+        }
+      }
+      // Convert bytes to KB and round to 2 decimal places
+      return Math.round((total / 1024) * 100) / 100;
+    } catch (error) {
+      console.error('Error calculating storage usage:', error);
+      return 0;
+    }
+  },
+  
+  /**
    * Save data to localStorage
    * @param key Storage key
    * @param data Data to save
@@ -105,9 +128,9 @@ export const StorageService = {
       // Use ElectronService to import data
       const result = await ElectronService.importData();
       
-      if (result.success && result.data) {
+      if (result && typeof result === 'object' && 'success' in result && result.success && 'data' in result && result.data) {
         try {
-          const data = JSON.parse(result.data);
+          const data = JSON.parse(result.data as string);
           
           // Clear current localStorage
           localStorage.clear();
@@ -128,7 +151,7 @@ export const StorageService = {
           return false;
         }
       } else {
-        toast.error(`Import failed: ${result.error || 'Unknown error'}`);
+        toast.error(`Import failed: ${result && typeof result === 'object' && 'error' in result ? result.error : 'Unknown error'}`);
         return false;
       }
     } catch (error) {
@@ -169,11 +192,16 @@ export const StorageService = {
       // Use ElectronService to save logs
       const result = await ElectronService.saveLog(logs, filename);
       
-      if (result.success) {
-        toast.success('Logs saved successfully');
-        return true;
+      if (result && typeof result === 'object' && 'success' in result) {
+        if (result.success) {
+          toast.success('Logs saved successfully');
+          return true;
+        } else {
+          toast.error(`Failed to save logs: ${result && 'error' in result ? result.error : 'Unknown error'}`);
+          return false;
+        }
       } else {
-        toast.error(`Failed to save logs: ${result.error}`);
+        toast.error('Failed to save logs: Invalid response');
         return false;
       }
     } catch (error) {
