@@ -18,6 +18,13 @@ interface ElectronAPI {
   saveLog: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
 }
 
+// Type declaration for the global Window object
+declare global {
+  interface Window {
+    electron?: ElectronAPI;
+  }
+}
+
 /**
  * This service provides a unified interface for Electron functionality,
  * with fallbacks for web-only mode.
@@ -80,43 +87,69 @@ export const ElectronService = {
     return { success: false, printers: [] };
   },
   
-  // Clipboard operations
-  copyToClipboard: async (text: string) => {
-    if (typeof window !== 'undefined' && window.electron) {
-      return await window.electron.system.copyToClipboard(text);
-    }
+  // System operations
+  system: {
+    openExternal: async (url: string) => {
+      if (typeof window !== 'undefined' && window.electron) {
+        return await window.electron.system.openExternal(url);
+      }
+      
+      // Web fallback
+      console.log('Electron not available: Opening URL in new tab');
+      window.open(url, '_blank');
+      return true;
+    },
     
-    // Web fallback for clipboard
-    console.log('Electron not available: Using browser clipboard API');
-    try {
-      await navigator.clipboard.writeText(text);
-      return { success: true };
-    } catch (e) {
-      console.error('Clipboard write failed:', e);
-      return { success: false, error: 'Cannot access clipboard' };
-    }
-  },
-  
-  readFromClipboard: async () => {
-    if (typeof window !== 'undefined' && window.electron) {
-      return await window.electron.system.readFromClipboard();
-    }
+    copyToClipboard: async (text: string) => {
+      if (typeof window !== 'undefined' && window.electron) {
+        return await window.electron.system.copyToClipboard(text);
+      }
+      
+      // Web fallback for clipboard
+      console.log('Electron not available: Using browser clipboard API');
+      try {
+        await navigator.clipboard.writeText(text);
+        return { success: true };
+      } catch (e) {
+        console.error('Clipboard write failed:', e);
+        return { success: false, error: 'Cannot access clipboard' };
+      }
+    },
     
-    // Web fallback for clipboard
-    console.log('Electron not available: Using browser clipboard API');
-    try {
-      const text = await navigator.clipboard.readText();
-      return { success: true, text };
-    } catch (e) {
-      console.error('Clipboard read failed:', e);
-      return { success: false, error: 'Cannot access clipboard', text: '' };
+    readFromClipboard: async () => {
+      if (typeof window !== 'undefined' && window.electron) {
+        return await window.electron.system.readFromClipboard();
+      }
+      
+      // Web fallback for clipboard
+      console.log('Electron not available: Using browser clipboard API');
+      try {
+        const text = await navigator.clipboard.readText();
+        return { success: true, text };
+      } catch (e) {
+        console.error('Clipboard read failed:', e);
+        return { success: false, error: 'Cannot access clipboard', text: '' };
+      }
+    },
+    
+    isPlatform: async (platform: string) => {
+      if (typeof window !== 'undefined' && window.electron) {
+        return await window.electron.system.isPlatform(platform);
+      }
+      
+      // Web fallback - detect browser platform
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (platform === 'windows') return userAgent.includes('win');
+      if (platform === 'mac') return userAgent.includes('mac');
+      if (platform === 'linux') return userAgent.includes('linux');
+      return false;
     }
   },
   
   // Data import/export operations
   exportData: async (data: string, filename: string) => {
     if (typeof window !== 'undefined' && window.electron && window.electron.exportData) {
-      return await window.electron.exportData(data);
+      return await window.electron.exportData(data, filename);
     }
     
     // Web fallback for data export (same as download)
@@ -180,7 +213,7 @@ export const ElectronService = {
   // Log saving operation
   saveLog: async (data: string, filename: string) => {
     if (typeof window !== 'undefined' && window.electron && window.electron.saveLog) {
-      return await window.electron.saveLog(data);
+      return await window.electron.saveLog(data, filename);
     }
     
     // Web fallback for log saving (same as download)
@@ -194,6 +227,3 @@ export const ElectronService = {
     return { success: true };
   }
 };
-
-// Note: The Window interface declaration has been removed as it's already 
-// defined in electron.d.ts to avoid type conflicts

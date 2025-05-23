@@ -77,14 +77,14 @@ export default function StockSettings() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+                {products?.map((product) => (
                   <ProductStockSetting
                     key={product.id}
                     product={product}
                     updateMinStock={(value) => updateProductMinStock(product.id, value)}
                   />
                 ))}
-                {products.length === 0 && (
+                {!products || products.length === 0 && (
                   <tr>
                     <td colSpan={3} className="p-4 text-center text-muted-foreground">
                       No products found
