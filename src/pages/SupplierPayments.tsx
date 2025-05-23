@@ -651,8 +651,7 @@ export default function SupplierPayments() {
               
               {(paymentFormData.paymentMethod === 'bank_transfer' || 
                 paymentFormData.paymentMethod === 'online' || 
-                pay
-                mentFormData.paymentMethod === 'upi') && (
+                paymentFormData.paymentMethod === 'upi') && (
                 <div className="col-span-2">
                   <Label htmlFor="transactionId">Transaction ID</Label>
                   <Input
