@@ -13,29 +13,15 @@ try {
     execSync('npm install --legacy-peer-deps --force --no-git', { stdio: 'inherit' });
     console.log('✅ Force installation successful!');
   } catch (secondError) {
-    console.error('❌ Force install failed too. Trying electron packages separately...');
+    console.error('❌ Force install failed too. Trying web-only installation...');
     try {
-      // Install electron separately first
-      execSync('npm install --no-save electron electron-builder electron-is-dev --force --no-git', { stdio: 'inherit' });
-      
-      // Then try the problematic node-gyp package
-      console.log('Installing node-gyp packages separately...');
-      execSync('npm install --no-save @electron/node-gyp node-gyp --force --no-git', { stdio: 'inherit' });
-      
-      // Then try the rest
-      execSync('npm install --legacy-peer-deps --no-git', { stdio: 'inherit' });
-      console.log('✅ Split installation successful!');
+      // Skip Electron packages completely
+      execSync('npm install --omit=optional --no-git', { stdio: 'inherit' });
+      console.log('✅ Web-only installation successful! (Electron features will be unavailable)');
     } catch (thirdError) {
-      console.error('❌ Split install failed too. Last attempt with minimal dependencies...');
-      try {
-        // Install only the most essential packages
-        execSync('npm install --no-save electron electron-builder react react-dom', { stdio: 'inherit' });
-        console.log('⚠️ Minimal installation completed. Some features may not work.');
-      } catch (finalError) {
-        console.error('💥 All installation attempts failed.');
-        console.error(finalError.message);
-        process.exit(1);
-      }
+      console.error('💥 All installation attempts failed.');
+      console.error(thirdError.message);
+      process.exit(1);
     }
   }
 }
