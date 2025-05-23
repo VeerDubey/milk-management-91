@@ -192,7 +192,6 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
         <div class="customer-info">
           <h3 class="section-title">Bill To</h3>
           <div><strong>${invoice.customerName || 'Customer'}</strong></div>
-          ${invoice.customerAddress ? `<div>${invoice.customerAddress}</div>` : ''}
         </div>
         
         <table>
