@@ -147,7 +147,7 @@ export const generateInvoicePreview = (
         <p>${invoice.notes || ''}</p>
         
         <h3>Terms & Conditions</h3>
-        <p>${invoice.terms || ''}</p>
+        <p>${invoice.termsAndConditions || ''}</p>
         
         <p>Bank Details:</p>
         <p>${companyInfo.bankDetails || 'Bank Details'}</p>
