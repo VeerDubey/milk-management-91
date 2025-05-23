@@ -43,7 +43,6 @@ export default function StockManagement() {
     // Create new stock entry with items array containing the product
     addStockEntry({
       date: new Date().toISOString(),
-      type: 'addition',
       totalAmount: 0,
       supplierId: '', // Adding a default empty string for supplierId which is required
       items: [{
