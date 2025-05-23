@@ -1,3 +1,4 @@
+
 // ElectronService.ts - Unified interface for Electron functionality with web fallbacks
 
 // Define the interface for the Electron API
@@ -194,7 +195,7 @@ export const ElectronService = {
   }
 };
 
-// Add TypeScript interface for the Electron API
+// Type augmentation for global Window object
 declare global {
   interface Window {
     electron?: ElectronAPI;
