@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -116,7 +115,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         toast.success('Invoice shared successfully');
       } else {
         // Fallback to clipboard
-        await ElectronService.copyToClipboard(shareData.text);
+        await ElectronService.system.copyToClipboard(shareData.text);
         toast.success('Invoice details copied to clipboard');
       }
     } catch (err) {
@@ -362,4 +361,3 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
     </Dialog>
   );
 }
-

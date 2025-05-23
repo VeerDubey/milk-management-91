@@ -47,31 +47,32 @@ class SystemAPI {
    * Copy text to clipboard
    * @param {Object} event - IPC event
    * @param {string} text - Text to copy
-   * @returns {boolean} Success status
+   * @returns {Object} Success status object
    */
   static copyToClipboard(event, text) {
     try {
       if (text && typeof text === 'string') {
         clipboard.writeText(text);
-        return true;
+        return { success: true };
       }
-      return false;
+      return { success: false, error: 'Invalid text' };
     } catch (error) {
       console.error('Copy to clipboard error:', error);
-      return false;
+      return { success: false, error: error.message };
     }
   }
 
   /**
    * Read text from clipboard
-   * @returns {string} Clipboard text
+   * @returns {Object} Clipboard text with success status
    */
   static readFromClipboard() {
     try {
-      return clipboard.readText();
+      const text = clipboard.readText();
+      return { success: true, text };
     } catch (error) {
       console.error('Read from clipboard error:', error);
-      return '';
+      return { success: false, error: error.message, text: '' };
     }
   }
   

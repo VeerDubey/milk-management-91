@@ -1,4 +1,3 @@
-
 import { ipcMain, dialog, clipboard, shell } from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -29,16 +28,16 @@ const APIRegistry = {
     ipcMain.handle('get-system-info', () => appInfo.getSystemInfo());
     
     // Register file system APIs
-    ipcMain.handle('export-data', (event, data) => fileSystem.exportData(event, data));
+    ipcMain.handle('export-data', (event, data, filename) => fileSystem.exportData(event, data, filename));
     ipcMain.handle('import-data', () => fileSystem.importData());
-    ipcMain.handle('save-log', (event, logData) => fileSystem.saveLog(event, logData));
+    ipcMain.handle('save-log', (event, logData, filename) => fileSystem.saveLog(event, logData, filename));
     
     // Register system APIs
     ipcMain.handle('open-external', (event, url) => system.openExternal(event, url));
     ipcMain.handle('open-path', (event, path) => system.openPath(event, path));
     ipcMain.handle('copy-to-clipboard', (event, text) => system.copyToClipboard(event, text));
     ipcMain.handle('read-from-clipboard', () => system.readFromClipboard());
-    ipcMain.handle('is-platform', (event, platform) => system.isPlatform(event, platform));
+    ipcMain.handle('is-platform', (event, platform) => system.isPlatform(platform));
     
     // Register invoice APIs
     ipcMain.handle('download-invoice', (event, data, filename) => invoiceApi.downloadInvoice(event, data, filename));
