@@ -3,6 +3,11 @@ import { execSync } from 'child_process';
 
 console.log('🛠️ Running npm install with fallback options...');
 
+// Force npm usage and avoid bun/yarn
+process.env.npm_config_user_agent = 'npm';
+process.env.npm_config_git = 'false';
+process.env.npm_config_git_tag_version = 'false';
+
 // Define required packages for the project
 const requiredPackages = [
   'jspdf', 
@@ -13,31 +18,27 @@ const requiredPackages = [
   'date-fns'
 ];
 
-// Try different installation approaches
+// Try different installation approaches with explicit npm usage
 const installApproaches = [
   { 
-    name: 'Standard install with no-git', 
-    command: `npm install --legacy-peer-deps --no-git ${requiredPackages.join(' ')}` 
-  },
-  { 
-    name: 'Installing packages directly from npm registry', 
+    name: 'Standard npm install with no-git', 
     command: `npm install --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ ${requiredPackages.join(' ')}` 
   },
   { 
-    name: 'Force install with no-git', 
-    command: `npm install --legacy-peer-deps --force --no-git ${requiredPackages.join(' ')}` 
+    name: 'Installing packages directly from npm registry with force', 
+    command: `npm install --legacy-peer-deps --force --no-git --registry=https://registry.npmjs.org/ ${requiredPackages.join(' ')}` 
   },
   { 
     name: 'Web-only install without optional dependencies', 
-    command: `npm install --omit=optional --no-git ${requiredPackages.join(' ')}` 
+    command: `npm install --omit=optional --omit=dev --no-git --registry=https://registry.npmjs.org/ ${requiredPackages.join(' ')}` 
   },
   { 
-    name: 'Install packages individually', 
-    command: requiredPackages.map(pkg => `npm install --no-git ${pkg}`).join(' && ') 
+    name: 'Install packages individually with npm', 
+    command: requiredPackages.map(pkg => `npm install --no-git --registry=https://registry.npmjs.org/ ${pkg}`).join(' && ') 
   },
   {
-    name: 'Direct tarball installation for jspdf',
-    command: 'npm install --no-git https://registry.npmjs.org/jspdf/-/jspdf-3.0.1.tgz && npm install --no-git https://registry.npmjs.org/jspdf-autotable/-/jspdf-autotable-5.0.2.tgz'
+    name: 'Direct tarball installation for problematic packages',
+    command: 'npm install --no-git --registry=https://registry.npmjs.org/ https://registry.npmjs.org/jspdf/-/jspdf-3.0.1.tgz && npm install --no-git --registry=https://registry.npmjs.org/ https://registry.npmjs.org/jspdf-autotable/-/jspdf-autotable-5.0.2.tgz'
   }
 ];
 
@@ -46,7 +47,14 @@ let success = false;
 for (const approach of installApproaches) {
   try {
     console.log(`Attempting ${approach.name}...`);
-    execSync(approach.command, { stdio: 'inherit' });
+    execSync(approach.command, { 
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        npm_config_git: 'false',
+        npm_config_user_agent: 'npm'
+      }
+    });
     console.log(`✅ ${approach.name} successful!`);
     success = true;
     break;
@@ -57,7 +65,7 @@ for (const approach of installApproaches) {
 }
 
 if (!success) {
-  console.error('💥 All installation attempts failed.');
+  console.error('💥 All npm installation attempts failed.');
   console.error('Consider creating a minimal reproduction or using a CDN for required libraries.');
   
   // Create fallback adapter for PDF functionality
@@ -109,5 +117,5 @@ export const safeNumber = (value: number | string | null | undefined): number =>
   
   process.exit(1);
 } else {
-  console.log('✅ Installation completed successfully!');
+  console.log('✅ Installation completed successfully with npm!');
 }

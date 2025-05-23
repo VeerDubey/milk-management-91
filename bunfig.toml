@@ -1,0 +1,24 @@
+
+[install]
+# Use npm registry for all packages
+registry = "https://registry.npmjs.org/"
+
+# Disable git operations completely
+git = false
+
+# Use legacy peer dependencies resolution
+legacy-peer-deps = true
+
+# Increase timeouts for network issues
+fetch-timeout = 600000
+
+# Prefer offline mode
+prefer-offline = true
+
+# Disable optional dependencies that might cause issues
+optional = false
+
+# Force use of tarball downloads instead of git
+[install.scopes]
+"@electron" = { git = false }
+electron = { git = false }
