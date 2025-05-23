@@ -10,15 +10,22 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { toast } from 'sonner';
 
 export default function StockManagement() {
-  const { products, stockEntries, addStockEntry, updateStockEntry } = useData();
+  const { products, stockEntries, addStockEntry } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
 
+  // Filter stock entries based on search term
   const filteredStock = stockEntries.filter(
     entry => {
-      const product = products.find(p => p.id === entry.productId);
+      const product = products.find(p => {
+        if (entry.items && entry.items.length > 0) {
+          return entry.items.some(item => item.productId === p.id);
+        } else {
+          return false;
+        }
+      });
       return product && product.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
   );
@@ -29,11 +36,15 @@ export default function StockManagement() {
       return;
     }
     
+    // Create new stock entry with items array containing the product
     addStockEntry({
-      productId: selectedProduct,
-      quantity: Number(stockQuantity),
       date: new Date().toISOString(),
-      type: 'addition'
+      type: 'addition',
+      totalAmount: 0,
+      items: [{
+        productId: selectedProduct,
+        quantity: Number(stockQuantity)
+      }]
     });
     
     toast.success('Stock updated successfully');
@@ -81,13 +92,18 @@ export default function StockManagement() {
               </thead>
               <tbody>
                 {filteredStock.map((entry) => {
-                  const product = products.find(p => p.id === entry.productId);
-                  const isLow = product && entry.quantity < (product.minStockLevel || 0);
+                  // Get first item from entry to display product information
+                  const firstItem = entry.items && entry.items.length > 0 ? entry.items[0] : null;
+                  const product = firstItem ? products.find(p => p.id === firstItem.productId) : null;
+                  
+                  // Check if product exists and if stock level is low
+                  const itemQuantity = firstItem ? firstItem.quantity : 0;
+                  const isLow = product && product.minStockLevel && (itemQuantity < product.minStockLevel);
                   
                   return (
                     <tr key={entry.id} className="border-b">
                       <td className="p-4 align-middle">{product?.name || 'Unknown Product'}</td>
-                      <td className="p-4 align-middle">{entry.quantity}</td>
+                      <td className="p-4 align-middle">{firstItem ? firstItem.quantity : 0}</td>
                       <td className="p-4 align-middle">{product?.minStockLevel || 'Not set'}</td>
                       <td className="p-4 align-middle">
                         <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
