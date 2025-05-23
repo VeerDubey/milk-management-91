@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { 
@@ -23,7 +24,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { ElectronService } from '@/services/ElectronService';
-import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { DateRange } from "react-day-picker";
 
 export default function CustomerReport() {
   const { toast } = useToast();
@@ -35,9 +38,20 @@ export default function CustomerReport() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  
+  // Use DateRange type from react-day-picker
+  const now = new Date();
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: (() => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      return thirtyDaysAgo;
+    })(),
+    to: now
+  });
 
   // Calculate date ranges based on timeFrame
-  const dateRange = useMemo(() => {
+  const calculatedDateRange = useMemo(() => {
     const now = new Date();
     const endDate = now.toISOString().split('T')[0];
     let startDate;
@@ -184,6 +198,32 @@ export default function CustomerReport() {
       });
   }, [customers, orders, invoices, products, sortColumn, sortDirection, searchTerm, timeFrame]);
 
+  // When using orders, filter by date range properly
+  const filteredOrders = useMemo(() => {
+    let result = [...orders];
+    
+    if (selectedCustomerId) {
+      result = result.filter(order => order.customerId === selectedCustomerId);
+    }
+    
+    // Simplified date range filtering without using isWithinInterval, startOfDay, endOfDay
+    if (dateRange.from && dateRange.to) {
+      result = result.filter(order => {
+        const orderDate = new Date(order.date);
+        return orderDate >= dateRange.from && orderDate <= dateRange.to;
+      });
+    }
+    
+    return result;
+  }, [orders, selectedCustomerId, dateRange]);
+
+  // Handle date range change
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
+  };
+
   // Chart data for customer spending
   const spendingChartData = useMemo(() => {
     // Get top 10 customers by spending
@@ -286,26 +326,6 @@ export default function CustomerReport() {
   // Chart colors
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-  // When using orders, filter by date range properly
-  const filteredOrders = useMemo(() => {
-    let result = [...orders];
-    
-    if (selectedCustomerId) {
-      result = result.filter(order => order.customerId === selectedCustomerId);
-    }
-    
-    if (dateRange.startDate && dateRange.endDate) {
-      result = result.filter(order => {
-        const orderDate = new Date(order.date);
-        const start = new Date(dateRange.startDate);
-        const end = new Date(dateRange.endDate);
-        return orderDate >= start && orderDate <= end;
-      });
-    }
-    
-    return result;
-  }, [orders, selectedCustomerId, dateRange]);
-
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold tracking-tight mb-6">Customer Report</h1>
@@ -366,11 +386,21 @@ export default function CustomerReport() {
                 </div>
               </div>
             </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">Custom Date Range</label>
+              <DateRangePicker 
+                value={dateRange} 
+                onValueChange={handleDateRangeChange}
+                align="start"
+                className="w-full max-w-sm"
+              />
+            </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <div>
               <span className="text-sm text-muted-foreground">
-                Showing {reportData.length} customers • {dateRange.startDate} to {dateRange.endDate}
+                Showing {reportData.length} customers • {dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : ''} to {dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : ''}
               </span>
             </div>
             <Button onClick={exportReport} variant="outline" size="sm">

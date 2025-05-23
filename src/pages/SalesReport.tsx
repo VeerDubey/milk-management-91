@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import { Calendar, Download, Filter, Loader2, RefreshCcw } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { OrderItem } from '@/types'; // Import OrderItem type
+import { OrderItem } from '@/types'; // Import OrderItem type from types
 
 // Import Recharts components for better performance and TypeScript support
 import {
