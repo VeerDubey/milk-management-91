@@ -101,17 +101,17 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Use the new HTML generator for previews
+  // Simplified web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Generating HTML preview for invoice:', invoice.id);
+      console.log('Generating web-only HTML preview for invoice:', invoice.id);
       const htmlPreview = generateInvoiceHtml(invoice, companyInfo);
       console.log('HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
       console.error('Error generating preview:', error);
       
-      // Ultra-simple fallback
+      // Simple fallback
       const simpleFallback = `
         <html>
         <head><title>Invoice ${invoice.id}</title></head>

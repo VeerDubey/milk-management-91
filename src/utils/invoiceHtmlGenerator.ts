@@ -2,7 +2,7 @@
 import { Invoice } from '@/types';
 
 /**
- * Generate a clean HTML preview for invoices
+ * Generate a clean HTML preview for invoices - completely self-contained
  */
 export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string {
   // Format currency helper
@@ -35,7 +35,7 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
     gstNumber: '29ABCDE1234F1Z5',
   };
 
-  // Generate HTML
+  // Generate completely self-contained HTML
   const html = `
     <!DOCTYPE html>
     <html>
@@ -43,8 +43,9 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
       <title>Invoice ${invoice.number || invoice.id}</title>
       <meta charset="UTF-8">
       <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+          font-family: Arial, sans-serif; 
           margin: 0; 
           padding: 40px;
           background: white;
@@ -54,8 +55,7 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
         .invoice-container {
           max-width: 800px;
           margin: 0 auto;
-          border: 1px solid #eaeaea;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          border: 1px solid #ddd;
           padding: 40px;
           border-radius: 8px;
         }
@@ -64,25 +64,26 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
           justify-content: space-between; 
           align-items: flex-start;
           margin-bottom: 40px;
-          border-bottom: 2px solid #f5f5f5;
+          border-bottom: 2px solid #eee;
           padding-bottom: 20px;
         }
         .invoice-title {
           font-size: 32px;
           font-weight: bold;
           color: #1a1a1a;
-          margin: 0 0 8px 0;
+          margin: 0;
         }
         .invoice-id {
           font-size: 16px;
           color: #666;
+          margin-top: 8px;
         }
         .company-info, .customer-info { 
           margin-bottom: 30px; 
         }
         .section-title {
           font-size: 18px;
-          font-weight: 600;
+          font-weight: bold;
           margin-bottom: 8px;
           color: #444;
         }
@@ -92,26 +93,21 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
           margin: 25px 0; 
         }
         th { 
-          background-color: #f9f9f9; 
-          padding: 12px 15px;
+          background-color: #f5f5f5; 
+          padding: 12px;
           text-align: left; 
-          font-weight: 600;
-          font-size: 14px;
-          border-bottom: 2px solid #eaeaea;
-          color: #555;
+          font-weight: bold;
+          border-bottom: 2px solid #ddd;
         }
         td { 
-          padding: 12px 15px; 
-          border-bottom: 1px solid #eaeaea;
-          color: #333;
-          font-size: 14px;
+          padding: 12px; 
+          border-bottom: 1px solid #ddd;
         }
-        .amount-col {
-          text-align: right;
-        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
         .total-section { 
           text-align: right; 
-          padding: 20px 15px;
+          padding: 20px;
           background: #f9f9f9;
           border-radius: 6px;
           margin-top: 30px;
@@ -122,18 +118,17 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
           padding: 8px 0;
         }
         .total-label {
-          font-weight: 500;
+          font-weight: bold;
           width: 150px;
         }
         .total-value {
           width: 120px;
-          font-weight: 500;
+          font-weight: bold;
         }
         .grand-total {
           font-size: 18px;
-          font-weight: 700;
-          color: #1a1a1a;
-          border-top: 2px solid #eaeaea;
+          font-weight: bold;
+          border-top: 2px solid #ddd;
           padding-top: 12px;
           margin-top: 12px;
         }
@@ -142,25 +137,14 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
           padding: 20px;
           background: #f5f5f5;
           border-radius: 6px;
-          color: #666;
         }
         .footer {
           margin-top: 40px;
           text-align: center;
           font-size: 13px;
-          color: #999;
-          border-top: 1px solid #eaeaea;
+          color: #666;
+          border-top: 1px solid #ddd;
           padding-top: 20px;
-        }
-        @media print {
-          body { 
-            padding: 0;
-            -webkit-print-color-adjust: exact;
-          }
-          .invoice-container {
-            box-shadow: none;
-            border: none;
-          }
         }
       </style>
     </head>
@@ -169,9 +153,7 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
         <div class="header">
           <div>
             <h1 class="invoice-title">INVOICE</h1>
-            <div class="invoice-id">
-              #${invoice.number || invoice.id}
-            </div>
+            <div class="invoice-id">#${invoice.number || invoice.id}</div>
           </div>
           <div>
             <div><strong>Date:</strong> ${formatDate(invoice.date || new Date().toISOString().slice(0, 10))}</div>
@@ -198,18 +180,18 @@ export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string
           <thead>
             <tr>
               <th>Description</th>
-              <th style="text-align: center;">Qty</th>
-              <th style="text-align: right;">Rate</th>
-              <th style="text-align: right;">Amount</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Rate</th>
+              <th class="text-right">Amount</th>
             </tr>
           </thead>
           <tbody>
             ${(invoice.items || []).map(item => `
               <tr>
                 <td>${item.description || 'Product'}</td>
-                <td style="text-align: center;">${item.quantity}</td>
-                <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
-                <td style="text-align: right;">${formatCurrency(item.amount || (item.quantity * (item.unitPrice || 0)))}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-right">${formatCurrency(item.unitPrice)}</td>
+                <td class="text-right">${formatCurrency(item.amount || (item.quantity * (item.unitPrice || 0)))}</td>
               </tr>
             `).join('')}
           </tbody>
