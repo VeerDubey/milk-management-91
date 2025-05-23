@@ -20,6 +20,10 @@ const installApproaches = [
     command: `npm install --legacy-peer-deps --no-git ${requiredPackages.join(' ')}` 
   },
   { 
+    name: 'Installing packages directly from npm registry', 
+    command: `npm install --legacy-peer-deps --no-git --registry=https://registry.npmjs.org/ ${requiredPackages.join(' ')}` 
+  },
+  { 
     name: 'Force install with no-git', 
     command: `npm install --legacy-peer-deps --force --no-git ${requiredPackages.join(' ')}` 
   },
@@ -30,6 +34,10 @@ const installApproaches = [
   { 
     name: 'Install packages individually', 
     command: requiredPackages.map(pkg => `npm install --no-git ${pkg}`).join(' && ') 
+  },
+  {
+    name: 'Direct tarball installation for jspdf',
+    command: 'npm install --no-git https://registry.npmjs.org/jspdf/-/jspdf-3.0.1.tgz && npm install --no-git https://registry.npmjs.org/jspdf-autotable/-/jspdf-autotable-5.0.2.tgz'
   }
 ];
 
@@ -51,6 +59,54 @@ for (const approach of installApproaches) {
 if (!success) {
   console.error('💥 All installation attempts failed.');
   console.error('Consider creating a minimal reproduction or using a CDN for required libraries.');
+  
+  // Create fallback adapter for PDF functionality
+  console.log('Creating fallback adapter for PDF functionality...');
+  try {
+    const fallbackPath = './src/utils/pdfFallback.ts';
+    const fallbackContent = `
+// Fallback PDF utilities when jspdf is not available
+export const exportToPdf = () => {
+  console.warn('PDF export is not available in this environment');
+  return null;
+};
+
+export const generatePdfPreview = () => {
+  console.warn('PDF preview is not available in this environment');
+  return null;
+};
+
+export const formatCurrency = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') {
+    return '₹0.00';
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numValue)) {
+    return '₹0.00';
+  }
+  
+  return \`₹\${numValue.toFixed(2)}\`;
+};
+
+export const safeNumber = (value: number | string | null | undefined): number => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  return isNaN(numValue) ? 0 : numValue;
+};`;
+    
+    const fs = await import('fs');
+    fs.writeFileSync(fallbackPath, fallbackContent);
+    console.log('✅ Created fallback PDF utilities');
+  } catch (err) {
+    console.error('Failed to create fallback:', err);
+  }
+  
   process.exit(1);
 } else {
   console.log('✅ Installation completed successfully!');

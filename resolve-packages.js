@@ -20,7 +20,9 @@ const corePackages = [
   '@radix-ui/react-tabs',
   'react-day-picker',
   'sonner',
-  'clsx'
+  'clsx',
+  'jspdf',
+  'jspdf-autotable'
 ];
 
 // Check if package.json exists
@@ -34,6 +36,21 @@ if (!fs.existsSync(packageJsonPath)) {
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
 try {
+  // Create .npmrc file to optimize installation
+  console.log('Creating .npmrc configuration...');
+  const npmrcContent = `
+registry=https://registry.npmjs.org/
+fetch-timeout=600000
+fetch-retry-mintimeout=60000
+fetch-retry-maxtimeout=300000
+legacy-peer-deps=true
+prefer-offline=true
+git=false
+git-tag-version=false
+`;
+  fs.writeFileSync(path.join(__dirname, '.npmrc'), npmrcContent.trim());
+  console.log('✅ Created .npmrc configuration');
+  
   // Install core packages
   console.log('Installing core packages...');
   execSync(`npm install --no-git ${corePackages.join(' ')}`, { stdio: 'inherit' });
@@ -60,6 +77,57 @@ try {
     
     fs.writeFileSync(indexPath, indexContent.trim());
     console.log('✅ Created fallback index.html');
+  }
+  
+  // Ensure PDF utils are available
+  console.log('Checking PDF utility availability...');
+  const pdfUtilsPath = path.join(__dirname, 'src', 'utils', 'pdfUtils.ts');
+  if (!fs.existsSync(pdfUtilsPath)) {
+    console.log('Creating fallback PDF utilities...');
+    const fallbackContent = `
+// Fallback PDF utilities when jspdf is not available
+export const exportToPdf = () => {
+  console.warn('PDF export is not available in this environment');
+  return null;
+};
+
+export const generatePdfPreview = () => {
+  console.warn('PDF preview is not available in this environment');
+  return null;
+};
+
+export const formatCurrency = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined || value === '') {
+    return '₹0.00';
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numValue)) {
+    return '₹0.00';
+  }
+  
+  return \`₹\${numValue.toFixed(2)}\`;
+};
+
+export const safeNumber = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  return isNaN(numValue) ? 0 : numValue;
+};`;
+    
+    // Ensure the directory exists
+    const utilsDir = path.join(__dirname, 'src', 'utils');
+    if (!fs.existsSync(utilsDir)) {
+      fs.mkdirSync(utilsDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(pdfUtilsPath, fallbackContent);
+    console.log('✅ Created fallback PDF utilities');
   }
   
   console.log('✅ Package resolution completed');
