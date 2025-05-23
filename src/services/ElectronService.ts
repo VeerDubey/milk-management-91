@@ -1,5 +1,22 @@
 
-// ElectronService.ts - Fallback implementation for when Electron is not available
+// ElectronService.ts - Unified interface for Electron functionality with web fallbacks
+
+// Define the interface for the Electron API
+interface ElectronAPI {
+  isElectron: boolean;
+  downloadInvoice: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
+  printInvoice: (data: string) => Promise<{success: boolean, error?: string}>;
+  getPrinters: () => Promise<{success: boolean, printers: any[]}>;
+  system: {
+    openExternal: (url: string) => Promise<boolean>;
+    copyToClipboard: (text: string) => Promise<{success: boolean, error?: string}>;
+    readFromClipboard: () => Promise<{success: boolean, error?: string, text: string}>;
+    isPlatform: (platform: string) => Promise<boolean>;
+  };
+  exportData: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
+  importData: (filePath?: string) => Promise<{success: boolean, data?: string, error?: string}>;
+  saveLog: (data: string, filename: string) => Promise<{success: boolean, filePath?: string, error?: string}>;
+}
 
 /**
  * This service provides a unified interface for Electron functionality,
@@ -94,23 +111,96 @@ export const ElectronService = {
       console.error('Clipboard read failed:', e);
       return { success: false, error: 'Cannot access clipboard', text: '' };
     }
+  },
+  
+  // Data import/export operations
+  exportData: async (data: string, filename: string) => {
+    if (typeof window !== 'undefined' && window.electron) {
+      return await window.electron.exportData?.(data, filename) || 
+        { success: false, error: 'Export function not available' };
+    }
+    
+    // Web fallback for data export (same as download)
+    console.log('Electron not available: Creating download link in browser for data export');
+    const link = document.createElement('a');
+    link.href = `data:text/json;charset=utf-8,${encodeURIComponent(data)}`;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return { success: true };
+  },
+  
+  importData: async (filePath?: string) => {
+    if (typeof window !== 'undefined' && window.electron) {
+      return await window.electron.importData?.(filePath) || 
+        { success: false, error: 'Import function not available' };
+    }
+    
+    // Web fallback for data import
+    console.log('Electron not available: Using file input dialog for data import');
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.style.display = 'none';
+      
+      input.onchange = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+        
+        if (!file) {
+          resolve({ success: false, error: 'No file selected' });
+          document.body.removeChild(input);
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = reader.result as string;
+            resolve({ success: true, data });
+          } catch (error) {
+            resolve({ success: false, error: 'Failed to read file' });
+          }
+          document.body.removeChild(input);
+        };
+        
+        reader.onerror = () => {
+          resolve({ success: false, error: 'Failed to read file' });
+          document.body.removeChild(input);
+        };
+        
+        reader.readAsText(file);
+      };
+      
+      document.body.appendChild(input);
+      input.click();
+    });
+  },
+  
+  // Log saving operation
+  saveLog: async (data: string, filename: string) => {
+    if (typeof window !== 'undefined' && window.electron) {
+      return await window.electron.saveLog?.(data, filename) || 
+        { success: false, error: 'Log saving function not available' };
+    }
+    
+    // Web fallback for log saving (same as download)
+    console.log('Electron not available: Creating download link in browser for log saving');
+    const link = document.createElement('a');
+    link.href = `data:text/plain;charset=utf-8,${encodeURIComponent(data)}`;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return { success: true };
   }
 };
 
 // Add TypeScript interface for the Electron API
 declare global {
   interface Window {
-    electron?: {
-      isElectron: boolean;
-      downloadInvoice: (data: string, filename: string) => Promise<{success: boolean, error?: string}>;
-      printInvoice: (data: string) => Promise<{success: boolean, error?: string}>;
-      getPrinters: () => Promise<{success: boolean, printers: any[]}>;
-      system: {
-        openExternal: (url: string) => Promise<boolean>;
-        copyToClipboard: (text: string) => Promise<{success: boolean, error?: string}>;
-        readFromClipboard: () => Promise<{success: boolean, error?: string, text: string}>;
-        isPlatform: (platform: string) => Promise<boolean>;
-      };
-    };
+    electron?: ElectronAPI;
   }
 }

@@ -1,179 +1,185 @@
 
 import { ElectronService } from './ElectronService';
+import { toast } from 'sonner';
 
 /**
- * Service for handling local storage operations with improved error handling and data management
+ * StorageService - Handles application data storage operations
+ * with fallbacks for web-only mode
  */
-export class StorageService {
+export const StorageService = {
   /**
-   * Save data to local storage with error handling
+   * Save data to localStorage
+   * @param key Storage key
+   * @param data Data to save
+   * @returns Success status
    */
-  static saveData<T>(key: string, data: T): void {
+  saveToStorage: (key: string, data: any): boolean => {
     try {
-      const serializedData = JSON.stringify(data);
-      localStorage.setItem(key, serializedData);
-      console.log(`Data successfully saved to localStorage: ${key}`);
+      localStorage.setItem(key, JSON.stringify(data));
+      return true;
     } catch (error) {
-      console.error(`Error saving data to localStorage: ${key}`, error);
-      // Show user friendly error if localStorage is full
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        alert('Storage is full. Please delete some data to continue.');
-      }
+      console.error(`Error saving ${key} to localStorage:`, error);
+      toast.error(`Failed to save ${key} data`);
+      return false;
     }
-  }
-
+  },
+  
   /**
-   * Load data from local storage with error handling and default value
+   * Load data from localStorage
+   * @param key Storage key
+   * @param defaultValue Default value if key doesn't exist
+   * @returns Retrieved data or default value
    */
-  static loadData<T>(key: string, defaultValue: T): T {
+  loadFromStorage: <T>(key: string, defaultValue: T): T => {
     try {
-      const serializedData = localStorage.getItem(key);
-      if (serializedData === null) {
-        return defaultValue;
-      }
-      return JSON.parse(serializedData) as T;
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : defaultValue;
     } catch (error) {
-      console.error(`Error loading data from localStorage: ${key}`, error);
+      console.error(`Error loading ${key} from localStorage:`, error);
+      toast.error(`Failed to load ${key} data`);
       return defaultValue;
     }
-  }
-
+  },
+  
   /**
-   * Remove data from local storage
+   * Remove data from localStorage
+   * @param key Storage key
+   * @returns Success status
    */
-  static removeData(key: string): void {
+  removeFromStorage: (key: string): boolean => {
     try {
       localStorage.removeItem(key);
-      console.log(`Data successfully removed from localStorage: ${key}`);
+      return true;
     } catch (error) {
-      console.error(`Error removing data from localStorage: ${key}`, error);
+      console.error(`Error removing ${key} from localStorage:`, error);
+      return false;
     }
-  }
-
+  },
+  
   /**
-   * Clear all app data from local storage
+   * Export all application data to a JSON file
+   * @returns Promise resolving to success status
    */
-  static clearAllData(): void {
+  exportAllData: async (): Promise<boolean> => {
     try {
-      localStorage.clear();
-      console.log('All data cleared from localStorage');
-    } catch (error) {
-      console.error('Error clearing all data from localStorage', error);
-    }
-  }
-
-  /**
-   * Export all app data as a JSON file for backup
-   */
-  static async exportData(): Promise<boolean> {
-    try {
-      const exportData: Record<string, unknown> = {};
-      
-      // Get all keys with app prefix to avoid exporting non-app data
+      // Gather all data from localStorage
+      const data: Record<string, any> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key) {
-          const value = localStorage.getItem(key);
-          if (value) {
-            exportData[key] = JSON.parse(value);
+          try {
+            data[key] = JSON.parse(localStorage.getItem(key) || 'null');
+          } catch (e) {
+            data[key] = localStorage.getItem(key);
           }
         }
       }
       
-      const dataStr = JSON.stringify(exportData, null, 2);
+      // Create a JSON string
+      const jsonData = JSON.stringify(data, null, 2);
+      const filename = `milk-center-backup-${new Date().toISOString().slice(0, 10)}.json`;
       
-      // Use ElectronService for export
-      const result = await ElectronService.exportData(dataStr);
+      // Use ElectronService to export data
+      const result = await ElectronService.exportData(jsonData, filename);
       
       if (result.success) {
-        console.log('Data exported successfully');
+        toast.success('Data exported successfully');
         return true;
       } else {
-        console.error('Export failed:', result.error);
-        alert('Error exporting data: ' + (result.error || 'Unknown error'));
+        toast.error(`Export failed: ${result.error}`);
         return false;
       }
     } catch (error) {
-      console.error('Error exporting data', error);
-      alert('Error exporting data. Please try again.');
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export data');
       return false;
     }
-  }
+  },
   
   /**
-   * Import app data from a JSON file
+   * Import data from a JSON file
+   * @returns Promise resolving to success status
    */
-  static async importData(jsonData?: string | React.ChangeEvent<HTMLInputElement>): Promise<boolean> {
+  importData: async (): Promise<boolean> => {
     try {
-      let data: Record<string, unknown>;
+      // Use ElectronService to import data
+      const result = await ElectronService.importData();
       
-      if (typeof jsonData === 'string') {
-        // Use provided JSON string
-        data = JSON.parse(jsonData);
-      } else if (jsonData && 'target' in jsonData && jsonData.target.files && jsonData.target.files[0]) {
-        // Handle file input event
-        const file = jsonData.target.files[0];
-        const text = await file.text();
-        data = JSON.parse(text);
-      } else if (ElectronService.isElectron()) {
-        // Use Electron's native dialog
-        const result = await ElectronService.importData();
-        if (!result.success) {
-          console.log('Import cancelled');
+      if (result.success && result.data) {
+        try {
+          const data = JSON.parse(result.data);
+          
+          // Clear current localStorage
+          localStorage.clear();
+          
+          // Set all imported data to localStorage
+          Object.entries(data).forEach(([key, value]) => {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+          });
+          
+          toast.success('Data imported successfully');
+          toast.info('Please restart the application to apply changes', {
+            duration: 5000
+          });
+          return true;
+        } catch (e) {
+          console.error('Error parsing imported data:', e);
+          toast.error('The selected file contains invalid data');
           return false;
         }
-        data = JSON.parse(result.data!);
       } else {
+        toast.error(`Import failed: ${result.error || 'Unknown error'}`);
         return false;
       }
-      
-      // Clear existing data first
+    } catch (error) {
+      console.error('Error importing data:', error);
+      toast.error('Failed to import data');
+      return false;
+    }
+  },
+  
+  /**
+   * Clear all application data
+   * @returns Success status
+   */
+  clearAllData: (): boolean => {
+    try {
       localStorage.clear();
-      
-      // Import all data from the JSON
-      Object.entries(data).forEach(([key, value]) => {
-        localStorage.setItem(key, JSON.stringify(value));
+      toast.success('All data cleared');
+      toast.info('Please restart the application to apply changes', {
+        duration: 5000
       });
-      
-      console.log('Data imported successfully');
       return true;
     } catch (error) {
-      console.error('Error importing data', error);
-      alert('Invalid backup file format. Please select a valid backup file.');
+      console.error('Error clearing data:', error);
+      toast.error('Failed to clear data');
       return false;
     }
-  }
+  },
   
   /**
-   * Calculate the approximate size of localStorage usage in KB
+   * Save application logs
+   * @param logs Log data to save
+   * @returns Promise resolving to success status
    */
-  static getStorageUsage(): number {
-    let total = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key);
-        if (value) {
-          total += key.length + value.length;
-        }
-      }
-    }
-    // Convert to KB
-    return Math.round(total / 1024);
-  }
-  
-  /**
-   * Save app logs to file
-   */
-  static async saveLogsToFile(logs: string[]): Promise<boolean> {
+  saveLogs: async (logs: string): Promise<boolean> => {
     try {
-      const formattedLogs = logs.join('\n\n');
-      const result = await ElectronService.saveLog(formattedLogs);
+      const filename = `milk-center-logs-${new Date().toISOString().slice(0, 10)}.txt`;
       
-      return result.success;
+      // Use ElectronService to save logs
+      const result = await ElectronService.saveLog(logs, filename);
+      
+      if (result.success) {
+        toast.success('Logs saved successfully');
+        return true;
+      } else {
+        toast.error(`Failed to save logs: ${result.error}`);
+        return false;
+      }
     } catch (error) {
-      console.error('Error saving logs', error);
+      console.error('Error saving logs:', error);
+      toast.error('Failed to save logs');
       return false;
     }
   }
-}
+};
