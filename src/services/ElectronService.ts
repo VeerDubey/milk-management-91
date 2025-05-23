@@ -195,9 +195,5 @@ export const ElectronService = {
   }
 };
 
-// Type augmentation for global Window object
-declare global {
-  interface Window {
-    electron?: ElectronAPI;
-  }
-}
+// Note: The Window interface declaration has been removed as it's already 
+// defined in electron.d.ts to avoid type conflicts
