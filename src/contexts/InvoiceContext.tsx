@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice } from '@/types';
 import { 
@@ -101,12 +102,17 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Bulletproof web-only preview generation
+  // Ultra-simple web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('🔄 Starting bulletproof preview generation for invoice:', invoice.id);
+      console.log('🔄 Generating web preview for invoice:', invoice.id);
       
-      // Validate invoice data with fallbacks and proper typing
+      // Ensure proper typing for status
+      const validStatuses: Array<'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'> = ['draft', 'sent', 'paid', 'overdue', 'canceled'];
+      const safeStatus = invoice.status && validStatuses.includes(invoice.status as any) 
+        ? invoice.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
+        : 'draft';
+      
       const safeInvoice: Invoice = {
         ...invoice,
         id: invoice.id || 'TEMP-001',
@@ -117,75 +123,55 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         total: invoice.total || 0,
         items: invoice.items || [],
         notes: invoice.notes || '',
-        status: (invoice.status && ['draft', 'sent', 'paid', 'overdue', 'canceled'].includes(invoice.status)) 
-          ? invoice.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
-          : 'draft'
+        status: safeStatus
       };
       
-      console.log('✅ Invoice validation passed, generating HTML...');
       const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
       
       if (!htmlPreview || !htmlPreview.startsWith('data:text/html')) {
         throw new Error('HTML generation failed');
       }
       
-      console.log('✅ HTML preview generated successfully');
+      console.log('✅ Preview generated successfully');
       return htmlPreview;
     } catch (error) {
       console.error('❌ Preview generation failed:', error);
       
-      // Ultra-simple fallback that will always work
-      const fallbackHtml = `
+      // Ultra-simple fallback
+      const simpleHtml = `
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Invoice Preview</title>
+          <title>Invoice ${invoice.number || invoice.id}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-            .title { font-size: 24px; font-weight: bold; margin: 0; }
-            .info { margin: 10px 0; }
-            .total { font-size: 18px; font-weight: bold; background: #f5f5f5; padding: 10px; border-radius: 5px; margin-top: 20px; }
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 20px; }
+            .title { font-size: 24px; font-weight: bold; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1 class="title">Invoice ${invoice.number || invoice.id}</h1>
-            <p class="info">Date: ${invoice.date || new Date().toLocaleDateString()}</p>
           </div>
-          <div class="info">
-            <strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}
-          </div>
-          <div class="info">
-            <strong>Items:</strong> ${(invoice.items || []).length} item(s)
-          </div>
-          <div class="total">
-            Total Amount: ₹${(invoice.total || 0).toFixed(2)}
-          </div>
-          <div style="margin-top: 30px; padding: 20px; background: #e8f4f8; border-radius: 5px;">
-            <p><strong>Note:</strong> This is a simplified preview. The full invoice template could not be loaded.</p>
-          </div>
+          <p>Customer: ${invoice.customerName || 'Unknown Customer'}</p>
+          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
         </body>
         </html>
       `;
       
-      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
+      return `data:text/html;charset=utf-8,${encodeURIComponent(simpleHtml)}`;
     }
   };
   
-  // Simple web-only download function
+  // Simple web download
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('📥 Starting download for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
-      if (!invoice) {
-        throw new Error('Invoice not found');
-      }
+      if (!invoice) throw new Error('Invoice not found');
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
       const fileName = `invoice-${invoice.number || invoice.id}.html`;
       
-      // Create and trigger download
       const link = document.createElement('a');
       link.href = htmlData;
       link.download = fileName;
@@ -193,45 +179,34 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Invoice downloaded successfully');
+      toast.success('Invoice downloaded');
     } catch (error) {
-      console.error('Download failed:', error);
       toast.error('Download failed');
     }
   };
   
-  // Simple web-only print function
+  // Simple web print
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('🖨️ Starting print for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
-      if (!invoice) {
-        throw new Error('Invoice not found');
-      }
+      if (!invoice) throw new Error('Invoice not found');
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
-      
-      // Open in new window and print
       const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        throw new Error('Could not open print window');
-      }
+      if (!printWindow) throw new Error('Could not open print window');
       
       const htmlContent = decodeURIComponent(htmlData.split(',')[1]);
       printWindow.document.write(htmlContent);
       printWindow.document.close();
-      printWindow.onload = function() {
-        printWindow.print();
-      };
+      printWindow.onload = () => printWindow.print();
       
-      toast.success('Invoice sent to printer');
+      toast.success('Sent to printer');
     } catch (error) {
-      console.error('Print failed:', error);
       toast.error('Print failed');
     }
   };
   
-  // Web-only printers function (returns empty array)
+  // Web-only (no printers)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
     return { success: false, printers: [] };
   };
