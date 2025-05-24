@@ -106,8 +106,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔄 Starting bulletproof preview generation for invoice:', invoice.id);
       
-      // Validate invoice data with fallbacks
-      const safeInvoice = {
+      // Validate invoice data with fallbacks and proper typing
+      const safeInvoice: Invoice = {
         ...invoice,
         id: invoice.id || 'TEMP-001',
         number: invoice.number || invoice.id || 'TEMP-001',
@@ -117,7 +117,9 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         total: invoice.total || 0,
         items: invoice.items || [],
         notes: invoice.notes || '',
-        status: invoice.status || 'Draft'
+        status: (invoice.status && ['draft', 'sent', 'paid', 'overdue', 'canceled'].includes(invoice.status)) 
+          ? invoice.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
+          : 'draft'
       };
       
       console.log('✅ Invoice validation passed, generating HTML...');
