@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice } from '@/types';
 import { 
@@ -105,9 +104,9 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   // Pure web preview generation - no electron dependencies
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('🔄 Generating web preview for invoice:', invoice.id);
+      console.log('🔄 Generating pure web preview for invoice:', invoice.id);
       
-      // Create a safe invoice object with all required properties
+      // Ensure we have a complete invoice object
       const safeInvoice: Invoice = {
         id: invoice.id || 'TEMP-001',
         customerId: invoice.customerId || 'TEMP-CUSTOMER',
@@ -127,44 +126,71 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         status: 'draft' as const
       };
       
-      const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
+      // Generate HTML using pure web utility
+      let htmlPreview: string;
+      try {
+        htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
+      } catch (htmlError) {
+        console.warn('HTML generator failed, creating simple fallback:', htmlError);
+        // Ultra-simple fallback HTML
+        const simpleHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Invoice ${safeInvoice.number}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+              .title { font-size: 24px; font-weight: bold; color: #333; }
+              .content { line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1 class="title">Invoice ${safeInvoice.number}</h1>
+            </div>
+            <div class="content">
+              <p><strong>Customer:</strong> ${safeInvoice.customerName}</p>
+              <p><strong>Date:</strong> ${safeInvoice.date}</p>
+              <p><strong>Total:</strong> ₹${safeInvoice.total.toFixed(2)}</p>
+            </div>
+          </body>
+          </html>
+        `;
+        htmlPreview = `data:text/html;charset=utf-8,${encodeURIComponent(simpleHtml)}`;
+      }
       
       if (!htmlPreview || !htmlPreview.startsWith('data:text/html')) {
         throw new Error('HTML generation failed');
       }
       
-      console.log('✅ Preview generated successfully');
+      console.log('✅ Pure web preview generated successfully');
       return htmlPreview;
     } catch (error) {
       console.error('❌ Preview generation failed:', error);
       
-      // Ultra-simple fallback HTML
-      const simpleHtml = `
+      // Ultimate fallback
+      const fallbackHtml = `
         <!DOCTYPE html>
         <html>
         <head>
           <title>Invoice ${invoice.number || invoice.id}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; }
-            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; color: #333; }
-            .content { line-height: 1.6; }
+            .error { color: #e74c3c; }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1 class="title">Invoice ${invoice.number || invoice.id}</h1>
-          </div>
-          <div class="content">
-            <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}</p>
-            <p><strong>Date:</strong> ${invoice.date || 'Not set'}</p>
-            <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
-          </div>
+          <h1>Invoice Preview</h1>
+          <p class="error">Preview generation encountered an issue.</p>
+          <p><strong>Invoice:</strong> ${invoice.number || invoice.id}</p>
+          <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown'}</p>
+          <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
         </body>
         </html>
       `;
       
-      return `data:text/html;charset=utf-8,${encodeURIComponent(simpleHtml)}`;
+      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
     }
   };
   
