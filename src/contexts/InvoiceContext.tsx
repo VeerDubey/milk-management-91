@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice } from '@/types';
 import { 
@@ -101,21 +102,13 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Fixed web-only preview generation
+  // Pure web preview generation - no electron dependencies
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('🔄 Generating web preview for invoice:', invoice.id);
       
-      // Ensure proper status typing - cast to correct type
-      const validStatuses = ['draft', 'sent', 'paid', 'overdue', 'canceled'] as const;
-      type InvoiceStatus = typeof validStatuses[number];
-      
-      const safeStatus: InvoiceStatus = validStatuses.includes(invoice.status as InvoiceStatus) 
-        ? invoice.status as InvoiceStatus
-        : 'draft';
-      
+      // Create a safe invoice object with proper typing
       const safeInvoice: Invoice = {
-        ...invoice,
         id: invoice.id || 'TEMP-001',
         number: invoice.number || invoice.id || 'TEMP-001',
         customerName: invoice.customerName || 'Unknown Customer',
@@ -124,7 +117,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         total: invoice.total || 0,
         items: invoice.items || [],
         notes: invoice.notes || '',
-        status: safeStatus
+        status: 'draft' as const // Force to valid literal type
       };
       
       const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
@@ -138,7 +131,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('❌ Preview generation failed:', error);
       
-      // Ultra-simple fallback
+      // Ultra-simple fallback HTML
       const simpleHtml = `
         <!DOCTYPE html>
         <html>
@@ -146,16 +139,20 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
           <title>Invoice ${invoice.number || invoice.id}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; }
-            .header { border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+            .title { font-size: 24px; font-weight: bold; color: #333; }
+            .content { line-height: 1.6; }
           </style>
         </head>
         <body>
           <div class="header">
             <h1 class="title">Invoice ${invoice.number || invoice.id}</h1>
           </div>
-          <p>Customer: ${invoice.customerName || 'Unknown Customer'}</p>
-          <p>Total: ₹${(invoice.total || 0).toFixed(2)}</p>
+          <div class="content">
+            <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}</p>
+            <p><strong>Date:</strong> ${invoice.date || 'Not set'}</p>
+            <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+          </div>
         </body>
         </html>
       `;
@@ -164,7 +161,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Simple web download
+  // Pure web download - no electron
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       const invoice = getInvoiceById(invoiceId);
@@ -180,13 +177,14 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       link.click();
       document.body.removeChild(link);
       
-      toast.success('Invoice downloaded');
+      toast.success('Invoice downloaded successfully');
     } catch (error) {
+      console.error('Download failed:', error);
       toast.error('Download failed');
     }
   };
   
-  // Simple web print
+  // Pure web print - no electron
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       const invoice = getInvoiceById(invoiceId);
@@ -203,11 +201,12 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       toast.success('Sent to printer');
     } catch (error) {
+      console.error('Print failed:', error);
       toast.error('Print failed');
     }
   };
   
-  // Web-only (no printers)
+  // Web-only - no actual printer detection
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
     return { success: false, printers: [] };
   };
