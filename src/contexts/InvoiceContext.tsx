@@ -107,17 +107,24 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔄 Generating web preview for invoice:', invoice.id);
       
-      // Create a safe invoice object with proper typing
+      // Create a safe invoice object with all required properties
       const safeInvoice: Invoice = {
         id: invoice.id || 'TEMP-001',
+        customerId: invoice.customerId || 'TEMP-CUSTOMER',
         number: invoice.number || invoice.id || 'TEMP-001',
         customerName: invoice.customerName || 'Unknown Customer',
         date: invoice.date || new Date().toISOString().slice(0, 10),
         dueDate: invoice.dueDate || 'Not set',
-        total: invoice.total || 0,
         items: invoice.items || [],
+        subtotal: invoice.subtotal || invoice.total || 0,
+        taxRate: invoice.taxRate || 0,
+        taxAmount: invoice.taxAmount || 0,
+        total: invoice.total || 0,
         notes: invoice.notes || '',
-        status: 'draft' as const // Force to valid literal type
+        termsAndConditions: invoice.termsAndConditions || '',
+        createdAt: invoice.createdAt || new Date().toISOString(),
+        updatedAt: invoice.updatedAt || new Date().toISOString(),
+        status: 'draft' as const
       };
       
       const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
