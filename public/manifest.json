@@ -5,25 +5,59 @@
   "description": "Offline milk delivery management application",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0d10",
+  "background_color": "#ffffff",
   "theme_color": "#0c0d10",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "related_applications": [
+  "screenshots": [
     {
-      "platform": "windows",
-      "url": "https://milkcenter.app"
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Order Entry",
+      "short_name": "Orders",
+      "description": "Quick access to order entry",
+      "url": "/order-entry",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Track Sheet",
+      "short_name": "Track",
+      "description": "View track sheet",
+      "url": "/track-sheet",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
   "prefer_related_applications": false
 }

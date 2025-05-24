@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
@@ -8,6 +7,8 @@ import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from '@/components/Layout';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 
 // Import all pages
 import Index from '@/pages/Index';
@@ -77,6 +78,8 @@ function App() {
                   </Route>
                 </Routes>
                 <Toaster />
+                <PWAInstallPrompt />
+                <OfflineIndicator />
               </MessagingProvider>
             </DataProvider>
           </InvoiceProvider>

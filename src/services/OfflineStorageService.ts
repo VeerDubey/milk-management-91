@@ -1,131 +1,177 @@
+import Dexie, { Table } from 'dexie';
+import { Customer, Product, Order, Payment, Supplier, Expense } from '@/types';
 
-// Define the OfflineStorageService class for offline functionality
-class OfflineStorageService {
-  private static offlineQueue: any[] = [];
-  private static syncInProgress = false;
+export interface StoredData {
+  id?: number;
+  type: string;
+  data: any;
+  timestamp: number;
+}
 
-  /**
-   * Initialize the offline storage service
-   */
-  static initialize(): void {
-    console.log('OfflineStorageService initialized');
+class OfflineDatabase extends Dexie {
+  customers!: Table<Customer>;
+  products!: Table<Product>;
+  orders!: Table<Order>;
+  payments!: Table<Payment>;
+  suppliers!: Table<Supplier>;
+  expenses!: Table<Expense>;
+  backups!: Table<StoredData>;
+
+  constructor() {
+    super('MilkCenterDB');
     
-    // Load offline queue from localStorage if exists
-    const savedQueue = localStorage.getItem('offlineQueue');
-    if (savedQueue) {
-      try {
-        this.offlineQueue = JSON.parse(savedQueue);
-        console.log(`Loaded ${this.offlineQueue.length} pending offline actions`);
-      } catch (error) {
-        console.error('Error loading offline queue:', error);
-        this.offlineQueue = [];
-      }
-    }
-    
-    // Attempt to sync when coming online
-    window.addEventListener('online', () => {
-      console.log('Device is online, attempting to sync');
-      this.synchronize();
+    this.version(1).stores({
+      customers: '++id, name, phone, isActive',
+      products: '++id, name, price, isActive, category',
+      orders: '++id, customerId, date, status, total',
+      payments: '++id, customerId, date, amount',
+      suppliers: '++id, name, phone, isActive',
+      expenses: '++id, date, category, amount',
+      backups: '++id, type, timestamp'
     });
-  }
-
-  /**
-   * Check if device is online
-   */
-  static isOnline(): boolean {
-    return navigator.onLine;
-  }
-
-  /**
-   * Queue an action for offline sync
-   */
-  static queueOfflineAction(action: any): void {
-    this.offlineQueue.push(action);
-    localStorage.setItem('offlineQueue', JSON.stringify(this.offlineQueue));
-    console.log('Action queued for offline sync:', action);
-  }
-
-  /**
-   * Get the offline queue
-   */
-  static getOfflineQueue(): any[] {
-    return this.offlineQueue;
-  }
-
-  /**
-   * Synchronize offline data with server when online
-   */
-  static async synchronize(): Promise<boolean> {
-    if (!navigator.onLine) {
-      console.log('Cannot synchronize while offline');
-      return false;
-    }
-
-    if (this.syncInProgress) {
-      console.log('Sync already in progress');
-      return false;
-    }
-
-    try {
-      this.syncInProgress = true;
-      console.log('Starting synchronization...');
-
-      if (this.offlineQueue.length === 0) {
-        console.log('No pending actions to synchronize');
-        return true;
-      }
-
-      // Process each action in the queue
-      const successfulActions = [];
-      const failedActions = [];
-
-      for (const action of this.offlineQueue) {
-        try {
-          // Here you would implement the actual synchronization with your backend
-          // For this example, we'll just simulate a successful sync
-          console.log('Processing action:', action);
-          
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          // Assume success for now
-          successfulActions.push(action);
-        } catch (error) {
-          console.error('Error processing action:', action, error);
-          failedActions.push(action);
-        }
-      }
-
-      // Remove successful actions from queue
-      if (successfulActions.length > 0) {
-        this.offlineQueue = this.offlineQueue.filter(
-          action => !successfulActions.includes(action)
-        );
-        localStorage.setItem('offlineQueue', JSON.stringify(this.offlineQueue));
-        console.log(`${successfulActions.length} actions synchronized successfully`);
-      }
-
-      // Update last sync time
-      const currentTime = new Date().toISOString();
-      localStorage.setItem('lastSuccessfulSync', currentTime);
-
-      return failedActions.length === 0;
-    } catch (error) {
-      console.error('Synchronization error:', error);
-      return false;
-    } finally {
-      this.syncInProgress = false;
-    }
-  }
-
-  /**
-   * Clean up resources
-   */
-  static cleanup(): void {
-    // Nothing to clean up for now
-    console.log('OfflineStorageService cleaned up');
   }
 }
 
-// Export the OfflineStorageService class
-export { OfflineStorageService };
+export const db = new OfflineDatabase();
+
+export class OfflineStorageService {
+  // Generic CRUD operations
+  static async saveData<T>(table: string, data: T[]): Promise<void> {
+    try {
+      const dbTable = (db as any)[table];
+      await dbTable.clear();
+      await dbTable.bulkAdd(data);
+      console.log(`Saved ${data.length} ${table} records`);
+    } catch (error) {
+      console.error(`Error saving ${table}:`, error);
+      throw error;
+    }
+  }
+
+  static async loadData<T>(table: string): Promise<T[]> {
+    try {
+      const dbTable = (db as any)[table];
+      const data = await dbTable.toArray();
+      console.log(`Loaded ${data.length} ${table} records`);
+      return data;
+    } catch (error) {
+      console.error(`Error loading ${table}:`, error);
+      return [];
+    }
+  }
+
+  static async addRecord<T>(table: string, record: T): Promise<void> {
+    try {
+      const dbTable = (db as any)[table];
+      await dbTable.add(record);
+    } catch (error) {
+      console.error(`Error adding ${table} record:`, error);
+      throw error;
+    }
+  }
+
+  static async updateRecord<T>(table: string, id: string, updates: Partial<T>): Promise<void> {
+    try {
+      const dbTable = (db as any)[table];
+      await dbTable.update(id, updates);
+    } catch (error) {
+      console.error(`Error updating ${table} record:`, error);
+      throw error;
+    }
+  }
+
+  static async deleteRecord(table: string, id: string): Promise<void> {
+    try {
+      const dbTable = (db as any)[table];
+      await dbTable.delete(id);
+    } catch (error) {
+      console.error(`Error deleting ${table} record:`, error);
+      throw error;
+    }
+  }
+
+  // Backup and restore
+  static async exportAllData(): Promise<string> {
+    try {
+      const exportData = {
+        timestamp: new Date().toISOString(),
+        version: '1.0',
+        data: {
+          customers: await this.loadData('customers'),
+          products: await this.loadData('products'),
+          orders: await this.loadData('orders'),
+          payments: await this.loadData('payments'),
+          suppliers: await this.loadData('suppliers'),
+          expenses: await this.loadData('expenses')
+        }
+      };
+      
+      return JSON.stringify(exportData, null, 2);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      throw error;
+    }
+  }
+
+  static async importAllData(jsonData: string): Promise<void> {
+    try {
+      const importData = JSON.parse(jsonData);
+      
+      if (!importData.data) {
+        throw new Error('Invalid backup format');
+      }
+
+      // Import each table
+      for (const [table, records] of Object.entries(importData.data)) {
+        if (Array.isArray(records)) {
+          await this.saveData(table, records);
+        }
+      }
+      
+      console.log('Data import completed successfully');
+    } catch (error) {
+      console.error('Error importing data:', error);
+      throw error;
+    }
+  }
+
+  static async createAutoBackup(): Promise<void> {
+    try {
+      const backupData = await this.exportAllData();
+      await db.backups.add({
+        type: 'auto-backup',
+        data: backupData,
+        timestamp: Date.now()
+      });
+      
+      // Keep only last 5 auto-backups
+      const backups = await db.backups.where('type').equals('auto-backup').toArray();
+      if (backups.length > 5) {
+        const oldBackups = backups.slice(0, -5);
+        await Promise.all(oldBackups.map(backup => 
+          backup.id ? db.backups.delete(backup.id) : Promise.resolve()
+        ));
+      }
+    } catch (error) {
+      console.error('Error creating auto-backup:', error);
+    }
+  }
+
+  // Sync with localStorage (for compatibility)
+  static async syncWithLocalStorage(): Promise<void> {
+    try {
+      // Load from localStorage and save to IndexedDB
+      const tables = ['customers', 'products', 'orders', 'payments', 'suppliers', 'expenses'];
+      
+      for (const table of tables) {
+        const localData = localStorage.getItem(table);
+        if (localData) {
+          const parsedData = JSON.parse(localData);
+          await this.saveData(table, parsedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing with localStorage:', error);
+    }
+  }
+}
