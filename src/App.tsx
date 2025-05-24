@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
@@ -5,8 +6,8 @@ import { DataProvider } from '@/contexts/data/DataContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import Layout from '@/components/Layout';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Layout } from '@/components/Layout';
 
 // Import all pages
 import Index from '@/pages/Index';
@@ -30,21 +31,14 @@ import ProductList from '@/pages/ProductList';
 import OrderList from '@/pages/OrderList';
 import PaymentList from '@/pages/PaymentList';
 import Suppliers from '@/pages/Suppliers';
-import Stock from '@/pages/Stock';
 import Expenses from './pages/Expenses';
-import Vehicles from './pages/Vehicles';
-import Salesmen from './pages/Salesmen';
-import VehicleTrips from './pages/VehicleTrips';
 import ProductRates from './pages/ProductRates';
 import Reports from './pages/Reports';
 import Invoices from './pages/Invoices';
-import CreateInvoice from './pages/CreateInvoice';
-import ViewInvoice from './pages/ViewInvoice';
-import EditInvoice from './pages/EditInvoice';
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+    <ThemeProvider>
       <Router>
         <AuthProvider>
           <InvoiceProvider>
@@ -75,17 +69,10 @@ function App() {
                       <Route path="sms-templates" element={<SMSTemplates />} />
                       <Route path="settings" element={<Settings />} />
                       <Route path="suppliers" element={<Suppliers />} />
-                      <Route path="stock" element={<Stock />} />
                       <Route path="expenses" element={<Expenses />} />
-                      <Route path="vehicles" element={<Vehicles />} />
-                      <Route path="salesmen" element={<Salesmen />} />
-                      <Route path="vehicle-trips" element={<VehicleTrips />} />
                       <Route path="product-rates" element={<ProductRates />} />
                       <Route path="reports" element={<Reports />} />
                       <Route path="invoices" element={<Invoices />} />
-                      <Route path="create-invoice" element={<CreateInvoice />} />
-                      <Route path="view-invoice/:id" element={<ViewInvoice />} />
-                      <Route path="edit-invoice/:id" element={<EditInvoice />} />
                     </Route>
                   </Route>
                 </Routes>

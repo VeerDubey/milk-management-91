@@ -51,7 +51,7 @@ export default function TruckSheet() {
         customerName: customer?.name || 'Unknown Customer',
         address: customer?.address || 'No address',
         products: order.items.map(item => ({
-          name: item.description,
+          name: item.name || item.productId || 'Unknown Product',
           quantity: item.quantity,
           unit: 'unit'
         })),
@@ -160,7 +160,7 @@ export default function TruckSheet() {
                 <SelectContent>
                   {vehicles.map(vehicle => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.name} - {vehicle.number}
+                      {vehicle.name} - {vehicle.registrationNumber || vehicle.id}
                     </SelectItem>
                   ))}
                 </SelectContent>
