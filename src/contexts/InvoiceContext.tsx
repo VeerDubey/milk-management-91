@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice } from '@/types';
 import { 
@@ -102,15 +101,17 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Ultra-simple web-only preview generation
+  // Fixed web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('🔄 Generating web preview for invoice:', invoice.id);
       
-      // Ensure proper typing for status
-      const validStatuses: Array<'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'> = ['draft', 'sent', 'paid', 'overdue', 'canceled'];
-      const safeStatus = invoice.status && validStatuses.includes(invoice.status as any) 
-        ? invoice.status as 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled'
+      // Ensure proper status typing - cast to correct type
+      const validStatuses = ['draft', 'sent', 'paid', 'overdue', 'canceled'] as const;
+      type InvoiceStatus = typeof validStatuses[number];
+      
+      const safeStatus: InvoiceStatus = validStatuses.includes(invoice.status as InvoiceStatus) 
+        ? invoice.status as InvoiceStatus
         : 'draft';
       
       const safeInvoice: Invoice = {
