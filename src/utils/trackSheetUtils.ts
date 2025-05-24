@@ -1,8 +1,7 @@
-
 // Add necessary imports for calculations and PDF generation
 import { TrackSheet, TrackSheetRow } from '@/types';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Define types
 export interface TrackSheetTemplate {
@@ -85,8 +84,8 @@ export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], c
     return rowData;
   });
   
-  // Add table
-  (doc as any).autoTable({
+  // Add table using autoTable
+  autoTable(doc, {
     head: [headers],
     body: data,
     startY: yPos + 5,
@@ -98,7 +97,6 @@ export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], c
     }
   });
   
-  // Save the PDF
   return doc;
 };
 
