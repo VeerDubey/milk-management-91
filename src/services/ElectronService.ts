@@ -1,10 +1,10 @@
 
 import { WebFileService } from './WebFileService';
 
-// Web-only service that mimics Electron API using browser capabilities
+// Web-only service that provides similar functionality to Electron
 export class ElectronService {
   static isElectron(): boolean {
-    return false; // Always false since we're web-only now
+    return false; // Always false since we're web-only
   }
 
   static async exportData(data: string, filename: string = 'backup.json') {
@@ -61,4 +61,10 @@ export class ElectronService {
       return false;
     }
   }
+
+  static system = {
+    openExternal: this.openExternal,
+    copyToClipboard: this.copyToClipboard,
+    readFromClipboard: this.readFromClipboard,
+  };
 }
