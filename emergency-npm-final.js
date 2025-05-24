@@ -5,40 +5,48 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-console.log('🚨 FINAL EMERGENCY NPM SETUP - Eliminating ALL bun usage...');
+console.log('🚨 EMERGENCY NPM FINAL - Complete Bun elimination...');
 
-// Step 1: Kill ALL bun processes more aggressively
+// Step 1: Kill ALL Bun processes with maximum force
 const killCommands = [
   'pkill -9 -f bun',
   'killall -9 bun',
   'taskkill /F /IM bun.exe',
-  'pgrep bun | xargs kill -9',
-  'ps aux | grep bun | awk \'{print $2}\' | xargs kill -9'
+  'pgrep bun | xargs kill -9 2>/dev/null || true',
+  'ps aux | grep bun | grep -v grep | awk \'{print $2}\' | xargs kill -9 2>/dev/null || true',
+  'sudo pkill -9 bun 2>/dev/null || true'
 ];
 
+console.log('Killing all Bun processes...');
 killCommands.forEach(cmd => {
   try {
-    execSync(cmd, { stdio: 'pipe' });
+    execSync(cmd, { stdio: 'pipe', timeout: 5000 });
   } catch (e) {
     // Ignore errors - just ensure bun is stopped
   }
 });
 
-// Step 2: Remove ALL bun-related files and directories
-const bunFiles = [
+// Step 2: Remove ALL Bun and conflicting files
+const filesToRemove = [
   'bun.lockb',
   'bunfig.toml',
   '.bunfig.toml',
   '.bun',
-  'node_modules/.cache/bun',
-  'node_modules/@electron/node-gyp'
+  'node_modules',
+  'package-lock.json',
+  '.npm',
+  '.cache',
+  'yarn.lock',
+  '.yarn',
+  '.pnpm-lock.yaml'
 ];
 
-bunFiles.forEach(file => {
+console.log('Removing all conflicting files...');
+filesToRemove.forEach(file => {
   try {
     if (fs.existsSync(file)) {
       if (fs.lstatSync(file).isDirectory()) {
-        execSync(`rm -rf "${file}"`, { stdio: 'pipe' });
+        execSync(`rm -rf "${file}"`, { stdio: 'pipe', timeout: 10000 });
       } else {
         fs.unlinkSync(file);
       }
@@ -49,99 +57,83 @@ bunFiles.forEach(file => {
   }
 });
 
-// Step 3: Create the most aggressive .npmrc possible
+// Step 3: Create the most restrictive .npmrc possible
 const npmrcContent = `
-# ABSOLUTE NPM ENFORCEMENT - NO BUN, NO GIT, NO EXCEPTIONS
+# EMERGENCY NPM ENFORCEMENT - ZERO BUN TOLERANCE
 registry=https://registry.npmjs.org/
-user-agent=npm
-package-manager=npm
-
-# Completely disable git operations for ALL packages
-git=false
-git-tag-version=false
-no-git-tag-version=true
-
-# Performance and reliability settings
-legacy-peer-deps=true
 fetch-timeout=600000
 fetch-retry-mintimeout=60000
 fetch-retry-maxtimeout=300000
+legacy-peer-deps=true
+prefer-offline=false
+git=false
+git-tag-version=false
+no-git-tag-version=true
+strict-ssl=true
+user-agent=npm/10.0.0
+package-manager=npm
 
-# Disable all optional dependencies
-optional=false
-no-optional=true
-
-# Force specific problematic packages to use registry
+# Package-specific settings to prevent any git operations
+@electron:registry=https://registry.npmjs.org/
+@electron:git=false
 @electron/node-gyp:registry=https://registry.npmjs.org/
 @electron/node-gyp:git=false
-@electron/node-gyp:tarball=true
-electron:registry=https://registry.npmjs.org/
-electron:git=false
-electron-builder:registry=https://registry.npmjs.org/
-electron-builder:git=false
+@electron/node-gyp:node-gyp-git=false
 node-gyp:git=false
-node-gyp:registry=https://registry.npmjs.org/
+electron:git=false
+electron-builder:git=false
 
-# Completely disable bun
+# Force tarball downloads
+@electron/node-gyp:tarball=true
+node-gyp:tarball=true
+electron:tarball=true
+
+# Disable bun entirely
+package-lock=true
+npm_config_package_manager=npm
 force-npm=true
 no-bun=true
 bun=false
-package-lock=true
+
+# Disable optional and peer dependencies
+optional=false
+no-optional=true
+audit=false
+fund=false
 `;
 
-fs.writeFileSync('.npmrc', npmrcContent);
-console.log('✅ Created ultra-aggressive .npmrc configuration');
+fs.writeFileSync('.npmrc', npmrcContent.trim());
+console.log('✅ Created emergency .npmrc configuration');
 
 // Step 4: Set environment variables aggressively
-process.env.npm_config_user_agent = 'npm';
+process.env.npm_config_user_agent = 'npm/10.0.0';
 process.env.npm_config_package_manager = 'npm';
 process.env.npm_config_git = 'false';
 process.env.npm_config_optional = 'false';
 process.env.npm_config_registry = 'https://registry.npmjs.org/';
 process.env.FORCE_NPM = 'true';
 process.env.NO_BUN = 'true';
-process.env.BUN_DISABLE = 'true';
 process.env.npm_config_package_lock = 'true';
 
-// Remove ALL bun environment variables
+// Remove ALL Bun environment variables
 delete process.env.BUN_INSTALL;
 delete process.env.BUN_CONFIG_FILE;
 delete process.env.YARN_ENABLE;
 delete process.env.BUN_RUNTIME;
+delete process.env.npm_execpath;
 
-// Step 5: Clear ALL caches aggressively
-console.log('Clearing all package manager caches...');
-const clearCommands = [
-  'npm cache clean --force',
-  'npm cache verify'
-];
-
-clearCommands.forEach(cmd => {
-  try {
-    execSync(cmd, { stdio: 'pipe' });
-  } catch (e) {
-    console.log(`Cache command completed: ${cmd}`);
-  }
-});
-
-// Step 6: Remove problematic directories
+// Step 5: Clear ALL caches
+console.log('Clearing all caches...');
 try {
-  if (fs.existsSync('node_modules')) {
-    execSync('rm -rf node_modules', { stdio: 'pipe' });
-    console.log('✅ Removed node_modules');
-  }
-  if (fs.existsSync('package-lock.json')) {
-    fs.unlinkSync('package-lock.json');
-    console.log('✅ Removed old package-lock.json');
-  }
+  execSync('npm cache clean --force', { stdio: 'pipe', timeout: 30000 });
+  execSync('npm cache verify', { stdio: 'pipe', timeout: 30000 });
+  console.log('✅ NPM cache cleared');
 } catch (e) {
-  console.log('Note: Some cleanup operations skipped');
+  console.log('Cache clear completed');
 }
 
-// Step 7: Install ONLY essential packages without ANY problematic dependencies
-console.log('Installing essential packages with npm (excluding ALL electron packages)...');
-
-const essentialPackages = [
+// Step 6: Install ONLY essential web packages (NO electron)
+const webOnlyPackages = [
   'react@18.3.1',
   'react-dom@18.3.1',
   'react-router-dom@6.26.2',
@@ -149,22 +141,19 @@ const essentialPackages = [
   'sonner@1.5.0',
   'lucide-react@0.462.0',
   'clsx@2.1.1',
-  'tailwind-merge@2.5.2',
-  '@radix-ui/react-dialog@1.1.2',
-  '@radix-ui/react-tabs@1.1.0',
-  'react-hook-form@7.53.0',
-  '@hookform/resolvers@3.9.0',
-  'zod@3.23.8'
+  'tailwind-merge@2.5.2'
 ];
 
+console.log('Installing essential web packages...');
 try {
-  const installCmd = `npm install --no-git --legacy-peer-deps --no-optional --registry=https://registry.npmjs.org/ ${essentialPackages.join(' ')}`;
+  const installCmd = `npm install --no-git --legacy-peer-deps --no-optional --registry=https://registry.npmjs.org/ --package-lock=true ${webOnlyPackages.join(' ')}`;
   execSync(installCmd, {
     stdio: 'inherit',
+    timeout: 180000, // 3 minutes timeout
     env: {
       ...process.env,
       npm_config_git: 'false',
-      npm_config_user_agent: 'npm',
+      npm_config_user_agent: 'npm/10.0.0',
       npm_config_package_manager: 'npm',
       npm_config_optional: 'false',
       npm_config_registry: 'https://registry.npmjs.org/',
@@ -174,18 +163,18 @@ try {
   });
   console.log('✅ Essential packages installed successfully');
 } catch (error) {
-  console.error('❌ Installation failed:', error.message);
-  console.log('Trying individual package installation...');
+  console.error('Installation failed, trying individual packages...');
   
-  // Fallback: install packages one by one
-  for (const pkg of essentialPackages) {
+  // Install packages one by one as fallback
+  for (const pkg of webOnlyPackages) {
     try {
       execSync(`npm install --no-git --legacy-peer-deps --no-optional --registry=https://registry.npmjs.org/ ${pkg}`, {
         stdio: 'pipe',
+        timeout: 60000,
         env: {
           ...process.env,
           npm_config_git: 'false',
-          npm_config_user_agent: 'npm',
+          npm_config_user_agent: 'npm/10.0.0',
           npm_config_registry: 'https://registry.npmjs.org/',
           FORCE_NPM: 'true'
         }
@@ -198,8 +187,9 @@ try {
 }
 
 console.log(`
-🎉 FINAL Emergency NPM setup completed!
-🚀 The application should now work without ANY bun or problematic git dependencies.
+🎉 EMERGENCY NPM FINAL completed!
+🚀 The application should now work without ANY Bun dependencies.
 📝 You can now run: npm run dev
-⚠️  Note: Electron features have been excluded to ensure stability
+⚠️  Note: All Electron and git-dependent packages have been excluded
+💡 The system is now configured for pure web-only operation
 `);

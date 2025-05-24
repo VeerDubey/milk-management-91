@@ -25,5 +25,5 @@ try {
   });
 } catch (error) {
   console.error('Failed to start with npm:', error.message);
-  console.log('Try running: node ultimate-npm-fix.js first');
+  console.log('Try running: node emergency-npm-final.js first');
 }

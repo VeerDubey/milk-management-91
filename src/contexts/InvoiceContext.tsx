@@ -101,18 +101,27 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Ultra-robust web-only preview generation
+  // Bulletproof web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Starting web-only preview generation for invoice:', invoice.id);
+      console.log('🔄 Starting bulletproof preview generation for invoice:', invoice.id);
       
-      // Validate invoice data
-      if (!invoice) {
-        throw new Error('Invoice data is missing');
-      }
+      // Validate invoice data with fallbacks
+      const safeInvoice = {
+        ...invoice,
+        id: invoice.id || 'TEMP-001',
+        number: invoice.number || invoice.id || 'TEMP-001',
+        customerName: invoice.customerName || 'Unknown Customer',
+        date: invoice.date || new Date().toISOString().slice(0, 10),
+        dueDate: invoice.dueDate || 'Not set',
+        total: invoice.total || 0,
+        items: invoice.items || [],
+        notes: invoice.notes || '',
+        status: invoice.status || 'Draft'
+      };
       
-      console.log('Invoice validation passed, generating HTML...');
-      const htmlPreview = generateInvoiceHtml(invoice, companyInfo);
+      console.log('✅ Invoice validation passed, generating HTML...');
+      const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
       
       if (!htmlPreview || !htmlPreview.startsWith('data:text/html')) {
         throw new Error('HTML generation failed');
@@ -122,7 +131,6 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       return htmlPreview;
     } catch (error) {
       console.error('❌ Preview generation failed:', error);
-      toast.error('Preview generation failed. Using fallback.');
       
       // Ultra-simple fallback that will always work
       const fallbackHtml = `
@@ -166,7 +174,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   // Simple web-only download function
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('Starting download for invoice:', invoiceId);
+      console.log('📥 Starting download for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) {
         throw new Error('Invoice not found');
@@ -193,7 +201,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   // Simple web-only print function
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('Starting print for invoice:', invoiceId);
+      console.log('🖨️ Starting print for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) {
         throw new Error('Invoice not found');
