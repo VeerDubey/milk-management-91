@@ -17,7 +17,7 @@ export function OfflineBackup() {
       setIsExporting(true);
       const exportData = await OfflineStorageService.exportAllData();
       
-      // Create and download file
+      // Create and download file using web APIs
       const blob = new Blob([exportData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -129,8 +129,8 @@ export function OfflineBackup() {
         <div className="flex items-start space-x-2 text-sm text-muted-foreground bg-blue-50 p-3 rounded">
           <AlertCircle className="h-4 w-4 mt-0.5 text-blue-600" />
           <div>
-            <p className="font-medium text-blue-900">Offline Storage Active</p>
-            <p>Your data is automatically saved locally and works without internet connection.</p>
+            <p className="font-medium text-blue-900">PWA Storage Active</p>
+            <p>Your data is stored locally in your browser and works offline.</p>
           </div>
         </div>
       </CardContent>

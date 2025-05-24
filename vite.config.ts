@@ -1,6 +1,7 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -13,15 +14,44 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}']
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'Milk Center Management System',
+        short_name: 'Milk Center',
+        description: 'Offline milk delivery management application',
+        theme_color: '#0c0d10',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: './', // This is crucial for Electron to load assets correctly when packaged
+  base: './',
   build: {
-    // Optimized build configuration for npm-only environment
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: mode === 'development',
@@ -50,7 +80,6 @@ export default defineConfig(({ mode }) => ({
         }
       }
     },
-    // Add better error handling for missing optional dependencies
     commonjsOptions: {
       esmExternals: true,
       requireReturnsDefault: 'auto',
@@ -59,13 +88,9 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     esbuildOptions: {
-      // Add a custom define to allow fallbacks for missing packages
       define: {
         'process.env.NODE_ENV': JSON.stringify(mode),
-        'process.env.VITE_ALLOW_MISSING_DEPENDENCIES': JSON.stringify('true'),
       }
-    },
-    // Exclude Electron from optimization
-    exclude: ['electron', 'electron-is-dev', 'electron-log']
+    }
   }
 }));
