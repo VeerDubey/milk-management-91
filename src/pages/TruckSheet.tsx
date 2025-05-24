@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +28,7 @@ interface DeliveryItem {
 }
 
 export default function TruckSheet() {
-  const { customers, orders, vehicles, salesmen } = useData();
+  const { customers, orders, vehicles, salesmen, products } = useData();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedDriver, setSelectedDriver] = useState('');
@@ -50,11 +49,14 @@ export default function TruckSheet() {
         customerId: order.customerId || '',
         customerName: customer?.name || 'Unknown Customer',
         address: customer?.address || 'No address',
-        products: order.items.map(item => ({
-          name: item.name || item.productId || 'Unknown Product',
-          quantity: item.quantity,
-          unit: 'unit'
-        })),
+        products: order.items.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          return {
+            name: product?.name || 'Unknown Product',
+            quantity: item.quantity,
+            unit: product?.unit || 'unit'
+          };
+        }),
         totalAmount: order.total || 0,
         delivered: false,
         notes: ''
@@ -62,7 +64,7 @@ export default function TruckSheet() {
     });
     
     setDeliveryItems(items);
-  }, [selectedDate, orders, customers]);
+  }, [selectedDate, orders, customers, products]);
 
   // Calculate delivery statistics
   useEffect(() => {
