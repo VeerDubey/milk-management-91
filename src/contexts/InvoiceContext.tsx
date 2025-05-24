@@ -101,68 +101,81 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Completely web-only preview generation with robust error handling
+  // Ultra-robust web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Generating web-only HTML preview for invoice:', invoice);
+      console.log('Starting web-only preview generation for invoice:', invoice.id);
       
-      // Add debug logging
-      console.log('Company info:', companyInfo);
-      console.log('Invoice data:', {
-        id: invoice.id,
-        number: invoice.number,
-        customerName: invoice.customerName,
-        total: invoice.total,
-        items: invoice.items
-      });
+      // Validate invoice data
+      if (!invoice) {
+        throw new Error('Invoice data is missing');
+      }
       
+      console.log('Invoice validation passed, generating HTML...');
       const htmlPreview = generateInvoiceHtml(invoice, companyInfo);
-      console.log('HTML preview generated successfully');
+      
+      if (!htmlPreview || !htmlPreview.startsWith('data:text/html')) {
+        throw new Error('HTML generation failed');
+      }
+      
+      console.log('✅ HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
-      console.error('Error generating preview:', error);
-      toast.error('Failed to generate preview. Please try again.');
+      console.error('❌ Preview generation failed:', error);
+      toast.error('Preview generation failed. Using fallback.');
       
-      // Robust fallback that always works
-      const simpleFallback = `
+      // Ultra-simple fallback that will always work
+      const fallbackHtml = `
+        <!DOCTYPE html>
         <html>
         <head>
-          <title>Invoice ${invoice.id}</title>
+          <title>Invoice Preview</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
-            .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
+            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+            .title { font-size: 24px; font-weight: bold; margin: 0; }
+            .info { margin: 10px 0; }
+            .total { font-size: 18px; font-weight: bold; background: #f5f5f5; padding: 10px; border-radius: 5px; margin-top: 20px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>Invoice ${invoice.number || invoice.id}</h1>
-            <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
+            <h1 class="title">Invoice ${invoice.number || invoice.id}</h1>
+            <p class="info">Date: ${invoice.date || new Date().toLocaleDateString()}</p>
           </div>
-          <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}</p>
-          <p><strong>Items:</strong> ${(invoice.items || []).length} item(s)</p>
+          <div class="info">
+            <strong>Customer:</strong> ${invoice.customerName || 'Unknown Customer'}
+          </div>
+          <div class="info">
+            <strong>Items:</strong> ${(invoice.items || []).length} item(s)
+          </div>
           <div class="total">
-            <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+            Total Amount: ₹${(invoice.total || 0).toFixed(2)}
+          </div>
+          <div style="margin-top: 30px; padding: 20px; background: #e8f4f8; border-radius: 5px;">
+            <p><strong>Note:</strong> This is a simplified preview. The full invoice template could not be loaded.</p>
           </div>
         </body>
         </html>
       `;
       
-      return `data:text/html;charset=utf-8,${encodeURIComponent(simpleFallback)}`;
+      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
     }
   };
   
-  // Web-only download function
+  // Simple web-only download function
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('Downloading invoice:', invoiceId);
+      console.log('Starting download for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
-      if (!invoice) throw new Error('Invoice not found');
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
       const fileName = `invoice-${invoice.number || invoice.id}.html`;
       
-      // Create download link
+      // Create and trigger download
       const link = document.createElement('a');
       link.href = htmlData;
       link.download = fileName;
@@ -172,25 +185,30 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       toast.success('Invoice downloaded successfully');
     } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download invoice');
+      console.error('Download failed:', error);
+      toast.error('Download failed');
     }
   };
   
-  // Web-only print function
+  // Simple web-only print function
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
-      console.log('Printing invoice:', invoiceId);
+      console.log('Starting print for invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
-      if (!invoice) throw new Error('Invoice not found');
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
       
       // Open in new window and print
       const printWindow = window.open('', '_blank');
-      if (!printWindow) throw new Error('Could not open print window');
+      if (!printWindow) {
+        throw new Error('Could not open print window');
+      }
       
-      printWindow.document.write(decodeURIComponent(htmlData.split(',')[1]));
+      const htmlContent = decodeURIComponent(htmlData.split(',')[1]);
+      printWindow.document.write(htmlContent);
       printWindow.document.close();
       printWindow.onload = function() {
         printWindow.print();
@@ -198,12 +216,12 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       toast.success('Invoice sent to printer');
     } catch (error) {
-      console.error('Print error:', error);
-      toast.error('Failed to print invoice');
+      console.error('Print failed:', error);
+      toast.error('Print failed');
     }
   };
   
-  // Web-only printers function
+  // Web-only printers function (returns empty array)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
     return { success: false, printers: [] };
   };

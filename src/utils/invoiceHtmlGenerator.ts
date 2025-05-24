@@ -2,241 +2,247 @@
 import { Invoice } from '@/types';
 
 /**
- * Generate a clean HTML preview for invoices - completely self-contained
+ * Generate a bulletproof HTML preview for invoices
  */
 export function generateInvoiceHtml(invoice: Invoice, companyInfo?: any): string {
-  // Format currency helper
-  const formatCurrency = (value?: number | null): string => {
-    if (value === null || value === undefined) return '₹0.00';
-    return `₹${value.toFixed(2)}`;
+  console.log('Generating HTML for invoice:', invoice.id);
+  
+  // Ensure we have safe values
+  const safeInvoice = {
+    id: invoice.id || 'N/A',
+    number: invoice.number || invoice.id || 'N/A',
+    customerName: invoice.customerName || 'Unknown Customer',
+    date: invoice.date || new Date().toISOString().slice(0, 10),
+    dueDate: invoice.dueDate || 'Not set',
+    total: invoice.total || 0,
+    items: invoice.items || [],
+    notes: invoice.notes || '',
+    status: invoice.status || 'Draft'
   };
-
-  // Format date helper
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return 'N/A';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  // Company info with defaults
-  const company = companyInfo || {
+  
+  const safeCompany = companyInfo || {
     companyName: 'Milk Center',
     address: '123 Dairy Lane, Milk City',
     contactNumber: '+91 98765 43210',
     email: 'info@milkcenter.com',
-    gstNumber: '29ABCDE1234F1Z5',
+    gstNumber: '29ABCDE1234F1Z5'
   };
-
-  // Generate completely self-contained HTML
+  
+  // Format currency safely
+  const formatCurrency = (value: number): string => {
+    try {
+      return `₹${value.toFixed(2)}`;
+    } catch (e) {
+      return '₹0.00';
+    }
+  };
+  
+  // Format date safely
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-IN');
+    } catch (e) {
+      return dateString;
+    }
+  };
+  
+  // Generate items table rows
+  const itemsHtml = safeInvoice.items.map((item, index) => {
+    const quantity = item.quantity || 0;
+    const unitPrice = item.unitPrice || 0;
+    const amount = item.amount || (quantity * unitPrice);
+    
+    return `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.description || `Item ${index + 1}`}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${quantity}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${formatCurrency(unitPrice)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${formatCurrency(amount)}</td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Generate complete HTML
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
-      <title>Invoice ${invoice.number || invoice.id}</title>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Invoice ${safeInvoice.number}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-          font-family: Arial, sans-serif; 
-          margin: 0; 
-          padding: 40px;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          max-width: 800px; 
+          margin: 0 auto; 
+          padding: 40px 20px; 
           background: white;
-          color: #333;
-          line-height: 1.5;
         }
-        .invoice-container {
-          max-width: 800px;
-          margin: 0 auto;
-          border: 1px solid #ddd;
-          padding: 40px;
-          border-radius: 8px;
-        }
-        .header { 
+        .invoice-header { 
           display: flex; 
           justify-content: space-between; 
-          align-items: flex-start;
-          margin-bottom: 40px;
-          border-bottom: 2px solid #eee;
-          padding-bottom: 20px;
+          align-items: flex-start; 
+          margin-bottom: 40px; 
+          border-bottom: 3px solid #007bff; 
+          padding-bottom: 20px; 
         }
-        .invoice-title {
-          font-size: 32px;
-          font-weight: bold;
-          color: #1a1a1a;
-          margin: 0;
+        .invoice-title { 
+          font-size: 36px; 
+          font-weight: bold; 
+          color: #007bff; 
+          margin: 0; 
         }
-        .invoice-id {
-          font-size: 16px;
-          color: #666;
-          margin-top: 8px;
+        .invoice-number { 
+          font-size: 18px; 
+          color: #666; 
+          margin-top: 5px; 
         }
-        .company-info, .customer-info { 
+        .invoice-dates { 
+          text-align: right; 
+          font-size: 14px; 
+        }
+        .invoice-dates div { 
+          margin-bottom: 5px; 
+        }
+        .company-section, .customer-section { 
           margin-bottom: 30px; 
         }
-        .section-title {
-          font-size: 18px;
-          font-weight: bold;
-          margin-bottom: 8px;
-          color: #444;
+        .section-title { 
+          font-size: 16px; 
+          font-weight: bold; 
+          color: #007bff; 
+          margin-bottom: 10px; 
+          text-transform: uppercase; 
+          letter-spacing: 1px; 
         }
-        table { 
+        .company-info, .customer-info { 
+          background: #f8f9fa; 
+          padding: 15px; 
+          border-radius: 5px; 
+          border-left: 4px solid #007bff; 
+        }
+        .items-table { 
           width: 100%; 
           border-collapse: collapse; 
-          margin: 25px 0; 
+          margin: 30px 0; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
         }
-        th { 
-          background-color: #f5f5f5; 
-          padding: 12px;
+        .items-table th { 
+          background: #007bff; 
+          color: white; 
+          padding: 12px 8px; 
           text-align: left; 
-          font-weight: bold;
-          border-bottom: 2px solid #ddd;
+          font-weight: bold; 
         }
-        td { 
-          padding: 12px; 
-          border-bottom: 1px solid #ddd;
-        }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .total-section { 
+        .items-table th:nth-child(2), .items-table th:nth-child(3), .items-table th:nth-child(4) { 
           text-align: right; 
-          padding: 20px;
-          background: #f9f9f9;
-          border-radius: 6px;
-          margin-top: 30px;
         }
-        .total-row {
-          display: flex;
-          justify-content: flex-end;
-          padding: 8px 0;
+        .total-section { 
+          background: #f8f9fa; 
+          padding: 20px; 
+          border-radius: 5px; 
+          margin-top: 30px; 
+          border: 2px solid #007bff; 
         }
-        .total-label {
-          font-weight: bold;
-          width: 150px;
+        .total-row { 
+          display: flex; 
+          justify-content: space-between; 
+          padding: 5px 0; 
+          font-size: 18px; 
+          font-weight: bold; 
         }
-        .total-value {
-          width: 120px;
-          font-weight: bold;
+        .notes-section { 
+          margin-top: 40px; 
+          padding: 20px; 
+          background: #fff3cd; 
+          border-radius: 5px; 
+          border-left: 4px solid #ffc107; 
         }
-        .grand-total {
-          font-size: 18px;
-          font-weight: bold;
-          border-top: 2px solid #ddd;
-          padding-top: 12px;
-          margin-top: 12px;
+        .footer { 
+          margin-top: 50px; 
+          text-align: center; 
+          color: #666; 
+          font-size: 14px; 
+          border-top: 1px solid #ddd; 
+          padding-top: 20px; 
         }
-        .notes {
-          margin-top: 40px;
-          padding: 20px;
-          background: #f5f5f5;
-          border-radius: 6px;
-        }
-        .footer {
-          margin-top: 40px;
-          text-align: center;
-          font-size: 13px;
-          color: #666;
-          border-top: 1px solid #ddd;
-          padding-top: 20px;
+        @media print {
+          body { padding: 20px; }
+          .invoice-header { page-break-after: avoid; }
         }
       </style>
     </head>
     <body>
-      <div class="invoice-container">
-        <div class="header">
-          <div>
-            <h1 class="invoice-title">INVOICE</h1>
-            <div class="invoice-id">#${invoice.number || invoice.id}</div>
-          </div>
-          <div>
-            <div><strong>Date:</strong> ${formatDate(invoice.date || new Date().toISOString().slice(0, 10))}</div>
-            <div><strong>Due Date:</strong> ${formatDate(invoice.dueDate)}</div>
-            ${invoice.status ? `<div><strong>Status:</strong> ${invoice.status}</div>` : ''}
-          </div>
+      <div class="invoice-header">
+        <div>
+          <h1 class="invoice-title">INVOICE</h1>
+          <div class="invoice-number">#${safeInvoice.number}</div>
         </div>
-        
+        <div class="invoice-dates">
+          <div><strong>Date:</strong> ${formatDate(safeInvoice.date)}</div>
+          <div><strong>Due Date:</strong> ${formatDate(safeInvoice.dueDate)}</div>
+          <div><strong>Status:</strong> ${safeInvoice.status}</div>
+        </div>
+      </div>
+      
+      <div class="company-section">
+        <div class="section-title">From</div>
         <div class="company-info">
-          <h3 class="section-title">From</h3>
-          <div><strong>${company.companyName}</strong></div>
-          <div>${company.address}</div>
-          <div>Phone: ${company.contactNumber}</div>
-          <div>Email: ${company.email}</div>
-          ${company.gstNumber ? `<div>GST: ${company.gstNumber}</div>` : ''}
+          <div><strong>${safeCompany.companyName}</strong></div>
+          <div>${safeCompany.address}</div>
+          <div>Phone: ${safeCompany.contactNumber}</div>
+          <div>Email: ${safeCompany.email}</div>
+          ${safeCompany.gstNumber ? `<div>GST: ${safeCompany.gstNumber}</div>` : ''}
         </div>
-        
+      </div>
+      
+      <div class="customer-section">
+        <div class="section-title">Bill To</div>
         <div class="customer-info">
-          <h3 class="section-title">Bill To</h3>
-          <div><strong>${invoice.customerName || 'Customer'}</strong></div>
+          <div><strong>${safeInvoice.customerName}</strong></div>
         </div>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th class="text-center">Qty</th>
-              <th class="text-right">Rate</th>
-              <th class="text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(invoice.items || []).map(item => `
-              <tr>
-                <td>${item.description || 'Product'}</td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-right">${formatCurrency(item.unitPrice)}</td>
-                <td class="text-right">${formatCurrency(item.amount || (item.quantity * (item.unitPrice || 0)))}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        
-        <div class="total-section">
-          <div class="total-row">
-            <div class="total-label">Subtotal</div>
-            <div class="total-value">${formatCurrency(invoice.subtotal || invoice.total)}</div>
-          </div>
-          
-          ${invoice.discount ? `
-          <div class="total-row">
-            <div class="total-label">Discount</div>
-            <div class="total-value">-${formatCurrency(invoice.discount)}</div>
-          </div>
-          ` : ''}
-          
-          ${invoice.taxRate ? `
-          <div class="total-row">
-            <div class="total-label">Tax (${invoice.taxRate}%)</div>
-            <div class="total-value">${formatCurrency((invoice.total || 0) * (invoice.taxRate / 100))}</div>
-          </div>
-          ` : ''}
-          
-          <div class="total-row grand-total">
-            <div class="total-label">Total</div>
-            <div class="total-value">${formatCurrency(invoice.total)}</div>
-          </div>
+      </div>
+      
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Rate</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemsHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #666;">No items</td></tr>'}
+        </tbody>
+      </table>
+      
+      <div class="total-section">
+        <div class="total-row">
+          <span>Total Amount:</span>
+          <span>${formatCurrency(safeInvoice.total)}</span>
         </div>
-        
-        ${invoice.notes ? `
-        <div class="notes">
-          <h3 class="section-title">Notes</h3>
-          <p>${invoice.notes}</p>
-        </div>
-        ` : ''}
-        
-        <div class="footer">
-          Thank you for your business!
-        </div>
+      </div>
+      
+      ${safeInvoice.notes ? `
+      <div class="notes-section">
+        <div class="section-title">Notes</div>
+        <p>${safeInvoice.notes}</p>
+      </div>
+      ` : ''}
+      
+      <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>Generated on ${new Date().toLocaleDateString()}</p>
       </div>
     </body>
     </html>
   `;
   
+  console.log('✅ HTML generation completed successfully');
   return `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
 }
