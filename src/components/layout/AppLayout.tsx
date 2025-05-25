@@ -25,17 +25,17 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   };
 
   if (!isMounted) {
-    return <div className="flex h-screen items-center justify-center">
+    return <div className="flex h-screen items-center justify-center bg-main-gradient">
       <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
     </div>;
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-main-gradient">
       <Sidebar />
       <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 shadow-sm">
-          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/20 bg-card/80 backdrop-blur-sm px-4 shadow-card">
+          <div className="text-2xl font-bold text-gradient animate-float">
             Vikas Milk Centre
           </div>
           <div className="flex items-center gap-4">
@@ -43,12 +43,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               variant="ghost" 
               size="icon"
               onClick={handleToggleTheme}
-              className="rounded-full hover:bg-muted"
+              className="rounded-full hover:bg-muted/20 hover:shadow-glow transition-all duration-300"
             >
               {isDarkTheme ? (
-                <SunIcon className="h-5 w-5" />
+                <SunIcon className="h-5 w-5 text-warning" />
               ) : (
-                <MoonIcon className="h-5 w-5" />
+                <MoonIcon className="h-5 w-5 text-primary" />
               )}
               <span className="sr-only">Toggle theme</span>
             </Button>

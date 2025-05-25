@@ -21,23 +21,24 @@ export default {
     extend: {
       colors: {
         background: {
-          DEFAULT: "#FAFBFC", // Light gray-blue
-          secondary: "#F1F5F9", // Slightly darker
+          DEFAULT: "#0F1629", // Deep navy from the image
+          secondary: "#1A2332", // Slightly lighter navy
           light: "#FFFFFF",
-          dark: "#0F172A",
+          dark: "#0A0F1C",
+          card: "#1E293B", // Dark card background
         },
         foreground: {
-          DEFAULT: "#1E293B", // Dark slate
-          muted: "#64748B",
+          DEFAULT: "#F8FAFC", // Light text for dark backgrounds
+          muted: "#94A3B8",
           dark: "#0F172A",
         },
         card: {
-          DEFAULT: "#FFFFFF",
-          foreground: "#1E293B",
+          DEFAULT: "#1E293B", // Dark card with slight transparency
+          foreground: "#F8FAFC",
           light: "#FFFFFF",
         },
         primary: {
-          DEFAULT: "#3B82F6", // Modern blue
+          DEFAULT: "#3B82F6", // Bright blue from gradient
           foreground: "#FFFFFF",
           50: "#EFF6FF",
           100: "#DBEAFE",
@@ -51,49 +52,49 @@ export default {
           900: "#1E3A8A",
         },
         secondary: {
-          DEFAULT: "#10B981", // Modern emerald
+          DEFAULT: "#06B6D4", // Teal from gradient
           foreground: "#FFFFFF",
-          50: "#ECFDF5",
-          100: "#D1FAE5",
-          200: "#A7F3D0",
-          300: "#6EE7B7",
-          400: "#34D399",
-          500: "#10B981",
-          600: "#059669",
-          700: "#047857",
-          800: "#065F46",
-          900: "#064E3B",
+          50: "#ECFEFF",
+          100: "#CFFAFE",
+          200: "#A5F3FC",
+          300: "#67E8F9",
+          400: "#22D3EE",
+          500: "#06B6D4",
+          600: "#0891B2",
+          700: "#0E7490",
+          800: "#155E75",
+          900: "#164E63",
         },
         accent: {
-          DEFAULT: "#8B5CF6", // Modern purple
+          DEFAULT: "#8B5CF6", // Purple accent
           foreground: "#FFFFFF",
         },
         destructive: {
-          DEFAULT: "#EF4444", // Modern red
+          DEFAULT: "#EF4444", // Red for errors
           foreground: "#FFFFFF",
         },
         warning: {
-          DEFAULT: "#F59E0B", // Modern amber
+          DEFAULT: "#F59E0B", // Amber for warnings
           foreground: "#FFFFFF",
         },
         success: {
-          DEFAULT: "#10B981", // Modern emerald
+          DEFAULT: "#10B981", // Green for success
           foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#F8FAFC",
-          foreground: "#64748B",
-          light: "#F1F5F9",
+          DEFAULT: "#334155", // Muted backgrounds
+          foreground: "#94A3B8",
+          light: "#475569",
         },
         border: {
-          DEFAULT: "#E2E8F0", // Light slate
-          light: "#F1F5F9",
+          DEFAULT: "#334155", // Borders
+          light: "#475569",
         },
-        // Enhanced gradient colors
+        // Enhanced gradient colors from the image
         gradient: {
-          from: "#3B82F6",
-          via: "#8B5CF6",
-          to: "#10B981",
+          from: "#1E293B", // Deep navy
+          via: "#0F4C75", // Mid blue
+          to: "#06B6D4", // Bright teal
         },
         // Status colors
         status: {
@@ -114,12 +115,15 @@ export default {
         'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
         'success': '0 4px 14px 0 rgba(16, 185, 129, 0.39)',
         'warning': '0 4px 14px 0 rgba(245, 158, 11, 0.39)',
+        'card': '0 10px 40px rgba(0, 0, 0, 0.3)',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'card-gradient': 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+        'hero-pattern': 'linear-gradient(135deg, #1E293B 0%, #0F4C75 50%, #06B6D4 100%)',
+        'card-gradient': 'linear-gradient(145deg, #1E293B 0%, #334155 100%)',
+        'button-gradient': 'linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%)',
+        'main-gradient': 'linear-gradient(135deg, #0F1629 0%, #1A2332 50%, #0F4C75 100%)',
       },
       keyframes: {
         "accordion-down": {
@@ -160,6 +164,10 @@ export default {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" }
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -168,6 +176,7 @@ export default {
         "slide-in": "slide-in 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "shimmer": "shimmer 2s infinite",
+        "float": "float 3s ease-in-out infinite",
       },
     },
   },
