@@ -3,10 +3,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Invoice } from '@/types';
 import { 
   generateInvoiceNumber,
-  INVOICE_TEMPLATES
+  INVOICE_TEMPLATES,
+  generateInvoicePreview
 } from '../utils/invoiceUtils';
 import { toast } from 'sonner';
-import { generateFallbackPreview } from '../utils/invoiceFallback';
 
 interface InvoiceContextType {
   invoices: Invoice[];
@@ -30,7 +30,6 @@ interface InvoiceContextType {
   generateInvoicePreview: (invoice: Invoice, templateId?: string) => Promise<string>;
   downloadInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
   printInvoice: (invoiceId: string, templateId?: string) => Promise<void>;
-  getPrinters: () => Promise<{success: boolean, printers: any[]}>;
 }
 
 const defaultCompanyInfo = {
@@ -102,11 +101,19 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Web-only preview generation
-  const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
+  // Web-only preview generation using the utility function
+  const generateWebInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
       console.log('Generating web preview for invoice:', invoice.id);
-      const htmlPreview = generateFallbackPreview(invoice);
+      
+      // Use the invoice utils function with proper context
+      const htmlPreview = generateInvoicePreview(
+        invoice,
+        companyInfo,
+        [], // products array - will be passed from context in real usage
+        templateId || selectedTemplateId
+      );
+      
       console.log('HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
@@ -144,7 +151,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const htmlData = await generateInvoicePreview(invoice, templateId);
+      const htmlData = await generateWebInvoicePreview(invoice, templateId);
       const fileName = `invoice-${invoice.number || invoice.id}.html`;
       
       // Create download link
@@ -169,7 +176,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
-      const htmlData = await generateInvoicePreview(invoice, templateId);
+      const htmlData = await generateWebInvoicePreview(invoice, templateId);
       
       // Open in new window and print
       const printWindow = window.open('', '_blank');
@@ -186,11 +193,6 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Web fallback for printers
-  const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
-    return { success: false, printers: [] };
-  };
-  
   return (
     <InvoiceContext.Provider
       value={{
@@ -204,10 +206,9 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         templates: INVOICE_TEMPLATES,
         companyInfo,
         setCompanyInfo,
-        generateInvoicePreview,
+        generateInvoicePreview: generateWebInvoicePreview,
         downloadInvoice,
         printInvoice,
-        getPrinters,
       }}
     >
       {children}

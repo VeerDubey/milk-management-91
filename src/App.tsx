@@ -65,7 +65,7 @@ import { MessagingProvider } from './contexts/MessagingContext';
 
 function App() {
   useEffect(() => {
-    console.log("App initialized");
+    console.log("Web app initialized");
   }, []);
 
   return (
