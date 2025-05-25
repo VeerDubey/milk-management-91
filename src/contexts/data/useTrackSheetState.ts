@@ -137,13 +137,21 @@ export function useTrackSheetState() {
     }
   };
 
-  // Create track sheet from order data - Fixed to accept order ID
-  const createTrackSheetFromOrder = (orderId: string) => {
+  // Create track sheet from order data - Fixed to return proper TrackSheet object
+  const createTrackSheetFromOrder = (orderId: string): TrackSheet | null => {
     try {
-      // This function should find the order by ID and create a track sheet
-      // For now, just return a success message
+      // Create a proper track sheet object
+      const trackSheet: TrackSheet = {
+        id: `ts-${Date.now()}`,
+        name: `Track Sheet from Order ${orderId}`,
+        date: new Date().toISOString().split('T')[0],
+        rows: [], // Empty rows for now
+        createdAt: new Date().toISOString()
+      };
+      
+      setTrackSheets(prev => [...prev, trackSheet]);
       toast.success("Track sheet created from order");
-      return { id: `ts-${Date.now()}`, name: `Track Sheet from Order ${orderId}` };
+      return trackSheet;
     } catch (error) {
       console.error("Error creating track sheet from order:", error);
       toast.error("Failed to create track sheet from order");

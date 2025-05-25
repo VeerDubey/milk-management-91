@@ -5,8 +5,8 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 import { DataProvider } from '@/contexts/data/DataContext';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { LoginLayout } from '@/components/layout/LoginLayout';
+import AppLayout from '@/components/layout/AppLayout';
+import LoginLayout from '@/components/layout/LoginLayout';
 
 // Import all pages
 import Dashboard from '@/pages/Dashboard';
