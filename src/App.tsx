@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -89,7 +89,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
               
-              <Route path="/" element={<AppLayout />}>
+              <Route path="/" element={<AppLayout><Outlet /></AppLayout>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="master" element={<Master />} />
