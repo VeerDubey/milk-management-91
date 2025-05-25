@@ -1,710 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { useData } from '@/contexts/DataContext';
+
+import React, { useState } from 'react';
+import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { TrackSheetRow } from '@/types';
-import { toast } from 'sonner';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from '@/components/ui/table';
 import { 
-  Search, 
-  FileText,
-  Calendar,
-  ArrowDownUp,
-  Filter,
-  Download,
-  Users,
-  Check,
-  Copy,
-  Printer,
-  FileUp,
-  ChevronsRight
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
-import { exportToPdf } from '@/utils/pdfUtils';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle 
-} from '@/components/ui/dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { 
+  Eye, 
+  MoreHorizontal, 
+  FileText, 
+  Truck, 
+  Search,
+  Filter
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Order } from '@/types';
 
-const OrderHistory = () => {
-  const navigate = useNavigate();
-  const { 
-    orders, 
-    customers, 
-    products, 
-    addTrackSheet, 
-    duplicateOrder,
-    generateInvoiceFromOrder
-  } = useData();
-  
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+export default function OrderHistory() {
+  const { orders, customers, products, createTrackSheetFromOrder } = useData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCustomer, setFilterCustomer] = useState<string>('');
-  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const [filterStatus, setFilterStatus] = useState<string>('');
-  const [sortBy, setSortBy] = useState<string>('date');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [duplicateDate, setDuplicateDate] = useState<Date | undefined>(new Date());
-  const [orderToDuplicate, setOrderToDuplicate] = useState<string | null>(null);
-  
-  // Handle order selection
-  const toggleOrderSelection = (orderId: string) => {
-    if (selectedOrders.includes(orderId)) {
-      setSelectedOrders(selectedOrders.filter(id => id !== orderId));
-    } else {
-      setSelectedOrders([...selectedOrders, orderId]);
-    }
-  };
-  
-  // Handle select all orders
-  const toggleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(filteredOrders.map(order => order.id));
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showCreateTrackSheetDialog, setShowCreateTrackSheetDialog] = useState(false);
+  const [isCreatingTrackSheet, setIsCreatingTrackSheet] = useState(false);
+
+  const filteredOrders = orders.filter(order => {
+    const customer = customers.find(c => c.id === order.customerId);
+    const customerName = customer?.name || order.customerName || '';
+    return customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           order.id.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'processing': return 'bg-blue-100 text-blue-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Handle order duplication
-  const handleDuplicateOrder = (orderId: string) => {
-    setOrderToDuplicate(orderId);
-    setDuplicateDate(new Date());
-    setShowDuplicateDialog(true);
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'partial': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
-  
-  // Confirm order duplication with selected date
-  const confirmDuplicateOrder = () => {
-    if (!orderToDuplicate || !duplicateDate) return;
+
+  const handleCreateTrackSheet = async () => {
+    if (!selectedOrder) return;
     
-    const formattedDate = format(duplicateDate, 'yyyy-MM-dd');
-    const newOrder = duplicateOrder?.(orderToDuplicate, formattedDate);
-    
-    if (newOrder) {
-      toast.success("Order duplicated successfully");
-      // Clear selections and close dialog
-      setOrderToDuplicate(null);
-      setShowDuplicateDialog(false);
-      
-      // Navigate to the new order
-      navigate(`/orders/${newOrder.id}`);
-    } else {
-      toast.error("Failed to duplicate order");
-    }
-  };
-
-  // Create invoice from order
-  const handleCreateInvoice = (orderId: string) => {
-    if (!generateInvoiceFromOrder) {
-      toast.error("Invoice generation functionality not available");
-      return;
-    }
-    
-    const invoiceId = generateInvoiceFromOrder(orderId);
-    if (invoiceId) {
-      toast.success("Invoice created successfully");
-      navigate(`/invoice/${invoiceId}`);
-    }
-  };
-
-  // Create track sheet from selected orders
-  const handleCreateTrackSheet = () => {
-    if (!selectedOrders.length) {
-      toast.error("Please select at least one order");
-      return;
-    }
-
-    // Create track sheet rows from orders
-    const trackSheetRows = selectedOrders.map((orderId) => {
-      const order = orders.find((o) => o.id === orderId);
-      if (!order) return null;
-
-      const customer = customers.find((c) => c.id === order.customerId);
-      if (!customer) return null;
-
-      // Map order items to quantities
-      const quantities: Record<string, number | string> = {};
-      order.items.forEach((item) => {
-        const product = products.find((p) => p.id === item.productId);
-        if (product) {
-          quantities[product.name] = item.quantity;
-        }
-      });
-
-      return {
-        name: customer.name,
-        customerId: customer.id,
-        quantities,
-        total: order.total || 0,
-        amount: order.total || 0,
-      };
-    }).filter(Boolean) as TrackSheetRow[];
-
-    // Create track sheet with the tracksheet data
-    const trackSheetData = {
-      name: `Track Sheet - ${format(new Date(), "dd/MM/yyyy")}`,
-      date: format(new Date(), "yyyy-MM-dd"),
-      rows: trackSheetRows,
-      notes: "Created from orders",
-    };
-
+    setIsCreatingTrackSheet(true);
     try {
-      const newTrackSheet = addTrackSheet(trackSheetData);
-      
-      if (newTrackSheet && newTrackSheet.id) {
-        toast.success("Track sheet created successfully");
-        navigate(`/track-sheet/${newTrackSheet.id}`);
-      } else {
-        toast.error("Failed to create track sheet");
+      const trackSheet = createTrackSheetFromOrder(selectedOrder);
+      if (trackSheet) {
+        toast.success('Track sheet created successfully');
+        setShowCreateTrackSheetDialog(false);
+        setSelectedOrder(null);
       }
     } catch (error) {
-      console.error("Error creating track sheet:", error);
-      toast.error("Failed to create track sheet");
+      console.error('Error creating track sheet:', error);
+      toast.error('Failed to create track sheet');
+    } finally {
+      setIsCreatingTrackSheet(false);
     }
   };
 
-  // Handle sorting
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortDirection('asc');
-    }
-  };
-  
-  // Filter orders
-  const filteredOrders = orders.filter(order => {
-    // Search term filter
-    const searchMatch = 
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customers.find(c => c.id === order.customerId)?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Customer filter
-    const customerMatch = !filterCustomer || order.customerId === filterCustomer;
-    
-    // Date filter
-    const dateMatch = !filterDate || 
-      (order.date && new Date(order.date).toDateString() === filterDate.toDateString());
-    
-    // Status filter
-    const statusMatch = !filterStatus || order.status === filterStatus;
-    
-    return searchMatch && customerMatch && dateMatch && statusMatch;
-  });
-  
-  // Sort orders
-  const sortedOrders = [...filteredOrders].sort((a, b) => {
-    const direction = sortDirection === 'asc' ? 1 : -1;
-    
-    switch (sortBy) {
-      case 'date':
-        return direction * (new Date(a.date || '').getTime() - new Date(b.date || '').getTime());
-      case 'customer':
-        const customerA = customers.find(c => c.id === a.customerId)?.name || '';
-        const customerB = customers.find(c => c.id === b.customerId)?.name || '';
-        return direction * customerA.localeCompare(customerB);
-      case 'total':
-        return direction * ((a.total || 0) - (b.total || 0));
-      case 'status':
-        return direction * (a.status || '').localeCompare(b.status || '');
-      default:
-        return 0;
-    }
-  });
-  
-  // Export orders to PDF
-  const handleExportOrders = () => {
-    if (selectedOrders.length === 0) {
-      toast.error("Please select at least one order to export");
-      return;
-    }
-    
-    const ordersToExport = sortedOrders.filter(order => selectedOrders.includes(order.id));
-    
-    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Status'];
-    const rows = ordersToExport.map(order => [
-      order.id,
-      order.date || '',
-      customers.find(c => c.id === order.customerId)?.name || order.customerName || '',
-      order.items.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return `${item.quantity} x ${product?.name || 'Unknown Product'}`;
-      }).join(', '),
-      `₹${order.total?.toFixed(2) || '0.00'}`,
-      order.status || 'pending'
-    ]);
-    
-    exportToPdf(headers, rows, {
-      title: 'Order History',
-      subtitle: `Generated on ${format(new Date(), 'PPP')}`,
-      filename: `orders-export-${format(new Date(), 'yyyy-MM-dd')}.pdf`
-    });
-    
-    toast.success(`Exported ${selectedOrders.length} orders to PDF`);
-  };
-
-  // Print selected orders
-  const handlePrintOrders = () => {
-    if (selectedOrders.length === 0) {
-      toast.error("Please select at least one order to print");
-      return;
-    }
-    
-    const ordersToPrint = sortedOrders.filter(order => selectedOrders.includes(order.id));
-    
-    const headers = ['Order ID', 'Date', 'Customer', 'Items', 'Total', 'Status'];
-    const rows = ordersToPrint.map(order => [
-      order.id,
-      order.date || '',
-      customers.find(c => c.id === order.customerId)?.name || order.customerName || '',
-      order.items.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return `${item.quantity} x ${product?.name || 'Unknown Product'}`;
-      }).join(', '),
-      `₹${order.total?.toFixed(2) || '0.00'}`,
-      order.status || 'pending'
-    ]);
-    
-    exportToPdf(headers, rows, {
-      title: 'Order History',
-      subtitle: `Generated on ${format(new Date(), 'PPP')}`,
-      filename: `orders-print-${format(new Date(), 'yyyy-MM-dd')}.pdf`,
-      autoPrint: true // This will trigger print dialog
-    });
-  };
-  
-  // Create invoices for selected orders
-  const handleCreateInvoicesForSelected = () => {
-    if (!selectedOrders.length) {
-      toast.error("Please select at least one order");
-      return;
-    }
-    
-    if (!generateInvoiceFromOrder) {
-      toast.error("Invoice generation functionality not available");
-      return;
-    }
-    
-    let successCount = 0;
-    let failCount = 0;
-    
-    selectedOrders.forEach(orderId => {
-      const invoiceId = generateInvoiceFromOrder(orderId);
-      if (invoiceId) {
-        successCount++;
-      } else {
-        failCount++;
-      }
-    });
-    
-    if (successCount > 0) {
-      toast.success(`Created ${successCount} invoice(s) successfully`);
-      navigate('/invoices');
-    }
-    
-    if (failCount > 0) {
-      toast.error(`Failed to create ${failCount} invoice(s)`);
-    }
-  };
-  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Order History</h1>
-          <p className="text-muted-foreground">View and manage order history</p>
-        </div>
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleExportOrders} disabled={selectedOrders.length === 0}>
-                <Download className="mr-2 h-4 w-4" />
-                Export Selected to PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handlePrintOrders} disabled={selectedOrders.length === 0}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print Selected
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button>
-                <FileText className="mr-2 h-4 w-4" />
-                Actions
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCreateTrackSheet} disabled={selectedOrders.length === 0}>
-                <FileText className="mr-2 h-4 w-4" />
-                Create Track Sheet
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCreateInvoicesForSelected} disabled={selectedOrders.length === 0}>
-                <FileUp className="mr-2 h-4 w-4" />
-                Create Invoices for Selected
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/order-entry')}>
-                <ChevronsRight className="mr-2 h-4 w-4" />
-                New Order Entry
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <p className="text-muted-foreground">View and manage all orders</p>
         </div>
       </div>
-      
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Orders</CardTitle>
-            <CardDescription>
-              View, filter and manage orders
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search orders..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Orders</CardTitle>
+              <CardDescription>Complete history of all orders</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 w-64"
+                />
+              </div>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2">
-                <Label>Filter by customer:</Label>
-                <Select value={filterCustomer} onValueChange={setFilterCustomer}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Customers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Customers</SelectItem>
-                    {customers.map(customer => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Label>Filter by status:</Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Label>Filter by date:</Label>
-                <DatePicker
-                  date={filterDate}
-                  setDate={setFilterDate}
-                  placeholderText="Select date"
-                />
-                {filterDate && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => setFilterDate(undefined)}
-                    className="h-8 w-8"
-                  >
-                    ✕
-                  </Button>
-                )}
-              </div>
-              {(filterCustomer || filterDate || filterStatus) && (
-                <Button variant="ghost" onClick={() => {
-                  setFilterCustomer('');
-                  setFilterDate(undefined);
-                  setFilterStatus('');
-                }} size="sm">
-                  Clear filters
-                </Button>
-              )}
-            </div>
-            
-            <ScrollArea className="rounded-md border h-[calc(100vh-350px)]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox 
-                        checked={
-                          filteredOrders.length > 0 && 
-                          selectedOrders.length === filteredOrders.length
-                        }
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all orders"
-                      />
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('date')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>Date</span>
-                        {sortBy === 'date' && (
-                          <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('customer')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <Users className="h-4 w-4" />
-                        <span>Customer</span>
-                        {sortBy === 'customer' && (
-                          <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead>Items</TableHead>
-                    <TableHead 
-                      className="cursor-pointer"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Status</span>
-                        {sortBy === 'status' && (
-                          <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="text-right cursor-pointer"
-                      onClick={() => handleSort('total')}
-                    >
-                      <div className="flex items-center justify-end space-x-1">
-                        <span>Total</span>
-                        {sortBy === 'total' && (
-                          <ArrowDownUp className="h-3 w-3 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredOrders.map((order) => {
+                const customer = customers.find(c => c.id === order.customerId);
+                const customerName = customer?.name || order.customerName || 'Unknown Customer';
+                
+                return (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>{customerName}</TableCell>
+                    <TableCell>
+                      {format(new Date(order.date), 'MMM dd, yyyy')}
+                    </TableCell>
+                    <TableCell>{order.items?.length || 0} items</TableCell>
+                    <TableCell>₹{(order.total || order.totalAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(order.status || 'pending')}>
+                        {order.status || 'pending'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getPaymentStatusColor(order.paymentStatus || 'pending')}>
+                        {order.paymentStatus || 'pending'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Generate Invoice
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowCreateTrackSheetDialog(true);
+                            }}
+                          >
+                            <Truck className="mr-2 h-4 w-4" />
+                            Create Track Sheet
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
-                        No orders found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    sortedOrders.map(order => {
-                      const customer = customers.find(c => c.id === order.customerId);
-                      return (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <Checkbox 
-                              checked={selectedOrders.includes(order.id)}
-                              onCheckedChange={() => toggleOrderSelection(order.id)}
-                              aria-label={`Select order ${order.id}`}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            {order.date ? format(new Date(order.date), 'PP') : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {customer?.name || order.customerName || 'Unknown Customer'}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {order.items.slice(0, 2).map((item, idx) => {
-                                const product = products.find(p => p.id === item.productId);
-                                return (
-                                  <Badge key={idx} variant="outline">
-                                    {item.quantity} x {product?.name || 'Unknown'}
-                                  </Badge>
-                                );
-                              })}
-                              {order.items.length > 2 && (
-                                <Badge variant="outline">
-                                  +{order.items.length - 2} more
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              order.status === 'completed' ? 'default' :
-                              order.status === 'processing' ? 'secondary' :
-                              order.status === 'cancelled' ? 'destructive' : 'outline'
-                            }>
-                              {order.status || 'pending'}
-                            </Badge>
-                            {order.paymentStatus && (
-                              <Badge variant={
-                                order.paymentStatus === 'paid' ? 'default' :
-                                order.paymentStatus === 'partial' ? 'secondary' : 'outline'
-                              } className="ml-2">
-                                {order.paymentStatus}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            ₹{order.total?.toFixed(2) || '0.00'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <FileText className="h-4 w-4" />
-                                  <span className="sr-only">Actions</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}`)}>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDuplicateOrder(order.id)}>
-                                  <Copy className="mr-2 h-4 w-4" />
-                                  Duplicate Order
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleCreateInvoice(order.id)}>
-                                  <FileUp className="mr-2 h-4 w-4" />
-                                  Create Invoice
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-            
-            {selectedOrders.length > 0 && (
-              <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-                <div>
-                  <span className="font-medium">{selectedOrders.length}</span> orders selected
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setSelectedOrders([])}
-                  >
-                    Clear selection
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={handleCreateTrackSheet}
-                  >
-                    <Check className="mr-1 h-4 w-4" />
-                    Create Track Sheet
-                  </Button>
-                  <Button 
-                    size="sm"
-                    variant="secondary" 
-                    onClick={handleCreateInvoicesForSelected}
-                  >
-                    <FileUp className="mr-1 h-4 w-4" />
-                    Create Invoices
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-      
-      {/* Duplicate Order Dialog */}
-      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+
+      {/* Create Track Sheet Dialog */}
+      <Dialog open={showCreateTrackSheetDialog} onOpenChange={setShowCreateTrackSheetDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Duplicate Order</DialogTitle>
+            <DialogTitle>Create Track Sheet</DialogTitle>
             <DialogDescription>
-              Choose a date for the duplicated order
+              Create a track sheet from order {selectedOrder?.id}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="space-y-4">
-              <div className="flex flex-col space-y-2">
-                <Label htmlFor="date">Order Date</Label>
-                <DatePicker 
-                  date={duplicateDate} 
-                  setDate={setDuplicateDate} 
-                  placeholderText="Select date" 
-                />
+            <p>This will create a new track sheet based on the items in this order.</p>
+            {selectedOrder && (
+              <div className="mt-4 p-4 bg-muted rounded-md">
+                <h4 className="font-medium">Order Details:</h4>
+                <p>Order ID: {selectedOrder.id}</p>
+                <p>Items: {selectedOrder.items?.length || 0}</p>
+                <p>Total: ₹{(selectedOrder.total || selectedOrder.totalAmount || 0).toFixed(2)}</p>
               </div>
-            </div>
+            )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDuplicateDialog(false)}
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCreateTrackSheetDialog(false)}
             >
               Cancel
             </Button>
-            <Button
-              onClick={confirmDuplicateOrder}
-              disabled={!duplicateDate}
+            <Button 
+              onClick={handleCreateTrackSheet}
+              disabled={isCreatingTrackSheet}
             >
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicate
+              {isCreatingTrackSheet ? 'Creating...' : 'Create Track Sheet'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
   );
-};
-
-export default OrderHistory;
+}
