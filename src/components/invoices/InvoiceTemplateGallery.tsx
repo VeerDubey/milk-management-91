@@ -35,17 +35,6 @@ const InvoiceTemplateGallery: React.FC<InvoiceTemplateGalleryProps> = ({
     setIsPreviewOpen(true);
   };
 
-  // Mock invoice data for preview
-  const mockInvoiceData = {
-    invoiceNumber: previewInvoiceId || 'INV-2023-001',
-    date: new Date().toISOString(),
-    customerName: 'Sample Customer',
-    items: [
-      { productName: 'Sample Product', quantity: 1, unitPrice: 100, total: 100 }
-    ],
-    total: 100
-  };
-
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -101,7 +90,7 @@ const InvoiceTemplateGallery: React.FC<InvoiceTemplateGalleryProps> = ({
         <InvoicePreviewDialog 
           isOpen={isPreviewOpen} 
           onClose={() => setIsPreviewOpen(false)} 
-          invoiceData={mockInvoiceData}
+          invoiceId={previewInvoiceId}
         />
       )}
     </div>

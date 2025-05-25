@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ interface InvoicePreviewDialogProps {
   pdfBlob?: Blob;
 }
 
-export default function InvoicePreviewDialog({ 
+export function InvoicePreviewDialog({ 
   isOpen, 
   onClose, 
   invoiceData,
@@ -56,7 +57,7 @@ export default function InvoicePreviewDialog({
     }
 
     try {
-      setIsPrinting(true);
+      setPrinting(true);
       const dataUrl = URL.createObjectURL(pdfBlob);
       
       const result = await ElectronService.printInvoice(dataUrl);
@@ -72,7 +73,7 @@ export default function InvoicePreviewDialog({
       console.error('Print error:', error);
       toast.error('Failed to print invoice');
     } finally {
-      setIsPrinting(false);
+      setPrinting(false);
     }
   };
 

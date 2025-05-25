@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,7 @@ export function InvoicePreviewDialogSafe({
     }
 
     try {
-      setIsPrinting(true);
+      setPrinting(true);
       
       // Open print window
       const url = URL.createObjectURL(pdfBlob);
@@ -77,7 +78,7 @@ export function InvoicePreviewDialogSafe({
       console.error('Print error:', error);
       toast.error('Failed to print invoice');
     } finally {
-      setIsPrinting(false);
+      setPrinting(false);
     }
   };
 
