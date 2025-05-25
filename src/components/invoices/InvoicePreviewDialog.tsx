@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,16 +14,13 @@ import {
   Download, 
   Printer, 
   RefreshCw, 
-  Copy, 
   Share2,
   Send,
-  FileText
 } from 'lucide-react';
 import { useInvoices } from '@/contexts/InvoiceContext';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useData } from '@/contexts/DataContext';
-import { ElectronService } from '@/services/ElectronService';
+import { useData } from '@/contexts/data/DataContext';
 
 interface InvoicePreviewDialogProps {
   isOpen: boolean;
@@ -58,9 +56,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         throw new Error('Invoice not found');
       }
       
-      // Log the invoice data to help with debugging
       console.log('Invoice to preview:', invoice);
-      
       const preview = await generateInvoicePreview(invoice, selectedTemplateId);
       setPreviewUrl(preview);
     } catch (err) {
@@ -115,7 +111,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         toast.success('Invoice shared successfully');
       } else {
         // Fallback to clipboard
-        await ElectronService.system.copyToClipboard(shareData.text);
+        await navigator.clipboard.writeText(shareData.text);
         toast.success('Invoice details copied to clipboard');
       }
     } catch (err) {
@@ -133,7 +129,6 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
       return;
     }
     
-    // In a real implementation, this would integrate with your email system
     toast.success(`Ready to send email to ${customer.email}`);
   };
   
@@ -295,23 +290,11 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
         
         <DialogFooter className="flex justify-between items-center">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => {
-              if (getInvoiceById(invoiceId)) {
-                handleShare();
-              } else {
-                toast.error("Invoice not found");
-              }
-            }}>
+            <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-1" />
               Share
             </Button>
-            <Button variant="outline" size="sm" onClick={() => {
-              if (getInvoiceById(invoiceId)) {
-                handleSendEmail();
-              } else {
-                toast.error("Invoice not found");
-              }
-            }}>
+            <Button variant="outline" size="sm" onClick={handleSendEmail}>
               <Send className="h-4 w-4 mr-1" />
               Email
             </Button>
@@ -322,13 +305,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => {
-                if (getInvoiceById(invoiceId)) {
-                  handlePrint();
-                } else {
-                  toast.error("Invoice not found");
-                }
-              }} 
+              onClick={handlePrint}
               disabled={isLoading || !previewUrl || isActionInProgress}
             >
               {isActionInProgress ? (
@@ -339,13 +316,7 @@ export default function InvoicePreviewDialog({ isOpen, onClose, invoiceId }: Inv
               Print
             </Button>
             <Button 
-              onClick={() => {
-                if (getInvoiceById(invoiceId)) {
-                  handleDownload();
-                } else {
-                  toast.error("Invoice not found");
-                }
-              }} 
+              onClick={handleDownload}
               disabled={isLoading || isActionInProgress}
             >
               {isActionInProgress ? (

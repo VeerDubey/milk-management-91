@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Invoice } from '@/types';
 import { 
@@ -101,19 +102,17 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Modified generate invoice preview function with better fallback
+  // Web-only preview generation
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('Generating preview for invoice:', invoice.id);
-      
-      // Always use HTML fallback to avoid git dependency issues
+      console.log('Generating web preview for invoice:', invoice.id);
       const htmlPreview = generateFallbackPreview(invoice);
       console.log('HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
       console.error('Error generating preview:', error);
       
-      // Ultra-simple fallback as last resort
+      // Simple fallback
       const simpleFallback = `
         <html>
         <head><title>Invoice ${invoice.id}</title></head>
@@ -138,7 +137,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Modified download invoice function with fallback
+  // Web-only download function
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       console.log('Downloading invoice:', invoiceId);
@@ -163,7 +162,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Function to print invoice
+  // Web-only print function
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
       console.log('Printing invoice:', invoiceId);
@@ -187,7 +186,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   };
   
-  // Function to get available printers (Web fallback)
+  // Web fallback for printers
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
     return { success: false, printers: [] };
   };

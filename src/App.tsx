@@ -65,8 +65,6 @@ import { MessagingProvider } from './contexts/MessagingContext';
 
 function App() {
   useEffect(() => {
-    // Example: Load initial data from local storage or an API
-    // You can dispatch actions to update the state in your contexts
     console.log("App initialized");
   }, []);
 
