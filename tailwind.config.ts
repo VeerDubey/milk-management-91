@@ -21,46 +21,70 @@ export default {
     extend: {
       colors: {
         background: {
-          DEFAULT: "#0C0D10",
-          secondary: "#1A1E23",
-          light: "#F8F9FA", // Added light background color for light theme
+          DEFAULT: "#F0FDFA", // teal-50
+          secondary: "#CCFBF1", // teal-100
+          light: "#F8F9FA",
         },
         foreground: {
-          DEFAULT: "#FFFFFF", 
-          muted: "#B0B0B8",
-          dark: "#222222", // Added dark foreground color for light theme text
+          DEFAULT: "#134E4A", // teal-900
+          muted: "#5F8A8B",
+          dark: "#0F172A",
         },
         card: {
-          DEFAULT: "#1A1E23", // Card background color
-          foreground: "#FFFFFF", // Card foreground color
-          light: "#FFFFFF", // Light theme card background
+          DEFAULT: "#FFFFFF",
+          foreground: "#134E4A", // teal-900
+          light: "#FFFFFF",
         },
         primary: {
-          DEFAULT: "#38BD95", // Teal green
+          DEFAULT: "#0D9488", // teal-600
           foreground: "#FFFFFF",
+          50: "#F0FDFA",
+          100: "#CCFBF1",
+          200: "#99F6E4",
+          300: "#5EEAD4",
+          400: "#2DD4BF",
+          500: "#14B8A6",
+          600: "#0D9488",
+          700: "#0F766E",
+          800: "#115E59",
+          900: "#134E4A",
         },
         secondary: {
-          DEFAULT: "#3B82F6", // Blue
+          DEFAULT: "#0EA5E9", // sky-500
           foreground: "#FFFFFF",
         },
         destructive: {
-          DEFAULT: "#EA384C", // Red for delete actions
+          DEFAULT: "#EF4444", // red-500
           foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#222428",
-          foreground: "#B0B0B8",
-          light: "#E9ECEF", // Light theme muted background
+          DEFAULT: "#F1F5F9",
+          foreground: "#64748B",
+          light: "#E2E8F0",
         },
         accent: {
-          DEFAULT: "#38BD95",
+          DEFAULT: "#0D9488", // teal-600
           foreground: "#FFFFFF",
         },
         border: {
-          DEFAULT: "rgba(255,255,255,0.1)",
-          light: "rgba(0,0,0,0.1)", // Added light theme border color
+          DEFAULT: "#B2F5EA", // teal-200
+          light: "#E6FFFA", // teal-50
         },
-        // Adding print-specific colors for track sheets
+        // Enhanced teal color palette
+        teal: {
+          25: "#F0FDFA",
+          50: "#F0FDFA",
+          100: "#CCFBF1",
+          200: "#99F6E4",
+          300: "#5EEAD4",
+          400: "#2DD4BF",
+          500: "#14B8A6",
+          600: "#0D9488",
+          700: "#0F766E",
+          800: "#115E59",
+          900: "#134E4A",
+        },
+        // Print-specific colors for track sheets
         print: {
           background: "#FFFFFF",
           text: "#000000",
@@ -74,8 +98,9 @@ export default {
         sm: "0.25rem",
       },
       boxShadow: {
-        'subtle': '0 4px 20px rgba(0, 0, 0, 0.3)',
-        'hover': '0 8px 30px rgba(0, 0, 0, 0.4)',
+        'subtle': '0 4px 20px rgba(13, 148, 136, 0.1)',
+        'hover': '0 8px 30px rgba(13, 148, 136, 0.15)',
+        'teal': '0 4px 14px 0 rgba(13, 148, 136, 0.39)',
       },
       keyframes: {
         "accordion-down": {

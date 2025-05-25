@@ -2,7 +2,13 @@
 // Add necessary imports for calculations and PDF generation
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+
+// Import autoTable properly
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => void;
+  }
+}
 
 // Define types
 export interface TrackSheetTemplate {
@@ -46,7 +52,7 @@ export const calculateProductTotals = (rows: TrackSheetRow[], products: string[]
   return productTotals;
 };
 
-// Function to generate a PDF from track sheet data
+// Function to generate a PDF from track sheet data with simplified approach
 export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], customers: any[]) => {
   const doc = new jsPDF();
   
@@ -73,32 +79,40 @@ export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], c
     yPos += 6;
   }
   
-  // Prepare data for table
-  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
-  const data = trackSheet.rows.map((row: any) => {
-    const rowData = [row.name || 'Unknown'];
-    productNames.forEach(product => {
-      rowData.push(row.quantities[product] || '');
-    });
-    rowData.push(row.total || 0);
-    rowData.push(row.amount || 0);
-    return rowData;
-  });
+  // Add a simple table representation
+  yPos += 10;
+  doc.setFontSize(10);
   
-  // Add table
-  (doc as any).autoTable({
-    head: [headers],
-    body: data,
-    startY: yPos + 5,
-    styles: {
-      fontSize: 8
-    },
-    headStyles: {
-      fillColor: [66, 139, 202]
+  // Headers
+  doc.text('Customer', 14, yPos);
+  doc.text('Products', 60, yPos);
+  doc.text('Total', 140, yPos);
+  doc.text('Amount', 170, yPos);
+  
+  yPos += 6;
+  
+  // Data rows
+  trackSheet.rows.forEach((row: any) => {
+    if (yPos > 280) { // New page if needed
+      doc.addPage();
+      yPos = 20;
     }
+    
+    doc.text(row.name || 'Unknown', 14, yPos);
+    
+    // Product quantities
+    const productText = Object.entries(row.quantities)
+      .filter(([_, qty]) => qty && qty !== 0)
+      .map(([product, qty]) => `${product}: ${qty}`)
+      .join(', ');
+    
+    doc.text(productText.substring(0, 40), 60, yPos);
+    doc.text(String(row.total || 0), 140, yPos);
+    doc.text(`₹${(row.amount || 0).toFixed(2)}`, 170, yPos);
+    
+    yPos += 6;
   });
   
-  // Save the PDF
   return doc;
 };
 

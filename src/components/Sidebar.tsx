@@ -24,7 +24,9 @@ import {
   MessageCircle,
   Calculator,
   Palette,
-  UserCheck
+  UserCheck,
+  Grid3X3,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -129,10 +131,11 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
       icon: Truck,
       key: 'delivery',
       children: [
-        { title: 'Vehicle Tracking', path: '/vehicle-tracking' },
-        { title: 'Vehicle/Salesman', path: '/vehicle-salesman-create' },
+        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced' },
         { title: 'Track Sheet', path: '/track-sheet' },
         { title: 'Track Sheet History', path: '/track-sheet-history' },
+        { title: 'Vehicle Tracking', path: '/vehicle-tracking' },
+        { title: 'Vehicle/Salesman', path: '/vehicle-salesman-create' },
       ]
     },
     {
@@ -173,12 +176,12 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
 
   return (
     <div className={cn(
-      'flex h-screen flex-col border-r bg-card transition-all duration-300',
+      'flex h-screen flex-col border-r bg-card transition-all duration-300 border-teal-200',
       collapsed ? 'w-16' : 'w-64'
     )}>
-      <div className="flex h-16 items-center justify-between px-4">
+      <div className="flex h-16 items-center justify-between px-4 bg-teal-50">
         {!collapsed && (
-          <h2 className="text-lg font-semibold">Navigation</h2>
+          <h2 className="text-lg font-semibold text-teal-700">Navigation</h2>
         )}
       </div>
       
@@ -200,8 +203,9 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                     <Button
                       variant={hasActiveChild ? "secondary" : "ghost"}
                       className={cn(
-                        "w-full justify-start",
-                        collapsed && "justify-center px-2"
+                        "w-full justify-start hover:bg-teal-50 hover:text-teal-700",
+                        collapsed && "justify-center px-2",
+                        hasActiveChild && "bg-teal-100 text-teal-700"
                       )}
                     >
                       <item.icon className="h-4 w-4" />
@@ -225,7 +229,10 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                           <Button
                             variant={isActive(child.path) ? "secondary" : "ghost"}
                             size="sm"
-                            className="w-full justify-start"
+                            className={cn(
+                              "w-full justify-start hover:bg-teal-50 hover:text-teal-700",
+                              isActive(child.path) && "bg-teal-200 text-teal-800"
+                            )}
                           >
                             {child.title}
                           </Button>
@@ -242,8 +249,9 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                 <Button
                   variant={isActive(item.path) ? "secondary" : "ghost"}
                   className={cn(
-                    "w-full justify-start",
-                    collapsed && "justify-center px-2"
+                    "w-full justify-start hover:bg-teal-50 hover:text-teal-700",
+                    collapsed && "justify-center px-2",
+                    isActive(item.path) && "bg-teal-200 text-teal-800"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
