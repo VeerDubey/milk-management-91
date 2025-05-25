@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -63,11 +62,8 @@ export default function PaymentCreate() {
     setIsLoading(true);
     
     try {
-      const customer = customers.find(c => c.id === formData.customerId);
-      
       const paymentData: Omit<Payment, 'id'> = {
         customerId: formData.customerId,
-        customerName: customer?.name,
         amount: parseFloat(formData.amount),
         date: formData.date,
         paymentMethod: formData.paymentMethod,

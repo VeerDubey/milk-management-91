@@ -77,7 +77,7 @@ export default function OrderHistory() {
     
     setIsCreatingTrackSheet(true);
     try {
-      const trackSheet = createTrackSheetFromOrder(selectedOrder);
+      const trackSheet = createTrackSheetFromOrder(selectedOrder.id);
       if (trackSheet) {
         toast.success('Track sheet created successfully');
         setShowCreateTrackSheetDialog(false);
