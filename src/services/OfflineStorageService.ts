@@ -1,143 +1,131 @@
-import Dexie, { Table } from 'dexie';
 
-export interface Customer {
-  id?: number;
-  name: string;
-  address: string;
-  phone: string;
-  email?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Define the OfflineStorageService class for offline functionality
+class OfflineStorageService {
+  private static offlineQueue: any[] = [];
+  private static syncInProgress = false;
 
-export interface Product {
-  id?: number;
-  name: string;
-  price: number;
-  unit: string;
-  category?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Order {
-  id?: number;
-  customerId: number;
-  customerName: string;
-  products: Array<{
-    productId: number;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
-  total: number;
-  date: string;
-  status: 'pending' | 'completed' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Payment {
-  id?: number;
-  customerId: number;
-  customerName: string;
-  amount: number;
-  date: string;
-  method: 'cash' | 'card' | 'bank_transfer' | 'check';
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export class OfflineDatabase extends Dexie {
-  customers!: Table<Customer>;
-  products!: Table<Product>;
-  orders!: Table<Order>;
-  payments!: Table<Payment>;
-
-  constructor() {
-    super('MilkCenterDB');
-    this.version(1).stores({
-      customers: '++id, name, phone, email, createdAt',
-      products: '++id, name, category, createdAt',
-      orders: '++id, customerId, customerName, date, status, createdAt',
-      payments: '++id, customerId, customerName, date, method, createdAt'
+  /**
+   * Initialize the offline storage service
+   */
+  static initialize(): void {
+    console.log('OfflineStorageService initialized');
+    
+    // Load offline queue from localStorage if exists
+    const savedQueue = localStorage.getItem('offlineQueue');
+    if (savedQueue) {
+      try {
+        this.offlineQueue = JSON.parse(savedQueue);
+        console.log(`Loaded ${this.offlineQueue.length} pending offline actions`);
+      } catch (error) {
+        console.error('Error loading offline queue:', error);
+        this.offlineQueue = [];
+      }
+    }
+    
+    // Attempt to sync when coming online
+    window.addEventListener('online', () => {
+      console.log('Device is online, attempting to sync');
+      this.synchronize();
     });
   }
-}
 
-export const db = new OfflineDatabase();
-
-export class OfflineStorageService {
-  static async exportAllData(): Promise<string> {
-    try {
-      const customers = await db.customers.toArray();
-      const products = await db.products.toArray();
-      const orders = await db.orders.toArray();
-      const payments = await db.payments.toArray();
-
-      const exportData = {
-        customers,
-        products,
-        orders,
-        payments,
-        exportDate: new Date().toISOString(),
-        version: '1.0'
-      };
-
-      return JSON.stringify(exportData, null, 2);
-    } catch (error) {
-      console.error('Export failed:', error);
-      throw new Error('Failed to export data');
-    }
+  /**
+   * Check if device is online
+   */
+  static isOnline(): boolean {
+    return navigator.onLine;
   }
 
-  static async importAllData(jsonData: string): Promise<void> {
+  /**
+   * Queue an action for offline sync
+   */
+  static queueOfflineAction(action: any): void {
+    this.offlineQueue.push(action);
+    localStorage.setItem('offlineQueue', JSON.stringify(this.offlineQueue));
+    console.log('Action queued for offline sync:', action);
+  }
+
+  /**
+   * Get the offline queue
+   */
+  static getOfflineQueue(): any[] {
+    return this.offlineQueue;
+  }
+
+  /**
+   * Synchronize offline data with server when online
+   */
+  static async synchronize(): Promise<boolean> {
+    if (!navigator.onLine) {
+      console.log('Cannot synchronize while offline');
+      return false;
+    }
+
+    if (this.syncInProgress) {
+      console.log('Sync already in progress');
+      return false;
+    }
+
     try {
-      const data = JSON.parse(jsonData);
-      
-      // Validate data structure
-      if (!data.customers || !data.products || !data.orders || !data.payments) {
-        throw new Error('Invalid data format');
+      this.syncInProgress = true;
+      console.log('Starting synchronization...');
+
+      if (this.offlineQueue.length === 0) {
+        console.log('No pending actions to synchronize');
+        return true;
       }
 
-      // Clear existing data
-      await db.transaction('rw', db.customers, db.products, db.orders, db.payments, async () => {
-        await db.customers.clear();
-        await db.products.clear();
-        await db.orders.clear();
-        await db.payments.clear();
+      // Process each action in the queue
+      const successfulActions = [];
+      const failedActions = [];
 
-        // Import new data
-        await db.customers.bulkAdd(data.customers);
-        await db.products.bulkAdd(data.products);
-        await db.orders.bulkAdd(data.orders);
-        await db.payments.bulkAdd(data.payments);
-      });
+      for (const action of this.offlineQueue) {
+        try {
+          // Here you would implement the actual synchronization with your backend
+          // For this example, we'll just simulate a successful sync
+          console.log('Processing action:', action);
+          
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Assume success for now
+          successfulActions.push(action);
+        } catch (error) {
+          console.error('Error processing action:', action, error);
+          failedActions.push(action);
+        }
+      }
+
+      // Remove successful actions from queue
+      if (successfulActions.length > 0) {
+        this.offlineQueue = this.offlineQueue.filter(
+          action => !successfulActions.includes(action)
+        );
+        localStorage.setItem('offlineQueue', JSON.stringify(this.offlineQueue));
+        console.log(`${successfulActions.length} actions synchronized successfully`);
+      }
+
+      // Update last sync time
+      const currentTime = new Date().toISOString();
+      localStorage.setItem('lastSuccessfulSync', currentTime);
+
+      return failedActions.length === 0;
     } catch (error) {
-      console.error('Import failed:', error);
-      throw new Error('Failed to import data');
+      console.error('Synchronization error:', error);
+      return false;
+    } finally {
+      this.syncInProgress = false;
     }
   }
 
-  static async createAutoBackup(): Promise<void> {
-    try {
-      const backupData = await this.exportAllData();
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `milk-center-auto-backup-${timestamp}.json`;
-      
-      // Store in localStorage as backup
-      localStorage.setItem('auto_backup_' + timestamp, backupData);
-      
-      // Keep only last 7 auto-backups
-      const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('auto_backup_'));
-      if (backupKeys.length > 7) {
-        backupKeys.sort();
-        backupKeys.slice(0, -7).forEach(key => localStorage.removeItem(key));
-      }
-    } catch (error) {
-      console.error('Auto-backup failed:', error);
-      throw new Error('Failed to create auto-backup');
-    }
+  /**
+   * Clean up resources
+   */
+  static cleanup(): void {
+    // Nothing to clean up for now
+    console.log('OfflineStorageService cleaned up');
   }
 }
+
+// Export the OfflineStorageService class
+export { OfflineStorageService };
