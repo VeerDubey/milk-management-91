@@ -4,8 +4,8 @@ import {
   generateInvoiceNumber,
   INVOICE_TEMPLATES
 } from '../utils/invoiceUtils';
-import { generateInvoiceHtml } from '../utils/invoiceHtmlGenerator';
 import { toast } from 'sonner';
+import { generateFallbackPreview } from '../utils/invoiceFallback';
 
 interface InvoiceContextType {
   invoices: Invoice[];
@@ -101,72 +101,54 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     setCompanyInfoState(prev => ({ ...prev, ...info }));
   };
   
-  // Pure web preview generation
+  // Modified generate invoice preview function with better fallback
   const generateInvoicePreview = async (invoice: Invoice, templateId?: string): Promise<string> => {
     try {
-      console.log('🔄 Generating web preview for invoice:', invoice.id);
+      console.log('Generating preview for invoice:', invoice.id);
       
-      // Ensure we have a complete invoice object with all required properties
-      const safeInvoice: Invoice = {
-        id: invoice.id || 'TEMP-001',
-        customerId: invoice.customerId || 'TEMP-CUSTOMER',
-        number: invoice.number || invoice.id || 'TEMP-001',
-        customerName: invoice.customerName || 'Unknown Customer',
-        date: invoice.date || new Date().toISOString().slice(0, 10),
-        dueDate: invoice.dueDate || 'Not set',
-        items: invoice.items || [],
-        subtotal: invoice.subtotal || invoice.total || 0,
-        taxRate: invoice.taxRate || 0,
-        taxAmount: invoice.taxAmount || 0,
-        total: invoice.total || 0,
-        notes: invoice.notes || '',
-        termsAndConditions: invoice.termsAndConditions || '',
-        createdAt: invoice.createdAt || new Date().toISOString(),
-        updatedAt: invoice.updatedAt || new Date().toISOString(),
-        status: 'draft' as const
-      };
-      
-      // Generate HTML using web utility
-      const htmlPreview = generateInvoiceHtml(safeInvoice, companyInfo);
-      
-      console.log('✅ Web preview generated successfully');
+      // Always use HTML fallback to avoid git dependency issues
+      const htmlPreview = generateFallbackPreview(invoice);
+      console.log('HTML preview generated successfully');
       return htmlPreview;
     } catch (error) {
-      console.error('❌ Preview generation failed:', error);
+      console.error('Error generating preview:', error);
       
-      // Fallback HTML
-      const fallbackHtml = `
-        <!DOCTYPE html>
+      // Ultra-simple fallback as last resort
+      const simpleFallback = `
         <html>
-        <head>
-          <title>Invoice ${invoice.number || invoice.id}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            .error { color: #e74c3c; }
-          </style>
-        </head>
-        <body>
-          <h1>Invoice Preview</h1>
-          <p><strong>Invoice:</strong> ${invoice.number || invoice.id}</p>
+        <head><title>Invoice ${invoice.id}</title></head>
+        <body style="padding: 20px; font-family: Arial, sans-serif;">
+          <h1>Invoice ${invoice.id}</h1>
           <p><strong>Customer:</strong> ${invoice.customerName || 'Unknown'}</p>
+          <p><strong>Date:</strong> ${invoice.date || new Date().toLocaleDateString()}</p>
           <p><strong>Total:</strong> ₹${(invoice.total || 0).toFixed(2)}</p>
+          <div style="margin-top: 20px;">
+            <h3>Items:</h3>
+            ${(invoice.items || []).map(item => `
+              <div style="margin: 5px 0;">
+                ${item.description || 'Item'} - Qty: ${item.quantity} - Rate: ₹${item.unitPrice?.toFixed(2)} - Amount: ₹${item.amount?.toFixed(2)}
+              </div>
+            `).join('')}
+          </div>
         </body>
         </html>
       `;
       
-      return `data:text/html;charset=utf-8,${encodeURIComponent(fallbackHtml)}`;
+      return `data:text/html;charset=utf-8,${encodeURIComponent(simpleFallback)}`;
     }
   };
   
-  // Pure web download
+  // Modified download invoice function with fallback
   const downloadInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
+      console.log('Downloading invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
       const fileName = `invoice-${invoice.number || invoice.id}.html`;
       
+      // Create download link
       const link = document.createElement('a');
       link.href = htmlData;
       link.download = fileName;
@@ -176,34 +158,36 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       
       toast.success('Invoice downloaded successfully');
     } catch (error) {
-      console.error('Download failed:', error);
-      toast.error('Download failed');
+      console.error('Download error:', error);
+      toast.error('Failed to download invoice');
     }
   };
   
-  // Pure web print
+  // Function to print invoice
   const printInvoice = async (invoiceId: string, templateId?: string): Promise<void> => {
     try {
+      console.log('Printing invoice:', invoiceId);
       const invoice = getInvoiceById(invoiceId);
       if (!invoice) throw new Error('Invoice not found');
       
       const htmlData = await generateInvoicePreview(invoice, templateId);
+      
+      // Open in new window and print
       const printWindow = window.open('', '_blank');
-      if (!printWindow) throw new Error('Could not open print window');
+      if (printWindow) {
+        printWindow.document.write(decodeURIComponent(htmlData.split(',')[1]));
+        printWindow.document.close();
+        printWindow.print();
+      }
       
-      const htmlContent = decodeURIComponent(htmlData.split(',')[1]);
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.onload = () => printWindow.print();
-      
-      toast.success('Sent to printer');
+      toast.success('Invoice sent to printer');
     } catch (error) {
-      console.error('Print failed:', error);
-      toast.error('Print failed');
+      console.error('Print error:', error);
+      toast.error('Failed to print invoice');
     }
   };
   
-  // Web-only - no actual printer detection
+  // Function to get available printers (Web fallback)
   const getPrinters = async (): Promise<{success: boolean, printers: any[]}> => {
     return { success: false, printers: [] };
   };
