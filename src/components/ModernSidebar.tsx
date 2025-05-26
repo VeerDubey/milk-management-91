@@ -1,0 +1,333 @@
+
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  ShoppingCart,
+  CreditCard,
+  FileText,
+  MessageSquare,
+  Truck,
+  BarChart3,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Building2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Home,
+  Store,
+  Calculator,
+  Clock,
+  TrendingUp,
+  Palette,
+  UserCheck,
+  Layers,
+  Bell,
+  Database,
+  Calendar
+} from 'lucide-react';
+
+interface ModernSidebarProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
+export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProps) {
+  const location = useLocation();
+  const [openSections, setOpenSections] = useState<string[]>(['customers', 'inventory', 'orders']);
+
+  const toggleSection = (section: string) => {
+    if (collapsed) return;
+    setOpenSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    );
+  };
+
+  const isActive = (path: string) => location.pathname === path;
+  const isSectionActive = (paths: string[]) => paths.some(path => location.pathname === path);
+
+  const menuItems = [
+    {
+      title: 'Dashboard',
+      icon: LayoutDashboard,
+      path: '/dashboard',
+      badge: null,
+    },
+    {
+      title: 'Master Data',
+      icon: Database,
+      path: '/master',
+      badge: null,
+    },
+    {
+      title: 'Customers',
+      icon: Users,
+      key: 'customers',
+      badge: '7',
+      children: [
+        { title: 'Customer List', path: '/customer-list', icon: Users },
+        { title: 'Directory', path: '/customer-directory', icon: Store },
+        { title: 'Ledger', path: '/customer-ledger', icon: FileText },
+        { title: 'Rates', path: '/customer-rates', icon: Calculator },
+        { title: 'Reports', path: '/customer-report', icon: BarChart3 },
+        { title: 'Outstanding Dues', path: '/outstanding-dues', icon: Clock },
+        { title: 'Outstanding Amounts', path: '/outstanding-amounts', icon: CreditCard },
+      ]
+    },
+    {
+      title: 'Inventory',
+      icon: Package,
+      key: 'inventory',
+      badge: '6',
+      children: [
+        { title: 'Product List', path: '/product-list', icon: Package },
+        { title: 'Product Rates', path: '/product-rates', icon: Calculator },
+        { title: 'Stock Management', path: '/stock-management', icon: Layers },
+        { title: 'Stock Settings', path: '/stock-settings', icon: Settings },
+        { title: 'Categories', path: '/product-categories', icon: Layers },
+        { title: 'Bulk Rates', path: '/bulk-rates', icon: TrendingUp },
+      ]
+    },
+    {
+      title: 'Orders',
+      icon: ShoppingCart,
+      key: 'orders',
+      badge: '3',
+      children: [
+        { title: 'Order List', path: '/order-list', icon: ShoppingCart },
+        { title: 'Order Entry', path: '/order-entry', icon: FileText },
+        { title: 'Order History', path: '/order-history', icon: Clock },
+      ]
+    },
+    {
+      title: 'Payments',
+      icon: CreditCard,
+      key: 'payments',
+      badge: '2',
+      children: [
+        { title: 'Payment List', path: '/payment-list', icon: CreditCard },
+        { title: 'Create Payment', path: '/payment-create', icon: FileText },
+      ]
+    },
+    {
+      title: 'Invoices',
+      icon: FileText,
+      key: 'invoices',
+      badge: '3',
+      children: [
+        { title: 'Invoice History', path: '/invoice-history', icon: Clock },
+        { title: 'Create Invoice', path: '/invoice-create', icon: FileText },
+        { title: 'Templates', path: '/invoice-templates', icon: Palette },
+      ]
+    },
+    {
+      title: 'Communication',
+      icon: MessageSquare,
+      key: 'communication',
+      badge: '4',
+      children: [
+        { title: 'Messaging', path: '/messaging', icon: MessageSquare },
+        { title: 'Email Templates', path: '/email-templates', icon: FileText },
+        { title: 'SMS Templates', path: '/sms-templates', icon: MessageSquare },
+        { title: 'Bulk Communication', path: '/bulk-communication', icon: Bell },
+      ]
+    },
+    {
+      title: 'Delivery',
+      icon: Truck,
+      key: 'delivery',
+      badge: '5',
+      children: [
+        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileText },
+        { title: 'Track Sheet', path: '/track-sheet', icon: FileText },
+        { title: 'Track History', path: '/track-sheet-history', icon: Clock },
+        { title: 'Vehicle Tracking', path: '/vehicle-tracking', icon: Truck },
+        { title: 'Vehicle/Salesman', path: '/vehicle-salesman-create', icon: Users },
+      ]
+    },
+    {
+      title: 'Suppliers',
+      icon: Building2,
+      key: 'suppliers',
+      badge: '4',
+      children: [
+        { title: 'Supplier Directory', path: '/supplier-directory', icon: Building2 },
+        { title: 'Supplier Ledger', path: '/supplier-ledger', icon: FileText },
+        { title: 'Supplier Payments', path: '/supplier-payments', icon: CreditCard },
+        { title: 'Supplier Rates', path: '/supplier-rates', icon: Calculator },
+      ]
+    },
+    {
+      title: 'Reports',
+      icon: BarChart3,
+      key: 'reports',
+      badge: '2',
+      children: [
+        { title: 'Sales Report', path: '/sales-report', icon: TrendingUp },
+        { title: 'Analytics', path: '/analytics', icon: BarChart3 },
+      ]
+    },
+    {
+      title: 'Settings',
+      icon: Settings,
+      key: 'settings',
+      badge: '7',
+      children: [
+        { title: 'Company Profile', path: '/company-profile', icon: Building2 },
+        { title: 'Area Management', path: '/area-management', icon: Layers },
+        { title: 'Financial Year', path: '/financial-year', icon: Calendar },
+        { title: 'Tax Settings', path: '/tax-settings', icon: Calculator },
+        { title: 'UI Settings', path: '/ui-settings', icon: Palette },
+        { title: 'User Access', path: '/user-access', icon: UserCheck },
+        { title: 'Expenses', path: '/expenses', icon: CreditCard },
+      ]
+    },
+  ];
+
+  return (
+    <div className={cn(
+      'flex h-screen flex-col bg-sidebar-gradient border-r border-border/50 shadow-lg transition-all duration-300 ease-in-out',
+      collapsed ? 'w-16' : 'w-72'
+    )}>
+      {/* Header */}
+      <div className="flex h-16 items-center justify-between px-4 border-b border-border/50">
+        {!collapsed && (
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+              <Home className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Vikas Milk</h2>
+              <p className="text-xs text-muted-foreground">Management System</p>
+            </div>
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggle}
+          className="h-8 w-8 hover:bg-muted/50"
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+      
+      <ScrollArea className="flex-1 px-3 py-4">
+        <div className="space-y-2">
+          {menuItems.map((item) => {
+            if (item.children) {
+              const sectionPaths = item.children.map(child => child.path);
+              const isOpen = openSections.includes(item.key) && !collapsed;
+              const hasActiveChild = isSectionActive(sectionPaths);
+
+              return (
+                <div key={item.key} className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    onClick={() => toggleSection(item.key)}
+                    className={cn(
+                      "w-full justify-start h-10 px-3 font-medium transition-all duration-200",
+                      collapsed && "justify-center px-2",
+                      hasActiveChild 
+                        ? "bg-primary/10 text-primary border-l-2 border-primary hover:bg-primary/15" 
+                        : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 text-left">{item.title}</span>
+                        <div className="flex items-center space-x-2">
+                          {item.badge && (
+                            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                              {item.badge}
+                            </Badge>
+                          )}
+                          {isOpen ? (
+                            <ChevronDown className="h-3 w-3" />
+                          ) : (
+                            <ChevronRight className="h-3 w-3" />
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </Button>
+                  
+                  {isOpen && !collapsed && (
+                    <div className="ml-4 space-y-1 border-l border-border/30 pl-4">
+                      {item.children.map((child) => (
+                        <Link key={child.path} to={child.path}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "w-full justify-start h-8 px-3 font-normal transition-all duration-200",
+                              isActive(child.path)
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-foreground/70 hover:text-foreground hover:bg-muted/30"
+                            )}
+                          >
+                            <child.icon className="h-3 w-3 mr-2" />
+                            {child.title}
+                          </Button>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <Link key={item.path} to={item.path}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start h-10 px-3 font-medium transition-all duration-200",
+                    collapsed && "justify-center px-2",
+                    isActive(item.path)
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
+                  )}
+                >
+                  <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
+                  {!collapsed && (
+                    <span className="flex-1 text-left">{item.title}</span>
+                  )}
+                </Button>
+              </Link>
+            );
+          })}
+        </div>
+      </ScrollArea>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="p-4 border-t border-border/50">
+          <div className="flex items-center space-x-3 p-2 rounded-lg bg-muted/30">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">Admin User</p>
+              <p className="text-xs text-muted-foreground truncate">admin@vikasmilk.com</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -5,25 +5,25 @@
  
 @layer base {
   :root {
-    --background: 10 14 26;
-    --foreground: 241 245 249;
+    --background: 250 251 252;
+    --foreground: 30 41 59;
 
-    --card: 30 42 68;
-    --card-foreground: 241 245 249;
+    --card: 255 255 255;
+    --card-foreground: 30 41 59;
  
-    --popover: 30 42 68;
-    --popover-foreground: 241 245 249;
+    --popover: 255 255 255;
+    --popover-foreground: 30 41 59;
  
-    --primary: 99 102 241;
+    --primary: 59 130 246;
     --primary-foreground: 255 255 255;
  
-    --secondary: 20 184 166;
+    --secondary: 139 92 246;
     --secondary-foreground: 255 255 255;
  
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
  
-    --accent: 245 158 11;
+    --accent: 6 182 212;
     --accent-foreground: 255 255 255;
  
     --destructive: 239 68 68;
@@ -35,33 +35,33 @@
     --warning: 245 158 11;
     --warning-foreground: 255 255 255;
 
-    --border: 51 65 85;
-    --input: 51 65 85;
-    --ring: 99 102 241;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
  
     --radius: 0.75rem;
   }
  
-  .light {
-    --background: 255 255 255;
-    --foreground: 15 23 42;
+  .dark {
+    --background: 15 23 42;
+    --foreground: 241 245 249;
  
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
+    --card: 30 41 59;
+    --card-foreground: 241 245 249;
  
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
+    --popover: 30 41 59;
+    --popover-foreground: 241 245 249;
  
-    --primary: 99 102 241;
+    --primary: 59 130 246;
     --primary-foreground: 255 255 255;
  
-    --secondary: 20 184 166;
+    --secondary: 139 92 246;
     --secondary-foreground: 255 255 255;
  
-    --muted: 248 250 252;
-    --muted-foreground: 100 116 139;
+    --muted: 51 65 85;
+    --muted-foreground: 148 163 184;
  
-    --accent: 245 158 11;
+    --accent: 6 182 212;
     --accent-foreground: 255 255 255;
  
     --destructive: 239 68 68;
@@ -73,9 +73,9 @@
     --warning: 245 158 11;
     --warning-foreground: 255 255 255;
  
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 99 102 241;
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 59 130 246;
   }
 
   * {
@@ -84,29 +84,29 @@
   
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(135deg, #0A0E1A 0%, #151B2E 50%, #1E2A44 100%);
+    background: linear-gradient(135deg, #FAFBFC 0%, #F1F5F9 50%, #E2E8F0 100%);
     min-height: 100vh;
     background-attachment: fixed;
   }
 
   /* Enhanced scrollbar styles */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
     @apply bg-muted/30;
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/60 hover:bg-primary/80;
-    border-radius: 4px;
+    @apply bg-primary/40 hover:bg-primary/60;
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary;
+    @apply bg-primary/80;
   }
 }
 
@@ -123,15 +123,15 @@
 
   /* Enhanced utility classes */
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-card;
+    @apply bg-card/95 backdrop-blur-sm border border-border/50 shadow-card;
   }
 
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary via-accent to-secondary;
+    @apply bg-gradient-to-r from-primary via-secondary to-accent;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
   }
 
   .hover-lift {
@@ -139,7 +139,7 @@
   }
 
   .button-glow {
-    @apply shadow-lg hover:shadow-glow transition-all duration-300;
+    @apply shadow-subtle hover:shadow-glow transition-all duration-300;
   }
 
   .status-badge {
@@ -193,12 +193,12 @@
 
   /* Modern card styles */
   .modern-card {
-    @apply bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg shadow-card hover:shadow-hover transition-all duration-300;
+    @apply bg-card backdrop-blur-sm border border-border/50 rounded-lg shadow-card hover:shadow-hover transition-all duration-300;
   }
 
   /* Gradient button */
   .gradient-button {
-    @apply bg-button-gradient text-white font-medium px-6 py-3 rounded-lg shadow-lg hover:shadow-glow transition-all duration-300 hover:scale-105;
+    @apply bg-button-gradient text-white font-medium px-6 py-3 rounded-lg shadow-subtle hover:shadow-hover transition-all duration-300 hover:scale-105;
   }
 }
 
