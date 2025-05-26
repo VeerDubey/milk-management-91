@@ -1,7 +1,8 @@
-
 // Add necessary imports for calculations and PDF generation
 import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { DownloadService } from '@/services/DownloadService';
 
 // Import autoTable properly
 declare module 'jspdf' {
@@ -56,16 +57,30 @@ export const calculateProductTotals = (rows: TrackSheetRow[], products: string[]
 export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], customers: any[]) => {
   const doc = new jsPDF();
   
-  // Add title
-  doc.setFontSize(18);
-  doc.text('Track Sheet', 14, 22);
+  // Header with company branding
+  doc.setFillColor(51, 65, 85); // Dark blue header
+  doc.rect(0, 0, 210, 40, 'F');
   
-  // Add date
+  // Company name
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Vikas Milk Centre', 14, 20);
+  
+  // Track sheet title
+  doc.setFontSize(16);
+  doc.text('Track Sheet', 14, 32);
+  
+  // Reset colors for content
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(12);
-  doc.text(`Date: ${trackSheet.date}`, 14, 32);
+  doc.setFont('helvetica', 'normal');
   
-  // Add vehicle and salesman info if available
-  let yPos = 36;
+  // Track sheet details
+  let yPos = 50;
+  doc.text(`Date: ${trackSheet.date}`, 14, yPos);
+  yPos += 8;
+  
   if (trackSheet.vehicleName) {
     doc.text(`Vehicle: ${trackSheet.vehicleName}`, 14, yPos);
     yPos += 6;
@@ -79,39 +94,65 @@ export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], c
     yPos += 6;
   }
   
-  // Add a simple table representation
-  yPos += 10;
-  doc.setFontSize(10);
+  // Prepare table data
+  const tableHeaders = ['Customer', ...productNames, 'Total', 'Amount'];
+  const tableData = trackSheet.rows.map((row: any) => [
+    row.name || 'Unknown',
+    ...productNames.map(product => row.quantities[product] || '-'),
+    String(row.total || 0),
+    `₹${(row.amount || 0).toFixed(2)}`
+  ]);
   
-  // Headers
-  doc.text('Customer', 14, yPos);
-  doc.text('Products', 60, yPos);
-  doc.text('Total', 140, yPos);
-  doc.text('Amount', 170, yPos);
-  
-  yPos += 6;
-  
-  // Data rows
-  trackSheet.rows.forEach((row: any) => {
-    if (yPos > 280) { // New page if needed
-      doc.addPage();
-      yPos = 20;
-    }
-    
-    doc.text(row.name || 'Unknown', 14, yPos);
-    
-    // Product quantities
-    const productText = Object.entries(row.quantities)
-      .filter(([_, qty]) => qty && qty !== 0)
-      .map(([product, qty]) => `${product}: ${qty}`)
-      .join(', ');
-    
-    doc.text(productText.substring(0, 40), 60, yPos);
-    doc.text(String(row.total || 0), 140, yPos);
-    doc.text(`₹${(row.amount || 0).toFixed(2)}`, 170, yPos);
-    
-    yPos += 6;
+  // Add totals row
+  const productTotals = productNames.map(product => {
+    return trackSheet.rows.reduce((sum: number, row: any) => {
+      const qty = row.quantities[product];
+      return sum + (qty === '' || qty === undefined ? 0 : Number(qty));
+    }, 0);
   });
+  
+  const grandTotal = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.total || 0), 0);
+  const grandAmount = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
+  
+  tableData.push([
+    'TOTAL',
+    ...productTotals.map(total => String(total)),
+    String(grandTotal),
+    `₹${grandAmount.toFixed(2)}`
+  ]);
+  
+  // Generate table using autoTable
+  (doc as any).autoTable({
+    startY: yPos + 10,
+    head: [tableHeaders],
+    body: tableData,
+    theme: 'grid',
+    styles: {
+      fontSize: 9,
+      cellPadding: 3
+    },
+    headStyles: {
+      fillColor: [59, 130, 246], // Blue header
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    footStyles: {
+      fillColor: [243, 244, 246], // Light gray footer
+      textColor: 0,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [249, 250, 251] // Very light gray
+    }
+  });
+  
+  // Add notes if present
+  if (trackSheet.notes) {
+    const finalY = (doc as any).lastAutoTable.finalY || yPos + 100;
+    doc.setFontSize(10);
+    doc.text('Notes:', 14, finalY + 20);
+    doc.text(trackSheet.notes, 14, finalY + 30);
+  }
   
   return doc;
 };
@@ -143,8 +184,47 @@ export const createEmptyTrackSheetRows = (customers: any[], products: string[]) 
 
 // Other utility functions...
 
-export const savePdf = (doc: jsPDF, filename: string) => {
-  doc.save(filename);
+export const savePdf = async (doc: jsPDF, filename: string): Promise<boolean> => {
+  return DownloadService.downloadPDF(doc, filename);
+};
+
+export const exportTrackSheetToCSV = (trackSheet: any, productNames: string[]): Promise<boolean> => {
+  // Create CSV headers
+  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
+  
+  // Create CSV rows
+  const rows = trackSheet.rows.map((row: any) => [
+    row.name || 'Unknown',
+    ...productNames.map(product => row.quantities[product] || '0'),
+    String(row.total || 0),
+    String(row.amount || 0)
+  ]);
+  
+  // Add totals row
+  const productTotals = productNames.map(product => {
+    return trackSheet.rows.reduce((sum: number, row: any) => {
+      const qty = row.quantities[product];
+      return sum + (qty === '' || qty === undefined ? 0 : Number(qty));
+    }, 0);
+  });
+  
+  const grandTotal = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.total || 0), 0);
+  const grandAmount = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
+  
+  rows.push([
+    'TOTAL',
+    ...productTotals.map(total => String(total)),
+    String(grandTotal),
+    String(grandAmount)
+  ]);
+  
+  // Convert to CSV string
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(cell => `"${cell}"`).join(','))
+    .join('\n');
+  
+  const filename = `tracksheet-${trackSheet.date}.csv`;
+  return DownloadService.downloadCSV(csvContent, filename);
 };
 
 export const getBlankRow = (products: string[]): TrackSheetRow => {

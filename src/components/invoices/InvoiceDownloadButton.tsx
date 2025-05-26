@@ -6,7 +6,8 @@ import {
   ChevronDown,
   Loader2,
   FileText,
-  Printer
+  Printer,
+  FileSpreadsheet
 } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -17,6 +18,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useInvoices } from '@/contexts/InvoiceContext';
+import { DownloadService } from '@/services/DownloadService';
 import { toast } from 'sonner';
 
 interface InvoiceDownloadButtonProps {
@@ -37,6 +39,7 @@ export default function InvoiceDownloadButton({
   const { downloadInvoice, printInvoice, selectedTemplateId, templates, getInvoiceById } = useInvoices();
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const invoice = getInvoiceById(invoiceId);
   
@@ -78,7 +81,42 @@ export default function InvoiceDownloadButton({
     }
   };
   
-  if (isDownloading || isPrinting) {
+  const handleExportCSV = async () => {
+    if (!invoice) {
+      toast.error("Invoice not found");
+      return;
+    }
+    
+    setIsExporting(true);
+    try {
+      // Convert invoice to CSV format
+      const headers = ['Item', 'Quantity', 'Rate', 'Amount'];
+      const rows = invoice.items?.map(item => [
+        item.productName || item.name || 'Unknown',
+        String(item.quantity || 0),
+        String(item.rate || 0),
+        String((item.quantity || 0) * (item.rate || 0))
+      ]) || [];
+      
+      // Add totals
+      rows.push(['', '', 'Total:', String(invoice.total || 0)]);
+      
+      const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+      
+      const filename = `invoice-${invoice.id}.csv`;
+      await DownloadService.downloadCSV(csvContent, filename);
+      onSuccess?.();
+    } catch (error) {
+      console.error("CSV export failed:", error);
+      toast.error("Failed to export CSV. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
+  if (isDownloading || isPrinting || isExporting) {
     return (
       <Button 
         variant={variant} 
@@ -87,7 +125,7 @@ export default function InvoiceDownloadButton({
         className={`flex items-center ${className}`}
       >
         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        {isDownloading ? 'Downloading...' : 'Printing...'}
+        {isDownloading ? 'Downloading...' : isPrinting ? 'Printing...' : 'Exporting...'}
       </Button>
     );
   }
@@ -109,18 +147,25 @@ export default function InvoiceDownloadButton({
         <DropdownMenuContent align="end" className="z-50">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {/* Quick download with selected template */}
+          
+          {/* Quick actions */}
           <DropdownMenuItem onClick={() => handleDownload()}>
             <Download className="h-4 w-4 mr-2" />
-            <span>Download with Current Template</span>
+            <span>Download PDF</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExportCSV}>
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            <span>Export CSV</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handlePrint()}>
             <Printer className="h-4 w-4 mr-2" />
-            <span>Print with Current Template</span>
+            <span>Print Invoice</span>
           </DropdownMenuItem>
+          
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Download with Template</DropdownMenuLabel>
-          {/* Download with specific template */}
+          
+          {/* Template-specific downloads */}
           {templates && templates.length > 0 ? templates.map(template => (
             <DropdownMenuItem 
               key={template.id} 
@@ -135,8 +180,8 @@ export default function InvoiceDownloadButton({
               No templates available
             </DropdownMenuItem>
           )}
+          
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => {
             if (invoice && navigator.clipboard) {
               navigator.clipboard.writeText(`Invoice #${invoice.id} - Amount: ₹${invoice.total?.toFixed(2) || '0.00'}`);
@@ -144,7 +189,7 @@ export default function InvoiceDownloadButton({
             }
           }}>
             <FileText className="h-4 w-4 mr-2" />
-            <span>Copy Invoice Details</span>
+            <span>Copy Details</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
