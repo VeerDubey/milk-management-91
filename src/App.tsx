@@ -13,6 +13,11 @@ import AppLayout from '@/components/layout/AppLayout';
 import LoginLayout from '@/components/layout/LoginLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
+// Import services for initialization
+import { OfflineStorageService } from '@/services/OfflineStorageService';
+import { EnhancedOfflineService } from '@/services/EnhancedOfflineService';
+import { BackupService } from '@/services/BackupService';
+
 // Import all pages
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
@@ -82,6 +87,13 @@ import UserAccess from '@/pages/UserAccess';
 import Expenses from '@/pages/Expenses';
 
 const queryClient = new QueryClient();
+
+// Initialize services
+React.useEffect(() => {
+  OfflineStorageService.initialize();
+  EnhancedOfflineService.initialize();
+  BackupService.autoBackup();
+}, []);
 
 function App() {
   return (
