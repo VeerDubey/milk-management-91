@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -87,6 +86,9 @@ import UISettings from '@/pages/UISettings';
 import UserAccess from '@/pages/UserAccess';
 import Expenses from '@/pages/Expenses';
 
+// Import the new testing page
+import TestingReportPage from '@/pages/TestingReport';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -124,6 +126,9 @@ function App() {
                         <Route index element={<Navigate to="/dashboard" replace />} />
                         <Route path="dashboard" element={<Dashboard />} />
                         <Route path="master" element={<Master />} />
+                        
+                        {/* Testing Route */}
+                        <Route path="testing-report" element={<TestingReportPage />} />
                         
                         {/* Customer Routes */}
                         <Route path="customer-list" element={<CustomerList />} />

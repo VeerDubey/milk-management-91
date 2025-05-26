@@ -269,27 +269,27 @@ export default function TrackSheetAdvanced() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-blue-600">Advanced Track Sheet</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Advanced Track Sheet</h1>
           <p className="text-muted-foreground">Excel-style order entry system</p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={saveAsTrackSheet} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={saveAsTrackSheet} className="bg-primary hover:bg-primary/90">
             <Save className="mr-2 h-4 w-4" />
             Save Track Sheet
           </Button>
-          <Button onClick={downloadPDF} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+          <Button onClick={downloadPDF} variant="outline" className="border-primary text-primary hover:bg-primary/10">
             <Download className="mr-2 h-4 w-4" />
             Download PDF
           </Button>
-          <Button onClick={downloadCSV} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+          <Button onClick={downloadCSV} variant="outline" className="border-success text-success hover:bg-success/10">
             <Download className="mr-2 h-4 w-4" />
             Download CSV
           </Button>
-          <Button onClick={carryForwardToNextDay} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+          <Button onClick={carryForwardToNextDay} variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
             <ArrowRight className="mr-2 h-4 w-4" />
             Carry Forward
           </Button>
-          <Button onClick={saveAsOrders} variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+          <Button onClick={saveAsOrders} variant="outline" className="border-accent text-accent hover:bg-accent/10">
             <Plus className="mr-2 h-4 w-4" />
             Convert to Orders
           </Button>
@@ -297,9 +297,9 @@ export default function TrackSheetAdvanced() {
       </div>
       
       {/* Header Details */}
-      <Card className="border-blue-200">
+      <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle className="text-blue-700">Track Sheet Details</CardTitle>
+          <CardTitle className="text-primary">Track Sheet Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -309,7 +309,7 @@ export default function TrackSheetAdvanced() {
                 id="name" 
                 value={trackSheetName} 
                 onChange={(e) => setTrackSheetName(e.target.value)}
-                className="border-blue-200 focus:border-blue-500"
+                className="border-primary/20 focus:border-primary"
               />
             </div>
             <div className="space-y-2">
@@ -326,7 +326,7 @@ export default function TrackSheetAdvanced() {
             <div className="space-y-2">
               <Label htmlFor="vehicle">Vehicle</Label>
               <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-                <SelectTrigger className="border-blue-200">
+                <SelectTrigger className="border-primary/20">
                   <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
                 <SelectContent>
@@ -342,7 +342,7 @@ export default function TrackSheetAdvanced() {
             <div className="space-y-2">
               <Label htmlFor="salesman">Salesman</Label>
               <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
-                <SelectTrigger className="border-blue-200">
+                <SelectTrigger className="border-primary/20">
                   <SelectValue placeholder="Select salesman" />
                 </SelectTrigger>
                 <SelectContent>
@@ -361,7 +361,7 @@ export default function TrackSheetAdvanced() {
                 id="route" 
                 value={routeName} 
                 onChange={(e) => setRouteName(e.target.value)}
-                className="border-blue-200 focus:border-blue-500"
+                className="border-primary/20 focus:border-primary"
               />
             </div>
           </div>
@@ -372,7 +372,7 @@ export default function TrackSheetAdvanced() {
               id="notes" 
               value={notes} 
               onChange={(e) => setNotes(e.target.value)}
-              className="border-blue-200 focus:border-blue-500"
+              className="border-primary/20 focus:border-primary"
               placeholder="Add any notes..."
             />
           </div>
@@ -380,34 +380,34 @@ export default function TrackSheetAdvanced() {
       </Card>
       
       {/* Order Matrix */}
-      <Card className="border-blue-200">
+      <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle className="text-blue-700 flex items-center gap-2">
+          <CardTitle className="text-primary flex items-center gap-2">
             <Calculator className="h-5 w-5" />
             Order Entry Matrix
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-blue-200">
+            <table className="w-full border-collapse border border-primary/20">
               {/* Header Row */}
               <thead>
-                <tr className="bg-blue-50">
-                  <th className="border border-blue-200 p-2 text-left font-medium text-blue-700">
+                <tr className="bg-primary/10">
+                  <th className="border border-primary/20 p-2 text-left font-medium text-primary">
                     Product
                   </th>
-                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
+                  <th className="border border-primary/20 p-2 text-center font-medium text-primary">
                     Price (₹)
                   </th>
                   {activeCustomers.map(customer => (
-                    <th key={customer.id} className="border border-blue-200 p-2 text-center font-medium text-blue-700 min-w-[100px]">
+                    <th key={customer.id} className="border border-primary/20 p-2 text-center font-medium text-primary min-w-[100px]">
                       {customer.name}
                     </th>
                   ))}
-                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
+                  <th className="border border-primary/20 p-2 text-center font-medium text-primary">
                     Total Qty
                   </th>
-                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
+                  <th className="border border-primary/20 p-2 text-center font-medium text-primary">
                     Total Amount
                   </th>
                 </tr>
@@ -419,18 +419,18 @@ export default function TrackSheetAdvanced() {
                   const productTotal = productTotals[productIndex];
                   
                   return (
-                    <tr key={product.id} className="hover:bg-blue-25">
-                      <td className="border border-blue-200 p-2 font-medium">
+                    <tr key={product.id} className="hover:bg-primary/5">
+                      <td className="border border-primary/20 p-2 font-medium">
                         {product.name}
                       </td>
-                      <td className="border border-blue-200 p-2 text-center">
+                      <td className="border border-primary/20 p-2 text-center">
                         ₹{product.price.toFixed(2)}
                       </td>
                       {activeCustomers.map(customer => {
                         const quantity = getQuantity(product.id, customer.id);
                         
                         return (
-                          <td key={customer.id} className="border border-blue-200 p-1">
+                          <td key={customer.id} className="border border-primary/20 p-1">
                             <Input
                               type="number"
                               min="0"
@@ -439,19 +439,19 @@ export default function TrackSheetAdvanced() {
                                 const value = parseInt(e.target.value) || 0;
                                 updateQuantity(product.id, customer.id, value);
                               }}
-                              className="w-full text-center border-none bg-transparent focus:bg-blue-50"
+                              className="w-full text-center border-none bg-transparent focus:bg-primary/10"
                               placeholder="0"
                             />
                           </td>
                         );
                       })}
-                      <td className="border border-blue-200 p-2 text-center bg-blue-50">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                      <td className="border border-primary/20 p-2 text-center bg-primary/10">
+                        <Badge variant="secondary" className="bg-primary/20 text-primary">
                           {productTotal.totalQuantity}
                         </Badge>
                       </td>
-                      <td className="border border-blue-200 p-2 text-center bg-blue-50">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                      <td className="border border-primary/20 p-2 text-center bg-primary/10">
+                        <Badge variant="secondary" className="bg-primary/20 text-primary">
                           ₹{productTotal.totalAmount.toFixed(2)}
                         </Badge>
                       </td>
@@ -460,34 +460,34 @@ export default function TrackSheetAdvanced() {
                 })}
                 
                 {/* Customer Totals Row */}
-                <tr className="bg-blue-100 font-semibold">
-                  <td className="border border-blue-200 p-2 text-blue-700">
+                <tr className="bg-primary/20 font-semibold">
+                  <td className="border border-primary/20 p-2 text-primary">
                     TOTAL
                   </td>
-                  <td className="border border-blue-200 p-2"></td>
+                  <td className="border border-primary/20 p-2"></td>
                   {activeCustomers.map((customer, customerIndex) => {
                     const customerTotal = customerTotals[customerIndex];
                     
                     return (
-                      <td key={customer.id} className="border border-blue-200 p-2 text-center">
+                      <td key={customer.id} className="border border-primary/20 p-2 text-center">
                         <div className="flex flex-col gap-1">
-                          <Badge className="bg-blue-600 text-white">
+                          <Badge className="bg-primary text-white">
                             {customerTotal.totalQuantity} qty
                           </Badge>
-                          <Badge className="bg-blue-700 text-white">
+                          <Badge className="bg-secondary text-white">
                             ₹{customerTotal.totalAmount.toFixed(2)}
                           </Badge>
                         </div>
                       </td>
                     );
                   })}
-                  <td className="border border-blue-200 p-2 text-center">
-                    <Badge className="bg-blue-600 text-white">
+                  <td className="border border-primary/20 p-2 text-center">
+                    <Badge className="bg-primary text-white">
                       {productTotals.reduce((sum, pt) => sum + pt.totalQuantity, 0)}
                     </Badge>
                   </td>
-                  <td className="border border-blue-200 p-2 text-center">
-                    <Badge className="bg-blue-700 text-white">
+                  <td className="border border-primary/20 p-2 text-center">
+                    <Badge className="bg-secondary text-white">
                       ₹{grandTotal.toFixed(2)}
                     </Badge>
                   </td>

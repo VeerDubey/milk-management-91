@@ -95,12 +95,12 @@ export default function TrackSheetManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-purple-600">Track Sheet Manager</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-primary">Track Sheet Manager</h1>
           <p className="text-muted-foreground">View, edit, and download saved track sheets</p>
         </div>
         <Button 
           onClick={() => window.location.href = '/track-sheet-advanced'} 
-          className="bg-purple-600 hover:bg-purple-700"
+          className="bg-primary hover:bg-primary/90"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Track Sheet
@@ -108,7 +108,7 @@ export default function TrackSheetManager() {
       </div>
       
       {/* Search and Filters */}
-      <Card className="border-purple-200">
+      <Card className="border-primary/20">
         <CardContent className="p-4">
           <div className="flex items-center space-x-4">
             <div className="relative flex-1">
@@ -117,11 +117,11 @@ export default function TrackSheetManager() {
                 placeholder="Search track sheets..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 border-purple-200 focus:border-purple-500"
+                className="pl-8 border-primary/20 focus:border-primary"
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="border-purple-600 text-purple-600">
+              <Badge variant="outline" className="border-primary text-primary">
                 {filteredTrackSheets.length} track sheets
               </Badge>
             </div>
@@ -130,18 +130,18 @@ export default function TrackSheetManager() {
       </Card>
       
       {/* Track Sheets Table */}
-      <Card className="border-purple-200">
+      <Card className="border-primary/20">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-purple-50">
-                <TableHead className="text-purple-700">Name</TableHead>
-                <TableHead className="text-purple-700">Date</TableHead>
-                <TableHead className="text-purple-700">Route</TableHead>
-                <TableHead className="text-purple-700">Items</TableHead>
-                <TableHead className="text-purple-700">Total Qty</TableHead>
-                <TableHead className="text-purple-700">Total Amount</TableHead>
-                <TableHead className="text-purple-700">Actions</TableHead>
+              <TableRow className="bg-primary/10">
+                <TableHead className="text-primary">Name</TableHead>
+                <TableHead className="text-primary">Date</TableHead>
+                <TableHead className="text-primary">Route</TableHead>
+                <TableHead className="text-primary">Items</TableHead>
+                <TableHead className="text-primary">Total Qty</TableHead>
+                <TableHead className="text-primary">Total Amount</TableHead>
+                <TableHead className="text-primary">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -154,7 +154,7 @@ export default function TrackSheetManager() {
                       <Button 
                         onClick={() => window.location.href = '/track-sheet-advanced'} 
                         variant="outline"
-                        className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                        className="border-primary text-primary hover:bg-primary/10"
                       >
                         Create your first track sheet
                       </Button>
@@ -166,22 +166,22 @@ export default function TrackSheetManager() {
                   const { totalQuantity, totalAmount } = calculateTotals(trackSheet);
                   
                   return (
-                    <TableRow key={trackSheet.id} className="hover:bg-purple-25">
+                    <TableRow key={trackSheet.id} className="hover:bg-primary/5">
                       <TableCell className="font-medium">{trackSheet.name}</TableCell>
                       <TableCell>{format(new Date(trackSheet.date), 'PP')}</TableCell>
                       <TableCell>{trackSheet.routeName || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-blue-600 text-blue-600">
+                        <Badge variant="outline" className="border-secondary text-secondary">
                           {trackSheet.rows.length} items
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-green-600 text-green-600">
+                        <Badge variant="outline" className="border-success text-success">
                           {totalQuantity}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-orange-600 text-orange-600">
+                        <Badge variant="outline" className="border-accent text-accent">
                           ₹{totalAmount.toFixed(2)}
                         </Badge>
                       </TableCell>
@@ -193,7 +193,7 @@ export default function TrackSheetManager() {
                                 variant="outline" 
                                 size="sm"
                                 onClick={() => setSelectedTrackSheet(trackSheet)}
-                                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                                className="border-secondary text-secondary hover:bg-secondary/10"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -212,7 +212,7 @@ export default function TrackSheetManager() {
                             variant="outline"
                             size="sm"
                             onClick={() => downloadPDF(trackSheet)}
-                            className="border-green-600 text-green-600 hover:bg-green-50"
+                            className="border-success text-success hover:bg-success/10"
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -221,7 +221,7 @@ export default function TrackSheetManager() {
                             variant="outline"
                             size="sm"
                             onClick={() => downloadCSV(trackSheet)}
-                            className="border-purple-600 text-purple-600 hover:bg-purple-50"
+                            className="border-primary text-primary hover:bg-primary/10"
                           >
                             <FileText className="h-4 w-4" />
                           </Button>
@@ -231,7 +231,7 @@ export default function TrackSheetManager() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-red-600 text-red-600 hover:bg-red-50"
+                                className="border-destructive text-destructive hover:bg-destructive/10"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -247,7 +247,7 @@ export default function TrackSheetManager() {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDelete(trackSheet.id)}
-                                  className="bg-red-600 hover:bg-red-700"
+                                  className="bg-destructive hover:bg-destructive/90"
                                 >
                                   Delete
                                 </AlertDialogAction>
@@ -268,10 +268,10 @@ export default function TrackSheetManager() {
       {/* Summary Cards */}
       {filteredTrackSheets.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-blue-200">
+          <Card className="border-secondary/20">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-secondary">
                   {filteredTrackSheets.length}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Track Sheets</div>
@@ -279,10 +279,10 @@ export default function TrackSheetManager() {
             </CardContent>
           </Card>
           
-          <Card className="border-green-200">
+          <Card className="border-success/20">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-success">
                   {filteredTrackSheets.reduce((sum, sheet) => {
                     const { totalQuantity } = calculateTotals(sheet);
                     return sum + totalQuantity;
@@ -293,10 +293,10 @@ export default function TrackSheetManager() {
             </CardContent>
           </Card>
           
-          <Card className="border-orange-200">
+          <Card className="border-accent/20">
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">
+                <div className="text-2xl font-bold text-accent">
                   ₹{filteredTrackSheets.reduce((sum, sheet) => {
                     const { totalAmount } = calculateTotals(sheet);
                     return sum + totalAmount;
