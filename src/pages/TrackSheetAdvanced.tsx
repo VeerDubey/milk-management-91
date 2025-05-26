@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { toast } from 'sonner';
-import { Save, Printer, Calculator, Plus, Minus } from 'lucide-react';
+import { Save, Printer, Calculator, Plus, Minus, Download, ArrowRight, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { generateTrackSheetPdf, savePdf, exportTrackSheetToCSV } from '@/utils/trackSheetUtils';
 
 interface OrderCell {
   productId: string;
@@ -115,14 +116,8 @@ export default function TrackSheetAdvanced() {
     });
   };
   
-  // Save as track sheet
-  const saveAsTrackSheet = () => {
-    if (!trackSheetDate) {
-      toast.error("Please select a date");
-      return;
-    }
-    
-    // Convert matrix to track sheet rows
+  // Create track sheet data
+  const createTrackSheetData = () => {
     const rows = activeCustomers.map(customer => {
       const quantities: Record<string, number> = {};
       let total = 0;
@@ -145,28 +140,76 @@ export default function TrackSheetAdvanced() {
         amount,
         products: activeProducts.map(p => p.name)
       };
-    }).filter(row => row.total > 0); // Only include rows with orders
+    }).filter(row => row.total > 0);
     
-    if (rows.length === 0) {
-      toast.error("No orders to save");
-      return;
-    }
-    
-    const trackSheetData = {
+    return {
       name: trackSheetName,
       date: format(trackSheetDate, 'yyyy-MM-dd'),
       vehicleId: selectedVehicle,
       salesmanId: selectedSalesman,
       routeName,
       rows,
-      notes
+      notes,
+      vehicleName: vehicles.find(v => v.id === selectedVehicle)?.name,
+      salesmanName: salesmen.find(s => s.id === selectedSalesman)?.name
     };
+  };
+  
+  // Save as track sheet
+  const saveAsTrackSheet = () => {
+    if (!trackSheetDate) {
+      toast.error("Please select a date");
+      return;
+    }
+    
+    const trackSheetData = createTrackSheetData();
+    
+    if (trackSheetData.rows.length === 0) {
+      toast.error("No orders to save");
+      return;
+    }
     
     const result = addTrackSheet(trackSheetData);
     
     if (result) {
       toast.success("Track sheet saved successfully");
+      navigate('/track-sheet-history');
     }
+  };
+  
+  // Download as PDF
+  const downloadPDF = () => {
+    const trackSheetData = createTrackSheetData();
+    
+    if (trackSheetData.rows.length === 0) {
+      toast.error("No data to download");
+      return;
+    }
+    
+    const productNames = activeProducts.map(p => p.name);
+    const doc = generateTrackSheetPdf(trackSheetData, productNames, []);
+    savePdf(doc, `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.pdf`);
+  };
+  
+  // Download as CSV
+  const downloadCSV = () => {
+    const trackSheetData = createTrackSheetData();
+    
+    if (trackSheetData.rows.length === 0) {
+      toast.error("No data to download");
+      return;
+    }
+    
+    const productNames = activeProducts.map(p => p.name);
+    exportTrackSheetToCSV(trackSheetData, productNames);
+  };
+  
+  // Carry forward to next day
+  const carryForwardToNextDay = () => {
+    const nextDay = addDays(trackSheetDate, 1);
+    setTrackSheetDate(nextDay);
+    setTrackSheetName(`Track Sheet - ${format(nextDay, 'dd/MM/yyyy')}`);
+    toast.success("Track sheet carried forward to next day");
   };
   
   // Save as orders
@@ -226,15 +269,27 @@ export default function TrackSheetAdvanced() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-teal-600">Advanced Track Sheet</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-blue-600">Advanced Track Sheet</h1>
           <p className="text-muted-foreground">Excel-style order entry system</p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={saveAsTrackSheet} className="bg-teal-600 hover:bg-teal-700">
+          <Button onClick={saveAsTrackSheet} className="bg-blue-600 hover:bg-blue-700">
             <Save className="mr-2 h-4 w-4" />
-            Save as Track Sheet
+            Save Track Sheet
           </Button>
-          <Button onClick={saveAsOrders} variant="outline" className="border-teal-600 text-teal-600 hover:bg-teal-50">
+          <Button onClick={downloadPDF} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+          <Button onClick={downloadCSV} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+            <Download className="mr-2 h-4 w-4" />
+            Download CSV
+          </Button>
+          <Button onClick={carryForwardToNextDay} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+            <ArrowRight className="mr-2 h-4 w-4" />
+            Carry Forward
+          </Button>
+          <Button onClick={saveAsOrders} variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
             <Plus className="mr-2 h-4 w-4" />
             Convert to Orders
           </Button>
@@ -242,9 +297,9 @@ export default function TrackSheetAdvanced() {
       </div>
       
       {/* Header Details */}
-      <Card className="border-teal-200">
+      <Card className="border-blue-200">
         <CardHeader>
-          <CardTitle className="text-teal-700">Track Sheet Details</CardTitle>
+          <CardTitle className="text-blue-700">Track Sheet Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,7 +309,7 @@ export default function TrackSheetAdvanced() {
                 id="name" 
                 value={trackSheetName} 
                 onChange={(e) => setTrackSheetName(e.target.value)}
-                className="border-teal-200 focus:border-teal-500"
+                className="border-blue-200 focus:border-blue-500"
               />
             </div>
             <div className="space-y-2">
@@ -271,7 +326,7 @@ export default function TrackSheetAdvanced() {
             <div className="space-y-2">
               <Label htmlFor="vehicle">Vehicle</Label>
               <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-                <SelectTrigger className="border-teal-200">
+                <SelectTrigger className="border-blue-200">
                   <SelectValue placeholder="Select vehicle" />
                 </SelectTrigger>
                 <SelectContent>
@@ -287,7 +342,7 @@ export default function TrackSheetAdvanced() {
             <div className="space-y-2">
               <Label htmlFor="salesman">Salesman</Label>
               <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
-                <SelectTrigger className="border-teal-200">
+                <SelectTrigger className="border-blue-200">
                   <SelectValue placeholder="Select salesman" />
                 </SelectTrigger>
                 <SelectContent>
@@ -306,42 +361,53 @@ export default function TrackSheetAdvanced() {
                 id="route" 
                 value={routeName} 
                 onChange={(e) => setRouteName(e.target.value)}
-                className="border-teal-200 focus:border-teal-500"
+                className="border-blue-200 focus:border-blue-500"
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Input 
+              id="notes" 
+              value={notes} 
+              onChange={(e) => setNotes(e.target.value)}
+              className="border-blue-200 focus:border-blue-500"
+              placeholder="Add any notes..."
+            />
           </div>
         </CardContent>
       </Card>
       
       {/* Order Matrix */}
-      <Card className="border-teal-200">
+      <Card className="border-blue-200">
         <CardHeader>
-          <CardTitle className="text-teal-700 flex items-center gap-2">
+          <CardTitle className="text-blue-700 flex items-center gap-2">
             <Calculator className="h-5 w-5" />
             Order Entry Matrix
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-teal-200">
+            <table className="w-full border-collapse border border-blue-200">
               {/* Header Row */}
               <thead>
-                <tr className="bg-teal-50">
-                  <th className="border border-teal-200 p-2 text-left font-medium text-teal-700">
+                <tr className="bg-blue-50">
+                  <th className="border border-blue-200 p-2 text-left font-medium text-blue-700">
                     Product
                   </th>
-                  <th className="border border-teal-200 p-2 text-center font-medium text-teal-700">
+                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
                     Price (₹)
                   </th>
                   {activeCustomers.map(customer => (
-                    <th key={customer.id} className="border border-teal-200 p-2 text-center font-medium text-teal-700 min-w-[100px]">
+                    <th key={customer.id} className="border border-blue-200 p-2 text-center font-medium text-blue-700 min-w-[100px]">
                       {customer.name}
                     </th>
                   ))}
-                  <th className="border border-teal-200 p-2 text-center font-medium text-teal-700">
+                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
                     Total Qty
                   </th>
-                  <th className="border border-teal-200 p-2 text-center font-medium text-teal-700">
+                  <th className="border border-blue-200 p-2 text-center font-medium text-blue-700">
                     Total Amount
                   </th>
                 </tr>
@@ -353,18 +419,18 @@ export default function TrackSheetAdvanced() {
                   const productTotal = productTotals[productIndex];
                   
                   return (
-                    <tr key={product.id} className="hover:bg-teal-25">
-                      <td className="border border-teal-200 p-2 font-medium">
+                    <tr key={product.id} className="hover:bg-blue-25">
+                      <td className="border border-blue-200 p-2 font-medium">
                         {product.name}
                       </td>
-                      <td className="border border-teal-200 p-2 text-center">
+                      <td className="border border-blue-200 p-2 text-center">
                         ₹{product.price.toFixed(2)}
                       </td>
                       {activeCustomers.map(customer => {
                         const quantity = getQuantity(product.id, customer.id);
                         
                         return (
-                          <td key={customer.id} className="border border-teal-200 p-1">
+                          <td key={customer.id} className="border border-blue-200 p-1">
                             <Input
                               type="number"
                               min="0"
@@ -373,19 +439,19 @@ export default function TrackSheetAdvanced() {
                                 const value = parseInt(e.target.value) || 0;
                                 updateQuantity(product.id, customer.id, value);
                               }}
-                              className="w-full text-center border-none bg-transparent focus:bg-teal-50"
+                              className="w-full text-center border-none bg-transparent focus:bg-blue-50"
                               placeholder="0"
                             />
                           </td>
                         );
                       })}
-                      <td className="border border-teal-200 p-2 text-center bg-teal-50">
-                        <Badge variant="secondary" className="bg-teal-100 text-teal-700">
+                      <td className="border border-blue-200 p-2 text-center bg-blue-50">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
                           {productTotal.totalQuantity}
                         </Badge>
                       </td>
-                      <td className="border border-teal-200 p-2 text-center bg-teal-50">
-                        <Badge variant="secondary" className="bg-teal-100 text-teal-700">
+                      <td className="border border-blue-200 p-2 text-center bg-blue-50">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-700">
                           ₹{productTotal.totalAmount.toFixed(2)}
                         </Badge>
                       </td>
@@ -394,34 +460,34 @@ export default function TrackSheetAdvanced() {
                 })}
                 
                 {/* Customer Totals Row */}
-                <tr className="bg-teal-100 font-semibold">
-                  <td className="border border-teal-200 p-2 text-teal-700">
+                <tr className="bg-blue-100 font-semibold">
+                  <td className="border border-blue-200 p-2 text-blue-700">
                     TOTAL
                   </td>
-                  <td className="border border-teal-200 p-2"></td>
+                  <td className="border border-blue-200 p-2"></td>
                   {activeCustomers.map((customer, customerIndex) => {
                     const customerTotal = customerTotals[customerIndex];
                     
                     return (
-                      <td key={customer.id} className="border border-teal-200 p-2 text-center">
+                      <td key={customer.id} className="border border-blue-200 p-2 text-center">
                         <div className="flex flex-col gap-1">
-                          <Badge className="bg-teal-600 text-white">
+                          <Badge className="bg-blue-600 text-white">
                             {customerTotal.totalQuantity} qty
                           </Badge>
-                          <Badge className="bg-teal-700 text-white">
+                          <Badge className="bg-blue-700 text-white">
                             ₹{customerTotal.totalAmount.toFixed(2)}
                           </Badge>
                         </div>
                       </td>
                     );
                   })}
-                  <td className="border border-teal-200 p-2 text-center">
-                    <Badge className="bg-teal-600 text-white">
+                  <td className="border border-blue-200 p-2 text-center">
+                    <Badge className="bg-blue-600 text-white">
                       {productTotals.reduce((sum, pt) => sum + pt.totalQuantity, 0)}
                     </Badge>
                   </td>
-                  <td className="border border-teal-200 p-2 text-center">
-                    <Badge className="bg-teal-700 text-white">
+                  <td className="border border-blue-200 p-2 text-center">
+                    <Badge className="bg-blue-700 text-white">
                       ₹{grandTotal.toFixed(2)}
                     </Badge>
                   </td>

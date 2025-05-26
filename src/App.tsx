@@ -64,6 +64,7 @@ import BulkCommunication from '@/pages/BulkCommunication';
 import TrackSheetAdvanced from '@/pages/TrackSheetAdvanced';
 import TrackSheet from '@/pages/TrackSheet';
 import TrackSheetHistory from '@/pages/TrackSheetHistory';
+import TrackSheetManager from '@/pages/TrackSheetManager';
 import VehicleTracking from '@/pages/VehicleTracking';
 import VehicleSalesmanCreate from '@/pages/VehicleSalesmanCreate';
 
@@ -88,14 +89,14 @@ import Expenses from '@/pages/Expenses';
 
 const queryClient = new QueryClient();
 
-// Initialize services
-React.useEffect(() => {
-  OfflineStorageService.initialize();
-  EnhancedOfflineService.initialize();
-  BackupService.autoBackup();
-}, []);
-
 function App() {
+  // Initialize services
+  React.useEffect(() => {
+    OfflineStorageService.initialize();
+    EnhancedOfflineService.initialize();
+    BackupService.autoBackup();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -165,6 +166,7 @@ function App() {
                         <Route path="track-sheet-advanced" element={<TrackSheetAdvanced />} />
                         <Route path="track-sheet" element={<TrackSheet />} />
                         <Route path="track-sheet-history" element={<TrackSheetHistory />} />
+                        <Route path="track-sheet-manager" element={<TrackSheetManager />} />
                         <Route path="vehicle-tracking" element={<VehicleTracking />} />
                         <Route path="vehicle-salesman-create" element={<VehicleSalesmanCreate />} />
                         
