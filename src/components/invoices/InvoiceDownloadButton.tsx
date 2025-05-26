@@ -89,13 +89,13 @@ export default function InvoiceDownloadButton({
     
     setIsExporting(true);
     try {
-      // Convert invoice to CSV format
-      const headers = ['Item', 'Quantity', 'Rate', 'Amount'];
+      // Convert invoice to CSV format using correct properties
+      const headers = ['Item', 'Quantity', 'Unit Price', 'Amount'];
       const rows = invoice.items?.map(item => [
-        item.productName || item.name || 'Unknown',
+        item.description || 'Unknown Item',
         String(item.quantity || 0),
-        String(item.rate || 0),
-        String((item.quantity || 0) * (item.rate || 0))
+        String(item.unitPrice || 0),
+        String(item.amount || 0)
       ]) || [];
       
       // Add totals
