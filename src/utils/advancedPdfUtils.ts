@@ -20,17 +20,25 @@ export const generateAdvancedTrackSheetPdf = (trackSheetData: any, productNames:
     const pageWidth = 297;
     const margin = 10;
 
-    // Header with vibrant gradient
-    doc.setFillColor(63, 140, 255);
+    // Header with moody theme colors
+    doc.setFillColor(90, 93, 255); // Slate Blue
     doc.rect(0, 0, pageWidth, 30, 'F');
     
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(225, 225, 230); // Cloud White
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.text('Advanced Track Sheet', margin, 15);
     
     doc.setFontSize(12);
     doc.text(`Date: ${trackSheetData.date ? format(new Date(trackSheetData.date), 'dd/MM/yyyy') : 'N/A'}`, margin, 25);
+
+    // Additional details
+    if (trackSheetData.vehicleName) {
+      doc.text(`Vehicle: ${trackSheetData.vehicleName}`, pageWidth - 80, 15);
+    }
+    if (trackSheetData.salesmanName) {
+      doc.text(`Salesman: ${trackSheetData.salesmanName}`, pageWidth - 80, 25);
+    }
 
     // Table data
     const headers = ['Customer', ...productNames, 'Total Qty', 'Total Amount'];
@@ -55,9 +63,12 @@ export const generateAdvancedTrackSheetPdf = (trackSheetData: any, productNames:
         textColor: [0, 0, 0]
       },
       headStyles: {
-        fillColor: [63, 140, 255],
-        textColor: [255, 255, 255],
+        fillColor: [90, 93, 255], // Slate Blue
+        textColor: [225, 225, 230], // Cloud White
         fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 245]
       },
       margin: { left: margin, right: margin }
     });
@@ -71,6 +82,7 @@ export const generateAdvancedTrackSheetPdf = (trackSheetData: any, productNames:
 
 export const secureDownloadPdf = (doc: jsPDF, filename: string) => {
   try {
+    // Use save method for download
     doc.save(filename);
     return true;
   } catch (error) {
@@ -82,10 +94,21 @@ export const secureDownloadPdf = (doc: jsPDF, filename: string) => {
 export const printAdvancedTrackSheet = (trackSheetData: any, productNames: string[]) => {
   try {
     const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
-    const pdfOutput = doc.output('bloburl');
-    const printWindow = window.open(pdfOutput);
+    
+    // Create blob URL for printing
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    // Open print dialog
+    const printWindow = window.open(pdfUrl, '_blank');
     if (printWindow) {
-      printWindow.print();
+      printWindow.onload = () => {
+        printWindow.print();
+        // Clean up URL after printing
+        setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 1000);
+      };
     }
     return true;
   } catch (error) {
@@ -110,32 +133,26 @@ export const exportAdvancedTrackSheetToCSV = (trackSheetData: any, productNames:
       ].join(',')) || [])
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
     link.href = url;
     link.download = `track-sheet-${trackSheetData.date || 'export'}.csv`;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+    
+    // Clean up URL
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
+    
     return true;
   } catch (error) {
     console.error('CSV export error:', error);
-    return false;
-  }
-};
-
-export const secureDownloadCSV = (csvContent: string, filename: string) => {
-  try {
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-    return true;
-  } catch (error) {
-    console.error('CSV download error:', error);
     return false;
   }
 };
