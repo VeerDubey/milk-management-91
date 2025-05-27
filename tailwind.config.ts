@@ -21,24 +21,24 @@ export default {
     extend: {
       colors: {
         background: {
-          DEFAULT: "#FAFBFC", // Clean white background
-          secondary: "#F8FAFC", // Slightly off-white
+          DEFAULT: "#FAFBFC", // Light blue-gray
+          secondary: "#F1F5F9", 
           light: "#FFFFFF",
-          dark: "#0F172A", // Dark slate for dark mode
-          card: "#FFFFFF", // Pure white cards
+          dark: "#0F172A", // Dark navy
+          card: "#FFFFFF",
         },
         foreground: {
-          DEFAULT: "#1E293B", // Dark slate text
+          DEFAULT: "#1E293B", // Dark blue-gray
           muted: "#64748B",
           dark: "#F1F5F9",
         },
         card: {
-          DEFAULT: "#FFFFFF", // Clean white cards
+          DEFAULT: "#FFFFFF",
           foreground: "#1E293B",
           light: "#FFFFFF",
         },
         primary: {
-          DEFAULT: "#3B82F6", // Beautiful blue
+          DEFAULT: "#2563EB", // Rich blue
           foreground: "#FFFFFF",
           50: "#EFF6FF",
           100: "#DBEAFE",
@@ -50,58 +50,69 @@ export default {
           700: "#1D4ED8",
           800: "#1E40AF",
           900: "#1E3A8A",
+          950: "#172554",
         },
         secondary: {
-          DEFAULT: "#8B5CF6", // Purple accent
-          foreground: "#FFFFFF",
-          50: "#F5F3FF",
-          100: "#EDE9FE",
-          200: "#DDD6FE",
-          300: "#C4B5FD",
-          400: "#A78BFA",
-          500: "#8B5CF6",
-          600: "#7C3AED",
-          700: "#6D28D9",
-          800: "#5B21B6",
-          900: "#4C1D95",
+          DEFAULT: "#0F172A", // Dark navy
+          foreground: "#F1F5F9",
+          50: "#F8FAFC",
+          100: "#F1F5F9",
+          200: "#E2E8F0",
+          300: "#CBD5E1",
+          400: "#94A3B8",
+          500: "#64748B",
+          600: "#475569",
+          700: "#334155",
+          800: "#1E293B",
+          900: "#0F172A",
         },
         accent: {
-          DEFAULT: "#06B6D4", // Cyan accent
+          DEFAULT: "#0EA5E9", // Sky blue
           foreground: "#FFFFFF",
+          50: "#F0F9FF",
+          100: "#E0F2FE",
+          200: "#BAE6FD",
+          300: "#7DD3FC",
+          400: "#38BDF8",
+          500: "#0EA5E9",
+          600: "#0284C7",
+          700: "#0369A1",
+          800: "#075985",
+          900: "#0C4A6E",
         },
         destructive: {
-          DEFAULT: "#EF4444", // Clean red
+          DEFAULT: "#DC2626",
           foreground: "#FFFFFF",
         },
         warning: {
-          DEFAULT: "#F59E0B", // Amber warning
+          DEFAULT: "#D97706",
           foreground: "#FFFFFF",
         },
         success: {
-          DEFAULT: "#10B981", // Emerald success
+          DEFAULT: "#059669",
           foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#F1F5F9", // Light slate muted
+          DEFAULT: "#F1F5F9",
           foreground: "#64748B",
           light: "#F8FAFC",
         },
         border: {
-          DEFAULT: "#E2E8F0", // Light borders
+          DEFAULT: "#E2E8F0",
           light: "#F1F5F9",
         },
         // Enhanced gradient colors
         gradient: {
-          from: "#3B82F6", // Blue
-          via: "#8B5CF6", // Purple  
-          to: "#06B6D4", // Cyan
+          from: "#2563EB", // Primary blue
+          via: "#0EA5E9", // Sky blue
+          to: "#0284C7", // Darker blue
         },
         // Status colors
         status: {
-          pending: "#F59E0B",
-          completed: "#10B981",
-          cancelled: "#EF4444",
-          processing: "#3B82F6",
+          pending: "#D97706",
+          completed: "#059669",
+          cancelled: "#DC2626",
+          processing: "#2563EB",
         },
       },
       borderRadius: {
@@ -112,20 +123,24 @@ export default {
       boxShadow: {
         'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        'glow': '0 0 15px rgba(59, 130, 246, 0.15)',
-        'success': '0 4px 14px 0 rgba(16, 185, 129, 0.25)',
-        'warning': '0 4px 14px 0 rgba(245, 158, 11, 0.25)',
+        'glow': '0 0 15px rgba(37, 99, 235, 0.15)',
+        'blue-glow': '0 0 20px rgba(37, 99, 235, 0.3)',
+        'success': '0 4px 14px 0 rgba(5, 150, 105, 0.25)',
+        'warning': '0 4px 14px 0 rgba(217, 119, 6, 0.25)',
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         'lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'hero-pattern': 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #06B6D4 100%)',
+        'hero-pattern': 'linear-gradient(135deg, #2563EB 0%, #0EA5E9 50%, #0284C7 100%)',
         'card-gradient': 'linear-gradient(145deg, #FFFFFF 0%, #F8FAFC 100%)',
-        'button-gradient': 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+        'button-gradient': 'linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%)',
         'main-gradient': 'linear-gradient(135deg, #FAFBFC 0%, #F1F5F9 50%, #E2E8F0 100%)',
         'sidebar-gradient': 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
+        'dark-gradient': 'linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%)',
+        'dark-card': 'linear-gradient(145deg, #1E293B 0%, #0F172A 100%)',
       },
       keyframes: {
         "accordion-down": {
@@ -156,10 +171,10 @@ export default {
         },
         "pulse-glow": {
           "0%, 100%": {
-            boxShadow: "0 0 5px rgba(59, 130, 246, 0.3)"
+            boxShadow: "0 0 5px rgba(37, 99, 235, 0.3)"
           },
           "50%": {
-            boxShadow: "0 0 20px rgba(59, 130, 246, 0.6)"
+            boxShadow: "0 0 20px rgba(37, 99, 235, 0.6)"
           }
         },
         "shimmer": {
@@ -170,6 +185,20 @@ export default {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-4px)" }
         },
+        "scale-in": {
+          "0%": {
+            transform: "scale(0.95)",
+            opacity: "0"
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "1"
+          }
+        },
+        "bounce-subtle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-2px)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -179,6 +208,8 @@ export default {
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "shimmer": "shimmer 2s infinite",
         "float": "float 3s ease-in-out infinite",
+        "scale-in": "scale-in 0.2s ease-out",
+        "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
       },
     },
   },

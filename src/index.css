@@ -14,30 +14,30 @@
     --popover: 255 255 255;
     --popover-foreground: 30 41 59;
  
-    --primary: 59 130 246;
+    --primary: 37 99 235;
     --primary-foreground: 255 255 255;
  
-    --secondary: 139 92 246;
-    --secondary-foreground: 255 255 255;
+    --secondary: 15 23 42;
+    --secondary-foreground: 241 245 249;
  
     --muted: 241 245 249;
     --muted-foreground: 100 116 139;
  
-    --accent: 6 182 212;
+    --accent: 14 165 233;
     --accent-foreground: 255 255 255;
  
-    --destructive: 239 68 68;
+    --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
 
-    --success: 16 185 129;
+    --success: 5 150 105;
     --success-foreground: 255 255 255;
 
-    --warning: 245 158 11;
+    --warning: 217 119 6;
     --warning-foreground: 255 255 255;
 
     --border: 226 232 240;
     --input: 226 232 240;
-    --ring: 59 130 246;
+    --ring: 37 99 235;
  
     --radius: 0.75rem;
   }
@@ -52,30 +52,30 @@
     --popover: 30 41 59;
     --popover-foreground: 241 245 249;
  
-    --primary: 59 130 246;
+    --primary: 37 99 235;
     --primary-foreground: 255 255 255;
  
-    --secondary: 139 92 246;
-    --secondary-foreground: 255 255 255;
+    --secondary: 51 65 85;
+    --secondary-foreground: 241 245 249;
  
     --muted: 51 65 85;
     --muted-foreground: 148 163 184;
  
-    --accent: 6 182 212;
+    --accent: 14 165 233;
     --accent-foreground: 255 255 255;
  
-    --destructive: 239 68 68;
+    --destructive: 220 38 38;
     --destructive-foreground: 255 255 255;
 
-    --success: 16 185 129;
+    --success: 5 150 105;
     --success-foreground: 255 255 255;
     
-    --warning: 245 158 11;
+    --warning: 217 119 6;
     --warning-foreground: 255 255 255;
  
     --border: 51 65 85;
     --input: 51 65 85;
-    --ring: 59 130 246;
+    --ring: 37 99 235;
   }
 
   * {
@@ -89,20 +89,24 @@
     background-attachment: fixed;
   }
 
+  .dark body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
+  }
+
   /* Enhanced scrollbar styles */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
     @apply bg-muted/30;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
     @apply bg-primary/40 hover:bg-primary/60;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -126,12 +130,16 @@
     @apply bg-card/95 backdrop-blur-sm border border-border/50 shadow-card;
   }
 
+  .glass-card-dark {
+    @apply bg-card/90 backdrop-blur-md border border-border/30 shadow-xl;
+  }
+
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary via-secondary to-accent;
+    @apply bg-gradient-to-r from-primary via-accent to-primary;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
   }
 
   .hover-lift {
@@ -139,7 +147,7 @@
   }
 
   .button-glow {
-    @apply shadow-subtle hover:shadow-glow transition-all duration-300;
+    @apply shadow-subtle hover:shadow-blue-glow transition-all duration-300;
   }
 
   .status-badge {
@@ -178,8 +186,8 @@
     background: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0) 0,
-      rgba(255, 255, 255, 0.1) 20%,
-      rgba(255, 255, 255, 0.3) 60%,
+      rgba(37, 99, 235, 0.1) 20%,
+      rgba(37, 99, 235, 0.3) 60%,
       rgba(255, 255, 255, 0)
     );
     animation: shimmer 2s infinite;
@@ -196,24 +204,57 @@
     @apply bg-card backdrop-blur-sm border border-border/50 rounded-lg shadow-card hover:shadow-hover transition-all duration-300;
   }
 
+  .modern-card-dark {
+    @apply bg-dark-card backdrop-blur-md border border-border/30 rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300;
+  }
+
   /* Gradient button */
   .gradient-button {
-    @apply bg-button-gradient text-white font-medium px-6 py-3 rounded-lg shadow-subtle hover:shadow-hover transition-all duration-300 hover:scale-105;
+    @apply bg-button-gradient text-white font-medium px-6 py-3 rounded-lg shadow-subtle hover:shadow-blue-glow transition-all duration-300 hover:scale-105;
   }
-}
 
-/* Print styles for track sheets */
-@media print {
-  .print-hidden {
-    display: none !important;
+  /* Enhanced table styles */
+  .table-modern {
+    @apply w-full border-collapse bg-card rounded-lg overflow-hidden shadow-card;
   }
-  
-  .print-page {
-    @apply bg-white text-black;
-    page-break-after: always;
+
+  .table-header-modern {
+    @apply bg-primary/5 text-primary font-semibold border-b border-primary/10;
   }
-  
-  .print-no-break {
-    page-break-inside: avoid;
+
+  .table-row-modern {
+    @apply border-b border-border/50 hover:bg-muted/30 transition-colors;
+  }
+
+  /* Print styles */
+  @media print {
+    .print-hidden {
+      display: none !important;
+    }
+    
+    .print-page {
+      @apply bg-white text-black;
+      page-break-after: always;
+    }
+    
+    .print-no-break {
+      page-break-inside: avoid;
+    }
+
+    .print-landscape {
+      size: landscape;
+    }
+
+    .print-table {
+      width: 100% !important;
+      font-size: 12px !important;
+    }
+
+    .print-table th,
+    .print-table td {
+      padding: 4px 6px !important;
+      border: 1px solid #000 !important;
+      word-wrap: break-word !important;
+    }
   }
 }
