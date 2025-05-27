@@ -9,7 +9,7 @@ declare module 'jspdf' {
   }
 }
 
-export const generateAdvancedTrackSheetPdf = (trackSheetData: any, productNames: string[], customers: any[]) => {
+export const generateAdvancedTrackSheetPdf = (trackSheetData: any, productNames: string[], customers: any[] = []) => {
   try {
     const doc = new jsPDF({
       orientation: 'landscape',
@@ -79,8 +79,9 @@ export const secureDownloadPdf = (doc: jsPDF, filename: string) => {
   }
 };
 
-export const printAdvancedTrackSheet = (doc: jsPDF) => {
+export const printAdvancedTrackSheet = (trackSheetData: any, productNames: string[]) => {
   try {
+    const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
     const pdfOutput = doc.output('bloburl');
     const printWindow = window.open(pdfOutput);
     if (printWindow) {

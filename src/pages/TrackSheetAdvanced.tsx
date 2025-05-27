@@ -15,7 +15,6 @@ import {
   generateAdvancedTrackSheetPdf, 
   secureDownloadPdf, 
   exportAdvancedTrackSheetToCSV,
-  secureDownloadCSV,
   printAdvancedTrackSheet
 } from '@/utils/advancedPdfUtils';
 
@@ -201,15 +200,10 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, [], {
-        landscape: true,
-        fontSize: 9,
-        includeHeader: true,
-        includeFooter: true
-      });
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
       
       const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.pdf`;
-      const success = await secureDownloadPdf(doc, filename);
+      const success = secureDownloadPdf(doc, filename);
       
       if (success) {
         toast.success("PDF downloaded successfully");
@@ -233,10 +227,7 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const csvContent = exportAdvancedTrackSheetToCSV(trackSheetData, productNames);
-      const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.csv`;
-      
-      const success = await secureDownloadCSV(csvContent, filename);
+      const success = exportAdvancedTrackSheetToCSV(trackSheetData, productNames);
       
       if (success) {
         toast.success("CSV downloaded successfully");
@@ -284,12 +275,7 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, [], {
-        landscape: true,
-        fontSize: 9,
-        includeHeader: true,
-        includeFooter: true
-      });
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
       
       const pdfUrl = doc.output('bloburl');
       window.open(pdfUrl, '_blank');

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -104,8 +105,8 @@ function App() {
 
   return (
     <BrowserRouter>
-      <QueryClient client={queryClient}>
-        <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
           <SettingsProvider>
             <DataProvider>
               <Toaster />
@@ -192,7 +193,7 @@ function App() {
             </DataProvider>
           </SettingsProvider>
         </ThemeProvider>
-      </QueryClient>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }
