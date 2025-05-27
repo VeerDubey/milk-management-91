@@ -12,19 +12,12 @@ import { toast } from 'sonner';
 import { Save, Printer, Calculator, Plus, Minus, Download, ArrowRight, Copy, FileSpreadsheet, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { 
-  generateEnhancedTrackSheetPdf, 
-  downloadEnhancedPdf, 
-  exportEnhancedTrackSheetToCSV,
-  downloadEnhancedCSV,
-  printTrackSheet
-} from '@/utils/enhancedTrackSheetUtils';
-
-interface OrderCell {
-  productId: string;
-  customerId: string;
-  quantity: number;
-  amount: number;
-}
+  generateAdvancedTrackSheetPdf, 
+  secureDownloadPdf, 
+  exportAdvancedTrackSheetToCSV,
+  secureDownloadCSV,
+  printAdvancedTrackSheet
+} from '@/utils/advancedPdfUtils';
 
 interface CustomerTotal {
   customerId: string;
@@ -121,7 +114,7 @@ export default function TrackSheetAdvanced() {
     });
   };
   
-  // Create track sheet data
+  // Create track sheet data with proper structure
   const createTrackSheetData = () => {
     const rows = activeCustomers.map(customer => {
       const quantities: Record<string, number> = {};
@@ -137,17 +130,22 @@ export default function TrackSheetAdvanced() {
         }
       });
       
-      return {
-        customerId: customer.id,
-        name: customer.name,
-        quantities,
-        total,
-        amount,
-        products: activeProducts.map(p => p.name)
-      };
-    }).filter(row => row.total > 0);
+      // Only include rows with actual orders
+      if (total > 0) {
+        return {
+          customerId: customer.id,
+          name: customer.name,
+          quantities,
+          total,
+          amount,
+          products: activeProducts.map(p => p.name)
+        };
+      }
+      return null;
+    }).filter(row => row !== null);
     
     return {
+      id: `ts-${Date.now()}`,
       name: trackSheetName,
       date: format(trackSheetDate, 'yyyy-MM-dd'),
       vehicleId: selectedVehicle,
@@ -155,12 +153,13 @@ export default function TrackSheetAdvanced() {
       routeName,
       rows,
       notes,
-      vehicleName: vehicles.find(v => v.id === selectedVehicle)?.name,
-      salesmanName: salesmen.find(s => s.id === selectedSalesman)?.name
+      vehicleName: vehicles.find(v => v.id === selectedVehicle)?.name || '',
+      salesmanName: salesmen.find(s => s.id === selectedSalesman)?.name || '',
+      createdAt: new Date().toISOString()
     };
   };
   
-  // Save as track sheet
+  // Save as track sheet with validation
   const saveAsTrackSheet = () => {
     if (!trackSheetDate) {
       toast.error("Please select a date");
@@ -169,39 +168,48 @@ export default function TrackSheetAdvanced() {
     
     const trackSheetData = createTrackSheetData();
     
-    if (trackSheetData.rows.length === 0) {
-      toast.error("No orders to save");
+    if (!trackSheetData.rows || trackSheetData.rows.length === 0) {
+      toast.error("No orders to save. Please add some quantities.");
       return;
     }
     
-    const result = addTrackSheet(trackSheetData);
-    
-    if (result) {
-      toast.success("Track sheet saved successfully");
-      navigate('/track-sheet-history');
+    try {
+      const result = addTrackSheet(trackSheetData);
+      
+      if (result) {
+        toast.success(`Track sheet saved successfully with ${trackSheetData.rows.length} orders`);
+        // Clear the form
+        setOrderMatrix({});
+        navigate('/track-sheet-history');
+      } else {
+        toast.error("Failed to save track sheet");
+      }
+    } catch (error) {
+      console.error('Error saving track sheet:', error);
+      toast.error("Error saving track sheet");
     }
   };
   
-  // Enhanced download as PDF with landscape support
+  // Enhanced download as PDF
   const downloadPDF = async () => {
     const trackSheetData = createTrackSheetData();
     
-    if (trackSheetData.rows.length === 0) {
-      toast.error("No data to download");
+    if (!trackSheetData.rows || trackSheetData.rows.length === 0) {
+      toast.error("No data to download. Please add some quantities.");
       return;
     }
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateEnhancedTrackSheetPdf(trackSheetData, productNames, [], {
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, [], {
         landscape: true,
-        fontSize: 10,
+        fontSize: 9,
         includeHeader: true,
         includeFooter: true
       });
       
       const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.pdf`;
-      const success = await downloadEnhancedPdf(doc, filename);
+      const success = await secureDownloadPdf(doc, filename);
       
       if (success) {
         toast.success("PDF downloaded successfully");
@@ -218,17 +226,17 @@ export default function TrackSheetAdvanced() {
   const downloadCSV = async () => {
     const trackSheetData = createTrackSheetData();
     
-    if (trackSheetData.rows.length === 0) {
-      toast.error("No data to download");
+    if (!trackSheetData.rows || trackSheetData.rows.length === 0) {
+      toast.error("No data to download. Please add some quantities.");
       return;
     }
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const csvContent = exportEnhancedTrackSheetToCSV(trackSheetData, productNames);
+      const csvContent = exportAdvancedTrackSheetToCSV(trackSheetData, productNames);
       const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.csv`;
       
-      const success = await downloadEnhancedCSV(csvContent, filename);
+      const success = await secureDownloadCSV(csvContent, filename);
       
       if (success) {
         toast.success("CSV downloaded successfully");
@@ -245,19 +253,19 @@ export default function TrackSheetAdvanced() {
   const handlePrint = () => {
     const trackSheetData = createTrackSheetData();
     
-    if (trackSheetData.rows.length === 0) {
-      toast.error("No data to print");
+    if (!trackSheetData.rows || trackSheetData.rows.length === 0) {
+      toast.error("No data to print. Please add some quantities.");
       return;
     }
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const success = printTrackSheet(trackSheetData, productNames);
+      const success = printAdvancedTrackSheet(trackSheetData, productNames);
       
       if (success) {
         toast.success("Print dialog opened");
       } else {
-        toast.error("Failed to print");
+        toast.error("Failed to open print dialog");
       }
     } catch (error) {
       console.error('Print error:', error);
@@ -269,22 +277,22 @@ export default function TrackSheetAdvanced() {
   const previewTrackSheet = () => {
     const trackSheetData = createTrackSheetData();
     
-    if (trackSheetData.rows.length === 0) {
-      toast.error("No data to preview");
+    if (!trackSheetData.rows || trackSheetData.rows.length === 0) {
+      toast.error("No data to preview. Please add some quantities.");
       return;
     }
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateEnhancedTrackSheetPdf(trackSheetData, productNames, [], {
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, [], {
         landscape: true,
-        fontSize: 10,
+        fontSize: 9,
         includeHeader: true,
         includeFooter: true
       });
       
-      // Open in new tab for preview
-      window.open(doc.output('bloburl'), '_blank');
+      const pdfUrl = doc.output('bloburl');
+      window.open(pdfUrl, '_blank');
       toast.success("Preview opened in new tab");
     } catch (error) {
       console.error('Preview error:', error);
@@ -300,7 +308,7 @@ export default function TrackSheetAdvanced() {
     toast.success("Track sheet carried forward to next day");
   };
   
-  // Save as orders
+  // Save as orders with improved logic
   const saveAsOrders = () => {
     const orders = [];
     
@@ -338,14 +346,23 @@ export default function TrackSheetAdvanced() {
     }
     
     if (orders.length === 0) {
-      toast.error("No orders to save");
+      toast.error("No orders to save. Please add some quantities.");
       return;
     }
     
-    const result = addBatchOrders(orders);
-    
-    if (result) {
-      toast.success(`${orders.length} orders created successfully`);
+    try {
+      const result = addBatchOrders(orders);
+      
+      if (result) {
+        toast.success(`${orders.length} orders created successfully`);
+        // Clear the matrix after successful order creation
+        setOrderMatrix({});
+      } else {
+        toast.error("Failed to create orders");
+      }
+    } catch (error) {
+      console.error('Error creating orders:', error);
+      toast.error("Error creating orders");
     }
   };
   
@@ -357,21 +374,21 @@ export default function TrackSheetAdvanced() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-aurora">
             Advanced Track Sheet
           </h1>
           <p className="text-muted-foreground">Excel-style order entry system with enhanced features</p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={previewTrackSheet} variant="outline" className="border-primary/20 text-primary hover:bg-primary/10">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={previewTrackSheet} variant="outline" className="border-primary/20 text-primary hover:bg-primary/10 glow-primary">
             <Eye className="mr-2 h-4 w-4" />
             Preview
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="border-primary/20 text-primary hover:bg-primary/10">
+          <Button onClick={handlePrint} variant="outline" className="border-secondary/20 text-secondary hover:bg-secondary/10">
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
-          <Button onClick={downloadPDF} className="bg-primary hover:bg-primary/90 button-glow">
+          <Button onClick={downloadPDF} className="aurora-button">
             <Download className="mr-2 h-4 w-4" />
             Download PDF
           </Button>
@@ -379,17 +396,17 @@ export default function TrackSheetAdvanced() {
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Download CSV
           </Button>
-          <Button onClick={saveAsTrackSheet} className="bg-gradient-button button-glow">
+          <Button onClick={saveAsTrackSheet} className="aurora-button glow-primary">
             <Save className="mr-2 h-4 w-4" />
             Save Track Sheet
           </Button>
         </div>
       </div>
       
-      {/* Header Details - Enhanced */}
-      <Card className="border-primary/20 shadow-card hover:shadow-hover transition-all duration-300">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardTitle className="text-primary flex items-center gap-2">
+      {/* Header Details */}
+      <Card className="aurora-card border-primary/20">
+        <CardHeader className="bg-aurora-gradient text-white">
+          <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />
             Track Sheet Configuration
           </CardTitle>
@@ -472,23 +489,24 @@ export default function TrackSheetAdvanced() {
         </CardContent>
       </Card>
       
-      {/* Order Matrix - Enhanced */}
-      <Card className="border-primary/20 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
-          <CardTitle className="text-primary flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Order Entry Matrix
-            <Badge variant="secondary" className="ml-auto">
+      {/* Order Matrix */}
+      <Card className="aurora-card border-primary/20">
+        <CardHeader className="bg-aurora-gradient text-white">
+          <CardTitle className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-5 w-5" />
+              Order Entry Matrix
+            </div>
+            <Badge variant="secondary" className="bg-white/20 text-white">
               Total: ₹{grandTotal.toFixed(2)}
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              {/* Enhanced Header Row */}
+            <table className="w-full border-collapse aurora-table">
               <thead>
-                <tr className="bg-gradient-to-r from-primary/10 to-accent/10">
+                <tr className="aurora-table-header">
                   <th className="border border-primary/20 p-3 text-left font-semibold text-primary sticky left-0 bg-primary/10 z-10">
                     Product
                   </th>
@@ -509,20 +527,19 @@ export default function TrackSheetAdvanced() {
                 </tr>
               </thead>
               
-              {/* Enhanced Product Rows */}
               <tbody>
                 {activeProducts.map((product, productIndex) => {
                   const productTotal = productTotals[productIndex];
                   
                   return (
-                    <tr key={product.id} className="hover:bg-primary/5 transition-colors">
+                    <tr key={product.id} className="aurora-table-row hover:bg-primary/5 transition-colors">
                       <td className="border border-primary/20 p-3 font-medium sticky left-0 bg-background z-10">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-primary/20"></div>
+                          <div className="w-3 h-3 rounded-full bg-aurora-gradient"></div>
                           {product.name}
                         </div>
                       </td>
-                      <td className="border border-primary/20 p-3 text-center font-mono">
+                      <td className="border border-primary/20 p-3 text-center font-mono text-muted-foreground">
                         ₹{product.price.toFixed(2)}
                       </td>
                       {activeCustomers.map(customer => {
@@ -538,7 +555,7 @@ export default function TrackSheetAdvanced() {
                                 const value = parseInt(e.target.value) || 0;
                                 updateQuantity(product.id, customer.id, value);
                               }}
-                              className="w-full text-center border-none bg-transparent focus:bg-primary/10 transition-colors"
+                              className="w-full text-center border-none bg-transparent focus:bg-primary/10 transition-colors text-foreground"
                               placeholder="0"
                             />
                           </td>
@@ -549,8 +566,8 @@ export default function TrackSheetAdvanced() {
                           {productTotal.totalQuantity}
                         </Badge>
                       </td>
-                      <td className="border border-primary/20 p-3 text-center bg-primary/5">
-                        <Badge variant="secondary" className="bg-accent/20 text-accent font-mono">
+                      <td className="border border-primary/20 p-3 text-center bg-secondary/5">
+                        <Badge variant="secondary" className="bg-secondary/20 text-secondary font-mono">
                           ₹{productTotal.totalAmount.toFixed(2)}
                         </Badge>
                       </td>
@@ -558,9 +575,9 @@ export default function TrackSheetAdvanced() {
                   );
                 })}
                 
-                {/* Enhanced Customer Totals Row */}
-                <tr className="bg-gradient-to-r from-primary/20 to-accent/20 font-semibold">
-                  <td className="border border-primary/20 p-3 text-primary sticky left-0 bg-primary/20 z-10">
+                {/* Customer Totals Row */}
+                <tr className="bg-aurora-gradient text-white font-semibold">
+                  <td className="border border-primary/20 p-3 sticky left-0 bg-primary z-10">
                     CUSTOMER TOTALS
                   </td>
                   <td className="border border-primary/20 p-3"></td>
@@ -570,10 +587,10 @@ export default function TrackSheetAdvanced() {
                     return (
                       <td key={customer.id} className="border border-primary/20 p-3 text-center">
                         <div className="flex flex-col gap-1">
-                          <Badge className="bg-primary text-white font-mono">
+                          <Badge className="bg-white/20 text-white font-mono">
                             {customerTotal.totalQuantity} qty
                           </Badge>
-                          <Badge className="bg-accent text-white font-mono">
+                          <Badge className="bg-white/30 text-white font-mono">
                             ₹{customerTotal.totalAmount.toFixed(2)}
                           </Badge>
                         </div>
@@ -581,12 +598,12 @@ export default function TrackSheetAdvanced() {
                     );
                   })}
                   <td className="border border-primary/20 p-3 text-center">
-                    <Badge className="bg-primary text-white font-mono text-lg">
+                    <Badge className="bg-white/20 text-white font-mono text-lg">
                       {productTotals.reduce((sum, pt) => sum + pt.totalQuantity, 0)}
                     </Badge>
                   </td>
                   <td className="border border-primary/20 p-3 text-center">
-                    <Badge className="bg-accent text-white font-mono text-lg">
+                    <Badge className="bg-white/30 text-white font-mono text-lg">
                       ₹{grandTotal.toFixed(2)}
                     </Badge>
                   </td>
@@ -598,14 +615,14 @@ export default function TrackSheetAdvanced() {
       </Card>
       
       {/* Quick Actions */}
-      <Card className="border-primary/20">
+      <Card className="aurora-card border-primary/20">
         <CardContent className="p-6">
           <div className="flex flex-wrap gap-4 justify-center">
             <Button onClick={carryForwardToNextDay} variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
               <ArrowRight className="mr-2 h-4 w-4" />
               Carry Forward to Next Day
             </Button>
-            <Button onClick={saveAsOrders} variant="outline" className="border-accent text-accent hover:bg-accent/10">
+            <Button onClick={saveAsOrders} className="aurora-button">
               <Plus className="mr-2 h-4 w-4" />
               Convert to Orders
             </Button>

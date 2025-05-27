@@ -3,6 +3,7 @@ import { TrackSheet, TrackSheetRow } from '@/types';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { DownloadService } from '@/services/DownloadService';
+import { format } from 'date-fns';
 
 // Import autoTable properly
 declare module 'jspdf' {
@@ -55,106 +56,154 @@ export const calculateProductTotals = (rows: TrackSheetRow[], products: string[]
 
 // Function to generate a PDF from track sheet data with simplified approach
 export const generateTrackSheetPdf = (trackSheet: any, productNames: string[], customers: any[]) => {
-  const doc = new jsPDF();
-  
-  // Header with company branding
-  doc.setFillColor(51, 65, 85); // Dark blue header
-  doc.rect(0, 0, 210, 40, 'F');
-  
-  // Company name
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Vikas Milk Centre', 14, 20);
-  
-  // Track sheet title
-  doc.setFontSize(16);
-  doc.text('Track Sheet', 14, 32);
-  
-  // Reset colors for content
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  
-  // Track sheet details
-  let yPos = 50;
-  doc.text(`Date: ${trackSheet.date}`, 14, yPos);
-  yPos += 8;
-  
-  if (trackSheet.vehicleName) {
-    doc.text(`Vehicle: ${trackSheet.vehicleName}`, 14, yPos);
-    yPos += 6;
-  }
-  if (trackSheet.salesmanName) {
-    doc.text(`Salesman: ${trackSheet.salesmanName}`, 14, yPos);
-    yPos += 6;
-  }
-  if (trackSheet.routeName) {
-    doc.text(`Route: ${trackSheet.routeName}`, 14, yPos);
-    yPos += 6;
-  }
-  
-  // Prepare table data
-  const tableHeaders = ['Customer', ...productNames, 'Total', 'Amount'];
-  const tableData = trackSheet.rows.map((row: any) => [
-    row.name || 'Unknown',
-    ...productNames.map(product => row.quantities[product] || '-'),
-    String(row.total || 0),
-    `₹${(row.amount || 0).toFixed(2)}`
-  ]);
-  
-  // Add totals row
-  const productTotals = productNames.map(product => {
-    return trackSheet.rows.reduce((sum: number, row: any) => {
-      const qty = row.quantities[product];
-      return sum + (qty === '' || qty === undefined ? 0 : Number(qty));
-    }, 0);
-  });
-  
-  const grandTotal = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.total || 0), 0);
-  const grandAmount = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
-  
-  tableData.push([
-    'TOTAL',
-    ...productTotals.map(total => String(total)),
-    String(grandTotal),
-    `₹${grandAmount.toFixed(2)}`
-  ]);
-  
-  // Generate table using autoTable
-  (doc as any).autoTable({
-    startY: yPos + 10,
-    head: [tableHeaders],
-    body: tableData,
-    theme: 'grid',
-    styles: {
-      fontSize: 9,
-      cellPadding: 3
-    },
-    headStyles: {
-      fillColor: [59, 130, 246], // Blue header
-      textColor: 255,
-      fontStyle: 'bold'
-    },
-    footStyles: {
-      fillColor: [243, 244, 246], // Light gray footer
-      textColor: 0,
-      fontStyle: 'bold'
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251] // Very light gray
+  try {
+    // Use landscape orientation for better table display
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pageWidth = 297; // A4 landscape width
+    const pageHeight = 210; // A4 landscape height
+    const margin = 15;
+
+    // Aurora theme header
+    doc.setFillColor(63, 140, 255); // Primary blue
+    doc.rect(0, 0, pageWidth, 35, 'F');
+    
+    // Company branding
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Vikas Milk Centre', margin, 15);
+    
+    doc.setFontSize(16);
+    doc.text('Track Sheet Report', margin, 28);
+    
+    // Track sheet details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    let yPos = 45;
+    const dateStr = trackSheet.date ? format(new Date(trackSheet.date), 'dd/MM/yyyy') : 'Not specified';
+    doc.text(`Date: ${dateStr}`, margin, yPos);
+    
+    if (trackSheet.vehicleName) {
+      doc.text(`Vehicle: ${trackSheet.vehicleName}`, margin + 80, yPos);
     }
-  });
-  
-  // Add notes if present
-  if (trackSheet.notes) {
-    const finalY = (doc as any).lastAutoTable.finalY || yPos + 100;
-    doc.setFontSize(10);
-    doc.text('Notes:', 14, finalY + 20);
-    doc.text(trackSheet.notes, 14, finalY + 30);
+    
+    yPos += 6;
+    if (trackSheet.salesmanName) {
+      doc.text(`Salesman: ${trackSheet.salesmanName}`, margin, yPos);
+    }
+    
+    if (trackSheet.routeName) {
+      doc.text(`Route: ${trackSheet.routeName}`, margin + 80, yPos);
+    }
+    
+    yPos += 10;
+
+    // Prepare table with proper data handling
+    const headers = ['Customer', ...productNames, 'Total', 'Amount (₹)'];
+    const tableData = (trackSheet.rows || []).map((row: any) => [
+      row.name || 'Unknown',
+      ...productNames.map(product => {
+        const qty = row.quantities && row.quantities[product];
+        return qty !== undefined && qty !== '' && qty !== 0 ? String(qty) : '-';
+      }),
+      String(row.total || 0),
+      `₹${(row.amount || 0).toFixed(2)}`
+    ]);
+
+    // Calculate and add totals
+    const productTotals = productNames.map(product => {
+      return (trackSheet.rows || []).reduce((sum: number, row: any) => {
+        const qty = row.quantities && row.quantities[product];
+        const numQty = qty !== undefined && qty !== '' ? Number(qty) : 0;
+        return sum + (isNaN(numQty) ? 0 : numQty);
+      }, 0);
+    });
+
+    const grandTotal = (trackSheet.rows || []).reduce((sum: number, row: any) => sum + (row.total || 0), 0);
+    const grandAmount = (trackSheet.rows || []).reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
+
+    tableData.push([
+      'TOTAL',
+      ...productTotals.map(total => String(total)),
+      String(grandTotal),
+      `₹${grandAmount.toFixed(2)}`
+    ]);
+
+    // Generate optimized table
+    (doc as any).autoTable({
+      startY: yPos,
+      head: [headers],
+      body: tableData,
+      theme: 'grid',
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        valign: 'middle',
+        halign: 'center',
+        lineColor: [63, 140, 255],
+        lineWidth: 0.3,
+      },
+      headStyles: {
+        fillColor: [63, 140, 255],
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 9,
+      },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 'auto' },
+        [productNames.length + 1]: { halign: 'center' },
+        [productNames.length + 2]: { halign: 'right' },
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      footStyles: {
+        fillColor: [138, 99, 210],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      margin: { left: margin, right: margin },
+      tableWidth: 'auto',
+      didDrawPage: function(data: any) {
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(
+          `Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')} | Page ${data.pageCount}`,
+          pageWidth - margin,
+          pageHeight - 8,
+          { align: 'right' }
+        );
+      }
+    });
+
+    // Notes section
+    if (trackSheet.notes) {
+      const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
+      if (finalY < pageHeight - 25) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Notes:', margin, finalY + 8);
+        doc.setFont('helvetica', 'normal');
+        
+        const splitNotes = doc.splitTextToSize(trackSheet.notes, pageWidth - (margin * 2));
+        doc.text(splitNotes, margin, finalY + 15);
+      }
+    }
+
+    return doc;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw new Error(`Failed to generate track sheet PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-  
-  return doc;
 };
 
 // Function to create a template from track sheet data
@@ -185,46 +234,78 @@ export const createEmptyTrackSheetRows = (customers: any[], products: string[]) 
 // Other utility functions...
 
 export const savePdf = async (doc: jsPDF, filename: string): Promise<boolean> => {
-  return DownloadService.downloadPDF(doc, filename);
+  try {
+    const sanitizedFilename = filename.replace(/[^a-z0-9.-]/gi, '_');
+    return DownloadService.downloadPDF(doc, sanitizedFilename);
+  } catch (error) {
+    console.error('Error saving PDF:', error);
+    return false;
+  }
 };
 
-export const exportTrackSheetToCSV = (trackSheet: any, productNames: string[]): Promise<boolean> => {
-  // Create CSV headers
-  const headers = ['Customer', ...productNames, 'Total', 'Amount'];
-  
-  // Create CSV rows
-  const rows = trackSheet.rows.map((row: any) => [
-    row.name || 'Unknown',
-    ...productNames.map(product => row.quantities[product] || '0'),
-    String(row.total || 0),
-    String(row.amount || 0)
-  ]);
-  
-  // Add totals row
-  const productTotals = productNames.map(product => {
-    return trackSheet.rows.reduce((sum: number, row: any) => {
-      const qty = row.quantities[product];
-      return sum + (qty === '' || qty === undefined ? 0 : Number(qty));
-    }, 0);
-  });
-  
-  const grandTotal = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.total || 0), 0);
-  const grandAmount = trackSheet.rows.reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
-  
-  rows.push([
-    'TOTAL',
-    ...productTotals.map(total => String(total)),
-    String(grandTotal),
-    String(grandAmount)
-  ]);
-  
-  // Convert to CSV string
-  const csvContent = [headers, ...rows]
-    .map(row => row.map(cell => `"${cell}"`).join(','))
-    .join('\n');
-  
-  const filename = `tracksheet-${trackSheet.date}.csv`;
-  return DownloadService.downloadCSV(csvContent, filename);
+export const exportTrackSheetToCSV = async (trackSheet: any, productNames: string[]): Promise<boolean> => {
+  try {
+    const csvLines: string[] = [];
+    
+    // Header information
+    csvLines.push(`"Track Sheet Report"`);
+    csvLines.push(`"Date","${trackSheet.date ? format(new Date(trackSheet.date), 'dd/MM/yyyy') : 'Not specified'}"`);
+    csvLines.push(`"Vehicle","${trackSheet.vehicleName || 'Not assigned'}"`);
+    csvLines.push(`"Salesman","${trackSheet.salesmanName || 'Not assigned'}"`);
+    csvLines.push(`"Route","${trackSheet.routeName || 'Not specified'}"`);
+    csvLines.push(''); // Empty line
+    
+    // Table headers
+    const headers = ['"Customer"', ...productNames.map(name => `"${name}"`), '"Total"', '"Amount"'];
+    csvLines.push(headers.join(','));
+    
+    // Data rows
+    (trackSheet.rows || []).forEach((row: any) => {
+      const csvRow = [
+        `"${row.name || 'Unknown'}"`,
+        ...productNames.map(product => {
+          const qty = row.quantities && row.quantities[product];
+          return qty !== undefined && qty !== '' && qty !== 0 ? String(qty) : '0';
+        }),
+        String(row.total || 0),
+        (row.amount || 0).toFixed(2)
+      ];
+      csvLines.push(csvRow.join(','));
+    });
+    
+    // Totals row
+    const productTotals = productNames.map(product => {
+      return (trackSheet.rows || []).reduce((sum: number, row: any) => {
+        const qty = row.quantities && row.quantities[product];
+        const numQty = qty !== undefined && qty !== '' ? Number(qty) : 0;
+        return sum + (isNaN(numQty) ? 0 : numQty);
+      }, 0);
+    });
+    
+    const grandTotal = (trackSheet.rows || []).reduce((sum: number, row: any) => sum + (row.total || 0), 0);
+    const grandAmount = (trackSheet.rows || []).reduce((sum: number, row: any) => sum + (row.amount || 0), 0);
+    
+    csvLines.push([
+      '"TOTAL"',
+      ...productTotals.map(total => String(total)),
+      String(grandTotal),
+      grandAmount.toFixed(2)
+    ].join(','));
+    
+    // Notes
+    if (trackSheet.notes) {
+      csvLines.push('');
+      csvLines.push(`"Notes","${trackSheet.notes}"`);
+    }
+    
+    const csvContent = csvLines.join('\n');
+    const filename = `tracksheet-${trackSheet.date || 'export'}.csv`;
+    
+    return DownloadService.downloadCSV(csvContent, filename);
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    return false;
+  }
 };
 
 export const getBlankRow = (products: string[]): TrackSheetRow => {
