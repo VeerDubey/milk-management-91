@@ -138,3 +138,65 @@ export const getBlankRow = (productNames: string[]) => {
     products: productNames
   };
 };
+
+// New utility functions
+export const createTrackSheetTemplate = (name: string, rows: any[]) => {
+  return {
+    id: `template-${Date.now()}`,
+    name,
+    rows: rows.map(row => ({
+      ...row,
+      quantities: Object.fromEntries(
+        Object.keys(row.quantities || {}).map(key => [key, ''])
+      ),
+      total: 0,
+      amount: 0
+    })),
+    createdAt: new Date().toISOString()
+  };
+};
+
+export const filterEmptyRows = (rows: any[]) => {
+  return rows.filter(row => {
+    if (!row.quantities) return false;
+    
+    const hasQuantity = Object.values(row.quantities).some(qty => 
+      qty !== '' && qty !== 0 && qty !== null && qty !== undefined
+    );
+    
+    return hasQuantity || row.total > 0;
+  });
+};
+
+export const calculateProductTotals = (rows: any[], productNames: string[]) => {
+  const totals: Record<string, number> = {};
+  
+  productNames.forEach(productName => {
+    totals[productName] = 0;
+  });
+  
+  rows.forEach(row => {
+    if (row.quantities) {
+      Object.entries(row.quantities).forEach(([productName, quantity]) => {
+        if (productNames.includes(productName)) {
+          const qty = Number(quantity) || 0;
+          totals[productName] = (totals[productName] || 0) + qty;
+        }
+      });
+    }
+  });
+  
+  return totals;
+};
+
+export const calculateTotals = (rows: any[]) => {
+  let totalQuantity = 0;
+  let totalAmount = 0;
+  
+  rows.forEach(row => {
+    totalQuantity += Number(row.total) || 0;
+    totalAmount += Number(row.amount) || 0;
+  });
+  
+  return { totalQuantity, totalAmount };
+};
