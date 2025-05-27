@@ -31,6 +31,7 @@ import CustomerRates from '@/pages/CustomerRates';
 import CustomerReport from '@/pages/CustomerReport';
 import OutstandingDues from '@/pages/OutstandingDues';
 import OutstandingAmounts from '@/pages/OutstandingAmounts';
+import CustomerDetail from '@/pages/CustomerDetail';
 
 // Product pages
 import ProductList from '@/pages/ProductList';
@@ -39,6 +40,7 @@ import StockManagement from '@/pages/StockManagement';
 import StockSettings from '@/pages/StockSettings';
 import ProductCategories from '@/pages/ProductCategories';
 import BulkRates from '@/pages/BulkRates';
+import ProductDetail from '@/pages/ProductDetail';
 
 // Order pages
 import OrderList from '@/pages/OrderList';
@@ -132,6 +134,7 @@ function App() {
                         <Route path="customer-report" element={<CustomerReport />} />
                         <Route path="outstanding-dues" element={<OutstandingDues />} />
                         <Route path="outstanding-amounts" element={<OutstandingAmounts />} />
+                        <Route path="customer/:id" element={<CustomerDetail />} />
                         
                         {/* Product Routes */}
                         <Route path="product-list" element={<ProductList />} />
@@ -140,6 +143,7 @@ function App() {
                         <Route path="stock-settings" element={<StockSettings />} />
                         <Route path="product-categories" element={<ProductCategories />} />
                         <Route path="bulk-rates" element={<BulkRates />} />
+                        <Route path="product/:id" element={<ProductDetail />} />
                         
                         {/* Order Routes */}
                         <Route path="order-list" element={<OrderList />} />

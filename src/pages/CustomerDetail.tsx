@@ -1,137 +1,166 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format, parseISO } from 'date-fns';
-import { Edit, ArrowLeft, Phone, Mail, MapPin, FileText, Download } from 'lucide-react';
+import { ArrowLeft, User, Phone, Mail, MapPin, Calendar, FileText, IndianRupee } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { customers, orders, payments } = useData();
-  const [activeTab, setActiveTab] = useState('info');
-
-  const customer = customers.find((c) => c.id === id);
-
-  // Get orders for this customer
-  const customerOrders = orders.filter(order => order.customerId === id);
   
-  // Get payments for this customer
-  const customerPayments = payments.filter(payment => payment.customerId === id);
-
+  const customer = customers.find(c => c.id === id);
+  const customerOrders = orders.filter(o => o.customerId === id);
+  const customerPayments = payments.filter(p => p.customerId === id);
+  
   if (!customer) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-        <h1 className="text-2xl font-bold">Customer Not Found</h1>
-        <p className="text-muted-foreground mb-4">The customer you're looking for doesn't exist or has been removed.</p>
-        <Button onClick={() => navigate('/customers')}>Back to Customers</Button>
+      <div className="container mx-auto py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gradient-moody">Customer Not Found</h1>
+          <Button onClick={() => navigate('/customer-list')} className="mt-4 moody-button">
+            Back to Customer List
+          </Button>
+        </div>
       </div>
     );
   }
 
+  const totalOrders = customerOrders.length;
+  const totalOrderValue = customerOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const totalPayments = customerPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+  const outstandingAmount = totalOrderValue - totalPayments;
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => navigate('/customers')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight">{customer.name}</h1>
-          {customer.isActive ? (
-            <Badge className="ml-2">Active</Badge>
-          ) : (
-            <Badge variant="outline" className="ml-2">Inactive</Badge>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate(`/customer-ledger/${id}`)}>
-            <FileText className="mr-2 h-4 w-4" />
-            View Ledger
-          </Button>
-          <Button onClick={() => navigate(`/edit-customer/${id}`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Customer
-          </Button>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/customer-list')}
+          className="hover:bg-primary/20 hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-moody">{customer.name}</h1>
+          <p className="text-muted-foreground">Customer Details & History</p>
         </div>
       </div>
-      
-      <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="info">Customer Info</TabsTrigger>
+
+      {/* Customer Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="moody-card">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <FileText className="h-8 w-8 text-primary" />
+              <div>
+                <div className="text-2xl font-bold text-primary">{totalOrders}</div>
+                <div className="text-sm text-muted-foreground">Total Orders</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="moody-card">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <IndianRupee className="h-8 w-8 text-secondary" />
+              <div>
+                <div className="text-2xl font-bold text-secondary">₹{totalOrderValue.toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">Order Value</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="moody-card">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <IndianRupee className="h-8 w-8 text-success" />
+              <div>
+                <div className="text-2xl font-bold text-success">₹{totalPayments.toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">Payments</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="moody-card">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <IndianRupee className="h-8 w-8 text-destructive" />
+              <div>
+                <div className="text-2xl font-bold text-destructive">₹{outstandingAmount.toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">Outstanding</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="info" className="space-y-4">
+        <TabsList className="grid w-full max-w-lg grid-cols-3 moody-card">
+          <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="info" className="space-y-4">
-          <Card>
+
+        <TabsContent value="info">
+          <Card className="moody-card">
             <CardHeader>
-              <CardTitle>Customer Details</CardTitle>
+              <CardTitle className="text-gradient-moody">Customer Information</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Contact Information</h3>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center">
-                      <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{customer.phone}</span>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">Name</div>
+                      <div className="text-muted-foreground">{customer.name}</div>
                     </div>
-                    {customer.email && (
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>{customer.email}</span>
-                      </div>
-                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-5 w-5 text-secondary" />
+                    <div>
+                      <div className="font-medium">Phone</div>
+                      <div className="text-muted-foreground">{customer.phone || 'Not provided'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-accent" />
+                    <div>
+                      <div className="font-medium">Email</div>
+                      <div className="text-muted-foreground">{customer.email || 'Not provided'}</div>
+                    </div>
                   </div>
                 </div>
                 
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
-                  <div className="mt-2 flex items-start">
-                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground mt-1" />
-                    <span>{customer.address}</span>
-                  </div>
-                </div>
-                
-                {customer.area && (
-                  <div>
-                    <h3 className="text-sm font-medium text-muted-foreground">Area</h3>
-                    <div className="mt-2">
-                      <Badge variant="outline">{customer.area}</Badge>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-success mt-1" />
+                    <div>
+                      <div className="font-medium">Address</div>
+                      <div className="text-muted-foreground">{customer.address || 'Not provided'}</div>
                     </div>
                   </div>
-                )}
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Financial Summary</h3>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Outstanding Balance:</span>
-                      <span className="font-medium">₹{customer.outstandingBalance || 0}</span>
-                    </div>
-                    
-                    {customer.lastPaymentDate && (
-                      <div className="flex justify-between">
-                        <span>Last Payment:</span>
-                        <span className="font-medium">₹{customer.lastPaymentAmount || 0} on {customer.lastPaymentDate}</span>
+                  
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-warning" />
+                    <div>
+                      <div className="font-medium">Customer Since</div>
+                      <div className="text-muted-foreground">
+                        {customer.createdAt ? format(new Date(customer.createdAt), 'PPP') : 'Unknown'}
                       </div>
-                    )}
-                    
-                    <div className="flex justify-between">
-                      <span>Total Orders:</span>
-                      <span className="font-medium">{customerOrders.length}</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span>Total Payments:</span>
-                      <span className="font-medium">{customerPayments.length}</span>
                     </div>
                   </div>
                 </div>
@@ -139,99 +168,77 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="orders" className="space-y-4">
-          <Card>
+
+        <TabsContent value="orders">
+          <Card className="moody-card">
             <CardHeader>
-              <CardTitle>Order History</CardTitle>
+              <CardTitle className="text-gradient-moody">Order History</CardTitle>
               <CardDescription>All orders placed by this customer</CardDescription>
             </CardHeader>
             <CardContent>
-              {customerOrders.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Order #</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
+              <Table className="moody-table">
+                <TableHeader className="moody-table-header">
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerOrders.map((order) => (
+                    <TableRow key={order.id} className="moody-table-row">
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell>{format(new Date(order.date), 'MMM dd, yyyy')}</TableCell>
+                      <TableCell>{order.items?.length || 0} items</TableCell>
+                      <TableCell>₹{(order.total || 0).toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge className={`status-${order.status || 'pending'}`}>
+                          {order.status || 'pending'}
+                        </Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customerOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>{order.id}</TableCell>
-                        <TableCell>₹{order.total || 0}</TableCell>
-                        <TableCell>
-                          <Badge>{order.status}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => navigate(`/order-detail/${order.id}`)}
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground">No orders found for this customer.</p>
-                </div>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="payments" className="space-y-4">
-          <Card>
+
+        <TabsContent value="payments">
+          <Card className="moody-card">
             <CardHeader>
-              <CardTitle>Payment History</CardTitle>
-              <CardDescription>All payments made by this customer</CardDescription>
+              <CardTitle className="text-gradient-moody">Payment History</CardTitle>
+              <CardDescription>All payments received from this customer</CardDescription>
             </CardHeader>
             <CardContent>
-              {customerPayments.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Payment #</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Actions</TableHead>
+              <Table className="moody-table">
+                <TableHeader className="moody-table-header">
+                  <TableRow>
+                    <TableHead>Payment ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerPayments.map((payment) => (
+                    <TableRow key={payment.id} className="moody-table-row">
+                      <TableCell className="font-medium">{payment.id}</TableCell>
+                      <TableCell>{format(new Date(payment.date), 'MMM dd, yyyy')}</TableCell>
+                      <TableCell>₹{(payment.amount || 0).toFixed(2)}</TableCell>
+                      <TableCell>{payment.method || 'Cash'}</TableCell>
+                      <TableCell>
+                        <Badge className="status-completed">
+                          Completed
+                        </Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customerPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell>{payment.date}</TableCell>
-                        <TableCell>{payment.id}</TableCell>
-                        <TableCell>₹{payment.amount}</TableCell>
-                        <TableCell>{payment.paymentMethod}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => navigate(`/payment-detail/${payment.id}`)}
-                          >
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground">No payments found for this customer.</p>
-                </div>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
