@@ -51,8 +51,8 @@ export const createInvoiceFromFormData = (formData: any): Invoice => {
       total: item.amount
     })),
     subtotal: subtotal,
-    tax: taxAmount,
-    discount: discountAmount,
+    taxAmount: taxAmount,
+    discountAmount: discountAmount,
     total: total,
     status: 'draft',
     notes: formData.notes || '',
@@ -175,10 +175,10 @@ export const generateInvoicePreview = (
         <tbody>
           ${invoice.items.map(item => `
             <tr>
-              <td>${item.productName || 'Product'}</td>
+              <td>${item.productName || item.description || 'Product'}</td>
               <td>${item.quantity}</td>
               <td>₹${item.unitPrice?.toFixed(2)}</td>
-              <td>₹${item.total?.toFixed(2)}</td>
+              <td>₹${(item.total || item.amount)?.toFixed(2)}</td>
             </tr>
           `).join('')}
           <tr class="total-row">

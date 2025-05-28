@@ -278,7 +278,7 @@ export default function TrackSheetAdvanced() {
     try {
       const productNames = activeProducts.map(p => p.name);
       const summary = getProductTotals();
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, summary);
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
       
       const pdfUrl = doc.output('bloburl');
       window.open(pdfUrl, '_blank');
