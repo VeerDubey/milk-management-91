@@ -5,27 +5,27 @@
  
 @layer base {
   :root {
-    /* Modern Professional Dark Theme Colors */
-    --background: 12 13 16; /* #0c0d10 */
+    /* Modern Dark Theme with Purple/Blue Accents */
+    --background: 11 12 16; /* #0b0c10 */
     --foreground: 233 234 236; /* #e9eaec */
 
-    --card: 26 30 35; /* #1a1e23 */
+    --card: 22 25 31; /* #161922 */
     --card-foreground: 255 255 255; /* #ffffff */
  
-    --popover: 26 30 35; /* #1a1e23 */
+    --popover: 22 25 31; /* #161922 */
     --popover-foreground: 233 234 236; /* #e9eaec */
  
-    --primary: 56 189 149; /* #38bd95 - Teal Green */
+    --primary: 139 92 246; /* #8b5cf6 - Purple */
     --primary-foreground: 255 255 255; /* #ffffff */
  
-    --secondary: 59 130 246; /* #3b82f6 - Soft Blue */
+    --secondary: 59 130 246; /* #3b82f6 - Blue */
     --secondary-foreground: 255 255 255; /* #ffffff */
  
-    --muted: 34 38 45; /* Slightly lighter than card */
-    --muted-foreground: 136 136 136; /* #888 */
+    --muted: 30 35 44; /* Slightly lighter than card */
+    --muted-foreground: 156 163 175; /* #9ca3af */
  
-    --accent: 56 189 149; /* Teal Green for accent */
-    --accent-foreground: 12 13 16; /* Dark text on accent */
+    --accent: 168 85 247; /* #a855f7 - Light Purple */
+    --accent-foreground: 255 255 255; /* #ffffff */
  
     --destructive: 239 68 68; /* Red for errors */
     --destructive-foreground: 255 255 255; /* #ffffff */
@@ -36,40 +36,38 @@
     --warning: 245 158 11; /* Orange for warning */
     --warning-foreground: 255 255 255; /* #ffffff */
 
-    --border: 34 38 45; /* Subtle border */
-    --input: 26 30 35; /* Same as card */
-    --ring: 56 189 149; /* Teal Green for focus rings */
+    --border: 30 35 44; /* Subtle border */
+    --input: 22 25 31; /* Same as card */
+    --ring: 139 92 246; /* Purple for focus rings */
  
-    --radius: 0.75rem; /* 12px rounded corners */
-    
-    --tertiary: 136 136 136; /* #888 muted text */
+    --radius: 1rem; /* 16px rounded corners */
   }
  
   .dark {
     /* Same colors for dark mode consistency */
-    --background: 12 13 16;
+    --background: 11 12 16;
     --foreground: 233 234 236;
-    --card: 26 30 35;
+    --card: 22 25 31;
     --card-foreground: 255 255 255;
-    --popover: 26 30 35;
+    --popover: 22 25 31;
     --popover-foreground: 233 234 236;
-    --primary: 56 189 149;
+    --primary: 139 92 246;
     --primary-foreground: 255 255 255;
     --secondary: 59 130 246;
     --secondary-foreground: 255 255 255;
-    --muted: 34 38 45;
-    --muted-foreground: 136 136 136;
-    --accent: 56 189 149;
-    --accent-foreground: 12 13 16;
+    --muted: 30 35 44;
+    --muted-foreground: 156 163 175;
+    --accent: 168 85 247;
+    --accent-foreground: 255 255 255;
     --destructive: 239 68 68;
     --destructive-foreground: 255 255 255;
     --success: 34 197 94;
     --success-foreground: 255 255 255;
     --warning: 245 158 11;
     --warning-foreground: 255 255 255;
-    --border: 34 38 45;
-    --input: 26 30 35;
-    --ring: 56 189 149;
+    --border: 30 35 44;
+    --input: 22 25 31;
+    --ring: 139 92 246;
   }
 
   * {
@@ -77,14 +75,13 @@
   }
   
   body {
-    background: #0c0d10;
-    background-attachment: fixed;
+    background: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: 'Inter', 'Nunito', 'Poppins', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
   }
 
-  /* Enhanced scrollbar with theme colors */
+  /* Enhanced scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -101,20 +98,20 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
   }
 }
 
 @layer utilities {
-  /* Professional dark card styles */
+  /* Modern card styles with curved corners and glow */
   .modern-card {
     background: hsl(var(--card));
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.1);
     border-radius: var(--radius);
     box-shadow: 
       0 8px 32px rgba(0, 0, 0, 0.3),
-      0 0 0 1px rgba(56, 189, 149, 0.1);
+      0 0 0 1px rgba(139, 92, 246, 0.1);
     transition: all 0.3s ease;
   }
 
@@ -122,20 +119,23 @@
     transform: translateY(-2px);
     box-shadow: 
       0 12px 40px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(56, 189, 149, 0.2),
-      0 0 20px rgba(56, 189, 149, 0.1);
+      0 0 0 1px rgba(139, 92, 246, 0.2),
+      0 0 20px rgba(139, 92, 246, 0.1);
   }
 
-  .teal-glow {
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.3);
+  .glass-card {
+    background: rgba(22, 25, 34, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: var(--radius);
   }
 
-  .blue-glow {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  .gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #38bd95, #3b82f6);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
@@ -147,7 +147,7 @@
     color: hsl(var(--warning));
     border: 1px solid rgba(245, 158, 11, 0.3);
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 500;
   }
@@ -157,7 +157,7 @@
     color: hsl(var(--success));
     border: 1px solid rgba(34, 197, 94, 0.3);
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 500;
   }
@@ -167,31 +167,31 @@
     color: hsl(var(--destructive));
     border: 1px solid rgba(239, 68, 68, 0.3);
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 500;
   }
 
   .status-processing {
-    background: rgba(56, 189, 149, 0.15);
+    background: rgba(139, 92, 246, 0.15);
     color: hsl(var(--primary));
-    border: 1px solid rgba(56, 189, 149, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     padding: 0.375rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 500;
   }
 
   /* Modern button styles */
   .modern-button {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
     color: hsl(var(--primary-foreground));
     font-weight: 500;
     padding: 0.75rem 1.5rem;
     border-radius: var(--radius);
     transition: all 0.3s ease;
     box-shadow: 
-      0 4px 15px rgba(56, 189, 149, 0.3),
+      0 4px 15px rgba(139, 92, 246, 0.3),
       0 0 0 1px rgba(255, 255, 255, 0.05);
     border: none;
   }
@@ -199,8 +199,8 @@
   .modern-button:hover {
     transform: translateY(-2px);
     box-shadow: 
-      0 8px 25px rgba(56, 189, 149, 0.4),
-      0 0 20px rgba(56, 189, 149, 0.3);
+      0 8px 25px rgba(139, 92, 246, 0.4),
+      0 0 20px rgba(139, 92, 246, 0.3);
   }
 
   .modern-button:active {
@@ -218,18 +218,18 @@
   }
 
   .modern-table-header {
-    background: rgba(56, 189, 149, 0.1);
+    background: rgba(139, 92, 246, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .modern-table-row:hover {
-    background: rgba(56, 189, 149, 0.05);
+    background: rgba(139, 92, 246, 0.05);
   }
 
   /* Input styles */
   .modern-input {
     background: hsl(var(--input));
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
     border-radius: var(--radius);
     color: hsl(var(--foreground));
     transition: all 0.3s ease;
@@ -239,8 +239,8 @@
   .modern-input:focus {
     border-color: hsl(var(--primary));
     box-shadow: 
-      0 0 0 2px rgba(56, 189, 149, 0.2),
-      0 0 10px rgba(56, 189, 149, 0.1);
+      0 0 0 2px rgba(139, 92, 246, 0.2),
+      0 0 10px rgba(139, 92, 246, 0.1);
     outline: none;
   }
 
@@ -252,7 +252,7 @@
   .modern-nav {
     background: hsl(var(--card));
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
   }
 
   .modern-nav-item {
@@ -264,25 +264,19 @@
 
   .modern-nav-item:hover {
     color: hsl(var(--foreground));
-    background: rgba(56, 189, 149, 0.1);
-    box-shadow: 0 0 10px rgba(56, 189, 149, 0.2);
+    background: rgba(139, 92, 246, 0.1);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
   }
 
   .modern-nav-item.active {
     color: hsl(var(--primary-foreground));
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-    box-shadow: 0 0 15px rgba(56, 189, 149, 0.4);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
   }
 
-  /* Utility classes for improved UX */
-  .glass-effect {
-    backdrop-filter: blur(20px);
-    background: rgba(26, 30, 35, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .subtle-shadow {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Utility classes */
+  .glow-effect {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
   }
 
   .glow-on-hover {
@@ -290,13 +284,7 @@
   }
 
   .glow-on-hover:hover {
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.4);
-  }
-
-  /* Improved accessibility */
-  .focus-visible {
-    outline: 2px solid hsl(var(--primary));
-    outline-offset: 2px;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
   }
 
   /* Animation utilities */
