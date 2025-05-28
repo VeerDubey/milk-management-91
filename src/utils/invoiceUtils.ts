@@ -1,4 +1,5 @@
 
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -40,17 +41,20 @@ export const createInvoiceFromFormData = (formData: any): Invoice => {
     id: formData.invoiceNumber,
     customerId: formData.customerId,
     customerName: formData.customerName,
+    number: formData.invoiceNumber,
     date: formData.invoiceDate,
     dueDate: formData.dueDate,
     items: formData.items.map((item: any) => ({
       productId: item.productId,
       productName: item.productName || '',
+      description: item.description || item.productName || '',
       quantity: item.quantity,
       unitPrice: item.rate,
-      unit: 'unit',
+      amount: item.amount,
       total: item.amount
     })),
     subtotal: subtotal,
+    taxRate: formData.taxRate || 0,
     taxAmount: taxAmount,
     discountAmount: discountAmount,
     total: total,

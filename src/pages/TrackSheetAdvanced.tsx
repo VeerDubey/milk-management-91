@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -201,7 +202,7 @@ export default function TrackSheetAdvanced() {
     try {
       const productNames = activeProducts.map(p => p.name);
       const summary = getProductTotals();
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, summary);
       
       const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.pdf`;
       const success = secureDownloadPdf(doc, filename);
@@ -228,7 +229,8 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const success = exportAdvancedTrackSheetToCSV(trackSheetData, productNames);
+      const summary = getProductTotals();
+      const success = exportAdvancedTrackSheetToCSV(trackSheetData, productNames, summary);
       
       if (success) {
         toast.success("CSV downloaded successfully");
@@ -252,7 +254,8 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const success = printAdvancedTrackSheet(trackSheetData, productNames);
+      const summary = getProductTotals();
+      const success = printAdvancedTrackSheet(trackSheetData, productNames, summary);
       
       if (success) {
         toast.success("Print dialog opened");
@@ -276,7 +279,8 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
+      const summary = getProductTotals();
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, summary);
       
       const pdfUrl = doc.output('bloburl');
       window.open(pdfUrl, '_blank');
