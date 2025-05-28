@@ -159,7 +159,7 @@ export default function CustomerDetail() {
                     <div>
                       <div className="font-medium">Customer Since</div>
                       <div className="text-muted-foreground">
-                        {customer.createdAt ? format(new Date(customer.createdAt), 'PPP') : 'Unknown'}
+                        {customer.lastPaymentDate ? format(new Date(customer.lastPaymentDate), 'PPP') : 'Unknown'}
                       </div>
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export default function CustomerDetail() {
                       <TableCell className="font-medium">{payment.id}</TableCell>
                       <TableCell>{format(new Date(payment.date), 'MMM dd, yyyy')}</TableCell>
                       <TableCell>₹{(payment.amount || 0).toFixed(2)}</TableCell>
-                      <TableCell>{payment.method || 'Cash'}</TableCell>
+                      <TableCell>{payment.paymentMethod || 'Cash'}</TableCell>
                       <TableCell>
                         <Badge className="status-completed">
                           Completed

@@ -13,10 +13,14 @@ import { format } from 'date-fns';
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { products, orders, stock } = useData();
+  const { products, orders, stockTransactions } = useData();
   
   const product = products.find(p => p.id === id);
-  const productStock = stock.find(s => s.productId === id);
+  const productStock = stockTransactions.filter(s => s.productId === id);
+  const currentStock = productStock.reduce((sum, transaction) => {
+    return transaction.type === 'in' ? sum + transaction.quantity : sum - transaction.quantity;
+  }, 0);
+  
   const productOrders = orders.filter(order => 
     order.items?.some(item => item.productId === id)
   );
@@ -41,7 +45,7 @@ export default function ProductDetail() {
 
   const totalRevenue = productOrders.reduce((sum, order) => {
     const productItem = order.items?.find(item => item.productId === id);
-    return sum + ((productItem?.quantity || 0) * (productItem?.price || 0));
+    return sum + ((productItem?.quantity || 0) * (productItem?.unitPrice || 0));
   }, 0);
 
   return (
@@ -68,7 +72,7 @@ export default function ProductDetail() {
             <div className="flex items-center gap-3">
               <Package className="h-8 w-8 text-primary" />
               <div>
-                <div className="text-2xl font-bold text-primary">{productStock?.quantity || 0}</div>
+                <div className="text-2xl font-bold text-primary">{currentStock || 0}</div>
                 <div className="text-sm text-muted-foreground">Current Stock</div>
               </div>
             </div>
@@ -170,48 +174,31 @@ export default function ProductDetail() {
           <Card className="moody-card">
             <CardHeader>
               <CardTitle className="text-gradient-moody">Stock Information</CardTitle>
-              <CardDescription>Current stock levels and inventory details</CardDescription>
+              <CardDescription>Current stock levels and transaction history</CardDescription>
             </CardHeader>
             <CardContent>
-              {productStock ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-primary/10 rounded-lg">
-                      <div className="text-sm text-muted-foreground">Current Stock</div>
-                      <div className="text-2xl font-bold text-primary">{productStock.quantity}</div>
-                    </div>
-                    
-                    <div className="p-4 bg-warning/10 rounded-lg">
-                      <div className="text-sm text-muted-foreground">Minimum Stock</div>
-                      <div className="text-2xl font-bold text-warning">{productStock.minQuantity || 0}</div>
-                    </div>
-                    
-                    <div className="p-4 bg-secondary/10 rounded-lg">
-                      <div className="text-sm text-muted-foreground">Last Updated</div>
-                      <div className="text-lg font-medium text-secondary">
-                        {productStock.lastUpdated ? format(new Date(productStock.lastUpdated), 'PPP') : 'Never'}
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-primary/10 rounded-lg">
+                    <div className="text-sm text-muted-foreground">Current Stock</div>
+                    <div className="text-2xl font-bold text-primary">{currentStock}</div>
                   </div>
                   
-                  {productStock.quantity <= (productStock.minQuantity || 0) && (
-                    <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                      <div className="font-medium text-destructive">Low Stock Alert</div>
-                      <div className="text-sm text-muted-foreground">
-                        Current stock is below minimum threshold. Consider restocking.
-                      </div>
+                  <div className="p-4 bg-secondary/10 rounded-lg">
+                    <div className="text-sm text-muted-foreground">Minimum Stock</div>
+                    <div className="text-2xl font-bold text-secondary">{product.minStockLevel || 0}</div>
+                  </div>
+                </div>
+                
+                {currentStock <= (product.minStockLevel || 0) && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <div className="font-medium text-destructive">Low Stock Alert</div>
+                    <div className="text-sm text-muted-foreground">
+                      Current stock is below minimum threshold. Consider restocking.
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Package className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-                  <h3 className="mt-4 text-lg font-medium">No Stock Information</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Stock information is not available for this product.
-                  </p>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -243,8 +230,8 @@ export default function ProductDetail() {
                         <TableCell>{format(new Date(order.date), 'MMM dd, yyyy')}</TableCell>
                         <TableCell>{order.customerName || 'Unknown'}</TableCell>
                         <TableCell>{productItem?.quantity || 0}</TableCell>
-                        <TableCell>₹{(productItem?.price || 0).toFixed(2)}</TableCell>
-                        <TableCell>₹{((productItem?.quantity || 0) * (productItem?.price || 0)).toFixed(2)}</TableCell>
+                        <TableCell>₹{(productItem?.unitPrice || 0).toFixed(2)}</TableCell>
+                        <TableCell>₹{((productItem?.quantity || 0) * (productItem?.unitPrice || 0)).toFixed(2)}</TableCell>
                       </TableRow>
                     );
                   })}
