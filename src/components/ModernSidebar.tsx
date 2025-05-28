@@ -31,7 +31,12 @@ import {
   Layers,
   Bell,
   Database,
-  Calendar
+  Calendar,
+  FileSpreadsheet,
+  Mail,
+  Phone,
+  DollarSign,
+  MapPin
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -41,7 +46,7 @@ interface ModernSidebarProps {
 
 export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProps) {
   const location = useLocation();
-  const [openSections, setOpenSections] = useState<string[]>(['customers', 'inventory', 'orders']);
+  const [openSections, setOpenSections] = useState<string[]>(['customers', 'inventory', 'orders', 'delivery']);
 
   const toggleSection = (section: string) => {
     if (collapsed) return;
@@ -136,8 +141,8 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       badge: '4',
       children: [
         { title: 'Messaging', path: '/messaging', icon: MessageSquare },
-        { title: 'Email Templates', path: '/email-templates', icon: FileText },
-        { title: 'SMS Templates', path: '/sms-templates', icon: MessageSquare },
+        { title: 'Email Templates', path: '/email-templates', icon: Mail },
+        { title: 'SMS Templates', path: '/sms-templates', icon: Phone },
         { title: 'Bulk Communication', path: '/bulk-communication', icon: Bell },
       ]
     },
@@ -147,7 +152,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       key: 'delivery',
       badge: '5',
       children: [
-        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileText },
+        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileSpreadsheet },
         { title: 'Track Sheet', path: '/track-sheet', icon: FileText },
         { title: 'Track History', path: '/track-sheet-history', icon: Clock },
         { title: 'Vehicle Tracking', path: '/vehicle-tracking', icon: Truck },
@@ -183,31 +188,34 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       badge: '7',
       children: [
         { title: 'Company Profile', path: '/company-profile', icon: Building2 },
-        { title: 'Area Management', path: '/area-management', icon: Layers },
+        { title: 'Area Management', path: '/area-management', icon: MapPin },
         { title: 'Financial Year', path: '/financial-year', icon: Calendar },
         { title: 'Tax Settings', path: '/tax-settings', icon: Calculator },
         { title: 'UI Settings', path: '/ui-settings', icon: Palette },
         { title: 'User Access', path: '/user-access', icon: UserCheck },
-        { title: 'Expenses', path: '/expenses', icon: CreditCard },
+        { title: 'Expenses', path: '/expenses', icon: DollarSign },
       ]
     },
   ];
 
   return (
     <div className={cn(
-      'flex h-screen flex-col bg-sidebar-gradient border-r border-border/50 shadow-lg transition-all duration-300 ease-in-out',
+      'flex h-screen flex-col bg-aurora-gradient border-r border-primary/20 shadow-2xl transition-all duration-300 ease-in-out relative overflow-hidden',
       collapsed ? 'w-16' : 'w-72'
     )}>
+      {/* Animated background overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 animate-glow"></div>
+      
       {/* Header */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border/50">
+      <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/20 backdrop-blur-xl">
         {!collapsed && (
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-              <Home className="w-4 h-4 text-white" />
+            <div className="w-10 h-10 bg-aurora-gradient rounded-xl flex items-center justify-center shadow-lg animate-float">
+              <Home className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Vikas Milk</h2>
-              <p className="text-xs text-muted-foreground">Management System</p>
+              <h2 className="text-sm font-bold text-white">Vikas Milk Centre</h2>
+              <p className="text-xs text-white/70">Advanced Management</p>
             </div>
           </div>
         )}
@@ -215,7 +223,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-8 w-8 hover:bg-muted/50"
+          className="h-9 w-9 hover:bg-white/10 text-white relative z-10"
         >
           {collapsed ? (
             <PanelLeftOpen className="h-4 w-4" />
@@ -225,7 +233,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
         </Button>
       </div>
       
-      <ScrollArea className="flex-1 px-3 py-4">
+      <ScrollArea className="flex-1 px-3 py-4 relative z-10">
         <div className="space-y-2">
           {menuItems.map((item) => {
             if (item.children) {
@@ -239,27 +247,28 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                     variant="ghost"
                     onClick={() => toggleSection(item.key)}
                     className={cn(
-                      "w-full justify-start h-10 px-3 font-medium transition-all duration-200",
+                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 rounded-xl relative overflow-hidden group",
                       collapsed && "justify-center px-2",
                       hasActiveChild 
-                        ? "bg-primary/10 text-primary border-l-2 border-primary hover:bg-primary/15" 
-                        : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
+                        ? "bg-white/20 text-white border border-white/30 shadow-lg backdrop-blur-sm" 
+                        : "hover:bg-white/10 text-white/80 hover:text-white"
                     )}
                   >
-                    <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                     {!collapsed && (
                       <>
-                        <span className="flex-1 text-left">{item.title}</span>
-                        <div className="flex items-center space-x-2">
+                        <span className="flex-1 text-left relative z-10">{item.title}</span>
+                        <div className="flex items-center space-x-2 relative z-10">
                           {item.badge && (
-                            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-white/20 text-white border-white/30">
                               {item.badge}
                             </Badge>
                           )}
                           {isOpen ? (
-                            <ChevronDown className="h-3 w-3" />
+                            <ChevronDown className="h-4 w-4" />
                           ) : (
-                            <ChevronRight className="h-3 w-3" />
+                            <ChevronRight className="h-4 w-4" />
                           )}
                         </div>
                       </>
@@ -267,21 +276,22 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                   </Button>
                   
                   {isOpen && !collapsed && (
-                    <div className="ml-4 space-y-1 border-l border-border/30 pl-4">
+                    <div className="ml-4 space-y-1 border-l border-white/20 pl-4 animate-fade-in">
                       {item.children.map((child) => (
                         <Link key={child.path} to={child.path}>
                           <Button
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "w-full justify-start h-8 px-3 font-normal transition-all duration-200",
+                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 rounded-lg relative overflow-hidden group",
                               isActive(child.path)
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-foreground/70 hover:text-foreground hover:bg-muted/30"
+                                ? "bg-aurora-gradient text-white shadow-lg border border-white/30"
+                                : "text-white/70 hover:text-white hover:bg-white/10"
                             )}
                           >
-                            <child.icon className="h-3 w-3 mr-2" />
-                            {child.title}
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <child.icon className="h-4 w-4 mr-2 relative z-10" />
+                            <span className="relative z-10">{child.title}</span>
                           </Button>
                         </Link>
                       ))}
@@ -296,16 +306,17 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-10 px-3 font-medium transition-all duration-200",
+                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 rounded-xl relative overflow-hidden group",
                     collapsed && "justify-center px-2",
                     isActive(item.path)
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
+                      ? "bg-aurora-gradient text-white shadow-lg border border-white/30"
+                      : "hover:bg-white/10 text-white/80 hover:text-white"
                   )}
                 >
-                  <item.icon className={cn("h-4 w-4", !collapsed && "mr-3")} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                   {!collapsed && (
-                    <span className="flex-1 text-left">{item.title}</span>
+                    <span className="flex-1 text-left relative z-10">{item.title}</span>
                   )}
                 </Button>
               </Link>
@@ -316,14 +327,14 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
       {/* Footer */}
       {!collapsed && (
-        <div className="p-4 border-t border-border/50">
-          <div className="flex items-center space-x-3 p-2 rounded-lg bg-muted/30">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-              <Users className="w-4 h-4 text-white" />
+        <div className="p-4 border-t border-white/20 bg-black/20 backdrop-blur-xl relative z-10">
+          <div className="flex items-center space-x-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+            <div className="w-10 h-10 bg-aurora-gradient rounded-full flex items-center justify-center shadow-lg">
+              <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Admin User</p>
-              <p className="text-xs text-muted-foreground truncate">admin@vikasmilk.com</p>
+              <p className="text-sm font-medium text-white truncate">Admin User</p>
+              <p className="text-xs text-white/70 truncate">admin@vikasmilk.com</p>
             </div>
           </div>
         </div>
