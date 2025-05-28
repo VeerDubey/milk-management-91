@@ -232,14 +232,17 @@ export interface Invoice {
   dueDate: string;
   items: Array<{
     productId: string;
+    productName?: string;
     description: string;
     quantity: number;
     unitPrice: number;
     amount: number;
+    total?: number;
   }>;
   subtotal: number;
   taxRate: number;
   taxAmount: number;
+  discountAmount?: number;
   total: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
   notes: string;
