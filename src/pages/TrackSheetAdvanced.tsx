@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -229,8 +228,7 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const summary = getProductTotals();
-      const success = exportAdvancedTrackSheetToCSV(trackSheetData, productNames, summary);
+      const success = exportAdvancedTrackSheetToCSV(trackSheetData, productNames);
       
       if (success) {
         toast.success("CSV downloaded successfully");
@@ -254,8 +252,7 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const summary = getProductTotals();
-      const success = printAdvancedTrackSheet(trackSheetData, productNames, summary);
+      const success = printAdvancedTrackSheet(trackSheetData, productNames);
       
       if (success) {
         toast.success("Print dialog opened");
