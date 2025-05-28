@@ -1,3 +1,4 @@
+
 // Customer Types
 export interface Customer {
   id: string;
@@ -129,12 +130,15 @@ export interface Invoice {
   items: InvoiceItem[];
   subtotal: number;
   discount?: number;
+  discountAmount?: number;
   tax?: number;
+  taxAmount?: number;
   total: number;
   amountPaid?: number;
   balance?: number;
   notes?: string;
   terms?: string;
+  termsAndConditions?: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
   paymentMethod?: string;
   referenceNumber?: string;
@@ -143,18 +147,22 @@ export interface Invoice {
   createdAt?: string;
   updatedAt?: string;
   customFields?: Record<string, any>;
+  number?: string;
 }
 
 export interface InvoiceItem {
+  id?: string;
   productId: string;
-  productName: string;
+  productName?: string;
+  description?: string;
   quantity: number;
   unitPrice: number;
   unit?: string;
   discount?: number;
   tax?: number;
-  total: number;
-  description?: string;
+  taxAmount?: number;
+  total?: number;
+  amount?: number;
 }
 
 // Payment Types

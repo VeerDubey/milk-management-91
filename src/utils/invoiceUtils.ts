@@ -38,49 +38,54 @@ export const createInvoiceFromFormData = (formData: any): Invoice => {
 
   return {
     id: formData.invoiceNumber,
-    number: formData.invoiceNumber,
     customerId: formData.customerId,
     customerName: formData.customerName,
     date: formData.invoiceDate,
     dueDate: formData.dueDate,
     items: formData.items.map((item: any) => ({
-      id: `item-${Date.now()}-${Math.random()}`,
       productId: item.productId,
       productName: item.productName || '',
       quantity: item.quantity,
       unitPrice: item.rate,
       unit: 'unit',
-      amount: item.amount
+      total: item.amount
     })),
     subtotal: subtotal,
-    taxAmount: taxAmount,
-    discountAmount: discountAmount,
+    tax: taxAmount,
+    discount: discountAmount,
     total: total,
     status: 'draft',
     notes: formData.notes || '',
-    termsAndConditions: formData.terms || '',
+    terms: formData.terms || '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 };
 
-export const INVOICE_TEMPLATES = {
-  standard: {
+// Export templates as an array for easier use in components
+export const INVOICE_TEMPLATES = [
+  {
     id: 'standard',
     name: 'Standard',
-    description: 'Clean and professional template'
+    description: 'Clean and professional template',
+    primaryColor: '#3b82f6',
+    fontFamily: 'Arial, sans-serif'
   },
-  modern: {
+  {
     id: 'modern',
     name: 'Modern',
-    description: 'Contemporary design with colors'
+    description: 'Contemporary design with colors',
+    primaryColor: '#38bd95',
+    fontFamily: 'Helvetica, sans-serif'
   },
-  minimal: {
+  {
     id: 'minimal',
     name: 'Minimal',
-    description: 'Simple and clean layout'
+    description: 'Simple and clean layout',
+    primaryColor: '#6b7280',
+    fontFamily: 'Times New Roman, serif'
   }
-};
+];
 
 export const generateInvoicePreview = (
   invoice: Invoice,
@@ -88,22 +93,54 @@ export const generateInvoicePreview = (
   products: any[] = [],
   templateId: string = 'standard'
 ): string => {
+  const template = INVOICE_TEMPLATES.find(t => t.id === templateId) || INVOICE_TEMPLATES[0];
+  
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Invoice ${invoice.number}</title>
+      <title>Invoice ${invoice.id}</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        body { 
+          font-family: ${template.fontFamily}; 
+          margin: 20px; 
+          color: #333;
+        }
+        .header { 
+          display: flex; 
+          justify-content: space-between; 
+          margin-bottom: 20px; 
+          border-bottom: 2px solid ${template.primaryColor};
+          padding-bottom: 20px;
+        }
         .company-info { text-align: left; }
         .invoice-info { text-align: right; }
         .customer-info { margin: 20px 0; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .total-row { font-weight: bold; }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin: 20px 0; 
+        }
+        th, td { 
+          border: 1px solid #ddd; 
+          padding: 12px; 
+          text-align: left; 
+        }
+        th { 
+          background-color: ${template.primaryColor}; 
+          color: white;
+          font-weight: bold;
+        }
+        .total-row { 
+          font-weight: bold; 
+          background-color: #f8f9fa;
+        }
         .notes { margin-top: 20px; }
+        .invoice-title {
+          color: ${template.primaryColor};
+          font-size: 2em;
+          font-weight: bold;
+        }
       </style>
     </head>
     <body>
@@ -114,16 +151,16 @@ export const generateInvoicePreview = (
           <p>${companyInfo?.contactNumber || 'Your Phone'}</p>
         </div>
         <div class="invoice-info">
-          <h1>INVOICE</h1>
-          <p>Invoice #: ${invoice.number}</p>
-          <p>Date: ${format(new Date(invoice.date), 'dd/MM/yyyy')}</p>
-          <p>Due Date: ${format(new Date(invoice.dueDate), 'dd/MM/yyyy')}</p>
+          <h1 class="invoice-title">INVOICE</h1>
+          <p><strong>Invoice #:</strong> ${invoice.id}</p>
+          <p><strong>Date:</strong> ${format(new Date(invoice.date), 'dd/MM/yyyy')}</p>
+          <p><strong>Due Date:</strong> ${format(new Date(invoice.dueDate || invoice.date), 'dd/MM/yyyy')}</p>
         </div>
       </div>
       
       <div class="customer-info">
         <h3>Bill To:</h3>
-        <p>${invoice.customerName}</p>
+        <p><strong>${invoice.customerName}</strong></p>
       </div>
       
       <table>
@@ -138,21 +175,21 @@ export const generateInvoicePreview = (
         <tbody>
           ${invoice.items.map(item => `
             <tr>
-              <td>${item.productName}</td>
+              <td>${item.productName || 'Product'}</td>
               <td>${item.quantity}</td>
               <td>₹${item.unitPrice?.toFixed(2)}</td>
-              <td>₹${item.amount?.toFixed(2)}</td>
+              <td>₹${item.total?.toFixed(2)}</td>
             </tr>
           `).join('')}
           <tr class="total-row">
-            <td colspan="3">Total</td>
-            <td>₹${invoice.total.toFixed(2)}</td>
+            <td colspan="3"><strong>Total</strong></td>
+            <td><strong>₹${invoice.total.toFixed(2)}</strong></td>
           </tr>
         </tbody>
       </table>
       
       ${invoice.notes ? `<div class="notes"><h4>Notes:</h4><p>${invoice.notes}</p></div>` : ''}
-      ${invoice.termsAndConditions ? `<div class="notes"><h4>Terms & Conditions:</h4><p>${invoice.termsAndConditions}</p></div>` : ''}
+      ${invoice.terms ? `<div class="notes"><h4>Terms & Conditions:</h4><p>${invoice.terms}</p></div>` : ''}
     </body>
     </html>
   `;
@@ -169,7 +206,7 @@ export const generateInvoicePdf = (invoiceData: any) => {
   doc.setTextColor(139, 92, 246);
   doc.text('INVOICE', 20, 30);
   
-  // Company info (you can customize this)
+  // Company info
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
   doc.text('Vikas Milk Centre', 20, 45);
