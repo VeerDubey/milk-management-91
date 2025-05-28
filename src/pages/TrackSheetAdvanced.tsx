@@ -200,7 +200,8 @@ export default function TrackSheetAdvanced() {
     
     try {
       const productNames = activeProducts.map(p => p.name);
-      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames);
+      const summary: any[] = []; // Add empty summary array
+      const doc = generateAdvancedTrackSheetPdf(trackSheetData, productNames, summary);
       
       const filename = `tracksheet-${format(trackSheetDate, 'yyyy-MM-dd')}.pdf`;
       const success = secureDownloadPdf(doc, filename);

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AdvancedFeatures } from '@/components/advanced/AdvancedFeatures';
+import AdvancedFeatures from '@/components/advanced/AdvancedFeatures';
 
 export default function AdvancedFeaturesPage() {
   return (

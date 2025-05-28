@@ -16,7 +16,7 @@ import {
   Star,
   Target
 } from 'lucide-react';
-import { OrderSummarySheet } from '../reports/OrderSummarySheet';
+import OrderSummarySheet from '../reports/OrderSummarySheet';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { CustomerInsights } from './CustomerInsights';
 import { InventoryPredictor } from './InventoryPredictor';
