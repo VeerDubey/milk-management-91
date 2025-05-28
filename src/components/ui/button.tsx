@@ -10,14 +10,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "moody-button",
+        default: "modern-button",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-moody hover:shadow-moody-lg hover:-translate-y-1",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-modern hover:shadow-modern-lg hover:-translate-y-1",
         outline:
-          "border border-input bg-card hover:bg-accent hover:text-accent-foreground shadow-moody hover:shadow-moody-lg hover:-translate-y-1",
+          "border border-input bg-card hover:bg-accent hover:text-accent-foreground shadow-modern hover:shadow-modern-lg hover:-translate-y-1",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-moody hover:shadow-moody-lg hover:-translate-y-1",
-        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-moody-glow",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-modern hover:shadow-modern-lg hover:-translate-y-1",
+        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-teal-glow",
         link: "text-primary underline-offset-4 hover:underline hover:text-secondary transition-colors",
       },
       size: {

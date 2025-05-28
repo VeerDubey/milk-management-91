@@ -42,7 +42,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     <div className="flex min-h-screen bg-background">
       <ModernSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
       <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-lg px-6 shadow-sm">
+        <header className="modern-nav sticky top-0 z-30 flex h-16 items-center justify-between px-6 shadow-modern">
           <div className="flex items-center space-x-4">
             <div className="text-2xl font-bold text-gradient animate-float">
               Vikas Milk Centre
@@ -56,7 +56,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search..."
-                  className="pl-9 w-64 h-9 bg-muted/30 border-border/50 focus:bg-background transition-colors"
+                  className="pl-9 w-64 h-9 bg-input/50 border-border/50 focus:bg-input transition-colors"
                 />
               </div>
             </div>
@@ -65,7 +65,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-muted/50 transition-colors"
+              className="h-9 w-9 rounded-full glow-on-hover transition-all duration-300"
             >
               <Bell className="h-4 w-4 text-muted-foreground" />
               <span className="sr-only">Notifications</span>
@@ -76,7 +76,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               variant="ghost" 
               size="icon"
               onClick={handleToggleTheme}
-              className="h-9 w-9 rounded-full hover:bg-muted/50 transition-colors"
+              className="h-9 w-9 rounded-full glow-on-hover transition-all duration-300"
             >
               {isDarkTheme ? (
                 <SunIcon className="h-4 w-4 text-warning" />
@@ -90,7 +90,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         
         <main className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-7xl">
-            <div className="animate-fade-in">
+            <div className="fade-in">
               {children}
             </div>
           </div>
