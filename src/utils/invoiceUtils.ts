@@ -56,7 +56,7 @@ export const createInvoiceFromFormData = (formData: any): Invoice => {
     total: total,
     status: 'draft',
     notes: formData.notes || '',
-    terms: formData.terms || '',
+    termsAndConditions: formData.terms || '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -189,7 +189,7 @@ export const generateInvoicePreview = (
       </table>
       
       ${invoice.notes ? `<div class="notes"><h4>Notes:</h4><p>${invoice.notes}</p></div>` : ''}
-      ${invoice.terms ? `<div class="notes"><h4>Terms & Conditions:</h4><p>${invoice.terms}</p></div>` : ''}
+      ${invoice.termsAndConditions ? `<div class="notes"><h4>Terms & Conditions:</h4><p>${invoice.termsAndConditions}</p></div>` : ''}
     </body>
     </html>
   `;
