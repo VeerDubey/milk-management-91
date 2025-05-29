@@ -37,7 +37,10 @@ import {
   Phone,
   DollarSign,
   MapPin,
-  Sparkles
+  Sparkles,
+  ClipboardList,
+  Archive,
+  Award
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -93,14 +96,16 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       title: 'Inventory',
       icon: Package,
       key: 'inventory',
-      badge: '6',
+      badge: '8',
       children: [
+        { title: 'Inventory Dashboard', path: '/inventory-dashboard', icon: BarChart3 },
         { title: 'Product List', path: '/product-list', icon: Package },
         { title: 'Product Rates', path: '/product-rates', icon: Calculator },
         { title: 'Stock Management', path: '/stock-management', icon: Layers },
         { title: 'Stock Settings', path: '/stock-settings', icon: Settings },
         { title: 'Categories', path: '/product-categories', icon: Layers },
         { title: 'Bulk Rates', path: '/bulk-rates', icon: TrendingUp },
+        { title: 'Low Stock Alerts', path: '/low-stock-alerts', icon: Bell },
       ]
     },
     {
@@ -151,8 +156,9 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       title: 'Delivery',
       icon: Truck,
       key: 'delivery',
-      badge: '5',
+      badge: '6',
       children: [
+        { title: 'Delivery Challan', path: '/delivery-challan', icon: ClipboardList },
         { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileSpreadsheet },
         { title: 'Track Sheet', path: '/track-sheet', icon: FileText },
         { title: 'Track History', path: '/track-sheet-history', icon: Clock },
@@ -173,11 +179,12 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       ]
     },
     {
-      title: 'Reports',
+      title: 'Reports & Analytics',
       icon: BarChart3,
       key: 'reports',
-      badge: '2',
+      badge: '3',
       children: [
+        { title: 'Sales Analytics', path: '/sales-analytics', icon: Award },
         { title: 'Sales Report', path: '/sales-report', icon: TrendingUp },
         { title: 'Analytics', path: '/analytics', icon: BarChart3 },
       ]
