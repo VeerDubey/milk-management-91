@@ -12,10 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Palette, Monitor, Type, Layout } from 'lucide-react';
+import { Palette, Monitor, Type, Layout, Save, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTheme } from '@/contexts/ThemeProvider';
 
 interface UISettings {
   theme: 'light' | 'dark' | 'system';
@@ -31,32 +29,78 @@ interface UISettings {
 }
 
 export default function UISettings() {
-  const { theme, toggleTheme } = useTheme();
   const [settings, setSettings] = useState<UISettings>({
-    theme: 'system',
+    theme: 'dark',
     compactMode: false,
     fontSize: 'medium',
     currency: 'INR',
     dateFormat: 'DD/MM/YYYY',
     sidebarCollapsed: false,
-    colorScheme: 'blue',
+    colorScheme: 'green',
     tableStyle: 'bordered',
     notificationFrequency: 'medium',
     language: 'en'
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     // Load settings from localStorage
-    const saved = localStorage.getItem('ui-settings');
-    if (saved) {
-      setSettings(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('ui-settings');
+      if (saved) {
+        const parsedSettings = JSON.parse(saved);
+        setSettings(prev => ({ ...prev, ...parsedSettings }));
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast.error('Failed to load settings');
     }
   }, []);
 
-  const saveSettings = (newSettings: UISettings) => {
-    setSettings(newSettings);
-    localStorage.setItem('ui-settings', JSON.stringify(newSettings));
-    toast.success('Settings saved successfully');
+  const saveSettings = async (newSettings: UISettings) => {
+    setIsLoading(true);
+    try {
+      setSettings(newSettings);
+      localStorage.setItem('ui-settings', JSON.stringify(newSettings));
+      
+      // Apply settings immediately
+      applySettingsToDOM(newSettings);
+      
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Failed to save settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const applySettingsToDOM = (newSettings: UISettings) => {
+    try {
+      const root = document.documentElement;
+      
+      // Apply theme
+      root.classList.remove('light', 'dark');
+      root.classList.add(newSettings.theme === 'system' ? 'dark' : newSettings.theme);
+      
+      // Apply font size
+      root.style.fontSize = newSettings.fontSize === 'small' ? '14px' : 
+                           newSettings.fontSize === 'large' ? '18px' : '16px';
+      
+      // Apply compact mode
+      if (newSettings.compactMode) {
+        root.classList.add('compact-mode');
+      } else {
+        root.classList.remove('compact-mode');
+      }
+      
+      // Apply color scheme
+      root.setAttribute('data-color-scheme', newSettings.colorScheme);
+      
+    } catch (error) {
+      console.error('Error applying settings to DOM:', error);
+    }
   };
 
   const handleSettingChange = (key: keyof UISettings, value: any) => {
@@ -64,48 +108,53 @@ export default function UISettings() {
     saveSettings(newSettings);
   };
 
-  const resetToDefaults = () => {
+  const resetToDefaults = async () => {
     const defaultSettings: UISettings = {
-      theme: 'system',
+      theme: 'dark',
       compactMode: false,
       fontSize: 'medium',
       currency: 'INR',
       dateFormat: 'DD/MM/YYYY',
       sidebarCollapsed: false,
-      colorScheme: 'blue',
+      colorScheme: 'green',
       tableStyle: 'bordered',
       notificationFrequency: 'medium',
       language: 'en'
     };
-    saveSettings(defaultSettings);
+    await saveSettings(defaultSettings);
+    toast.success('Settings reset to defaults');
   };
 
   const colorSchemes = [
-    { id: 'blue', name: 'Blue', color: '#3b82f6' },
     { id: 'green', name: 'Green', color: '#22c55e' },
+    { id: 'blue', name: 'Blue', color: '#3b82f6' },
     { id: 'purple', name: 'Purple', color: '#a855f7' },
     { id: 'red', name: 'Red', color: '#ef4444' },
     { id: 'orange', name: 'Orange', color: '#f97316' },
+    { id: 'teal', name: 'Teal', color: '#14b8a6' },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">UI Settings</h1>
-          <p className="text-muted-foreground">Customize the application interface</p>
+          <h1 className="text-3xl font-bold tracking-tight gradient-text">UI Settings</h1>
+          <p className="text-muted-foreground">Customize the application interface to your preferences</p>
         </div>
-        <Button variant="outline" onClick={resetToDefaults}>
-          Reset to Defaults
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={resetToDefaults} disabled={isLoading}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset to Defaults
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Appearance Settings */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
+              <Palette className="h-5 w-5 text-primary" />
               Appearance
             </CardTitle>
             <CardDescription>
@@ -134,14 +183,14 @@ export default function UISettings() {
 
             <div className="space-y-2">
               <Label>Color Scheme</Label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-6 gap-2">
                 {colorSchemes.map((scheme) => (
                   <button
                     key={scheme.id}
-                    className={`w-full h-10 rounded-md border-2 ${
+                    className={`w-full h-10 rounded-md border-2 transition-all ${
                       settings.colorScheme === scheme.id 
-                        ? 'border-foreground' 
-                        : 'border-muted'
+                        ? 'border-primary ring-2 ring-primary/20' 
+                        : 'border-border hover:border-primary/50'
                     }`}
                     style={{ backgroundColor: scheme.color }}
                     onClick={() => handleSettingChange('colorScheme', scheme.id)}
@@ -163,15 +212,18 @@ export default function UISettings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
+                  <SelectItem value="small">Small (14px)</SelectItem>
+                  <SelectItem value="medium">Medium (16px)</SelectItem>
+                  <SelectItem value="large">Large (18px)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="compactMode">Compact Mode</Label>
+              <div className="space-y-0.5">
+                <Label htmlFor="compactMode">Compact Mode</Label>
+                <p className="text-sm text-muted-foreground">Reduce spacing and padding</p>
+              </div>
               <Switch
                 id="compactMode"
                 checked={settings.compactMode}
@@ -182,11 +234,11 @@ export default function UISettings() {
         </Card>
 
         {/* Layout Settings */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Layout className="h-5 w-5" />
-              Layout
+              <Layout className="h-5 w-5 text-secondary" />
+              Layout & Navigation
             </CardTitle>
             <CardDescription>
               Configure layout and navigation preferences
@@ -194,7 +246,10 @@ export default function UISettings() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
-              <Label htmlFor="sidebarCollapsed">Collapsed Sidebar</Label>
+              <div className="space-y-0.5">
+                <Label htmlFor="sidebarCollapsed">Collapsed Sidebar</Label>
+                <p className="text-sm text-muted-foreground">Start with sidebar collapsed</p>
+              </div>
               <Switch
                 id="sidebarCollapsed"
                 checked={settings.sidebarCollapsed}
@@ -244,11 +299,11 @@ export default function UISettings() {
         </Card>
 
         {/* Regional Settings */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Monitor className="h-5 w-5" />
-              Regional
+              <Monitor className="h-5 w-5 text-accent" />
+              Regional Settings
             </CardTitle>
             <CardDescription>
               Configure regional and formatting preferences
@@ -311,21 +366,24 @@ export default function UISettings() {
         </Card>
 
         {/* Preview Card */}
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Preview</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Type className="h-5 w-5 text-warning" />
+              Live Preview
+            </CardTitle>
             <CardDescription>
-              See how your settings will look
+              See how your settings will look in real-time
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4 p-4 border rounded-md">
+            <div className="space-y-4 p-4 border border-border rounded-lg bg-card/50">
               <div className="flex items-center justify-between">
                 <span className={`font-medium ${
                   settings.fontSize === 'small' ? 'text-sm' :
                   settings.fontSize === 'large' ? 'text-lg' : 'text-base'
                 }`}>
-                  Sample Text
+                  Sample Text Preview
                 </span>
                 <span className="text-muted-foreground">
                   {settings.currency === 'INR' ? '₹1,234.56' :
@@ -334,16 +392,20 @@ export default function UISettings() {
                 </span>
               </div>
               
-              <div className={`p-2 rounded ${
-                settings.tableStyle === 'bordered' ? 'border' :
-                settings.tableStyle === 'striped' ? 'bg-muted/50' : ''
+              <div className={`p-3 rounded-md ${
+                settings.tableStyle === 'bordered' ? 'border border-border' :
+                settings.tableStyle === 'striped' ? 'bg-muted/30' : 'bg-transparent'
               }`}>
-                <div className="text-sm">Sample table row</div>
+                <div className="text-sm">Sample table row with your styling</div>
               </div>
               
               <div className="text-sm text-muted-foreground">
-                Date: {settings.dateFormat === 'DD/MM/YYYY' ? '25/05/2024' :
-                       settings.dateFormat === 'MM/DD/YYYY' ? '05/25/2024' : '2024-05-25'}
+                Date Format: {settings.dateFormat === 'DD/MM/YYYY' ? '25/05/2024' :
+                             settings.dateFormat === 'MM/DD/YYYY' ? '05/25/2024' : '2024-05-25'}
+              </div>
+              
+              <div className="text-xs text-muted-foreground">
+                Theme: {settings.theme} | Color: {settings.colorScheme} | Size: {settings.fontSize}
               </div>
             </div>
           </CardContent>

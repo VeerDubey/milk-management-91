@@ -4,67 +4,130 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { TrackSheetRow } from '@/types';
-import { createTrackSheetTemplate } from '@/utils/trackSheetUtils';
+
+interface TrackSheetRow {
+  id: string;
+  customerName: string;
+  quantities: Record<string, number>;
+  total: number;
+  amount: number;
+}
 
 interface SaveTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  rows: TrackSheetRow[]; // Added rows prop
+  rows: TrackSheetRow[];
 }
 
 export function SaveTemplateDialog({ open, onOpenChange, rows }: SaveTemplateDialogProps) {
   const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!templateName.trim()) {
       toast.error("Please enter a template name");
       return;
     }
 
+    setIsLoading(true);
     try {
-      // Use the createTrackSheetTemplate function with rows
-      const template = createTrackSheetTemplate(templateName, rows);
+      // Create template structure (without actual values)
+      const templateStructure = {
+        id: `template_${Date.now()}`,
+        name: templateName.trim(),
+        description: templateDescription.trim(),
+        createdAt: new Date().toISOString(),
+        structure: rows.map(row => ({
+          customerName: row.customerName,
+          productColumns: Object.keys(row.quantities),
+        }))
+      };
       
-      // In a real app, we would save this template to storage
-      // For now, we'll just show a success message
+      // Save to localStorage (in a real app, this would be saved to a database)
+      const existingTemplates = JSON.parse(localStorage.getItem('track-sheet-templates') || '[]');
+      existingTemplates.push(templateStructure);
+      localStorage.setItem('track-sheet-templates', JSON.stringify(existingTemplates));
+      
       toast.success(`Template "${templateName}" saved successfully`);
       
       // Close dialog and reset state
       onOpenChange(false);
       setTemplateName('');
+      setTemplateDescription('');
     } catch (error) {
-      toast.error("Failed to save template");
       console.error("Error saving template:", error);
+      toast.error("Failed to save template");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+    setTemplateName('');
+    setTemplateDescription('');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md glass-card">
         <DialogHeader>
-          <DialogTitle>Save as Template</DialogTitle>
+          <DialogTitle className="gradient-text">Save as Template</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Template Name</Label>
+            <Label htmlFor="name">Template Name *</Label>
             <Input
               id="name"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
-              placeholder="Morning Route Template"
+              placeholder="e.g., Morning Route Template"
+              className="modern-input"
+              disabled={isLoading}
             />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Save this layout as a template for future use. Only the structure will be saved, not the values.
-          </p>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              value={templateDescription}
+              onChange={(e) => setTemplateDescription(e.target.value)}
+              placeholder="Describe when to use this template..."
+              className="modern-input resize-none"
+              rows={3}
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="p-3 bg-muted/20 rounded-md">
+            <p className="text-sm text-muted-foreground">
+              <strong>Note:</strong> This template will save the structure and customer names from your current track sheet. 
+              You can use it to quickly create new track sheets with the same layout.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Customers: {rows.length} | Products: {rows.length > 0 ? Object.keys(rows[0].quantities || {}).length : 0}
+            </p>
+          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleCancel}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Template</Button>
+          <Button 
+            onClick={handleSave}
+            disabled={isLoading || !templateName.trim()}
+            className="modern-button"
+          >
+            {isLoading ? "Saving..." : "Save Template"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
