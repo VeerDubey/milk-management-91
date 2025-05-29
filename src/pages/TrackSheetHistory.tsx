@@ -36,7 +36,6 @@ export default function TrackSheetHistory() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedSalesman, setSelectedSalesman] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   
   // Filter track sheets based on search criteria
   const filteredSheets = trackSheets.filter(sheet => {
@@ -51,9 +50,8 @@ export default function TrackSheetHistory() {
     
     const matchesVehicle = !selectedVehicle || sheet.vehicleId === selectedVehicle;
     const matchesSalesman = !selectedSalesman || sheet.salesmanId === selectedSalesman;
-    const matchesStatus = !statusFilter || sheet.status === statusFilter;
     
-    return matchesSearch && matchesDate && matchesVehicle && matchesSalesman && matchesStatus;
+    return matchesSearch && matchesDate && matchesVehicle && matchesSalesman;
   });
 
   // Enhanced PDF generation with better error handling
@@ -320,7 +318,7 @@ export default function TrackSheetHistory() {
                 Search and filter your track sheets by various criteria
               </CardDescription>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Search</label>
                   <div className="relative">
@@ -378,22 +376,6 @@ export default function TrackSheetHistory() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Status</label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="border-primary/20">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
                   <label className="text-sm font-medium">Actions</label>
                   <Button 
                     variant="outline" 
@@ -402,7 +384,6 @@ export default function TrackSheetHistory() {
                       setSelectedDate(undefined);
                       setSelectedVehicle('');
                       setSelectedSalesman('');
-                      setStatusFilter('');
                     }}
                     className="w-full border-secondary/20 text-secondary hover:bg-secondary/10"
                   >
@@ -446,11 +427,6 @@ export default function TrackSheetHistory() {
                                 <Badge className="status-completed">
                                   {sheet.rows?.length || 0} orders
                                 </Badge>
-                                {sheet.status && (
-                                  <Badge className={`status-${sheet.status}`}>
-                                    {sheet.status}
-                                  </Badge>
-                                )}
                               </div>
                               {sheet.notes && (
                                 <p className="text-sm text-muted-foreground italic">

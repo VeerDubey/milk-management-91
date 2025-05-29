@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -63,6 +62,7 @@ import SmsTemplates from '@/pages/SmsTemplates';
 import BulkCommunication from '@/pages/BulkCommunication';
 
 // Delivery pages
+import DeliveryChallan from '@/pages/DeliveryChallan';
 import TrackSheetAdvanced from '@/pages/TrackSheetAdvanced';
 import TrackSheet from '@/pages/TrackSheet';
 import TrackSheetHistory from '@/pages/TrackSheetHistory';
@@ -77,6 +77,7 @@ import SupplierPayments from '@/pages/SupplierPayments';
 import SupplierRates from '@/pages/SupplierRates';
 
 // Report pages
+import SalesAnalytics from '@/pages/SalesAnalytics';
 import SalesReport from '@/pages/SalesReport';
 import Analytics from '@/pages/Analytics';
 
@@ -106,13 +107,12 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
           <SettingsProvider>
             <AuthProvider>
               <DataProvider>
-                <Toaster />
                 <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
                   <Routes>
                     <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
@@ -166,6 +166,7 @@ function App() {
                         <Route path="bulk-communication" element={<BulkCommunication />} />
                         
                         {/* Delivery Routes */}
+                        <Route path="delivery-challan" element={<DeliveryChallan />} />
                         <Route path="track-sheet-advanced" element={<TrackSheetAdvanced />} />
                         <Route path="track-sheet" element={<TrackSheet />} />
                         <Route path="track-sheet-history" element={<TrackSheetHistory />} />
@@ -180,6 +181,7 @@ function App() {
                         <Route path="supplier-rates" element={<SupplierRates />} />
                         
                         {/* Report Routes */}
+                        <Route path="sales-analytics" element={<SalesAnalytics />} />
                         <Route path="sales-report" element={<SalesReport />} />
                         <Route path="analytics" element={<Analytics />} />
                         
@@ -198,9 +200,9 @@ function App() {
               </DataProvider>
             </AuthProvider>
           </SettingsProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </QueryClientProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
