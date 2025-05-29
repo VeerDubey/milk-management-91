@@ -4,7 +4,7 @@ import { ModernSidebar } from "../ModernSidebar";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
-import { MoonIcon, SunIcon, Bell, Search, Sparkles, Palette, User } from "lucide-react";
+import { MoonIcon, SunIcon, Bell, Search, Waves, Palette, User } from "lucide-react";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 
@@ -45,16 +45,16 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background overflow-hidden">
+    <div className="flex min-h-screen bg-background overflow-hidden w-full">
       <ModernSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-6 bg-card/50 backdrop-blur-xl border-b border-primary/20 shadow-lg">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-aurora-gradient rounded-lg flex items-center justify-center animate-float glow-primary">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-gradient-modern rounded-lg flex items-center justify-center animate-float glow-primary">
+                <Waves className="w-4 h-4 text-white" />
               </div>
-              <div className="text-2xl font-bold text-gradient-aurora animate-glow">
+              <div className="text-2xl font-bold text-gradient-modern animate-glow">
                 Vikas Milk Centre
               </div>
               <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
@@ -72,7 +72,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                   placeholder="Search anything..."
                   className="pl-9 w-80 h-10 bg-card/50 border-primary/20 focus:border-primary transition-all duration-300 backdrop-blur-sm"
                 />
-                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               onClick={handleToggleTheme}
               className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-300 relative group overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               {isDarkTheme ? (
                 <SunIcon className="h-5 w-5 text-warning relative z-10 transition-transform group-hover:rotate-180 duration-500" />
               ) : (

@@ -37,7 +37,7 @@ import {
   Phone,
   DollarSign,
   MapPin,
-  Sparkles,
+  Waves,
   ClipboardList,
   Archive,
   Award
@@ -105,7 +105,6 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
         { title: 'Stock Settings', path: '/stock-settings', icon: Settings },
         { title: 'Categories', path: '/product-categories', icon: Layers },
         { title: 'Bulk Rates', path: '/bulk-rates', icon: TrendingUp },
-        { title: 'Low Stock Alerts', path: '/low-stock-alerts', icon: Bell },
       ]
     },
     {
@@ -208,21 +207,21 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
   return (
     <div className={cn(
-      'flex h-screen flex-col modern-sidebar transition-all duration-300 ease-in-out relative overflow-hidden',
+      'flex h-screen flex-col modern-sidebar transition-all duration-300 ease-in-out relative overflow-hidden z-40',
       collapsed ? 'w-16' : 'w-72'
     )}>
       {/* Animated background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5"></div>
       
       {/* Header */}
       <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/10 backdrop-blur-xl">
         {!collapsed && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-aurora-gradient rounded-xl flex items-center justify-center shadow-lg animate-float glow-primary">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-gradient-modern rounded-xl flex items-center justify-center shadow-lg animate-float glow-primary">
+              <Waves className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-gradient-aurora">Vikas Milk Centre</h2>
+              <h2 className="text-sm font-bold text-gradient-modern">Vikas Milk Centre</h2>
               <p className="text-xs text-muted-foreground">Management System</p>
             </div>
           </div>
@@ -262,7 +261,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                         : "hover:bg-primary/10 text-foreground hover:text-primary"
                     )}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                     {!collapsed && (
                       <>
@@ -293,11 +292,11 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                             className={cn(
                               "w-full justify-start h-9 px-3 font-normal transition-all duration-300 nav-item relative overflow-hidden group",
                               isActive(child.path)
-                                ? "bg-aurora-gradient text-white shadow-lg border border-primary/30 active"
+                                ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
                                 : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
                             )}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <child.icon className="h-4 w-4 mr-2 relative z-10" />
                             <span className="relative z-10">{child.title}</span>
                           </Button>
@@ -317,11 +316,11 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                     "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
                     collapsed && "justify-center px-2",
                     isActive(item.path)
-                      ? "bg-aurora-gradient text-white shadow-lg border border-primary/30 active"
+                      ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
                       : "hover:bg-primary/10 text-foreground hover:text-primary"
                   )}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                   {!collapsed && (
                     <span className="flex-1 text-left relative z-10">{item.title}</span>
@@ -337,7 +336,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       {!collapsed && (
         <div className="p-4 border-t border-primary/20 bg-black/10 backdrop-blur-xl relative z-10">
           <div className="flex items-center space-x-3 p-3 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20">
-            <div className="w-10 h-10 bg-aurora-gradient rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-modern rounded-full flex items-center justify-center shadow-lg">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">

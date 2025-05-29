@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
 
 import { DataProvider } from '@/contexts/data/DataContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
@@ -40,6 +40,7 @@ import StockSettings from '@/pages/StockSettings';
 import ProductCategories from '@/pages/ProductCategories';
 import BulkRates from '@/pages/BulkRates';
 import ProductDetail from '@/pages/ProductDetail';
+import InventoryDashboard from '@/pages/InventoryDashboard';
 
 // Order pages
 import OrderList from '@/pages/OrderList';
@@ -107,13 +108,13 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
           <SettingsProvider>
             <AuthProvider>
               <DataProvider>
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
                   <Routes>
                     <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
                     
@@ -137,6 +138,7 @@ function App() {
                         <Route path="customer/:id" element={<CustomerDetail />} />
                         
                         {/* Product Routes */}
+                        <Route path="inventory-dashboard" element={<InventoryDashboard />} />
                         <Route path="product-list" element={<ProductList />} />
                         <Route path="product-rates" element={<ProductRates />} />
                         <Route path="stock-management" element={<StockManagement />} />
@@ -200,9 +202,9 @@ function App() {
               </DataProvider>
             </AuthProvider>
           </SettingsProvider>
-        </QueryClientProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 }
 
