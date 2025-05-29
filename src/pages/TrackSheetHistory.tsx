@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -11,6 +10,7 @@ import { format } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrackSheetDetails } from '@/components/track-sheet/TrackSheetDetails';
 import { TrackSheetConverter } from '@/components/track-sheet/TrackSheetConverter';
+import { downloadTrackSheetPDF } from '@/utils/trackSheetPdfGenerator';
 import { 
   Printer, 
   Calendar, 
@@ -54,51 +54,29 @@ export default function TrackSheetHistory() {
     return matchesSearch && matchesDate && matchesVehicle && matchesSalesman;
   });
 
-  // Enhanced PDF generation with better error handling
+  // Enhanced PDF generation using the new format
   const handleExportPdf = async (trackSheet: any) => {
     try {
-      const productNames: string[] = [];
-      
-      trackSheet.rows.forEach((row: any) => {
-        if (row.quantities) {
-          Object.keys(row.quantities).forEach(name => {
-            if (!productNames.includes(name)) {
-              productNames.push(name);
-            }
-          });
-        }
-      });
-      
-      if (productNames.length === 0) {
-        toast.warning('No products found in track sheet');
-        return;
-      }
-
-      // Create a simple PDF content for now
-      const pdfContent = {
-        title: `Track Sheet - ${trackSheet.name}`,
+      // Transform track sheet data to match the PDF format
+      const pdfData = {
+        title: 'NAIK MILK DISTRIBUTORS',
+        area: trackSheet.routeName || 'EICHER',
         date: format(new Date(trackSheet.date), 'dd/MM/yyyy'),
-        vehicle: trackSheet.vehicleName,
-        salesman: trackSheet.salesmanName,
-        products: productNames,
-        rows: trackSheet.rows?.length || 0
+        rows: trackSheet.rows?.map((row: any) => ({
+          name: row.customerName || row.name || 'Unknown',
+          quantities: row.quantities || {},
+          totalQuantity: row.total || 0,
+          totalAmount: row.amount || 0
+        })) || []
       };
-
-      // Simulate PDF download
-      const blob = new Blob([JSON.stringify(pdfContent, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tracksheet-${format(new Date(trackSheet.date), 'yyyy-MM-dd')}-${trackSheet.name || 'sheet'}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
       
-      toast.success('Track sheet exported successfully');
+      const filename = `tracksheet-${format(new Date(trackSheet.date), 'yyyy-MM-dd')}-${trackSheet.name || 'sheet'}.pdf`;
+      downloadTrackSheetPDF(pdfData, filename);
+      
+      toast.success('Track sheet PDF downloaded successfully');
     } catch (error) {
-      console.error('Error exporting PDF:', error);
-      toast.error('Failed to export track sheet');
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
     }
   };
 
@@ -237,14 +215,16 @@ export default function TrackSheetHistory() {
     <div className="container mx-auto py-6 space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gradient-aurora">Track Sheet History</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-purple-500 to-teal-400 bg-clip-text text-transparent">
+            Track Sheet History
+          </h1>
+          <p className="text-slate-300 mt-2">
             View and manage your delivery track sheets with advanced features
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button onClick={() => navigate('/track-sheet-advanced')} className="aurora-button">
+          <Button onClick={() => navigate('/track-sheet-advanced')} className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
             <Plus className="mr-2 h-4 w-4" />
             Create New
           </Button>
@@ -252,102 +232,102 @@ export default function TrackSheetHistory() {
       </div>
 
       {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="aurora-card">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Sheets</p>
-                <p className="text-2xl font-bold text-gradient-aurora">{totalSheets}</p>
+                <p className="text-sm font-medium text-slate-400">Total Sheets</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{totalSheets}</p>
               </div>
-              <FileText className="h-8 w-8 text-primary" />
+              <FileText className="h-10 w-10 text-blue-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-card">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Orders</p>
-                <p className="text-2xl font-bold text-gradient-aurora">{totalOrders}</p>
+                <p className="text-sm font-medium text-slate-400">Total Orders</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">{totalOrders}</p>
               </div>
-              <Package className="h-8 w-8 text-secondary" />
+              <Package className="h-10 w-10 text-purple-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-card">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold text-gradient-aurora">₹{totalAmount.toFixed(2)}</p>
+                <p className="text-sm font-medium text-slate-400">Total Value</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-teal-400 to-green-400 bg-clip-text text-transparent">₹{totalAmount.toFixed(2)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-accent" />
+              <TrendingUp className="h-10 w-10 text-teal-400" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-card">
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700 hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg per Sheet</p>
-                <p className="text-2xl font-bold text-gradient-aurora">
+                <p className="text-sm font-medium text-slate-400">Avg per Sheet</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   ₹{totalSheets > 0 ? (totalAmount / totalSheets).toFixed(2) : '0.00'}
                 </p>
               </div>
-              <BarChart3 className="h-8 w-8 text-success" />
+              <BarChart3 className="h-10 w-10 text-green-400" />
             </div>
           </CardContent>
         </Card>
       </div>
       
-      <Tabs defaultValue="history" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2 aurora-card">
-          <TabsTrigger value="history" className="data-[state=active]:bg-aurora-gradient data-[state=active]:text-white">History</TabsTrigger>
-          <TabsTrigger value="convert" className="data-[state=active]:bg-aurora-gradient data-[state=active]:text-white">Convert Orders</TabsTrigger>
+      <Tabs defaultValue="history" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-800 border-slate-700">
+          <TabsTrigger value="history" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">History</TabsTrigger>
+          <TabsTrigger value="convert" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">Convert Orders</TabsTrigger>
         </TabsList>
         
         <TabsContent value="history">
-          <Card className="aurora-card">
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-gradient-aurora">Filter Track Sheets</CardTitle>
-              <CardDescription>
+              <CardTitle className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Filter Track Sheets</CardTitle>
+              <CardDescription className="text-slate-400">
                 Search and filter your track sheets by various criteria
               </CardDescription>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Search</label>
+                  <label className="text-sm font-medium text-slate-300">Search</label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
                       placeholder="Search track sheets..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-primary/20 focus:border-primary"
+                      className="pl-10 bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-blue-500"
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Date</label>
+                  <label className="text-sm font-medium text-slate-300">Date</label>
                   <DatePicker
                     date={selectedDate}
                     setDate={setSelectedDate}
-                    className="w-full"
+                    className="w-full bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Vehicle</label>
+                  <label className="text-sm font-medium text-slate-300">Vehicle</label>
                   <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-                    <SelectTrigger className="border-primary/20">
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                       <SelectValue placeholder="All vehicles" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-slate-800 border-slate-600">
                       <SelectItem value="">All vehicles</SelectItem>
                       {vehicles.map(vehicle => (
                         <SelectItem key={vehicle.id} value={vehicle.id}>
@@ -359,12 +339,12 @@ export default function TrackSheetHistory() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Salesman</label>
+                  <label className="text-sm font-medium text-slate-300">Salesman</label>
                   <Select value={selectedSalesman} onValueChange={setSelectedSalesman}>
-                    <SelectTrigger className="border-primary/20">
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                       <SelectValue placeholder="All salesmen" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-slate-800 border-slate-600">
                       <SelectItem value="">All salesmen</SelectItem>
                       {salesmen.map(salesman => (
                         <SelectItem key={salesman.id} value={salesman.id}>
@@ -376,7 +356,7 @@ export default function TrackSheetHistory() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Actions</label>
+                  <label className="text-sm font-medium text-slate-300">Actions</label>
                   <Button 
                     variant="outline" 
                     onClick={() => {
@@ -385,7 +365,7 @@ export default function TrackSheetHistory() {
                       setSelectedVehicle('');
                       setSelectedSalesman('');
                     }}
-                    className="w-full border-secondary/20 text-secondary hover:bg-secondary/10"
+                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
                   >
                     Clear Filters
                   </Button>
@@ -397,10 +377,10 @@ export default function TrackSheetHistory() {
               <div className="space-y-4">
                 {filteredSheets.length === 0 ? (
                   <div className="text-center py-12">
-                    <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium">No track sheets found</h3>
-                    <p className="text-muted-foreground">Try adjusting your filters or create a new track sheet.</p>
-                    <Button onClick={() => navigate('/track-sheet-advanced')} className="mt-4 aurora-button">
+                    <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                    <h3 className="text-lg font-medium text-white">No track sheets found</h3>
+                    <p className="text-slate-400">Try adjusting your filters or create a new track sheet.</p>
+                    <Button onClick={() => navigate('/track-sheet-advanced')} className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
                       <Plus className="mr-2 h-4 w-4" />
                       Create Your First Track Sheet
                     </Button>
@@ -408,12 +388,12 @@ export default function TrackSheetHistory() {
                 ) : (
                   <div className="grid gap-4">
                     {filteredSheets.map((sheet) => (
-                      <Card key={sheet.id} className="aurora-card hover:glow-primary transition-all duration-300">
+                      <Card key={sheet.id} className="bg-gradient-to-r from-slate-800 to-slate-900 border-slate-700 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300">
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
                             <div className="space-y-2">
-                              <h3 className="font-semibold text-lg text-gradient-aurora">{sheet.name}</h3>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <h3 className="font-semibold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{sheet.name}</h3>
+                              <div className="flex items-center gap-4 text-sm text-slate-400">
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-4 w-4" />
                                   {format(new Date(sheet.date), 'dd/MM/yyyy')}
@@ -424,12 +404,12 @@ export default function TrackSheetHistory() {
                                 {sheet.salesmanName && (
                                   <span>Salesman: {sheet.salesmanName}</span>
                                 )}
-                                <Badge className="status-completed">
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                                   {sheet.rows?.length || 0} orders
                                 </Badge>
                               </div>
                               {sheet.notes && (
-                                <p className="text-sm text-muted-foreground italic">
+                                <p className="text-sm text-slate-400 italic">
                                   {sheet.notes}
                                 </p>
                               )}
@@ -440,7 +420,7 @@ export default function TrackSheetHistory() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handlePreview(sheet)}
-                                className="border-primary/20 text-primary hover:bg-primary/10"
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                               >
                                 <Eye className="mr-2 h-4 w-4" />
                                 Preview
@@ -450,7 +430,7 @@ export default function TrackSheetHistory() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handlePrint(sheet)}
-                                className="border-secondary/20 text-secondary hover:bg-secondary/10"
+                                className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
                               >
                                 <Printer className="mr-2 h-4 w-4" />
                                 Print
@@ -459,7 +439,7 @@ export default function TrackSheetHistory() {
                               <Button
                                 size="sm"
                                 onClick={() => handleExportPdf(sheet)}
-                                className="aurora-button"
+                                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
                               >
                                 <Download className="mr-2 h-4 w-4" />
                                 PDF
@@ -469,7 +449,7 @@ export default function TrackSheetHistory() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleExportCsv(sheet)}
-                                className="border-accent/20 text-accent hover:bg-accent/10"
+                                className="border-green-500/30 text-green-400 hover:bg-green-500/10"
                               >
                                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                                 CSV
