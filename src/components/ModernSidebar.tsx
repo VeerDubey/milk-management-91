@@ -36,7 +36,8 @@ import {
   Mail,
   Phone,
   DollarSign,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -200,22 +201,22 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
   return (
     <div className={cn(
-      'flex h-screen flex-col bg-aurora-gradient border-r border-primary/20 shadow-2xl transition-all duration-300 ease-in-out relative overflow-hidden',
+      'flex h-screen flex-col modern-sidebar transition-all duration-300 ease-in-out relative overflow-hidden',
       collapsed ? 'w-16' : 'w-72'
     )}>
       {/* Animated background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 animate-glow"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5"></div>
       
       {/* Header */}
-      <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/20 backdrop-blur-xl">
+      <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/10 backdrop-blur-xl">
         {!collapsed && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-aurora-gradient rounded-xl flex items-center justify-center shadow-lg animate-float">
-              <Home className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-aurora-gradient rounded-xl flex items-center justify-center shadow-lg animate-float glow-primary">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Vikas Milk Centre</h2>
-              <p className="text-xs text-white/70">Advanced Management</p>
+              <h2 className="text-sm font-bold text-gradient-aurora">Vikas Milk Centre</h2>
+              <p className="text-xs text-muted-foreground">Management System</p>
             </div>
           </div>
         )}
@@ -223,7 +224,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-9 w-9 hover:bg-white/10 text-white relative z-10"
+          className="h-9 w-9 hover:bg-primary/10 text-foreground relative z-10"
         >
           {collapsed ? (
             <PanelLeftOpen className="h-4 w-4" />
@@ -247,21 +248,21 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                     variant="ghost"
                     onClick={() => toggleSection(item.key)}
                     className={cn(
-                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 rounded-xl relative overflow-hidden group",
+                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
                       collapsed && "justify-center px-2",
                       hasActiveChild 
-                        ? "bg-white/20 text-white border border-white/30 shadow-lg backdrop-blur-sm" 
-                        : "hover:bg-white/10 text-white/80 hover:text-white"
+                        ? "bg-primary/20 text-primary border border-primary/30 shadow-lg backdrop-blur-sm" 
+                        : "hover:bg-primary/10 text-foreground hover:text-primary"
                     )}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-left relative z-10">{item.title}</span>
                         <div className="flex items-center space-x-2 relative z-10">
                           {item.badge && (
-                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-white/20 text-white border-white/30">
+                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-primary/20 text-primary border-primary/30">
                               {item.badge}
                             </Badge>
                           )}
@@ -276,20 +277,20 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                   </Button>
                   
                   {isOpen && !collapsed && (
-                    <div className="ml-4 space-y-1 border-l border-white/20 pl-4 animate-fade-in">
+                    <div className="ml-4 space-y-1 border-l border-primary/20 pl-4 animate-fade-in">
                       {item.children.map((child) => (
                         <Link key={child.path} to={child.path}>
                           <Button
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 rounded-lg relative overflow-hidden group",
+                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 nav-item relative overflow-hidden group",
                               isActive(child.path)
-                                ? "bg-aurora-gradient text-white shadow-lg border border-white/30"
-                                : "text-white/70 hover:text-white hover:bg-white/10"
+                                ? "bg-aurora-gradient text-white shadow-lg border border-primary/30 active"
+                                : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
                             )}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-accent/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <child.icon className="h-4 w-4 mr-2 relative z-10" />
                             <span className="relative z-10">{child.title}</span>
                           </Button>
@@ -306,14 +307,14 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 rounded-xl relative overflow-hidden group",
+                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
                     collapsed && "justify-center px-2",
                     isActive(item.path)
-                      ? "bg-aurora-gradient text-white shadow-lg border border-white/30"
-                      : "hover:bg-white/10 text-white/80 hover:text-white"
+                      ? "bg-aurora-gradient text-white shadow-lg border border-primary/30 active"
+                      : "hover:bg-primary/10 text-foreground hover:text-primary"
                   )}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                   {!collapsed && (
                     <span className="flex-1 text-left relative z-10">{item.title}</span>
@@ -327,14 +328,14 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
       {/* Footer */}
       {!collapsed && (
-        <div className="p-4 border-t border-white/20 bg-black/20 backdrop-blur-xl relative z-10">
-          <div className="flex items-center space-x-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+        <div className="p-4 border-t border-primary/20 bg-black/10 backdrop-blur-xl relative z-10">
+          <div className="flex items-center space-x-3 p-3 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20">
             <div className="w-10 h-10 bg-aurora-gradient rounded-full flex items-center justify-center shadow-lg">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">Admin User</p>
-              <p className="text-xs text-white/70 truncate">admin@vikasmilk.com</p>
+              <p className="text-sm font-medium text-foreground truncate">Admin User</p>
+              <p className="text-xs text-muted-foreground truncate">admin@vikasmilk.com</p>
             </div>
           </div>
         </div>
