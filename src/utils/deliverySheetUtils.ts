@@ -44,7 +44,7 @@ export const generateDeliverySheetPDF = (data: DeliverySheetData) => {
     // Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.text('NAIK MILK DISTRIBUTORS', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+    doc.text('VIKAS MILK CENTRE', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
@@ -141,7 +141,7 @@ export const exportToExcel = (data: DeliverySheetData) => {
   try {
     // Prepare data for Excel
     const excelData = [
-      ['NAIK MILK DISTRIBUTORS'],
+      ['VIKAS MILK CENTRE'],
       ['SINCE 1975'],
       [],
       [`DATE: ${data.date}`, '', '', '', '', '', '', '', `AREA: ${data.area}`],

@@ -38,17 +38,21 @@ const Login = () => {
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
-      <Card className="aurora-card border-primary/20 shadow-2xl">
+      <Card className="neo-noir-card border-accent-color/20 shadow-2xl">
         <CardHeader className="text-center pb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-aurora-gradient rounded-2xl flex items-center justify-center glow-primary animate-float">
-              <Sparkles className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 neo-noir-button-accent rounded-2xl flex items-center justify-center neo-noir-glow animate-float">
+              <img 
+                src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
+                alt="Vikas Milk Centre" 
+                className="w-10 h-10"
+              />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-gradient-aurora">
+          <CardTitle className="text-2xl font-bold neo-noir-gradient-text">
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-muted-foreground mt-2">
+          <CardDescription className="neo-noir-text-muted mt-2">
             Sign in to access Vikas Milk Centre dashboard
           </CardDescription>
         </CardHeader>
@@ -56,36 +60,36 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground font-medium">
+              <Label htmlFor="email" className="neo-noir-text font-medium">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-accent-color" />
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                  className="pl-10 h-12 neo-noir-input"
                   required
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground font-medium">
+              <Label htmlFor="password" className="neo-noir-text font-medium">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-accent-color" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="pl-10 pr-10 h-12 bg-muted/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                  className="pl-10 pr-10 h-12 neo-noir-input"
                   required
                 />
                 <Button
@@ -96,9 +100,9 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-4 w-4 text-accent-color" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-4 w-4 text-accent-color" />
                   )}
                 </Button>
               </div>
@@ -106,7 +110,7 @@ const Login = () => {
             
             <Button
               type="submit"
-              className="w-full h-12 aurora-button text-base font-semibold group"
+              className="w-full h-12 neo-noir-button-accent text-base font-semibold group"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -123,12 +127,12 @@ const Login = () => {
             </Button>
           </form>
           
-          <div className="mt-6 pt-6 border-t border-border/50">
+          <div className="mt-6 pt-6 border-t border-border-color">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm neo-noir-text-muted">
                 Demo credentials:
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs neo-noir-text-muted mt-1">
                 admin@vikasmilk.com / admin123
               </p>
             </div>
