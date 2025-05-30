@@ -35,9 +35,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   if (!isMounted) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-screen items-center justify-center page-background">
         <div className="relative">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent glow-primary"></div>
+          <div className="loading-spinner animate-spin glow-primary"></div>
           <div className="absolute inset-0 h-16 w-16 animate-pulse rounded-full bg-primary/20"></div>
         </div>
       </div>
@@ -45,10 +45,10 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background overflow-hidden w-full">
+    <div className="flex min-h-screen page-background overflow-hidden w-full">
       <ModernSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-6 bg-card/50 backdrop-blur-xl border-b border-primary/20 shadow-lg">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-6 header-glass shadow-lg">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-modern rounded-lg flex items-center justify-center animate-float glow-primary">
@@ -57,7 +57,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               <div className="text-2xl font-bold text-gradient-modern animate-glow">
                 Vikas Milk Centre
               </div>
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
                 Advanced
               </Badge>
             </div>
@@ -70,9 +70,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 <Input
                   placeholder="Search anything..."
-                  className="pl-9 w-80 h-10 bg-card/50 border-primary/20 focus:border-primary transition-all duration-300 backdrop-blur-sm"
+                  className="pl-9 w-80 h-10 modern-input focus:ring-2 focus:ring-primary/20"
                 />
-                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+                <div className="absolute inset-0 rounded-md bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               onClick={handleToggleTheme}
               className="h-10 w-10 rounded-xl hover:bg-primary/10 transition-all duration-300 relative group overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               {isDarkTheme ? (
                 <SunIcon className="h-5 w-5 text-warning relative z-10 transition-transform group-hover:rotate-180 duration-500" />
               ) : (
@@ -117,7 +117,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-auto p-6 bg-gradient-to-br from-background via-background to-primary/5">
+        <main className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-7xl">
             <div className="animate-fade-in">
               {children}
