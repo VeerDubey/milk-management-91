@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -63,6 +64,7 @@ import BulkCommunication from '@/pages/BulkCommunication';
 
 // Delivery pages
 import DeliveryChallan from '@/pages/DeliveryChallan';
+import DeliverySheet from '@/pages/DeliverySheet';
 import TrackSheetAdvanced from '@/pages/TrackSheetAdvanced';
 import TrackSheet from '@/pages/TrackSheet';
 import TrackSheetHistory from '@/pages/TrackSheetHistory';
@@ -115,7 +117,7 @@ function App() {
               <DataProvider>
                 <InvoiceProvider>
                   <MessagingProvider>
-                    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+                    <div className="min-h-screen w-full neo-noir-bg">
                       <Routes>
                         <Route path="/login" element={<LoginLayout><Login /></LoginLayout>} />
                         
@@ -170,6 +172,7 @@ function App() {
                             
                             {/* Delivery Routes */}
                             <Route path="delivery-challan" element={<DeliveryChallan />} />
+                            <Route path="delivery-sheet" element={<DeliverySheet />} />
                             <Route path="track-sheet-advanced" element={<TrackSheetAdvanced />} />
                             <Route path="track-sheet" element={<TrackSheet />} />
                             <Route path="track-sheet-history" element={<TrackSheetHistory />} />
