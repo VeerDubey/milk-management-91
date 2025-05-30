@@ -44,7 +44,7 @@ export const generateDeliverySheetPDF = (data: DeliverySheetData) => {
     // Header
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.text('NAIK MILK DISTRIBUTORS', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
+    doc.text('VIKAS MILK CENTRE', doc.internal.pageSize.getWidth() / 2, 25, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
@@ -127,13 +127,49 @@ export const generateDeliverySheetPDF = (data: DeliverySheetData) => {
     doc.text('Driver\'s Signature: ________________________', 20, finalY);
     doc.text('Supervisor\'s Signature: ________________________', 120, finalY);
     
-    // Save PDF
-    const filename = `delivery-sheet-${data.date.replace(/\//g, '-')}-${data.area}.pdf`;
-    doc.save(filename);
-    
+    return doc;
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF');
+  }
+};
+
+export const downloadDeliverySheetPDF = (data: DeliverySheetData) => {
+  try {
+    const doc = generateDeliverySheetPDF(data);
+    const filename = `delivery-sheet-${data.date.replace(/\//g, '-')}-${data.area}.pdf`;
+    doc.save(filename);
+  } catch (error) {
+    console.error('Error downloading PDF:', error);
+    throw new Error('Failed to download PDF');
+  }
+};
+
+export const printDeliverySheet = (data: DeliverySheetData) => {
+  try {
+    const doc = generateDeliverySheetPDF(data);
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+        setTimeout(() => {
+          URL.revokeObjectURL(pdfUrl);
+        }, 1000);
+      };
+    } else {
+      // Fallback: download if popup blocked
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `delivery-sheet-print-${new Date().getTime()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(pdfUrl);
+    }
+  } catch (error) {
+    console.error('Error printing PDF:', error);
+    throw new Error('Failed to print PDF');
   }
 };
 
@@ -141,7 +177,7 @@ export const exportToExcel = (data: DeliverySheetData) => {
   try {
     // Prepare data for Excel
     const excelData = [
-      ['NAIK MILK DISTRIBUTORS'],
+      ['VIKAS MILK CENTRE'],
       ['SINCE 1975'],
       [],
       [`DATE: ${data.date}`, '', '', '', '', '', '', '', `AREA: ${data.area}`],
