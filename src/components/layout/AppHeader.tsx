@@ -9,12 +9,12 @@ export function AppHeader() {
         <div className="flex items-center gap-3">
           <img 
             src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
-            alt="Vikas Milk Centre" 
+            alt="Naik Milk Distributors" 
             className="h-10 w-10"
           />
           <div>
             <h1 className="text-xl font-bold neo-noir-gradient-text">
-              Vikas Milk Centre
+              Naik Milk Distributors
             </h1>
             <p className="text-xs neo-noir-text-muted">Since 1975</p>
           </div>

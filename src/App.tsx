@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -63,7 +64,9 @@ import BulkCommunication from '@/pages/BulkCommunication';
 
 // Delivery pages
 import DeliveryChallan from '@/pages/DeliveryChallan';
-import TrackDeliverySheet from '@/pages/TrackDeliverySheet';
+import DeliverySheet from '@/pages/DeliverySheet';
+import TrackSheetAdvanced from '@/pages/TrackSheetAdvanced';
+import TrackSheet from '@/pages/TrackSheet';
 import TrackSheetHistory from '@/pages/TrackSheetHistory';
 import TrackSheetManager from '@/pages/TrackSheetManager';
 import VehicleTracking from '@/pages/VehicleTracking';
@@ -127,9 +130,6 @@ function App() {
                             {/* Testing Route */}
                             <Route path="testing-report" element={<TestingReportPage />} />
                             
-                            {/* Unified Track & Delivery Sheet Route */}
-                            <Route path="track-delivery-sheet" element={<TrackDeliverySheet />} />
-                            
                             {/* Customer Routes */}
                             <Route path="customer-list" element={<CustomerList />} />
                             <Route path="customer-directory" element={<CustomerDirectory />} />
@@ -170,11 +170,11 @@ function App() {
                             <Route path="sms-templates" element={<SmsTemplates />} />
                             <Route path="bulk-communication" element={<BulkCommunication />} />
                             
-                            {/* Legacy Delivery Routes (keeping for backward compatibility) */}
+                            {/* Delivery Routes */}
                             <Route path="delivery-challan" element={<DeliveryChallan />} />
-                            <Route path="delivery-sheet" element={<Navigate to="/track-delivery-sheet" replace />} />
-                            <Route path="track-sheet-advanced" element={<Navigate to="/track-delivery-sheet" replace />} />
-                            <Route path="track-sheet" element={<Navigate to="/track-delivery-sheet" replace />} />
+                            <Route path="delivery-sheet" element={<DeliverySheet />} />
+                            <Route path="track-sheet-advanced" element={<TrackSheetAdvanced />} />
+                            <Route path="track-sheet" element={<TrackSheet />} />
                             <Route path="track-sheet-history" element={<TrackSheetHistory />} />
                             <Route path="track-sheet-manager" element={<TrackSheetManager />} />
                             <Route path="vehicle-tracking" element={<VehicleTracking />} />

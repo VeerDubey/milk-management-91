@@ -96,7 +96,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       title: 'Inventory',
       icon: Package,
       key: 'inventory',
-      badge: '7',
+      badge: '8',
       children: [
         { title: 'Inventory Dashboard', path: '/inventory-dashboard', icon: BarChart3 },
         { title: 'Product List', path: '/product-list', icon: Package },
@@ -152,20 +152,17 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       ]
     },
     {
-      title: 'Track & Delivery',
+      title: 'Delivery',
       icon: Truck,
-      path: '/track-delivery-sheet',
-      badge: 'NEW',
-    },
-    {
-      title: 'Vehicle Management',
-      icon: Truck,
-      key: 'vehicles',
-      badge: '3',
+      key: 'delivery',
+      badge: '6',
       children: [
+        { title: 'Delivery Challan', path: '/delivery-challan', icon: ClipboardList },
+        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileSpreadsheet },
+        { title: 'Track Sheet', path: '/track-sheet', icon: FileText },
+        { title: 'Track History', path: '/track-sheet-history', icon: Clock },
         { title: 'Vehicle Tracking', path: '/vehicle-tracking', icon: Truck },
         { title: 'Vehicle/Salesman', path: '/vehicle-salesman-create', icon: Users },
-        { title: 'Track History', path: '/track-sheet-history', icon: Clock },
       ]
     },
     {
@@ -210,26 +207,22 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
   return (
     <div className={cn(
-      'flex h-screen flex-col neo-noir-surface border-r border-border-color transition-all duration-300 ease-in-out relative overflow-hidden z-40',
+      'flex h-screen flex-col modern-sidebar transition-all duration-300 ease-in-out relative overflow-hidden z-40',
       collapsed ? 'w-16' : 'w-72'
     )}>
       {/* Animated background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-accent-color/5 via-transparent to-accent-color-secondary/5"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5"></div>
       
       {/* Header */}
-      <div className="relative flex h-16 items-center justify-between px-4 border-b border-border-color bg-black/10 backdrop-blur-xl">
+      <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/10 backdrop-blur-xl">
         {!collapsed && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 neo-noir-button-accent rounded-xl flex items-center justify-center shadow-lg neo-noir-float neo-noir-glow">
-              <img 
-                src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
-                alt="Vikas Milk Centre" 
-                className="w-6 h-6"
-              />
+            <div className="w-10 h-10 bg-gradient-modern rounded-xl flex items-center justify-center shadow-lg animate-float glow-primary">
+              <Waves className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold neo-noir-gradient-text">Vikas Milk Centre</h2>
-              <p className="text-xs neo-noir-text-muted">Management System</p>
+              <h2 className="text-sm font-bold text-gradient-modern">Vikas Milk Centre</h2>
+              <p className="text-xs text-muted-foreground">Management System</p>
             </div>
           </div>
         )}
@@ -237,7 +230,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-9 w-9 hover:bg-accent-color/10 neo-noir-text relative z-10"
+          className="h-9 w-9 hover:bg-primary/10 text-foreground relative z-10"
         >
           {collapsed ? (
             <PanelLeftOpen className="h-4 w-4" />
@@ -261,21 +254,21 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                     variant="ghost"
                     onClick={() => toggleSection(item.key)}
                     className={cn(
-                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 relative overflow-hidden group",
+                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
                       collapsed && "justify-center px-2",
                       hasActiveChild 
-                        ? "bg-accent-color/20 text-accent-color border border-accent-color/30 shadow-lg backdrop-blur-sm" 
-                        : "hover:bg-accent-color/10 neo-noir-text hover:text-accent-color"
+                        ? "bg-primary/20 text-primary border border-primary/30 shadow-lg backdrop-blur-sm" 
+                        : "hover:bg-primary/10 text-foreground hover:text-primary"
                     )}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-accent-color/10 to-accent-color-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-left relative z-10">{item.title}</span>
                         <div className="flex items-center space-x-2 relative z-10">
                           {item.badge && (
-                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-accent-color/20 text-accent-color border-accent-color/30">
+                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-primary/20 text-primary border-primary/30">
                               {item.badge}
                             </Badge>
                           )}
@@ -290,20 +283,20 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                   </Button>
                   
                   {isOpen && !collapsed && (
-                    <div className="ml-4 space-y-1 border-l border-accent-color/20 pl-4 animate-fade-in">
+                    <div className="ml-4 space-y-1 border-l border-primary/20 pl-4 animate-fade-in">
                       {item.children.map((child) => (
                         <Link key={child.path} to={child.path}>
                           <Button
                             variant="ghost"
                             size="sm"
                             className={cn(
-                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 relative overflow-hidden group",
+                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 nav-item relative overflow-hidden group",
                               isActive(child.path)
-                                ? "neo-noir-button-accent text-white shadow-lg border border-accent-color/30"
-                                : "neo-noir-text-muted hover:neo-noir-text hover:bg-accent-color/10"
+                                ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
+                                : "text-muted-foreground hover:text-foreground hover:bg-primary/10"
                             )}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-accent-color-secondary/10 to-accent-color/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <child.icon className="h-4 w-4 mr-2 relative z-10" />
                             <span className="relative z-10">{child.title}</span>
                           </Button>
@@ -320,24 +313,17 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 relative overflow-hidden group",
+                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
                     collapsed && "justify-center px-2",
                     isActive(item.path)
-                      ? "neo-noir-button-accent text-white shadow-lg border border-accent-color/30"
-                      : "hover:bg-accent-color/10 neo-noir-text hover:text-accent-color"
+                      ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
+                      : "hover:bg-primary/10 text-foreground hover:text-primary"
                   )}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent-color/10 to-accent-color-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
                   {!collapsed && (
-                    <>
-                      <span className="flex-1 text-left relative z-10">{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="secondary" className="h-5 px-2 text-xs bg-accent-color/20 text-accent-color border-accent-color/30">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </>
+                    <span className="flex-1 text-left relative z-10">{item.title}</span>
                   )}
                 </Button>
               </Link>
@@ -348,14 +334,14 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
 
       {/* Footer */}
       {!collapsed && (
-        <div className="p-4 border-t border-border-color bg-black/10 backdrop-blur-xl relative z-10">
-          <div className="flex items-center space-x-3 p-3 rounded-xl bg-accent-color/10 backdrop-blur-sm border border-accent-color/20">
-            <div className="w-10 h-10 neo-noir-button-accent rounded-full flex items-center justify-center shadow-lg">
+        <div className="p-4 border-t border-primary/20 bg-black/10 backdrop-blur-xl relative z-10">
+          <div className="flex items-center space-x-3 p-3 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20">
+            <div className="w-10 h-10 bg-gradient-modern rounded-full flex items-center justify-center shadow-lg">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium neo-noir-text truncate">Admin User</p>
-              <p className="text-xs neo-noir-text-muted truncate">admin@vikasmilk.com</p>
+              <p className="text-sm font-medium text-foreground truncate">Admin User</p>
+              <p className="text-xs text-muted-foreground truncate">admin@vikasmilk.com</p>
             </div>
           </div>
         </div>
