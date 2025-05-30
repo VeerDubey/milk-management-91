@@ -14,10 +14,10 @@ interface TrackSheetData {
   }>;
 }
 
-// Extend jsPDF type to include autoTable
+// Extend jsPDF type to include autoTable - corrected return type
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
+    autoTable: (options: any) => void;
   }
 }
 
