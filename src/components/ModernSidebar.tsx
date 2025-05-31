@@ -34,7 +34,9 @@ import {
   Palette,
   Shield,
   User,
-  Calendar
+  Calendar,
+  Bell,
+  Key
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -191,9 +193,22 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
       icon: CreditCard,
       color: "text-green-400",
       submenu: [
+        { title: "Payment Management", href: "/customer-payment-management", icon: CreditCard },
         { title: "Payment List", href: "/payment-list", icon: List },
         { title: "Payment Create", href: "/payment-create", icon: Plus },
         { title: "Customer Ledger", href: "/customer-ledger", icon: BookOpen }
+      ]
+    },
+    {
+      title: "Purchases & Suppliers",
+      icon: Building,
+      color: "text-yellow-400",
+      submenu: [
+        { title: "Purchase Management", href: "/purchase-management", icon: Building },
+        { title: "Supplier Directory", href: "/supplier-directory", icon: Building },
+        { title: "Supplier Ledger", href: "/supplier-ledger", icon: BookOpen },
+        { title: "Supplier Payments", href: "/supplier-payments", icon: CreditCard },
+        { title: "Supplier Rates", href: "/supplier-rates", icon: TrendingUp }
       ]
     },
     {
@@ -214,7 +229,8 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
         { title: "Messaging", href: "/messaging", icon: MessageSquare },
         { title: "Email Templates", href: "/email-templates", icon: Mail },
         { title: "SMS Templates", href: "/sms-templates", icon: MessageCircle },
-        { title: "Bulk Communication", href: "/bulk-communication", icon: Send }
+        { title: "Bulk Communication", href: "/bulk-communication", icon: Send },
+        { title: "Notifications", href: "/notifications", icon: Bell }
       ]
     },
     {
@@ -230,17 +246,6 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
         { title: "Track Sheet Manager", href: "/track-sheet-manager", icon: Settings },
         { title: "Vehicle Tracking", href: "/vehicle-tracking", icon: Truck },
         { title: "Vehicle & Salesman", href: "/vehicle-salesman-create", icon: UserPlus }
-      ]
-    },
-    {
-      title: "Suppliers & Purchase",
-      icon: Building,
-      color: "text-yellow-400",
-      submenu: [
-        { title: "Supplier Directory", href: "/supplier-directory", icon: Building },
-        { title: "Supplier Ledger", href: "/supplier-ledger", icon: BookOpen },
-        { title: "Supplier Payments", href: "/supplier-payments", icon: CreditCard },
-        { title: "Supplier Rates", href: "/supplier-rates", icon: TrendingUp }
       ]
     },
     {
@@ -265,6 +270,7 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
         { title: "Tax Settings", href: "/tax-settings", icon: Calculator },
         { title: "UI Settings", href: "/ui-settings", icon: Palette },
         { title: "User Access", href: "/user-access", icon: Shield },
+        { title: "Role Management", href: "/role-management", icon: Key },
         { title: "Expenses", href: "/expenses", icon: DollarSign }
       ]
     }

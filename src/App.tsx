@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -101,6 +102,10 @@ import CustomerPaymentManagement from '@/pages/CustomerPaymentManagement';
 import PurchaseManagement from '@/pages/PurchaseManagement';
 import EnhancedDeliverySheet from '@/pages/EnhancedDeliverySheet';
 
+// Import new pages
+import NotificationsPage from '@/pages/NotificationsPage';
+import RoleManagementPage from '@/pages/RoleManagementPage';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -137,6 +142,12 @@ function App() {
                             {/* Payment & Purchase Management */}
                             <Route path="customer-payment-management" element={<CustomerPaymentManagement />} />
                             <Route path="purchase-management" element={<PurchaseManagement />} />
+                            
+                            {/* Communication & Automation */}
+                            <Route path="notifications" element={<NotificationsPage />} />
+                            
+                            {/* Access Control */}
+                            <Route path="role-management" element={<RoleManagementPage />} />
                             
                             {/* Testing Route */}
                             <Route path="testing-report" element={<TestingReportPage />} />
