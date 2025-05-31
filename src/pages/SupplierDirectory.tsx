@@ -159,14 +159,42 @@ export default function SupplierDirectory() {
   const handleEditSubmit = () => {
     if (editFormData.id) {
       // Update existing supplier
-      updateSupplier(editFormData.id, editFormData);
+      const updateData = {
+        name: editFormData.name,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        address: editFormData.address,
+        contactPerson: editFormData.contactPerson,
+        contactName: editFormData.contactPerson,
+        gstin: editFormData.gstin,
+        paymentTerms: editFormData.paymentTerms,
+        notes: editFormData.notes,
+        outstandingBalance: editFormData.outstandingBalance,
+        isActive: true,
+        products: []
+      };
+      updateSupplier(editFormData.id, updateData);
       toast({
         title: "Supplier Updated",
         description: `${editFormData.name} information has been updated.`
       });
     } else {
       // Add new supplier
-      const newSupplier = addSupplier(editFormData);
+      const supplierData = {
+        name: editFormData.name,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        address: editFormData.address,
+        contactPerson: editFormData.contactPerson,
+        contactName: editFormData.contactPerson,
+        gstin: editFormData.gstin,
+        paymentTerms: editFormData.paymentTerms,
+        notes: editFormData.notes,
+        outstandingBalance: editFormData.outstandingBalance,
+        isActive: true,
+        products: []
+      };
+      addSupplier(supplierData);
       toast({
         title: "Supplier Added",
         description: `${editFormData.name} has been added to your suppliers.`

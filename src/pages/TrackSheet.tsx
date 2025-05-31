@@ -113,28 +113,36 @@ export default function TrackSheet() {
     setRows(prev => prev.filter((_, i) => i !== index));
   };
   
-  // Save track sheet
-  const saveTrackSheet = () => {
-    if (!trackSheetDate) {
-      toast.error("Please select a date");
-      return;
-    }
-    
-    const trackSheetData = {
-      name: trackSheetName,
-      date: format(trackSheetDate, 'yyyy-MM-dd'),
-      vehicleId: selectedVehicle,
-      salesmanId: selectedSalesman,
-      routeName,
-      rows,
-      notes
-    };
-    
-    const result = addTrackSheet(trackSheetData);
-    
-    if (result) {
-      toast.success("Track sheet saved successfully");
-      navigate('/track-sheet-history');
+  const handleSaveTrackSheet = () => {
+    try {
+      addTrackSheet({
+        name: trackSheetName,
+        date: trackSheetDate,
+        vehicleId: selectedVehicle?.id,
+        salesmanId: selectedSalesman?.id,
+        routeName: routeName,
+        rows: rows.map(row => ({
+          customerId: row.customerId,
+          name: row.name,
+          quantities: row.quantities,
+          total: row.total,
+          amount: row.amount
+        })),
+        notes: '',
+        status: 'draft',
+        summary: {
+          totalItems: rows.reduce((sum, row) => sum + row.total, 0),
+          totalAmount: rows.reduce((sum, row) => sum + row.amount, 0),
+          productTotals: {}
+        }
+      });
+      
+      toast.success('Track sheet saved successfully!');
+      setTrackSheetName('');
+      setRows([]);
+    } catch (error) {
+      console.error('Error saving track sheet:', error);
+      toast.error('Failed to save track sheet');
     }
   };
   
@@ -176,7 +184,7 @@ export default function TrackSheet() {
           <p className="text-muted-foreground">Create and manage track sheets for delivery routes</p>
         </div>
         <div className="flex space-x-2">
-          <Button onClick={saveTrackSheet}>
+          <Button onClick={handleSaveTrackSheet}>
             <Save className="mr-2 h-4 w-4" />
             Save Track Sheet
           </Button>

@@ -38,7 +38,8 @@ export default function TrackSheetAdvanced() {
     vehicles, 
     salesmen,
     addTrackSheet,
-    addBatchOrders
+    addBatchOrders,
+    updateTrackSheet
   } = useData();
   
   const [trackSheetName, setTrackSheetName] = useState(`Track Sheet - ${format(new Date(), 'dd/MM/yyyy')}`);
@@ -47,6 +48,7 @@ export default function TrackSheetAdvanced() {
   const [selectedSalesman, setSelectedSalesman] = useState('');
   const [routeName, setRouteName] = useState('');
   const [notes, setNotes] = useState('');
+  const [showBulkOrderDialog, setShowBulkOrderDialog] = useState(false);
   
   // Get active products and customers
   const activeProducts = products.filter(p => p.isActive);
@@ -353,7 +355,58 @@ export default function TrackSheetAdvanced() {
       toast.error("Error creating orders");
     }
   };
-  
+
+  const handleCreateBulkOrders = () => {
+    try {
+      const orders = trackSheetData.rows.map(row => ({
+        customerId: row.customerId,
+        customerName: row.name,
+        date: trackSheetData.date,
+        items: Object.entries(row.quantities).map(([productId, quantity]) => ({
+          productId,
+          quantity: Number(quantity),
+          unitPrice: getProductPrice(productId),
+          total: Number(quantity) * getProductPrice(productId)
+        })),
+        vehicleId: trackSheetData.vehicleId || '',
+        salesmanId: trackSheetData.salesmanId || '',
+        status: 'pending' as const,
+        paymentStatus: 'pending' as const,
+        total: row.amount,
+        totalAmount: row.amount
+      }));
+
+      addBatchOrders(orders);
+      toast.success(`Created ${orders.length} orders successfully!`);
+      setShowBulkOrderDialog(false);
+    } catch (error) {
+      console.error('Error creating bulk orders:', error);
+      toast.error('Failed to create orders');
+    }
+  };
+
+  const handleSaveTrackSheet = () => {
+    try {
+      if (trackSheetData.id) {
+        updateTrackSheet(trackSheetData.id, {
+          ...trackSheetData,
+          savedAt: new Date().toISOString()
+        });
+        toast.success('Track sheet updated successfully!');
+      } else {
+        addTrackSheet({
+          ...trackSheetData,
+          createdAt: new Date().toISOString(),
+          savedAt: new Date().toISOString()
+        });
+        toast.success('Track sheet saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving track sheet:', error);
+      toast.error('Failed to save track sheet');
+    }
+  };
+
   const customerTotals = getCustomerTotals();
   const productTotals = getProductTotals();
   const grandTotal = customerTotals.reduce((sum, ct) => sum + ct.totalAmount, 0);

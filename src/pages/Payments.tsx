@@ -151,25 +151,34 @@ const Payments = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handlePaymentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customerId || !formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error("Customer and amount are required");
+    if (!formData.customerId || !formData.amount || !formData.paymentMethod) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    addPayment({
+    const paymentData = {
       customerId: formData.customerId,
       amount: parseFloat(formData.amount),
-      date: format(paymentDate, "yyyy-MM-dd"),
+      date: formData.date,
+      method: formData.paymentMethod,
       paymentMethod: formData.paymentMethod,
-      notes: formData.notes,
-    });
+      notes: formData.notes
+    };
 
-    toast.success("Payment recorded successfully");
-    setOpen(false);
-    resetForm();
+    addPayment(paymentData);
+    toast.success('Payment recorded successfully');
+    
+    // Reset form
+    setFormData({
+      customerId: '',
+      amount: '',
+      date: format(new Date(), 'yyyy-MM-dd'),
+      paymentMethod: 'cash',
+      notes: ''
+    });
   };
 
   const handleDeletePayment = (payment: Payment) => {
@@ -417,7 +426,7 @@ const Payments = () => {
                   Enter payment details received from customer
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handlePaymentSubmit}>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="customer">Customer</Label>
