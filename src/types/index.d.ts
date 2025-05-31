@@ -20,6 +20,7 @@ export interface Customer {
   totalPaid?: number; // Added for payment tracking
   outstandingBalance?: number; // Added for compatibility
   area?: string; // Added for compatibility
+  balanceDue?: number; // Added for balance tracking
 }
 
 // Product Types

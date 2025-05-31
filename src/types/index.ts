@@ -13,6 +13,7 @@ export interface Customer {
   vehicleId?: string; // Track vehicle assignment
   salesmanId?: string; // Track salesman assignment
   totalPaid?: number; // Added for payment tracking
+  balanceDue?: number; // Added for balance tracking
 }
 
 export interface Product {
