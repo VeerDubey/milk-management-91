@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -127,8 +126,8 @@ function App() {
                             <Route path="dashboard" element={<Dashboard />} />
                             <Route path="master" element={<Master />} />
                             
-                            {/* Combined Track & Delivery Sheet Route */}
-                            <Route path="track-delivery-sheet" element={<TrackDeliverySheet />} />
+                            {/* Enhanced Delivery & Track Sheet Route */}
+                            <Route path="delivery-sheet" element={<DeliverySheet />} />
                             
                             {/* Testing Route */}
                             <Route path="testing-report" element={<TestingReportPage />} />
@@ -175,7 +174,6 @@ function App() {
                             
                             {/* Delivery Routes */}
                             <Route path="delivery-challan" element={<DeliveryChallan />} />
-                            <Route path="delivery-sheet" element={<DeliverySheet />} />
                             <Route path="track-sheet-advanced" element={<TrackSheetAdvanced />} />
                             <Route path="track-sheet-history" element={<TrackSheetHistory />} />
                             <Route path="track-sheet-manager" element={<TrackSheetManager />} />

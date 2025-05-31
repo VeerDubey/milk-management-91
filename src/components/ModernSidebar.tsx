@@ -36,11 +36,12 @@ import {
   Phone,
   DollarSign,
   MapPin,
-  Waves,
   ClipboardList,
   Archive,
   Award,
-  FlaskConical
+  FlaskConical,
+  Wallet,
+  Receipt
 } from 'lucide-react';
 
 interface ModernSidebarProps {
@@ -78,10 +79,10 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       badge: null,
     },
     {
-      title: 'Track & Delivery',
-      icon: Truck,
-      path: '/track-delivery-sheet',
-      badge: 'New',
+      title: 'Delivery Sheet',
+      icon: FileSpreadsheet,
+      path: '/delivery-sheet',
+      badge: 'Enhanced',
     },
     {
       title: 'Customers',
@@ -102,7 +103,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       title: 'Inventory',
       icon: Package,
       key: 'inventory',
-      badge: '8',
+      badge: '7',
       children: [
         { title: 'Inventory Dashboard', path: '/inventory-dashboard', icon: BarChart3 },
         { title: 'Product List', path: '/product-list', icon: Package },
@@ -131,7 +132,7 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       badge: '2',
       children: [
         { title: 'Payment List', path: '/payment-list', icon: CreditCard },
-        { title: 'Create Payment', path: '/payment-create', icon: FileText },
+        { title: 'Create Payment', path: '/payment-create', icon: Wallet },
       ]
     },
     {
@@ -161,10 +162,9 @@ export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProp
       title: 'Delivery Management',
       icon: Truck,
       key: 'delivery',
-      badge: '7',
+      badge: '6',
       children: [
         { title: 'Delivery Challan', path: '/delivery-challan', icon: ClipboardList },
-        { title: 'Delivery Sheet', path: '/delivery-sheet', icon: FileSpreadsheet },
         { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileSpreadsheet },
         { title: 'Track History', path: '/track-sheet-history', icon: Clock },
         { title: 'Track Manager', path: '/track-sheet-manager', icon: Archive },
