@@ -1,3 +1,4 @@
+
 export interface Customer {
   id: string;
   name: string;
@@ -9,11 +10,22 @@ export interface Customer {
   lastPaymentAmount?: number;
   email?: string;
   area?: string;
-  outstandingAmount?: number; // Added for compatibility with existing code
-  vehicleId?: string; // Track vehicle assignment
-  salesmanId?: string; // Track salesman assignment
-  totalPaid?: number; // Added for payment tracking
-  balanceDue?: number; // Added for balance tracking
+  outstandingAmount?: number;
+  vehicleId?: string;
+  salesmanId?: string;
+  totalPaid?: number;
+  balanceDue?: number;
+  balance: number;
+  createdAt: string;
+  updatedAt?: string;
+  notes?: string;
+  type?: 'regular' | 'wholesale' | 'retail';
+  customerCode?: string;
+  routeId?: string;
+  areaId?: string;
+  customFields?: Record<string, any>;
+  city?: string;
+  pinCode?: string;
 }
 
 export interface Product {
@@ -27,10 +39,29 @@ export interface Product {
   sku?: string;
   category?: string;
   minStockLevel?: number;
-  stock?: number; // Added for dashboard display
-  minStock?: number; // Added for dashboard display
-  costPrice?: number; // Added for product detail
-  code?: string; // Added for delivery sheet product codes
+  stock?: number;
+  minStock?: number;
+  costPrice?: number;
+  code?: string;
+  createdAt: string;
+  updatedAt?: string;
+  imageUrl?: string;
+  hasVariants: boolean;
+  variants?: ProductVariant[];
+  attributes?: string[];
+  taxRate?: number;
+  hsnCode?: string;
+  customFields?: Record<string, any>;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  attributeValues: Record<string, string>;
+  price: number;
+  costPrice?: number;
+  stock?: number;
+  sku?: string;
 }
 
 export interface OrderItem {
@@ -38,39 +69,63 @@ export interface OrderItem {
   customerId?: string;
   quantity: number;
   unitPrice: number;
-  price?: number; // For dashboard compatibility
-  rate?: number; // Alias for unitPrice
-  id?: string; // Added to support InvoiceService
-  productName?: string; // Added for InvoiceService
-  unit?: string; // Added for InvoiceService
+  price?: number;
+  rate?: number;
+  id?: string;
+  productName?: string;
+  unit?: string;
+  discount?: number;
+  total?: number;
+  notes?: string;
+  variantId?: string;
+  taxRate?: number;
+  taxAmount?: number;
 }
 
 export interface Order {
   id: string;
   date: string;
-  orderDate?: string; // Alias for date
+  orderDate?: string;
   items: OrderItem[];
   vehicleId: string;
   salesmanId: string;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'partial';
-  customerId?: string; // Added for CustomerLedger
-  total?: number; // Added for CustomerLedger
-  customerName?: string; // Added for display purposes
-  totalAmount?: number; // Added for compatibility with existing code
+  customerId?: string;
+  total?: number;
+  customerName?: string;
+  totalAmount?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  discount?: number;
+  tax?: number;
+  deliveryDate?: string;
+  deliveryAddress?: string;
+  invoiceId?: string;
+  paymentMethod?: string;
+  customFields?: Record<string, any>;
 }
 
 export interface Payment {
   id: string;
   customerId: string;
-  orderId?: string; // Made optional for compatibility with PaymentCreate
+  orderId?: string;
   date: string;
   amount: number;
-  paymentMethod: string; // Changed from enum to string to support more payment methods
+  paymentMethod: string;
+  method: string;
   reference?: string;
-  referenceNumber?: string; // For backward compatibility
+  referenceNumber?: string;
   notes?: string;
-  status?: 'completed' | 'pending' | 'failed'; // Added for PaymentListView with proper type
+  status?: 'completed' | 'pending' | 'failed';
+  customerName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  invoiceId?: string;
+  attachment?: string;
+  customFields?: Record<string, any>;
+  receiptNumber?: string;
 }
 
 export interface CustomerProductRate {
@@ -80,6 +135,9 @@ export interface CustomerProductRate {
   rate: number;
   effectiveDate: string;
   isActive: boolean;
+  endDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SupplierProductRate {
@@ -89,7 +147,7 @@ export interface SupplierProductRate {
   rate: number;
   effectiveDate: string;
   isActive: boolean;
-  notes?: string; // Added for SupplierRates
+  notes?: string;
 }
 
 export interface Supplier {
@@ -102,11 +160,13 @@ export interface Supplier {
   products: string[];
   isActive: boolean;
   outstandingBalance?: number;
-  status?: string; // Added for SupplierDirectory
-  contactPerson?: string; // Added for compatibility
-  contact?: string; // Added for compatibility
-  gstNumber?: string; // Added for SupplierPayments
-  notes?: string; // Added for SupplierPayments
+  status?: string;
+  contactPerson?: string;
+  contact?: string;
+  gstNumber?: string;
+  gstin?: string;
+  notes?: string;
+  paymentTerms?: string;
 }
 
 export interface SupplierPayment {
@@ -114,16 +174,19 @@ export interface SupplierPayment {
   supplierId: string;
   amount: number;
   date: string;
-  paymentMethod: string; // Changed from enum to string to support more payment methods
+  paymentMethod: string;
   reference?: string;
-  referenceNumber?: string; // For backward compatibility
+  referenceNumber?: string;
   notes?: string;
-  method?: string; // For backward compatibility
+  method?: string;
   status?: 'completed' | 'pending' | 'failed';
   description?: string;
   receiptNumber?: string;
   transactionId?: string;
   bankDetails?: string;
+  supplierName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Vehicle {
@@ -143,6 +206,7 @@ export interface Vehicle {
   trips?: Array<any>;
   createdAt?: string;
   updatedAt?: string;
+  driver?: string;
 }
 
 export interface Salesman {
@@ -167,16 +231,22 @@ export interface Salesman {
 export interface TrackSheetRow {
   name: string;
   customerId?: string;
-  quantities: Record<string, number | string>; // Product name -> quantity
+  quantities: Record<string, number | string>;
   total: number;
   amount: number;
-  products?: string[]; // Adding the products property
+  products?: string[];
+}
+
+export interface TrackSheetSummary {
+  totalItems: number;
+  totalAmount: number;
+  productTotals: Record<string, number>;
 }
 
 export interface TrackSheet {
   id: string;
   name: string;
-  title?: string; // Adding title property for backward compatibility
+  title?: string;
   date: string;
   rows: TrackSheetRow[];
   vehicleId?: string;
@@ -187,14 +257,16 @@ export interface TrackSheet {
   createdAt?: string;
   updatedAt?: string;
   savedAt?: string;
-  notes?: string; // Adding notes property
+  notes?: string;
+  status?: 'draft' | 'completed';
+  summary?: TrackSheetSummary;
 }
 
 export interface Expense {
   id: string;
   date: string;
   amount: number;
-  category: string; // Changed from specific type to string for flexibility
+  category: string;
   description: string;
   paymentMethod: string;
   reference?: string;
@@ -207,6 +279,7 @@ export interface Expense {
   nextDueDate?: string;
   createdAt?: string;
   updatedAt?: string;
+  recurringPeriod?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 export interface UISettings {
@@ -226,6 +299,21 @@ export interface UISettings {
   currencyFormat?: string;
 }
 
+export interface InvoiceItem {
+  id?: string;
+  productId: string;
+  productName?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  total?: number;
+  unit?: string;
+  discount?: number;
+  tax?: number;
+  taxAmount?: number;
+}
+
 export interface Invoice {
   id: string;
   customerId: string;
@@ -233,15 +321,7 @@ export interface Invoice {
   number: string;
   date: string;
   dueDate: string;
-  items: Array<{
-    productId: string;
-    productName?: string;
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    amount: number;
-    total?: number;
-  }>;
+  items: InvoiceItem[];
   subtotal: number;
   taxRate: number;
   taxAmount: number;
@@ -254,17 +334,24 @@ export interface Invoice {
   updatedAt: string;
   discount?: number;
   shipping?: number;
-  orderId?: string; // Add orderId for InvoiceGenerator
-  customerName?: string; // Add customerName for InvoiceHistory
-  amount?: number; // Add amount for InvoiceHistory
+  orderId?: string;
+  customerName?: string;
+  amount?: number;
+  amountPaid?: number;
+  balance?: number;
+  terms?: string;
+  paymentMethod?: string;
+  referenceNumber?: string;
+  trackSheetId?: string;
+  customFields?: Record<string, any>;
 }
 
 export interface StockRecord {
   id: string;
   productId: string;
-  quantity: number; // Required field
+  quantity: number;
   date: string;
-  type: 'in' | 'out' | 'adjustment'; // Required field
+  type: 'in' | 'out' | 'adjustment';
   notes?: string;
   relatedEntryId?: string;
   openingStock?: number;
@@ -280,7 +367,7 @@ export interface StockEntryItem {
   quantity: number;
   unitPrice: number;
   totalPrice?: number;
-  total?: number; // For compatibility with existing code
+  total?: number;
 }
 
 export interface StockEntry {
@@ -292,7 +379,7 @@ export interface StockEntry {
   totalAmount: number;
   paymentStatus?: 'paid' | 'partial' | 'unpaid';
   createdAt?: string;
-  referenceNumber?: string; // Add for PurchaseHistory and StockManagement
+  referenceNumber?: string;
 }
 
 export interface TaxSetting {
@@ -301,25 +388,30 @@ export interface TaxSetting {
   rate: number;
   isActive: boolean;
   isDefault: boolean;
-  applicableOn?: string[]; // Changed from string to string[]
-  appliedTo?: string[]; // Changed from string to string[]
+  applicableOn?: string[];
+  appliedTo?: string[];
 }
 
-// Define ProductRate type since it's missing
 export type ProductRate = CustomerProductRate;
 
-// Define StockTransaction type
 export interface StockTransaction {
   id: string;
   productId: string;
   quantity: number;
   date: string;
-  type: 'in' | 'out' | 'adjustment';
+  type: 'in' | 'out' | 'adjustment' | 'purchase' | 'sale' | 'transfer' | 'return';
   notes?: string;
   referenceNumber?: string;
+  referenceId?: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  unitCost?: number;
+  totalCost?: number;
+  supplierId?: string;
+  createdAt?: string;
+  updated?: string;
 }
 
-// Update VehicleTrip type to match what we need
 export interface VehicleTrip {
   id: string;
   vehicleId: string;
@@ -336,4 +428,65 @@ export interface VehicleTrip {
   startReading?: number;
   endReading?: number;
   routes?: string[];
+}
+
+// Notification Types
+export interface NotificationTemplate {
+  id: string;
+  type: 'sms' | 'email' | 'whatsapp';
+  event: 'order_confirmation' | 'delivery_update' | 'payment_receipt' | 'payment_reminder' | 'low_stock';
+  template: string;
+  isActive: boolean;
+  variables?: string[];
+}
+
+export interface NotificationSettings {
+  smsEnabled: boolean;
+  emailEnabled: boolean;
+  whatsappEnabled: boolean;
+  apiKey?: string;
+  senderId?: string;
+  emailFrom?: string;
+}
+
+// Role Management
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+  isActive: boolean;
+}
+
+export interface Permission {
+  id: string;
+  module: string;
+  action: 'create' | 'read' | 'update' | 'delete';
+  allowed: boolean;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Area {
+  id: string;
+  name: string;
+  description?: string;
+  city?: string;
+  pinCodes?: string[];
+  isActive: boolean;
+}
+
+export interface Route {
+  id: string;
+  name: string;
+  areas: string[];
+  description?: string;
+  isActive: boolean;
 }

@@ -9,7 +9,7 @@ import { FileText, Download, Printer, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/contexts/DataContext';
 import { generateInvoicePdf, printInvoice } from '@/utils/invoiceUtils';
-import { Order, OrderItem } from '@/types';
+import { Order, OrderItem, InvoiceItem } from '@/types';
 
 interface InvoiceGeneratorProps {
   order?: Order;
@@ -88,6 +88,17 @@ export default function InvoiceGenerator({ order, onClose }: InvoiceGeneratorPro
         return;
       }
       
+      // Convert OrderItems to InvoiceItems
+      const invoiceItems: InvoiceItem[] = formData.items.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        description: item.productName || products.find(p => p.id === item.productId)?.name || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        amount: item.quantity * item.unitPrice,
+        unit: item.unit
+      }));
+      
       const invoice = {
         number: `INV-${Date.now().toString().slice(-6)}`,
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
@@ -95,7 +106,7 @@ export default function InvoiceGenerator({ order, onClose }: InvoiceGeneratorPro
         customerName: customer.name,
         date: formData.date,
         dueDate: formData.dueDate,
-        items: formData.items,
+        items: invoiceItems,
         subtotal: calculateTotal(),
         taxRate: 0,
         taxAmount: 0,

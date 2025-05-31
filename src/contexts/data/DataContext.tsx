@@ -3,7 +3,8 @@ import {
   Customer, Product, Order, Payment, Vehicle, Salesman, 
   TrackSheet, Invoice, StockEntry, Supplier, SupplierPayment,
   ProductRate, Expense, StockTransaction, UISettings,
-  NotificationTemplate, NotificationSettings, Role, User
+  NotificationTemplate, NotificationSettings, Role, User,
+  CustomerProductRate, SupplierProductRate
 } from '@/types';
 
 export interface DataContextType {
@@ -87,6 +88,17 @@ export interface DataContextType {
   updateProductRate: (id: string, rate: Partial<ProductRate>) => void;
   deleteProductRate: (id: string) => void;
 
+  // Customer Product Rates
+  customerProductRates: CustomerProductRate[];
+  addCustomerProductRate: (rate: Omit<CustomerProductRate, 'id'>) => void;
+  updateCustomerProductRate: (id: string, rate: Partial<CustomerProductRate>) => void;
+
+  // Supplier Product Rates
+  supplierProductRates: SupplierProductRate[];
+  addSupplierProductRate: (rate: Omit<SupplierProductRate, 'id'>) => void;
+  updateSupplierProductRate: (id: string, rate: Partial<SupplierProductRate>) => void;
+  deleteSupplierProductRate: (id: string) => void;
+
   // Expense data
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, 'id'>) => void;
@@ -125,6 +137,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
   const [productRates, setProductRates] = useState<ProductRate[]>([]);
+  const [customerProductRates, setCustomerProductRates] = useState<CustomerProductRate[]>([]);
+  const [supplierProductRates, setSupplierProductRates] = useState<SupplierProductRate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [stockTransactions, setStockTransactions] = useState<StockTransaction[]>([]);
   const [uiSettings, setUISettings] = useState<UISettings>({
@@ -361,6 +375,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProductRates(prev => prev.filter(r => r.id !== id));
   };
 
+  // Customer Product Rate functions
+  const addCustomerProductRate = (rate: Omit<CustomerProductRate, 'id'>) => {
+    const newRate = { ...rate, id: `customerrate_${Date.now()}` };
+    setCustomerProductRates(prev => [...prev, newRate]);
+  };
+
+  const updateCustomerProductRate = (id: string, rate: Partial<CustomerProductRate>) => {
+    setCustomerProductRates(prev => prev.map(r => r.id === id ? { ...r, ...rate } : r));
+  };
+
+  // Supplier Product Rate functions
+  const addSupplierProductRate = (rate: Omit<SupplierProductRate, 'id'>) => {
+    const newRate = { ...rate, id: `supplierrate_${Date.now()}` };
+    setSupplierProductRates(prev => [...prev, newRate]);
+  };
+
+  const updateSupplierProductRate = (id: string, rate: Partial<SupplierProductRate>) => {
+    setSupplierProductRates(prev => prev.map(r => r.id === id ? { ...r, ...rate } : r));
+  };
+
+  const deleteSupplierProductRate = (id: string) => {
+    setSupplierProductRates(prev => prev.filter(r => r.id !== id));
+  };
+
   // Expense CRUD operations
   const addExpense = (expense: Omit<Expense, 'id'>) => {
     const newExpense = { ...expense, id: `expense_${Date.now()}` };
@@ -451,6 +489,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addProductRate,
     updateProductRate,
     deleteProductRate,
+    customerProductRates,
+    addCustomerProductRate,
+    updateCustomerProductRate,
+    supplierProductRates,
+    addSupplierProductRate,
+    updateSupplierProductRate,
+    deleteSupplierProductRate,
     expenses,
     addExpense,
     updateExpense,
