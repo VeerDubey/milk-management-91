@@ -1,3 +1,4 @@
+
 import { Customer, Product, Order, Payment, Expense, Supplier } from "@/types";
 
 export const initialCustomers: Customer[] = [
@@ -6,60 +7,70 @@ export const initialCustomers: Customer[] = [
     name: "Ganesh Apartment",
     phone: "9876543210",
     address: "123 Main St",
+    balance: 1200,
     outstandingBalance: 1200,
     lastPaymentDate: "2025-04-05",
     lastPaymentAmount: 2500,
     isActive: true,
     email: "ganesh@example.com",
-    area: "North Zone"
+    area: "North Zone",
+    createdAt: "2024-01-01T00:00:00.000Z"
   },
   {
     id: "c2",
     name: "Sharma Stores",
     phone: "9876543211",
     address: "456 Market Rd",
+    balance: 950,
     outstandingBalance: 950,
     lastPaymentDate: "2025-04-07",
     lastPaymentAmount: 1800,
     isActive: true,
     email: "sharma@example.com",
-    area: "South Zone"
+    area: "South Zone",
+    createdAt: "2024-01-01T00:00:00.000Z"
   },
   {
     id: "c3",
     name: "Patel Dairy",
     phone: "9876543212",
     address: "789 Milk Lane",
+    balance: 780,
     outstandingBalance: 780,
     lastPaymentDate: "2025-04-08",
     lastPaymentAmount: 1500,
     isActive: true,
     email: "patel@example.com",
-    area: "East Zone"
+    area: "East Zone",
+    createdAt: "2024-01-01T00:00:00.000Z"
   },
   {
     id: "c4",
     name: "Sunrise Cafe",
     phone: "9876543213",
     address: "101 Cafe Street",
+    balance: 450,
     outstandingBalance: 450,
     lastPaymentDate: "2025-04-09",
     lastPaymentAmount: 1200,
     isActive: true,
     email: "sunrise@example.com",
-    area: "West Zone"
+    area: "West Zone",
+    createdAt: "2024-01-01T00:00:00.000Z"
   },
   {
     id: "c5",
     name: "Green Valley School",
     phone: "9876543214",
     address: "202 Education Rd",
+    balance: 350,
     outstandingBalance: 350,
     lastPaymentDate: "2025-04-10",
     lastPaymentAmount: 2000,
     isActive: true,
     email: "greenvalley@example.com",
-    area: "Central Zone"
+    area: "Central Zone",
+    createdAt: "2024-01-01T00:00:00.000Z"
   },
 ];
 
@@ -72,7 +83,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "AMUL-TZ-01",
     category: "Amul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p2",
@@ -82,7 +95,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "AMUL-CW-01",
     category: "Amul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p3",
@@ -92,7 +107,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "AMUL-A2-01",
     category: "Amul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p4",
@@ -102,7 +119,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "MAHA-01",
     category: "Mahananda",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p5",
@@ -112,7 +131,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "GOKUL-CH-01",
     category: "Gokul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p6",
@@ -122,7 +143,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "GOKUL-CF-01",
     category: "Gokul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p7",
@@ -132,7 +155,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "GOKUL-SH-01",
     category: "Gokul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p8",
@@ -142,7 +167,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "GOKUL-SF-01",
     category: "Gokul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p9",
@@ -152,7 +179,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "GOKUL-SK-01",
     category: "Gokul",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p10",
@@ -162,7 +191,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "GOKUL-DH-01",
     category: "Curd",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p11",
@@ -172,7 +203,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "GOKUL-DF-01",
     category: "Curd",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p12",
@@ -182,7 +215,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "TONE-H-01",
     category: "Toned Milk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p13",
@@ -192,7 +227,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "TONE-F-01",
     category: "Toned Milk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p14",
@@ -202,7 +239,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "SPL-H-01",
     category: "Special Milk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p15",
@@ -212,7 +251,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "SPL-F-01",
     category: "Special Milk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p16",
@@ -222,7 +263,9 @@ export const initialProducts: Product[] = [
     unit: "Jar",
     sku: "SPL-J-01",
     category: "Special Milk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p17",
@@ -232,7 +275,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "AKSH-01",
     category: "Akshara",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p18",
@@ -242,7 +287,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "SARTHI-01",
     category: "Sarthi",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p19",
@@ -252,7 +299,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "WARNA-SPL-01",
     category: "Warna",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p20",
@@ -262,7 +311,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "WARNA-COW-01",
     category: "Warna",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p21",
@@ -272,7 +323,9 @@ export const initialProducts: Product[] = [
     unit: "Liter",
     sku: "WARNA-TZ-01",
     category: "Warna",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p22",
@@ -282,7 +335,9 @@ export const initialProducts: Product[] = [
     unit: "Bottle",
     sku: "AMUL-TAAK-01",
     category: "Buttermilk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p23",
@@ -292,7 +347,9 @@ export const initialProducts: Product[] = [
     unit: "Bottle",
     sku: "WARNA-TAAK-01",
     category: "Buttermilk",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p24",
@@ -302,7 +359,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "WARNA-DAHI-01",
     category: "Curd",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p25",
@@ -312,7 +371,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "CREAM-100-01",
     category: "Cream",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p26",
@@ -322,7 +383,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "CREAM-150-01",
     category: "Cream",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p27",
@@ -332,7 +395,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "AMUL-CREAM-80-01",
     category: "Cream",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   },
   {
     id: "p28",
@@ -342,7 +407,9 @@ export const initialProducts: Product[] = [
     unit: "Pack",
     sku: "AMUL-CREAM-200-01",
     category: "Cream",
-    isActive: true
+    isActive: true,
+    createdAt: "2024-01-01T00:00:00.000Z",
+    hasVariants: false
   }
 ];
 
