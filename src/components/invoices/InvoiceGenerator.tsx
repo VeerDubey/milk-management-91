@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,7 +89,7 @@ export default function InvoiceGenerator({ order, onClose }: InvoiceGeneratorPro
       }
       
       const invoice = {
-        id: `INV-${Date.now()}`,
+        number: `INV-${Date.now().toString().slice(-6)}`,
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
         customerId: formData.customerId,
         customerName: customer.name,
@@ -98,6 +97,7 @@ export default function InvoiceGenerator({ order, onClose }: InvoiceGeneratorPro
         dueDate: formData.dueDate,
         items: formData.items,
         subtotal: calculateTotal(),
+        taxRate: 0,
         taxAmount: 0,
         total: calculateTotal(),
         status: 'draft' as const,

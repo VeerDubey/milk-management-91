@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { 
   Customer, Product, Order, Payment, Vehicle, Salesman, 
   TrackSheet, Invoice, StockEntry, Supplier, SupplierPayment,
-  CustomerProductRate, SupplierProductRate, Expense 
+  ProductRate, Expense, StockTransaction, UISettings,
+  NotificationTemplate, NotificationSettings, Role, User
 } from '@/types';
 
 export interface DataContextType {
@@ -17,18 +18,21 @@ export interface DataContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
+  getProductRateForCustomer: (productId: string, customerId: string) => number;
 
   // Order data
   orders: Order[];
-  addOrder: (order: Omit<Order, 'id'>) => void;
+  addOrder: (order: Omit<Order, 'id'>) => string;
   updateOrder: (id: string, order: Partial<Order>) => void;
   deleteOrder: (id: string) => void;
+  addBatchOrders: (orders: Omit<Order, 'id'>[]) => void;
 
   // Payment data
   payments: Payment[];
   addPayment: (payment: Omit<Payment, 'id'>) => void;
   updatePayment: (id: string, payment: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
+  deleteMultiplePayments: (ids: string[]) => void;
 
   // Vehicle data
   vehicles: Vehicle[];
@@ -47,6 +51,7 @@ export interface DataContextType {
   addTrackSheet: (trackSheet: Omit<TrackSheet, 'id'>) => void;
   updateTrackSheet: (id: string, trackSheet: Partial<TrackSheet>) => void;
   deleteTrackSheet: (id: string) => void;
+  createTrackSheetFromOrder: (orderId: string) => TrackSheet | null;
 
   // Invoice data
   invoices: Invoice[];
@@ -59,6 +64,10 @@ export interface DataContextType {
   addStockEntry: (stockEntry: Omit<StockEntry, 'id'>) => void;
   updateStockEntry: (id: string, stockEntry: Partial<StockEntry>) => void;
   deleteStockEntry: (id: string) => void;
+
+  // Stock Transaction data
+  stockTransactions: StockTransaction[];
+  addStockTransaction: (transaction: Omit<StockTransaction, 'id'>) => void;
 
   // Supplier data
   suppliers: Supplier[];
@@ -73,21 +82,32 @@ export interface DataContextType {
   deleteSupplierPayment: (id: string) => void;
 
   // Rate data
-  customerProductRates: CustomerProductRate[];
-  addCustomerProductRate: (rate: Omit<CustomerProductRate, 'id'>) => void;
-  updateCustomerProductRate: (id: string, rate: Partial<CustomerProductRate>) => void;
-  deleteCustomerProductRate: (id: string) => void;
-
-  supplierProductRates: SupplierProductRate[];
-  addSupplierProductRate: (rate: Omit<SupplierProductRate, 'id'>) => void;
-  updateSupplierProductRate: (id: string, rate: Partial<SupplierProductRate>) => void;
-  deleteSupplierProductRate: (id: string) => void;
+  productRates: ProductRate[];
+  addProductRate: (rate: Omit<ProductRate, 'id'>) => void;
+  updateProductRate: (id: string, rate: Partial<ProductRate>) => void;
+  deleteProductRate: (id: string) => void;
 
   // Expense data
   expenses: Expense[];
   addExpense: (expense: Omit<Expense, 'id'>) => void;
   updateExpense: (id: string, expense: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
+
+  // UI Settings
+  uiSettings: UISettings;
+  updateUISettings: (settings: Partial<UISettings>) => void;
+
+  // Notification data
+  notificationTemplates: NotificationTemplate[];
+  notificationSettings: NotificationSettings;
+  updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
+
+  // Role management
+  roles: Role[];
+  users: User[];
+  addRole: (role: Omit<Role, 'id'>) => void;
+  updateRole: (id: string, role: Partial<Role>) => void;
+  deleteRole: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -104,9 +124,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [stockEntries, setStockEntries] = useState<StockEntry[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
-  const [customerProductRates, setCustomerProductRates] = useState<CustomerProductRate[]>([]);
-  const [supplierProductRates, setSupplierProductRates] = useState<SupplierProductRate[]>([]);
+  const [productRates, setProductRates] = useState<ProductRate[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [stockTransactions, setStockTransactions] = useState<StockTransaction[]>([]);
+  const [uiSettings, setUISettings] = useState<UISettings>({
+    theme: 'dark',
+    compactMode: false,
+    currency: 'INR',
+    dateFormat: 'dd/MM/yyyy',
+    sidebarCollapsed: false,
+    defaultPaymentMethod: 'cash',
+    defaultReportPeriod: 'monthly'
+  });
+  const [notificationTemplates, setNotificationTemplates] = useState<NotificationTemplate[]>([]);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
+    smsEnabled: true,
+    emailEnabled: true,
+    whatsappEnabled: true
+  });
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   // Customer CRUD operations
   const addCustomer = (customer: Omit<Customer, 'id'>) => {
@@ -136,10 +173,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
+  const getProductRateForCustomer = (productId: string, customerId: string): number => {
+    const rate = productRates.find(r => r.productId === productId && r.customerId === customerId && r.isActive);
+    if (rate) return rate.rate;
+    
+    const product = products.find(p => p.id === productId);
+    return product?.price || 0;
+  };
+
   // Order CRUD operations
-  const addOrder = (order: Omit<Order, 'id'>) => {
+  const addOrder = (order: Omit<Order, 'id'>): string => {
     const newOrder = { ...order, id: `order_${Date.now()}` };
     setOrders(prev => [...prev, newOrder]);
+    return newOrder.id;
   };
 
   const updateOrder = (id: string, order: Partial<Order>) => {
@@ -148,6 +194,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteOrder = (id: string) => {
     setOrders(prev => prev.filter(o => o.id !== id));
+  };
+
+  const addBatchOrders = (orders: Omit<Order, 'id'>[]) => {
+    const newOrders = orders.map(order => ({ ...order, id: `order_${Date.now()}_${Math.random()}` }));
+    setOrders(prev => [...prev, ...newOrders]);
   };
 
   // Payment CRUD operations
@@ -162,6 +213,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deletePayment = (id: string) => {
     setPayments(prev => prev.filter(p => p.id !== id));
+  };
+
+  const deleteMultiplePayments = (ids: string[]) => {
+    setPayments(prev => prev.filter(p => !ids.includes(p.id)));
   };
 
   // Vehicle CRUD operations
@@ -206,6 +261,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setTrackSheets(prev => prev.filter(t => t.id !== id));
   };
 
+  const createTrackSheetFromOrder = (orderId: string): TrackSheet | null => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return null;
+
+    const trackSheet: TrackSheet = {
+      id: `tracksheet_${Date.now()}`,
+      name: `Track Sheet for Order ${order.id}`,
+      date: order.date,
+      vehicleId: order.vehicleId,
+      salesmanId: order.salesmanId,
+      rows: [{
+        customerId: order.customerId,
+        name: order.customerName || '',
+        quantities: {},
+        total: order.total || 0,
+        amount: order.total || 0
+      }],
+      status: 'draft'
+    };
+
+    addTrackSheet(trackSheet);
+    return trackSheet;
+  };
+
   // Invoice CRUD operations
   const addInvoice = (invoice: Omit<Invoice, 'id'>) => {
     const newInvoice = { ...invoice, id: `invoice_${Date.now()}` };
@@ -232,6 +311,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteStockEntry = (id: string) => {
     setStockEntries(prev => prev.filter(s => s.id !== id));
+  };
+
+  // Stock Transaction CRUD operations
+  const addStockTransaction = (transaction: Omit<StockTransaction, 'id'>) => {
+    const newTransaction = { ...transaction, id: `transaction_${Date.now()}` };
+    setStockTransactions(prev => [...prev, newTransaction]);
   };
 
   // Supplier CRUD operations
@@ -262,32 +347,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSupplierPayments(prev => prev.filter(p => p.id !== id));
   };
 
-  // Customer Product Rate CRUD operations
-  const addCustomerProductRate = (rate: Omit<CustomerProductRate, 'id'>) => {
-    const newRate = { ...rate, id: `customerrate_${Date.now()}` };
-    setCustomerProductRates(prev => [...prev, newRate]);
+  // Product Rate CRUD operations
+  const addProductRate = (rate: Omit<ProductRate, 'id'>) => {
+    const newRate = { ...rate, id: `rate_${Date.now()}` };
+    setProductRates(prev => [...prev, newRate]);
   };
 
-  const updateCustomerProductRate = (id: string, rate: Partial<CustomerProductRate>) => {
-    setCustomerProductRates(prev => prev.map(r => r.id === id ? { ...r, ...rate } : r));
+  const updateProductRate = (id: string, rate: Partial<ProductRate>) => {
+    setProductRates(prev => prev.map(r => r.id === id ? { ...r, ...rate } : r));
   };
 
-  const deleteCustomerProductRate = (id: string) => {
-    setCustomerProductRates(prev => prev.filter(r => r.id !== id));
-  };
-
-  // Supplier Product Rate CRUD operations
-  const addSupplierProductRate = (rate: Omit<SupplierProductRate, 'id'>) => {
-    const newRate = { ...rate, id: `supplierrate_${Date.now()}` };
-    setSupplierProductRates(prev => [...prev, newRate]);
-  };
-
-  const updateSupplierProductRate = (id: string, rate: Partial<SupplierProductRate>) => {
-    setSupplierProductRates(prev => prev.map(r => r.id === id ? { ...r, ...rate } : r));
-  };
-
-  const deleteSupplierProductRate = (id: string) => {
-    setSupplierProductRates(prev => prev.filter(r => r.id !== id));
+  const deleteProductRate = (id: string) => {
+    setProductRates(prev => prev.filter(r => r.id !== id));
   };
 
   // Expense CRUD operations
@@ -304,6 +375,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
+  const updateUISettings = (settings: Partial<UISettings>) => {
+    setUISettings(prev => ({ ...prev, ...settings }));
+  };
+
+  const updateNotificationSettings = (settings: Partial<NotificationSettings>) => {
+    setNotificationSettings(prev => ({ ...prev, ...settings }));
+  };
+
+  const addRole = (role: Omit<Role, 'id'>) => {
+    const newRole = { ...role, id: `role_${Date.now()}` };
+    setRoles(prev => [...prev, newRole]);
+  };
+
+  const updateRole = (id: string, role: Partial<Role>) => {
+    setRoles(prev => prev.map(r => r.id === id ? { ...r, ...role } : r));
+  };
+
+  const deleteRole = (id: string) => {
+    setRoles(prev => prev.filter(r => r.id !== id));
+  };
+
   const value: DataContextType = {
     customers,
     addCustomer,
@@ -313,14 +405,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addProduct,
     updateProduct,
     deleteProduct,
+    getProductRateForCustomer,
     orders,
     addOrder,
     updateOrder,
     deleteOrder,
+    addBatchOrders,
     payments,
     addPayment,
     updatePayment,
     deletePayment,
+    deleteMultiplePayments,
     vehicles,
     addVehicle,
     updateVehicle,
@@ -333,6 +428,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addTrackSheet,
     updateTrackSheet,
     deleteTrackSheet,
+    createTrackSheetFromOrder,
     invoices,
     addInvoice,
     updateInvoice,
@@ -341,6 +437,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addStockEntry,
     updateStockEntry,
     deleteStockEntry,
+    stockTransactions,
+    addStockTransaction,
     suppliers,
     addSupplier,
     updateSupplier,
@@ -349,18 +447,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addSupplierPayment,
     updateSupplierPayment,
     deleteSupplierPayment,
-    customerProductRates,
-    addCustomerProductRate,
-    updateCustomerProductRate,
-    deleteCustomerProductRate,
-    supplierProductRates,
-    addSupplierProductRate,
-    updateSupplierProductRate,
-    deleteSupplierProductRate,
+    productRates,
+    addProductRate,
+    updateProductRate,
+    deleteProductRate,
     expenses,
     addExpense,
     updateExpense,
     deleteExpense,
+    uiSettings,
+    updateUISettings,
+    notificationTemplates,
+    notificationSettings,
+    updateNotificationSettings,
+    roles,
+    users,
+    addRole,
+    updateRole,
+    deleteRole,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -128,6 +128,7 @@ export interface TrackSheetSummary {
 // Invoice Types
 export interface Invoice {
   id: string;
+  number: string;
   customerId: string;
   customerName?: string;
   date: string;
@@ -137,6 +138,7 @@ export interface Invoice {
   discount?: number;
   discountAmount?: number;
   tax?: number;
+  taxRate: number;
   taxAmount?: number;
   total: number;
   amountPaid?: number;
@@ -152,7 +154,7 @@ export interface Invoice {
   createdAt?: string;
   updatedAt?: string;
   customFields?: Record<string, any>;
-  number?: string;
+  invoiceNumber?: string;
 }
 
 export interface InvoiceItem {
@@ -170,7 +172,7 @@ export interface InvoiceItem {
   amount?: number;
 }
 
-// Payment Types - Fixed to include both method and paymentMethod
+// Payment Types
 export interface Payment {
   id: string;
   customerId: string;
@@ -274,7 +276,7 @@ export interface StockTransaction {
   totalCost?: number;
   supplierId?: string;
   createdAt?: string;
-  updatedAt?: string;
+  updated?: string;
 }
 
 export interface StockEntry {
@@ -336,6 +338,7 @@ export interface Supplier {
   id: string;
   name: string;
   contactName?: string;
+  contactPerson?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -343,8 +346,71 @@ export interface Supplier {
   isActive: boolean;
   outstandingBalance?: number;
   status?: string;
-  contactPerson?: string;
   contact?: string;
   gstNumber?: string;
+  gstin?: string;
   notes?: string;
+  paymentTerms?: string;
+}
+
+// UI Settings
+export interface UISettings {
+  theme: 'light' | 'dark' | 'system';
+  compactMode: boolean;
+  currency: string;
+  dateFormat: string;
+  sidebarCollapsed: boolean;
+  defaultPaymentMethod: string;
+  defaultReportPeriod: string;
+  fontSize?: 'small' | 'medium' | 'large';
+  colorScheme?: string;
+  sidebarStyle?: 'compact' | 'expanded';
+  tableStyle?: 'bordered' | 'minimal' | 'striped';
+  notificationFrequency?: 'high' | 'medium' | 'low' | 'off';
+  language?: string;
+  currencyFormat?: string;
+}
+
+// Notification Types
+export interface NotificationTemplate {
+  id: string;
+  type: 'sms' | 'email' | 'whatsapp';
+  event: 'order_confirmation' | 'delivery_update' | 'payment_receipt' | 'payment_reminder' | 'low_stock';
+  template: string;
+  isActive: boolean;
+  variables?: string[];
+}
+
+export interface NotificationSettings {
+  smsEnabled: boolean;
+  emailEnabled: boolean;
+  whatsappEnabled: boolean;
+  apiKey?: string;
+  senderId?: string;
+  emailFrom?: string;
+}
+
+// Role Management
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+  isActive: boolean;
+}
+
+export interface Permission {
+  id: string;
+  module: string;
+  action: 'create' | 'read' | 'update' | 'delete';
+  allowed: boolean;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  isActive: boolean;
+  createdAt: string;
 }
