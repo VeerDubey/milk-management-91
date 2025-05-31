@@ -70,7 +70,9 @@ const ProductList = () => {
     }
 
     addProduct({
-      ...newProduct
+      ...newProduct,
+      createdAt: new Date().toISOString(),
+      hasVariants: false
     });
     
     setNewProduct({

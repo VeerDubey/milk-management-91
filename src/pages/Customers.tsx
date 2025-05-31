@@ -117,7 +117,9 @@ const Customers = () => {
     } else {
       addCustomer({
         ...formData,
+        balance: Number(formData.outstandingBalance) || 0,
         outstandingBalance: Number(formData.outstandingBalance) || 0,
+        createdAt: new Date().toISOString()
       });
       toast.success("Customer added successfully");
     }

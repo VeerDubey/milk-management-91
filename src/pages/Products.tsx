@@ -37,7 +37,9 @@ export default function Products() {
       category: category || 'General',
       stock: parseInt(stock),
       costPrice: parseFloat(costPrice || '0'),
-      isActive: true
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      hasVariants: false
     };
 
     addProduct(product);

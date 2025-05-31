@@ -66,18 +66,16 @@ export default function PaymentCreate() {
         customerId: formData.customerId,
         amount: parseFloat(formData.amount),
         date: formData.date,
+        method: formData.paymentMethod,
         paymentMethod: formData.paymentMethod,
         referenceNumber: formData.referenceNumber || undefined,
         notes: formData.notes || undefined,
         status: 'completed'
       };
 
-      const newPayment = addPayment(paymentData);
-      
-      if (newPayment) {
-        toast.success('Payment recorded successfully');
-        navigate('/payment-list');
-      }
+      addPayment(paymentData);
+      toast.success('Payment recorded successfully');
+      navigate('/payment-list');
     } catch (error) {
       console.error('Error creating payment:', error);
       toast.error('Failed to record payment');

@@ -292,7 +292,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         total: order.total || 0,
         amount: order.total || 0
       }],
-      status: 'draft'
+      status: 'draft',
+      summary: {
+        totalItems: 0,
+        totalAmount: order.total || 0,
+        productTotals: {}
+      }
     };
 
     addTrackSheet(trackSheet);
@@ -522,5 +527,3 @@ export function useData() {
   }
   return context;
 }
-
-export type { DataContextType };
