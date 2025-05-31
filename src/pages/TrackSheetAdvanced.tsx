@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -353,57 +354,6 @@ export default function TrackSheetAdvanced() {
     } catch (error) {
       console.error('Error creating orders:', error);
       toast.error("Error creating orders");
-    }
-  };
-
-  const handleCreateBulkOrders = () => {
-    try {
-      const orders = trackSheetData.rows.map(row => ({
-        customerId: row.customerId,
-        customerName: row.name,
-        date: trackSheetData.date,
-        items: Object.entries(row.quantities).map(([productId, quantity]) => ({
-          productId,
-          quantity: Number(quantity),
-          unitPrice: getProductPrice(productId),
-          total: Number(quantity) * getProductPrice(productId)
-        })),
-        vehicleId: trackSheetData.vehicleId || '',
-        salesmanId: trackSheetData.salesmanId || '',
-        status: 'pending' as const,
-        paymentStatus: 'pending' as const,
-        total: row.amount,
-        totalAmount: row.amount
-      }));
-
-      addBatchOrders(orders);
-      toast.success(`Created ${orders.length} orders successfully!`);
-      setShowBulkOrderDialog(false);
-    } catch (error) {
-      console.error('Error creating bulk orders:', error);
-      toast.error('Failed to create orders');
-    }
-  };
-
-  const handleSaveTrackSheet = () => {
-    try {
-      if (trackSheetData.id) {
-        updateTrackSheet(trackSheetData.id, {
-          ...trackSheetData,
-          savedAt: new Date().toISOString()
-        });
-        toast.success('Track sheet updated successfully!');
-      } else {
-        addTrackSheet({
-          ...trackSheetData,
-          createdAt: new Date().toISOString(),
-          savedAt: new Date().toISOString()
-        });
-        toast.success('Track sheet saved successfully!');
-      }
-    } catch (error) {
-      console.error('Error saving track sheet:', error);
-      toast.error('Failed to save track sheet');
     }
   };
 

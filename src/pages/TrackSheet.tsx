@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -115,11 +116,11 @@ export default function TrackSheet() {
   
   const handleSaveTrackSheet = () => {
     try {
-      addTrackSheet({
+      const trackSheetData = {
         name: trackSheetName,
-        date: trackSheetDate,
-        vehicleId: selectedVehicle?.id,
-        salesmanId: selectedSalesman?.id,
+        date: format(trackSheetDate, 'yyyy-MM-dd'),
+        vehicleId: selectedVehicle,
+        salesmanId: selectedSalesman,
         routeName: routeName,
         rows: rows.map(row => ({
           customerId: row.customerId,
@@ -129,17 +130,23 @@ export default function TrackSheet() {
           amount: row.amount
         })),
         notes: '',
-        status: 'draft',
+        status: 'draft' as const,
         summary: {
           totalItems: rows.reduce((sum, row) => sum + row.total, 0),
           totalAmount: rows.reduce((sum, row) => sum + row.amount, 0),
           productTotals: {}
         }
-      });
+      };
       
-      toast.success('Track sheet saved successfully!');
-      setTrackSheetName('');
-      setRows([]);
+      const result = addTrackSheet(trackSheetData);
+      
+      if (result) {
+        toast.success('Track sheet saved successfully!');
+        setTrackSheetName('');
+        setRows([]);
+      } else {
+        toast.error('Failed to save track sheet');
+      }
     } catch (error) {
       console.error('Error saving track sheet:', error);
       toast.error('Failed to save track sheet');
