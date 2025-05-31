@@ -97,6 +97,10 @@ import TestingReportPage from '@/pages/TestingReport';
 // Import the new settings provider
 import { SettingsProvider } from '@/components/ui-settings/SettingsProvider';
 
+import CustomerPaymentManagement from '@/pages/CustomerPaymentManagement';
+import PurchaseManagement from '@/pages/PurchaseManagement';
+import EnhancedDeliverySheet from '@/pages/EnhancedDeliverySheet';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -126,8 +130,13 @@ function App() {
                             <Route path="dashboard" element={<Dashboard />} />
                             <Route path="master" element={<Master />} />
                             
-                            {/* Enhanced Delivery & Track Sheet Route */}
+                            {/* Enhanced Delivery & Track Sheet Routes */}
                             <Route path="delivery-sheet" element={<DeliverySheet />} />
+                            <Route path="enhanced-delivery-sheet" element={<EnhancedDeliverySheet />} />
+                            
+                            {/* Payment & Purchase Management */}
+                            <Route path="customer-payment-management" element={<CustomerPaymentManagement />} />
+                            <Route path="purchase-management" element={<PurchaseManagement />} />
                             
                             {/* Testing Route */}
                             <Route path="testing-report" element={<TestingReportPage />} />

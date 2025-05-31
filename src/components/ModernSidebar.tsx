@@ -1,12 +1,6 @@
-
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from "react";
 import {
-  LayoutDashboard,
+  Home,
   Users,
   Package,
   ShoppingCart,
@@ -14,357 +8,333 @@ import {
   FileText,
   MessageSquare,
   Truck,
+  Building,
   BarChart3,
   Settings,
-  ChevronDown,
+  ChevronLeft,
   ChevronRight,
-  Building2,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Store,
-  Calculator,
-  Clock,
+  List,
+  Book,
   TrendingUp,
-  Palette,
-  UserCheck,
-  Layers,
-  Bell,
-  Database,
-  Calendar,
-  FileSpreadsheet,
-  Mail,
-  Phone,
+  AlertCircle,
   DollarSign,
+  Plus,
+  History,
+  BookOpen,
+  Mail,
+  MessageCircle,
+  Send,
+  File,
   MapPin,
-  ClipboardList,
-  Archive,
-  Award,
-  FlaskConical,
-  Wallet,
-  Receipt
-} from 'lucide-react';
+  UserPlus,
+  TestTube,
+  Grid3X3,
+  Calculator,
+  Palette,
+  Shield,
+  User
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface ModernSidebarProps {
-  collapsed?: boolean;
-  onToggle?: () => void;
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-export function ModernSidebar({ collapsed = false, onToggle }: ModernSidebarProps) {
-  const location = useLocation();
-  const [openSections, setOpenSections] = useState<string[]>(['customers', 'inventory', 'orders', 'delivery']);
+interface SidebarItemProps {
+  title: string;
+  href: string;
+  icon: any;
+  color: string;
+  collapsed: boolean;
+}
 
-  const toggleSection = (section: string) => {
-    if (collapsed) return;
-    setOpenSections(prev => 
-      prev.includes(section) 
-        ? prev.filter(s => s !== section)
-        : [...prev, section]
-    );
+interface SidebarGroupProps {
+  title: string;
+  icon: any;
+  color: string;
+  collapsed: boolean;
+  items: { title: string; href: string; icon: any }[];
+}
+
+function SidebarItem({ title, href, icon: Icon, color, collapsed }: SidebarItemProps) {
+  const location = useLocation();
+  const isActive = location.pathname === href;
+
+  return (
+    <Link
+      to={href}
+      className={cn(
+        "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent-color/10 hover:text-accent-color",
+        isActive ? "bg-accent-color/10 text-accent-color" : "text-muted-foreground",
+        collapsed ? "justify-center" : "space-x-2"
+      )}
+    >
+      <Icon className={cn("h-4 w-4", color)} />
+      {!collapsed && <span>{title}</span>}
+    </Link>
+  );
+}
+
+function SidebarGroup({ title, icon: Icon, color, collapsed, items }: SidebarGroupProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const anyChildActive = items.some(item => location.pathname === item.href);
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
   };
 
-  const isActive = (path: string) => location.pathname === path;
-  const isSectionActive = (paths: string[]) => paths.some(path => location.pathname === path);
+  const handleNavigation = (href: string) => {
+    navigate(href);
+    if (collapsed) {
+      setIsExpanded(false);
+    }
+  };
+
+  return (
+    <div>
+      <Button
+        variant="ghost"
+        className={cn(
+          "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent-color/10 hover:text-accent-color",
+          anyChildActive ? "bg-accent-color/10 text-accent-color" : "text-muted-foreground",
+          collapsed ? "justify-center" : "space-x-2"
+        )}
+        onClick={toggleExpand}
+      >
+        <div className="flex items-center">
+          <Icon className={cn("h-4 w-4", color)} />
+          {!collapsed && <span className="ml-2">{title}</span>}
+        </div>
+        {!collapsed && <ChevronRight className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />}
+      </Button>
+      {isExpanded && (
+        <div className="mt-2 space-y-1">
+          {items.map((item) => (
+            <Button
+              key={item.title}
+              variant="ghost"
+              className={cn(
+                "flex w-full items-center rounded-md px-5 py-2 text-sm font-medium transition-colors hover:bg-accent-color/10 hover:text-accent-color",
+                location.pathname === item.href ? "bg-accent-color/10 text-accent-color" : "text-muted-foreground",
+                collapsed ? "justify-center" : "space-x-2"
+              )}
+              onClick={() => handleNavigation(item.href)}
+            >
+              <item.icon className="h-4 w-4" />
+              {!collapsed && <span>{item.title}</span>}
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const menuItems = [
     {
-      title: 'Dashboard',
-      icon: LayoutDashboard,
-      path: '/dashboard',
-      badge: null,
+      title: "Dashboard",
+      icon: Home,
+      href: "/dashboard",
+      color: "text-blue-400"
     },
     {
-      title: 'Master Data',
-      icon: Database,
-      path: '/master',
-      badge: null,
-    },
-    {
-      title: 'Delivery Sheet',
-      icon: FileSpreadsheet,
-      path: '/delivery-sheet',
-      badge: 'Enhanced',
-    },
-    {
-      title: 'Customers',
+      title: "Customers",
       icon: Users,
-      key: 'customers',
-      badge: '7',
-      children: [
-        { title: 'Customer List', path: '/customer-list', icon: Users },
-        { title: 'Directory', path: '/customer-directory', icon: Store },
-        { title: 'Ledger', path: '/customer-ledger', icon: FileText },
-        { title: 'Rates', path: '/customer-rates', icon: Calculator },
-        { title: 'Reports', path: '/customer-report', icon: BarChart3 },
-        { title: 'Outstanding Dues', path: '/outstanding-dues', icon: Clock },
-        { title: 'Outstanding Amounts', path: '/outstanding-amounts', icon: CreditCard },
+      color: "text-green-400",
+      submenu: [
+        { title: "Customer List", href: "/customer-list", icon: List },
+        { title: "Customer Directory", href: "/customer-directory", icon: Book },
+        { title: "Customer Ledger", href: "/customer-ledger", icon: CreditCard },
+        { title: "Customer Rates", href: "/customer-rates", icon: TrendingUp },
+        { title: "Customer Report", href: "/customer-report", icon: BarChart3 },
+        { title: "Outstanding Dues", href: "/outstanding-dues", icon: AlertCircle },
+        { title: "Outstanding Amounts", href: "/outstanding-amounts", icon: DollarSign }
       ]
     },
     {
-      title: 'Inventory',
+      title: "Products & Inventory",
       icon: Package,
-      key: 'inventory',
-      badge: '7',
-      children: [
-        { title: 'Inventory Dashboard', path: '/inventory-dashboard', icon: BarChart3 },
-        { title: 'Product List', path: '/product-list', icon: Package },
-        { title: 'Product Rates', path: '/product-rates', icon: Calculator },
-        { title: 'Stock Management', path: '/stock-management', icon: Layers },
-        { title: 'Stock Settings', path: '/stock-settings', icon: Settings },
-        { title: 'Categories', path: '/product-categories', icon: Layers },
-        { title: 'Bulk Rates', path: '/bulk-rates', icon: TrendingUp },
+      color: "text-purple-400",
+      submenu: [
+        { title: "Inventory Dashboard", href: "/inventory-dashboard", icon: BarChart3 },
+        { title: "Product List", href: "/product-list", icon: List },
+        { title: "Product Rates", href: "/product-rates", icon: TrendingUp },
+        { title: "Stock Management", href: "/stock-management", icon: Package },
+        { title: "Stock Settings", href: "/stock-settings", icon: Settings },
+        { title: "Product Categories", href: "/product-categories", icon: Grid3X3 },
+        { title: "Bulk Rates", href: "/bulk-rates", icon: Calculator }
       ]
     },
     {
-      title: 'Orders',
+      title: "Orders",
       icon: ShoppingCart,
-      key: 'orders',
-      badge: '3',
-      children: [
-        { title: 'Order List', path: '/order-list', icon: ShoppingCart },
-        { title: 'Order Entry', path: '/order-entry', icon: FileText },
-        { title: 'Order History', path: '/order-history', icon: Clock },
+      color: "text-orange-400",
+      submenu: [
+        { title: "Order List", href: "/order-list", icon: List },
+        { title: "Order Entry", href: "/order-entry", icon: Plus },
+        { title: "Order History", href: "/order-history", icon: History }
       ]
     },
     {
-      title: 'Payments',
+      title: "Payments & Ledger",
       icon: CreditCard,
-      key: 'payments',
-      badge: '2',
-      children: [
-        { title: 'Payment List', path: '/payment-list', icon: CreditCard },
-        { title: 'Create Payment', path: '/payment-create', icon: Wallet },
+      color: "text-green-400",
+      submenu: [
+        { title: "Payment List", href: "/payment-list", icon: List },
+        { title: "Payment Create", href: "/payment-create", icon: Plus },
+        { title: "Customer Ledger", href: "/customer-ledger", icon: BookOpen }
       ]
     },
     {
-      title: 'Invoices',
+      title: "Invoices",
       icon: FileText,
-      key: 'invoices',
-      badge: '3',
-      children: [
-        { title: 'Invoice History', path: '/invoice-history', icon: Clock },
-        { title: 'Create Invoice', path: '/invoice-create', icon: FileText },
-        { title: 'Templates', path: '/invoice-templates', icon: Palette },
+      color: "text-blue-400",
+      submenu: [
+        { title: "Invoice History", href: "/invoice-history", icon: History },
+        { title: "Invoice Create", href: "/invoice-create", icon: Plus },
+        { title: "Invoice Templates", href: "/invoice-templates", icon: FileText }
       ]
     },
     {
-      title: 'Communication',
+      title: "Communication",
       icon: MessageSquare,
-      key: 'communication',
-      badge: '4',
-      children: [
-        { title: 'Messaging', path: '/messaging', icon: MessageSquare },
-        { title: 'Email Templates', path: '/email-templates', icon: Mail },
-        { title: 'SMS Templates', path: '/sms-templates', icon: Phone },
-        { title: 'Bulk Communication', path: '/bulk-communication', icon: Bell },
+      color: "text-cyan-400",
+      submenu: [
+        { title: "Messaging", href: "/messaging", icon: MessageSquare },
+        { title: "Email Templates", href: "/email-templates", icon: Mail },
+        { title: "SMS Templates", href: "/sms-templates", icon: MessageCircle },
+        { title: "Bulk Communication", href: "/bulk-communication", icon: Send }
       ]
     },
     {
-      title: 'Delivery Management',
+      title: "Delivery & Track",
       icon: Truck,
-      key: 'delivery',
-      badge: '6',
-      children: [
-        { title: 'Delivery Challan', path: '/delivery-challan', icon: ClipboardList },
-        { title: 'Advanced Track Sheet', path: '/track-sheet-advanced', icon: FileSpreadsheet },
-        { title: 'Track History', path: '/track-sheet-history', icon: Clock },
-        { title: 'Track Manager', path: '/track-sheet-manager', icon: Archive },
-        { title: 'Vehicle Tracking', path: '/vehicle-tracking', icon: Truck },
-        { title: 'Vehicle/Salesman', path: '/vehicle-salesman-create', icon: Users },
+      color: "text-accent-color",
+      submenu: [
+        { title: "Delivery Sheet", href: "/delivery-sheet", icon: FileText },
+        { title: "Enhanced Delivery", href: "/enhanced-delivery-sheet", icon: Truck },
+        { title: "Delivery Challan", href: "/delivery-challan", icon: Package },
+        { title: "Track Sheet Advanced", href: "/track-sheet-advanced", icon: MapPin },
+        { title: "Track Sheet History", href: "/track-sheet-history", icon: History },
+        { title: "Track Sheet Manager", href: "/track-sheet-manager", icon: Settings },
+        { title: "Vehicle Tracking", href: "/vehicle-tracking", icon: Truck },
+        { title: "Vehicle & Salesman", href: "/vehicle-salesman-create", icon: UserPlus }
       ]
     },
     {
-      title: 'Suppliers',
-      icon: Building2,
-      key: 'suppliers',
-      badge: '4',
-      children: [
-        { title: 'Supplier Directory', path: '/supplier-directory', icon: Building2 },
-        { title: 'Supplier Ledger', path: '/supplier-ledger', icon: FileText },
-        { title: 'Supplier Payments', path: '/supplier-payments', icon: CreditCard },
-        { title: 'Supplier Rates', path: '/supplier-rates', icon: Calculator },
+      title: "Suppliers & Purchase",
+      icon: Building,
+      color: "text-yellow-400",
+      submenu: [
+        { title: "Supplier Directory", href: "/supplier-directory", icon: Building },
+        { title: "Supplier Ledger", href: "/supplier-ledger", icon: BookOpen },
+        { title: "Supplier Payments", href: "/supplier-payments", icon: CreditCard },
+        { title: "Supplier Rates", href: "/supplier-rates", icon: TrendingUp }
       ]
     },
     {
-      title: 'Reports & Analytics',
+      title: "Reports & Analytics",
       icon: BarChart3,
-      key: 'reports',
-      badge: '4',
-      children: [
-        { title: 'Sales Analytics', path: '/sales-analytics', icon: Award },
-        { title: 'Sales Report', path: '/sales-report', icon: TrendingUp },
-        { title: 'Analytics', path: '/analytics', icon: BarChart3 },
-        { title: 'Testing Report', path: '/testing-report', icon: FlaskConical },
+      color: "text-red-400",
+      submenu: [
+        { title: "Sales Analytics", href: "/sales-analytics", icon: BarChart3 },
+        { title: "Sales Report", href: "/sales-report", icon: FileText },
+        { title: "Analytics", href: "/analytics", icon: TrendingUp },
+        { title: "Testing Report", href: "/testing-report", icon: TestTube }
       ]
     },
     {
-      title: 'Settings',
+      title: "Settings",
       icon: Settings,
-      key: 'settings',
-      badge: '7',
-      children: [
-        { title: 'Company Profile', path: '/company-profile', icon: Building2 },
-        { title: 'Area Management', path: '/area-management', icon: MapPin },
-        { title: 'Financial Year', path: '/financial-year', icon: Calendar },
-        { title: 'Tax Settings', path: '/tax-settings', icon: Calculator },
-        { title: 'UI Settings', path: '/ui-settings', icon: Palette },
-        { title: 'User Access', path: '/user-access', icon: UserCheck },
-        { title: 'Expenses', path: '/expenses', icon: DollarSign },
+      color: "text-gray-400",
+      submenu: [
+        { title: "Company Profile", href: "/company-profile", icon: Building },
+        { title: "Area Management", href: "/area-management", icon: MapPin },
+        { title: "Financial Year", href: "/financial-year", icon: Calendar },
+        { title: "Tax Settings", href: "/tax-settings", icon: Calculator },
+        { title: "UI Settings", href: "/ui-settings", icon: Palette },
+        { title: "User Access", href: "/user-access", icon: Shield },
+        { title: "Expenses", href: "/expenses", icon: DollarSign }
       ]
-    },
+    }
   ];
 
   return (
-    <div className={cn(
-      'flex h-screen flex-col modern-sidebar transition-all duration-300 ease-in-out relative overflow-hidden z-40',
-      collapsed ? 'w-16' : 'w-72'
-    )}>
-      {/* Animated background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-secondary/5"></div>
-      
+    <div className={`${collapsed ? 'w-16' : 'w-72'} transition-all duration-300 neo-noir-surface border-r border-border-color flex flex-col h-screen relative z-40`}>
       {/* Header */}
-      <div className="relative flex h-16 items-center justify-between px-4 border-b border-primary/20 bg-black/10 backdrop-blur-xl">
+      <div className="flex items-center justify-between p-4 border-b border-border-color">
         {!collapsed && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-modern rounded-xl flex items-center justify-center shadow-lg neo-noir-float neo-noir-glow">
+            <div className="w-8 h-8 neo-noir-button-accent rounded-lg flex items-center justify-center">
               <img 
                 src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
-                alt="Vikas Milk Centre" 
+                alt="Logo" 
                 className="w-6 h-6"
               />
             </div>
-            <div>
-              <h2 className="text-sm font-bold neo-noir-gradient-text">Vikas Milk Centre</h2>
-              <p className="text-xs neo-noir-text-muted">Management System</p>
-            </div>
+            <h2 className="text-lg font-bold neo-noir-gradient-text">Vikas Milk Centre</h2>
           </div>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggle}
-          className="h-9 w-9 hover:bg-primary/10 neo-noir-text relative z-10"
+          className="h-8 w-8 neo-noir-button-outline"
         >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
-      
-      <ScrollArea className="flex-1 px-3 py-4 relative z-10">
-        <div className="space-y-2">
-          {menuItems.map((item) => {
-            if (item.children) {
-              const sectionPaths = item.children.map(child => child.path);
-              const isOpen = openSections.includes(item.key) && !collapsed;
-              const hasActiveChild = isSectionActive(sectionPaths);
 
-              return (
-                <div key={item.key} className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    onClick={() => toggleSection(item.key)}
-                    className={cn(
-                      "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
-                      collapsed && "justify-center px-2",
-                      hasActiveChild 
-                        ? "bg-primary/20 neo-noir-text border border-primary/30 shadow-lg backdrop-blur-sm" 
-                        : "hover:bg-primary/10 neo-noir-text hover:text-primary"
-                    )}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 text-left relative z-10">{item.title}</span>
-                        <div className="flex items-center space-x-2 relative z-10">
-                          {item.badge && (
-                            <Badge variant="secondary" className="h-5 px-2 text-xs bg-primary/20 text-primary border-primary/30">
-                              {item.badge}
-                            </Badge>
-                          )}
-                          {isOpen ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </Button>
-                  
-                  {isOpen && !collapsed && (
-                    <div className="ml-4 space-y-1 border-l border-primary/20 pl-4 animate-fade-in">
-                      {item.children.map((child) => (
-                        <Link key={child.path} to={child.path}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                              "w-full justify-start h-9 px-3 font-normal transition-all duration-300 nav-item relative overflow-hidden group",
-                              isActive(child.path)
-                                ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
-                                : "neo-noir-text-muted hover:neo-noir-text hover:bg-primary/10"
-                            )}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-secondary/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <child.icon className="h-4 w-4 mr-2 relative z-10" />
-                            <span className="relative z-10">{child.title}</span>
-                          </Button>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start h-11 px-3 font-medium transition-all duration-300 nav-item relative overflow-hidden group",
-                    collapsed && "justify-center px-2",
-                    isActive(item.path)
-                      ? "bg-gradient-modern text-white shadow-lg border border-primary/30 active"
-                      : "hover:bg-primary/10 neo-noir-text hover:text-primary"
-                  )}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <item.icon className={cn("h-5 w-5 relative z-10", !collapsed && "mr-3")} />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 text-left relative z-10">{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="secondary" className="h-5 px-2 text-xs bg-primary/20 text-primary border-primary/30">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                </Button>
-              </Link>
-            );
-          })}
-        </div>
-      </ScrollArea>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto py-4">
+        <nav className="space-y-2 px-3">
+          {menuItems.map((item) => (
+            <div key={item.title}>
+              {item.submenu ? (
+                <SidebarGroup 
+                  title={item.title}
+                  icon={item.icon}
+                  color={item.color}
+                  collapsed={collapsed}
+                  items={item.submenu}
+                />
+              ) : (
+                <SidebarItem 
+                  title={item.title}
+                  href={item.href}
+                  icon={item.icon}
+                  color={item.color}
+                  collapsed={collapsed}
+                />
+              )}
+            </div>
+          ))}
+        </nav>
+      </div>
 
       {/* Footer */}
-      {!collapsed && (
-        <div className="p-4 border-t border-primary/20 bg-black/10 backdrop-blur-xl relative z-10">
-          <div className="flex items-center space-x-3 p-3 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/20">
-            <div className="w-10 h-10 bg-gradient-modern rounded-full flex items-center justify-center shadow-lg">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium neo-noir-text truncate">Admin User</p>
-              <p className="text-xs neo-noir-text-muted truncate">admin@vikasmilk.com</p>
-            </div>
+      <div className="p-4 border-t border-border-color">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-accent-color rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
           </div>
+          {!collapsed && (
+            <div className="flex-1">
+              <p className="text-sm font-medium neo-noir-text">Admin User</p>
+              <p className="text-xs neo-noir-text-muted">admin@vikasmilk.com</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
