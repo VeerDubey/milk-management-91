@@ -12,6 +12,7 @@ export interface Customer {
   outstandingAmount?: number; // Added for compatibility with existing code
   vehicleId?: string; // Track vehicle assignment
   salesmanId?: string; // Track salesman assignment
+  totalPaid?: number; // Added for payment tracking
 }
 
 export interface Product {
@@ -28,6 +29,7 @@ export interface Product {
   stock?: number; // Added for dashboard display
   minStock?: number; // Added for dashboard display
   costPrice?: number; // Added for product detail
+  code?: string; // Added for delivery sheet product codes
 }
 
 export interface OrderItem {

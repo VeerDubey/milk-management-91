@@ -1,4 +1,3 @@
-
 // Customer Types
 export interface Customer {
   id: string;
@@ -18,6 +17,9 @@ export interface Customer {
   routeId?: string;
   areaId?: string;
   customFields?: Record<string, any>;
+  totalPaid?: number; // Added for payment tracking
+  outstandingBalance?: number; // Added for compatibility
+  area?: string; // Added for compatibility
 }
 
 // Product Types
@@ -40,6 +42,7 @@ export interface Product {
   taxRate?: number;
   hsnCode?: string;
   customFields?: Record<string, any>;
+  code?: string; // Added for delivery sheet product codes
 }
 
 export interface ProductVariant {

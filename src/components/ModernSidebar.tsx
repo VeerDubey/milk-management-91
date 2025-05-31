@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Home,
@@ -32,7 +33,8 @@ import {
   Calculator,
   Palette,
   Shield,
-  User
+  User,
+  Calendar
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
