@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -176,16 +175,11 @@ export default function TrackSheetAdvanced() {
     }
     
     try {
-      const result = addTrackSheet(trackSheetData);
-      
-      if (result) {
-        toast.success(`Track sheet saved successfully with ${trackSheetData.rows.length} orders`);
-        // Clear the form
-        setOrderMatrix({});
-        navigate('/track-sheet-history');
-      } else {
-        toast.error("Failed to save track sheet");
-      }
+      addTrackSheet(trackSheetData);
+      toast.success(`Track sheet saved successfully with ${trackSheetData.rows.length} orders`);
+      // Clear the form
+      setOrderMatrix({});
+      navigate('/track-sheet-history');
     } catch (error) {
       console.error('Error saving track sheet:', error);
       toast.error("Error saving track sheet");
@@ -342,15 +336,10 @@ export default function TrackSheetAdvanced() {
     }
     
     try {
-      const result = addBatchOrders(orders);
-      
-      if (result) {
-        toast.success(`${orders.length} orders created successfully`);
-        // Clear the matrix after successful order creation
-        setOrderMatrix({});
-      } else {
-        toast.error("Failed to create orders");
-      }
+      addBatchOrders(orders);
+      toast.success(`${orders.length} orders created successfully`);
+      // Clear the matrix after successful order creation
+      setOrderMatrix({});
     } catch (error) {
       console.error('Error creating orders:', error);
       toast.error("Error creating orders");

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
@@ -138,15 +137,10 @@ export default function TrackSheet() {
         }
       };
       
-      const result = addTrackSheet(trackSheetData);
-      
-      if (result) {
-        toast.success('Track sheet saved successfully!');
-        setTrackSheetName('');
-        setRows([]);
-      } else {
-        toast.error('Failed to save track sheet');
-      }
+      addTrackSheet(trackSheetData);
+      toast.success('Track sheet saved successfully!');
+      setTrackSheetName('');
+      setRows([]);
     } catch (error) {
       console.error('Error saving track sheet:', error);
       toast.error('Failed to save track sheet');
