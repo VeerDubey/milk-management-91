@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,11 +11,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Bell, Send, MessageSquare, Mail, Smartphone, Settings, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+type NotificationType = 'sms' | 'email' | 'whatsapp';
+type NotificationEvent = 'order_confirmation' | 'delivery_update' | 'payment_receipt' | 'payment_reminder' | 'low_stock';
+
 interface NotificationTemplate {
   id: string;
   name: string;
-  type: 'sms' | 'email' | 'whatsapp';
-  event: 'order_confirmation' | 'delivery_update' | 'payment_receipt' | 'payment_reminder' | 'low_stock';
+  type: NotificationType;
+  event: NotificationEvent;
   subject?: string;
   message: string;
   isActive: boolean;
@@ -50,10 +52,17 @@ export function NotificationService() {
   });
   const [isEditingTemplate, setIsEditingTemplate] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplate | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    type: NotificationType;
+    event: NotificationEvent;
+    subject: string;
+    message: string;
+    isActive: boolean;
+  }>({
     name: '',
-    type: 'sms' as const,
-    event: 'order_confirmation' as const,
+    type: 'sms',
+    event: 'order_confirmation',
     subject: '',
     message: '',
     isActive: true
@@ -116,14 +125,14 @@ export function NotificationService() {
   ];
 
   const eventOptions = [
-    { value: 'order_confirmation', label: 'Order Confirmation' },
-    { value: 'delivery_update', label: 'Delivery Update' },
-    { value: 'payment_receipt', label: 'Payment Receipt' },
-    { value: 'payment_reminder', label: 'Payment Reminder' },
-    { value: 'low_stock', label: 'Low Stock Alert' }
+    { value: 'order_confirmation' as const, label: 'Order Confirmation' },
+    { value: 'delivery_update' as const, label: 'Delivery Update' },
+    { value: 'payment_receipt' as const, label: 'Payment Receipt' },
+    { value: 'payment_reminder' as const, label: 'Payment Reminder' },
+    { value: 'low_stock' as const, label: 'Low Stock Alert' }
   ];
 
-  const availableVariables = {
+  const availableVariables: Record<NotificationEvent, string[]> = {
     order_confirmation: ['customerName', 'orderNumber', 'amount', 'deliveryDate', 'items'],
     delivery_update: ['customerName', 'orderNumber', 'estimatedTime', 'driverName', 'vehicleNumber'],
     payment_receipt: ['customerName', 'amount', 'paymentDate', 'paymentMethod', 'referenceNumber'],
@@ -199,11 +208,10 @@ export function NotificationService() {
   };
 
   const sendTestNotification = (template: NotificationTemplate) => {
-    // Here you would integrate with actual SMS/Email/WhatsApp APIs
     toast.success(`Test ${template.type.toUpperCase()} sent using "${template.name}" template`);
   };
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: NotificationType) => {
     switch (type) {
       case 'sms': return <Smartphone className="h-4 w-4" />;
       case 'email': return <Mail className="h-4 w-4" />;
@@ -212,7 +220,7 @@ export function NotificationService() {
     }
   };
 
-  const getTypeBadge = (type: string) => {
+  const getTypeBadge = (type: NotificationType) => {
     const colors = {
       sms: 'bg-green-500/20 text-green-400',
       email: 'bg-blue-500/20 text-blue-400',
@@ -220,7 +228,7 @@ export function NotificationService() {
     };
     
     return (
-      <Badge className={colors[type as keyof typeof colors] || 'bg-gray-500/20 text-gray-400'}>
+      <Badge className={colors[type]}>
         {getTypeIcon(type)}
         <span className="ml-1">{type.toUpperCase()}</span>
       </Badge>
@@ -396,7 +404,7 @@ export function NotificationService() {
               </div>
               <div className="space-y-2">
                 <Label className="neo-noir-text">Type *</Label>
-                <Select value={formData.type} onValueChange={(value: 'sms' | 'email' | 'whatsapp') => setFormData({...formData, type: value})}>
+                <Select value={formData.type} onValueChange={(value: NotificationType) => setFormData({...formData, type: value})}>
                   <SelectTrigger className="neo-noir-input">
                     <SelectValue />
                   </SelectTrigger>
@@ -409,7 +417,7 @@ export function NotificationService() {
               </div>
               <div className="space-y-2">
                 <Label className="neo-noir-text">Event *</Label>
-                <Select value={formData.event} onValueChange={(value: any) => setFormData({...formData, event: value})}>
+                <Select value={formData.event} onValueChange={(value: NotificationEvent) => setFormData({...formData, event: value})}>
                   <SelectTrigger className="neo-noir-input">
                     <SelectValue />
                   </SelectTrigger>

@@ -1,3 +1,4 @@
+
 // Customer Types
 export interface Customer {
   id: string;
@@ -17,10 +18,10 @@ export interface Customer {
   routeId?: string;
   areaId?: string;
   customFields?: Record<string, any>;
-  totalPaid?: number; // Added for payment tracking
-  outstandingBalance?: number; // Added for compatibility
-  area?: string; // Added for compatibility
-  balanceDue?: number; // Added for balance tracking
+  totalPaid?: number;
+  outstandingBalance?: number;
+  area?: string;
+  balanceDue?: number;
 }
 
 // Product Types
@@ -43,7 +44,7 @@ export interface Product {
   taxRate?: number;
   hsnCode?: string;
   customFields?: Record<string, any>;
-  code?: string; // Added for delivery sheet product codes
+  code?: string;
 }
 
 export interface ProductVariant {
@@ -115,7 +116,7 @@ export interface TrackSheetRow {
   quantities: Record<string, number | string>;
   total: number;
   amount: number;
-  products?: string[]; // Product names array
+  products?: string[];
 }
 
 export interface TrackSheetSummary {
@@ -169,7 +170,7 @@ export interface InvoiceItem {
   amount?: number;
 }
 
-// Payment Types
+// Payment Types - Fixed to include both method and paymentMethod
 export interface Payment {
   id: string;
   customerId: string;
@@ -177,6 +178,7 @@ export interface Payment {
   date: string;
   amount: number;
   method: string;
+  paymentMethod: string;
   referenceNumber?: string;
   notes?: string;
   createdAt?: string;
@@ -255,7 +257,7 @@ export interface SupplierPayment {
   receiptNumber?: string;
   transactionId?: string;
   bankDetails?: string;
-  referenceNumber?: string; // Alias for reference for compatibility
+  referenceNumber?: string;
 }
 
 export interface StockTransaction {
@@ -273,6 +275,27 @@ export interface StockTransaction {
   supplierId?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface StockEntry {
+  id: string;
+  supplierId: string;
+  date: string;
+  items: StockEntryItem[];
+  notes?: string;
+  totalAmount: number;
+  paymentStatus?: 'paid' | 'partial' | 'unpaid';
+  createdAt?: string;
+  referenceNumber?: string;
+}
+
+export interface StockEntryItem {
+  id?: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice?: number;
+  total?: number;
 }
 
 export interface Area {
@@ -306,4 +329,22 @@ export interface Expense {
   nextDueDate?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Supplier Types
+export interface Supplier {
+  id: string;
+  name: string;
+  contactName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  products?: string[];
+  isActive: boolean;
+  outstandingBalance?: number;
+  status?: string;
+  contactPerson?: string;
+  contact?: string;
+  gstNumber?: string;
+  notes?: string;
 }
