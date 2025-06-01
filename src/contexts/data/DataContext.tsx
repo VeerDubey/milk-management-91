@@ -9,6 +9,7 @@ import { useSalesmanState } from './useSalesmanState';
 import { usePaymentState } from './usePaymentState';
 import { useSupplierState } from './useSupplierState';
 import { useOtherStates } from './useOtherStates';
+import { useExpenseState } from './useExpenseState';
 import { useInitialData } from './useInitialData';
 
 export interface DataContextType {
@@ -25,6 +26,9 @@ export interface DataContextType {
   invoices: any[];
   trackSheets: any[];
   uiSettings: any;
+  expenses: any[];
+  stockTransactions: any[];
+  supplierProductRates: any[];
   
   addProduct: (product: Omit<Product, "id">) => Product;
   addCustomer: (customer: Omit<Customer, "id">) => Customer;
@@ -38,6 +42,9 @@ export interface DataContextType {
   addCustomerProductRate: (rate: any) => any;
   addInvoice: (invoice: any) => string;
   addTrackSheet: (trackSheet: any) => any;
+  addExpense: (expense: any) => any;
+  addSupplierProductRate: (rate: any) => any;
+  addBatchOrders: (orders: Omit<Order, "id">[]) => void;
   
   updateProduct: (id: string, productData: Partial<Product>) => void;
   updateCustomer: (id: string, customerData: Partial<Customer>) => void;
@@ -52,6 +59,8 @@ export interface DataContextType {
   updateInvoice: (id: string, invoiceData: any) => void;
   updateTrackSheet: (id: string, trackSheetData: any) => void;
   updateUISettings: (settings: any) => void;
+  updateExpense: (id: string, expenseData: any) => void;
+  updateSupplierProductRate: (id: string, rateData: any) => void;
   
   deleteProduct: (id: string) => void;
   deleteCustomer: (id: string) => void;
@@ -64,9 +73,13 @@ export interface DataContextType {
   deleteSupplierPayment: (id: string) => void;
   deleteInvoice: (id: string) => void;
   deleteTrackSheet: (id: string) => void;
+  deleteExpense: (id: string) => void;
+  deleteMultiplePayments: (ids: string[]) => void;
+  deleteSupplierProductRate: (id: string) => void;
   
   getInvoiceById: (id: string) => any;
   generateInvoiceFromOrder: (orderId: string) => string;
+  createTrackSheetFromOrder: (orderId: string) => any;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -86,6 +99,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const { vehicles, addVehicle, updateVehicle, deleteVehicle } = useVehicleState();
   const { salesmen, addSalesman, updateSalesman, deleteSalesman } = useSalesmanState();
   const { payments, addPayment, updatePayment, deletePayment } = usePaymentState();
+  const { expenses, addExpense, updateExpense, deleteExpense } = useExpenseState();
   
   const {
     suppliers, supplierPayments, stockEntries,
@@ -118,24 +132,68 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [hasLoadedInitialData, products, customers, addProduct, addCustomer]);
 
+  // Additional methods
+  const addBatchOrders = (orders: Omit<Order, "id">[]) => {
+    orders.forEach(order => addOrder(order));
+  };
+
+  const deleteMultiplePayments = (ids: string[]) => {
+    ids.forEach(id => deletePayment(id));
+  };
+
+  const createTrackSheetFromOrder = (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return null;
+    
+    const trackSheet = {
+      orderId,
+      date: order.date,
+      customerId: order.customerId,
+      items: order.items || [],
+      createdAt: new Date().toISOString()
+    };
+    
+    return addTrackSheet(trackSheet);
+  };
+
+  // Mock data for missing properties
+  const stockTransactions: any[] = [];
+  const supplierProductRates: any[] = [];
+  
+  const addSupplierProductRate = (rate: any) => {
+    // Mock implementation
+    return rate;
+  };
+  
+  const updateSupplierProductRate = (id: string, rateData: any) => {
+    // Mock implementation
+  };
+  
+  const deleteSupplierProductRate = (id: string) => {
+    // Mock implementation
+  };
+
   const value: DataContextType = {
     customers, products, orders, vehicles, salesmen, payments,
     suppliers, supplierPayments, stockEntries, customerProductRates,
-    invoices, trackSheets, uiSettings,
+    invoices, trackSheets, uiSettings, expenses, stockTransactions,
+    supplierProductRates,
     
     addProduct, addCustomer, addOrder, addVehicle, addSalesman, addPayment,
     addSupplier, addStockEntry, addSupplierPayment, addCustomerProductRate,
-    addInvoice, addTrackSheet,
+    addInvoice, addTrackSheet, addExpense, addSupplierProductRate, addBatchOrders,
     
     updateProduct, updateCustomer, updateOrder, updateVehicle, updateSalesman,
     updatePayment, updateSupplier, updateStockEntry, updateSupplierPayment,
     updateCustomerProductRate, updateInvoice, updateTrackSheet, updateUISettings,
+    updateExpense, updateSupplierProductRate,
     
     deleteProduct, deleteCustomer, deleteOrder, deleteVehicle, deleteSalesman,
     deletePayment, deleteSupplier, deleteStockEntry, deleteSupplierPayment,
-    deleteInvoice, deleteTrackSheet,
+    deleteInvoice, deleteTrackSheet, deleteExpense, deleteMultiplePayments,
+    deleteSupplierProductRate,
     
-    getInvoiceById, generateInvoiceFromOrder,
+    getInvoiceById, generateInvoiceFromOrder, createTrackSheetFromOrder,
   };
 
   return (

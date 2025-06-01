@@ -125,6 +125,8 @@ export default function DeliverySheetCreate() {
             status: 'pending',
             paymentStatus: 'pending',
             total: row.totalAmount,
+            vehicleId: '',
+            salesmanId: '',
             notes: `Delivery Sheet - ${selectedArea} Area`
           });
           createdOrders++;
