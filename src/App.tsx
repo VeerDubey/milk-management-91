@@ -14,13 +14,13 @@ import Customers from '@/pages/Customers';
 import Products from '@/pages/Products';
 import OrderEntry from '@/pages/OrderEntry';
 import OrderHistory from '@/pages/OrderHistory';
-import { InventoryDashboard } from '@/components/inventory/InventoryDashboard';
-import { DeliverySheetGenerator } from '@/components/delivery/DeliverySheetGenerator';
+import InventoryDashboard from '@/components/inventory/InventoryDashboard';
+import DeliverySheetGenerator from '@/components/delivery/DeliverySheetGenerator';
 import DeliveryEntryPage from '@/components/delivery/DeliveryEntryPage';
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider>
       <AuthProvider>
         <DataProvider>
           <Router>
