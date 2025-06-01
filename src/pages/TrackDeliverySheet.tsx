@@ -46,8 +46,9 @@ export default function TrackDeliverySheet() {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { label: 'Pending', variant: 'secondary' as const, icon: Clock },
-      dispatched: { label: 'Dispatched', variant: 'default' as const, icon: Truck },
-      delivered: { label: 'Delivered', variant: 'default' as const, icon: CheckCircle },
+      processing: { label: 'Processing', variant: 'default' as const, icon: Truck },
+      completed: { label: 'Completed', variant: 'success' as const, icon: CheckCircle },
+      cancelled: { label: 'Cancelled', variant: 'destructive' as const, icon: Clock },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -183,7 +184,7 @@ export default function TrackDeliverySheet() {
                             {order.items?.length || 0} items
                           </div>
                         </TableCell>
-                        <TableCell>₹{order.total.toFixed(2)}</TableCell>
+                        <TableCell>₹{order.total?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>{getStatusBadge(order.status)}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
@@ -191,19 +192,19 @@ export default function TrackDeliverySheet() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => updateOrderStatus(order.id, 'dispatched')}
+                                onClick={() => updateOrderStatus(order.id, 'processing')}
                                 className="neo-noir-button-outline text-xs"
                               >
-                                Dispatch
+                                Start Processing
                               </Button>
                             )}
-                            {order.status === 'dispatched' && (
+                            {order.status === 'processing' && (
                               <Button
                                 size="sm"
-                                onClick={() => updateOrderStatus(order.id, 'delivered')}
+                                onClick={() => updateOrderStatus(order.id, 'completed')}
                                 className="neo-noir-button-accent text-xs"
                               >
-                                Delivered
+                                Mark Complete
                               </Button>
                             )}
                           </div>
