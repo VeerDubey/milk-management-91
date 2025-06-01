@@ -225,3 +225,88 @@ export interface SystemHealth {
   lastChecked: string;
   errors: string[];
 }
+
+// User roles and permissions
+export interface UserRole {
+  id: string;
+  name: 'admin' | 'staff' | 'customer' | 'driver';
+  permissions: Permission[];
+  description: string;
+  isActive: boolean;
+}
+
+export interface Permission {
+  id: string;
+  module: string;
+  action: 'read' | 'write' | 'delete' | 'admin';
+  resource: string;
+}
+
+export interface EnhancedCustomer {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address: string;
+  area?: string;
+  creditLimit: number;
+  currentBalance: number;
+  outstandingBalance: number;
+  lastOrderDate?: string;
+  isActive: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerLedgerEntry {
+  id: string;
+  customerId: string;
+  date: string;
+  type: 'order' | 'payment' | 'credit_note' | 'debit_note';
+  orderId?: string;
+  paymentId?: string;
+  description: string;
+  debitAmount: number;
+  creditAmount: number;
+  balance: number;
+  createdAt: string;
+}
+
+// Product with enhanced features
+export interface EnhancedProduct {
+  id: string;
+  name: string;
+  code: string; // Auto-generated product code
+  price: number;
+  unit: string;
+  category: string;
+  description?: string;
+  isActive: boolean;
+  stock?: number;
+  minStock?: number;
+  dynamicPricing: DynamicPricing[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Delivery sheet specific types
+export interface DeliverySheetEntry {
+  customerId: string;
+  customerName: string;
+  area: string;
+  products: { [productCode: string]: number }; // Product code to quantity mapping
+  totalQuantity: number;
+  totalAmount: number;
+  notes?: string;
+}
+
+export interface DeliverySheet {
+  id: string;
+  date: string;
+  area?: string;
+  entries: DeliverySheetEntry[];
+  createdBy: string;
+  createdAt: string;
+  status: 'draft' | 'finalized' | 'delivered';
+}
