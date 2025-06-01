@@ -1,393 +1,210 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Import Neo Noir theme */
+@import './styles/neo-noir-theme.css';
+
 @layer base {
   :root {
-    /* Neo Noir Dark Theme Variables */
-    --bg-color: #0c0d10;
-    --surface-color: #1a1e23;
-    --text-color: #e9eaec;
-    --accent-color: #38bd95;
-    --accent-color-secondary: #3b82f6;
-    --border-color: rgba(255, 255, 255, 0.05);
-    --shadow-color: rgba(0, 0, 0, 0.3);
-    
-    /* Shadcn variables updated for Neo Noir */
-    --background: 12 13 16;
-    --foreground: 233 234 236;
-    --card: 26 30 35;
-    --card-foreground: 233 234 236;
-    --popover: 26 30 35;
-    --popover-foreground: 233 234 236;
-    --primary: 56 189 149;
-    --primary-foreground: 12 13 16;
-    --secondary: 59 130 246;
-    --secondary-foreground: 233 234 236;
-    --muted: 42 48 60;
-    --muted-foreground: 156 163 175;
-    --accent: 56 189 149;
-    --accent-foreground: 12 13 16;
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-    --border: 255 255 255 / 0.05;
-    --input: 26 30 35;
-    --ring: 56 189 149;
-    --radius: 0.75rem;
-    --success: 34 197 94;
-    --success-foreground: 255 255 255;
-    --warning: 251 191 36;
-    --warning-foreground: 0 0 0;
-  }
-
-  [data-theme="light"] {
-    --bg-color: #ffffff;
-    --surface-color: #f8f9fa;
-    --text-color: #1a1e23;
-    --accent-color: #38bd95;
-    --accent-color-secondary: #3b82f6;
-    --border-color: rgba(0, 0, 0, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    
-    --background: 255 255 255;
-    --foreground: 26 30 35;
-    --card: 248 249 250;
-    --card-foreground: 26 30 35;
-    --popover: 248 249 250;
-    --popover-foreground: 26 30 35;
-    --primary: 56 189 149;
-    --primary-foreground: 255 255 255;
-    --secondary: 59 130 246;
-    --secondary-foreground: 255 255 255;
-    --muted: 243 244 246;
-    --muted-foreground: 107 114 128;
-    --accent: 56 189 149;
-    --accent-foreground: 255 255 255;
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
-    --border: 0 0 0 / 0.1;
-    --input: 248 249 250;
-    --ring: 56 189 149;
-  }
-
-  * {
-    border-color: var(--border-color);
-  }
-
-  body {
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    transition: all 0.3s ease;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142.1 76.2% 36.3%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142.4 71.8% 29.2%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
-@layer components {
-  /* Neo Noir Base Components */
-  .neo-noir-bg {
-    background: var(--bg-color);
-    background-image: 
-      radial-gradient(circle at 20% 80%, rgba(56, 189, 149, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-    min-height: 100vh;
+@layer base {
+  * {
+    @apply border-border;
   }
-
-  .neo-noir-surface {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 20px var(--shadow-color);
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', system-ui, sans-serif;
   }
+}
 
-  .neo-noir-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    box-shadow: 
-      0 8px 32px var(--shadow-color),
-      0 0 0 1px rgba(56, 189, 149, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .neo-noir-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-      0 12px 40px var(--shadow-color),
-      0 0 0 1px rgba(56, 189, 149, 0.2),
-      0 0 20px rgba(56, 189, 149, 0.15);
-  }
-
-  .neo-noir-text {
-    color: var(--text-color);
-  }
-
-  .neo-noir-text-muted {
-    color: #888888;
-  }
-
-  .neo-noir-gradient-text {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 700;
-  }
-
-  /* Modern Buttons */
-  .neo-noir-button-accent {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.3);
-  }
-
-  .neo-noir-button-accent:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(56, 189, 149, 0.5);
-  }
-
-  .neo-noir-button-outline {
-    background: transparent;
-    color: var(--accent-color);
-    border: 1px solid var(--accent-color);
-    border-radius: var(--radius);
-    transition: all 0.3s ease;
-  }
-
-  .neo-noir-button-outline:hover {
-    background: var(--accent-color);
-    color: var(--bg-color);
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.4);
-  }
-
-  /* Modern Inputs */
-  .neo-noir-input {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    border-radius: var(--radius);
-    transition: all 0.3s ease;
-  }
-
-  .neo-noir-input:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(56, 189, 149, 0.2);
-    outline: none;
-  }
-
-  .neo-noir-input::placeholder {
-    color: #888888;
-  }
-
-  /* Modern Cards */
-  .modern-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    box-shadow: 
-      0 8px 32px var(--shadow-color),
-      0 0 0 1px rgba(56, 189, 149, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .modern-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 
-      0 12px 40px var(--shadow-color),
-      0 0 0 1px rgba(56, 189, 149, 0.2),
-      0 0 20px rgba(56, 189, 149, 0.15);
-  }
-
-  /* Modern Buttons */
-  .modern-button {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.3);
-  }
-
-  .modern-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(56, 189, 149, 0.5);
-  }
-
-  /* Modern Sidebar */
-  .modern-sidebar {
-    background: var(--surface-color);
-    border-right: 1px solid var(--border-color);
-    box-shadow: 4px 0 20px var(--shadow-color);
-  }
-
-  /* Text Gradients */
-  .text-gradient {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
+@layer utilities {
+  .text-gradient-aurora {
+    background: linear-gradient(135deg, #38bd95 0%, #2dd4bf 50%, #06b6d4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Background Gradients */
-  .bg-gradient-modern {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
+  .bg-aurora-gradient {
+    background: linear-gradient(135deg, #38bd95 0%, #2dd4bf 50%, #06b6d4 100%);
   }
 
-  /* Navigation Items */
-  .nav-item {
-    transition: all 0.3s ease;
+  .aurora-button {
+    @apply bg-aurora-gradient text-white border-none transition-all duration-300 hover:scale-105 hover:shadow-lg;
   }
 
-  .nav-item:hover {
-    background: rgba(56, 189, 149, 0.1);
-    box-shadow: 0 0 15px rgba(56, 189, 149, 0.2);
+  .aurora-card {
+    @apply neo-card border-primary/20 hover:border-primary/40;
   }
 
-  .nav-item.active {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
-    color: white;
-    box-shadow: 0 0 20px rgba(56, 189, 149, 0.4);
+  .aurora-table {
+    @apply border-collapse border border-primary/20;
   }
 
-  /* Tables */
-  .neo-noir-table {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    overflow: hidden;
+  .aurora-table-header {
+    @apply bg-primary/10 border-b-2 border-primary/30;
   }
 
-  .neo-noir-table-header {
-    background: linear-gradient(135deg, rgba(56, 189, 149, 0.2), rgba(59, 130, 246, 0.1));
-    color: var(--text-color);
-    font-weight: 600;
+  .aurora-table-row {
+    @apply border-b border-primary/10 hover:bg-primary/5;
   }
 
-  .neo-noir-table-row {
-    background: var(--surface-color);
-    color: var(--text-color);
-    border-bottom: 1px solid var(--border-color);
-    transition: all 0.2s ease;
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(56, 189, 149, 0.3);
   }
 
-  .neo-noir-table-row:hover {
-    background: rgba(56, 189, 149, 0.1);
-    box-shadow: 0 0 15px rgba(56, 189, 149, 0.2);
+  .glass-morphism {
+    background: rgba(26, 30, 35, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .neo-noir-table-row:nth-child(even) {
-    background: rgba(26, 30, 35, 0.5);
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
   }
 
-  .neo-noir-table-total {
-    background: linear-gradient(135deg, rgba(56, 189, 149, 0.3), rgba(59, 130, 246, 0.2));
-    color: var(--text-color);
-    font-weight: bold;
-  }
-
-  /* Print Styles */
-  .neo-noir-print-container {
-    @media print {
-      background: white !important;
-      color: black !important;
-      
-      .neo-noir-card {
-        background: white !important;
-        border: 1px solid #ccc !important;
-        box-shadow: none !important;
-      }
-      
-      .neo-noir-text {
-        color: black !important;
-      }
-      
-      .neo-noir-text-muted {
-        color: #666 !important;
-      }
-      
-      .neo-noir-gradient-text {
-        color: black !important;
-        background: none !important;
-        -webkit-text-fill-color: unset !important;
-      }
-      
-      .neo-noir-table {
-        background: white !important;
-        border: 1px solid #000 !important;
-      }
-      
-      .neo-noir-table-header {
-        background: #f0f0f0 !important;
-        color: black !important;
-      }
-      
-      .neo-noir-table-row {
-        background: white !important;
-        color: black !important;
-        border-bottom: 1px solid #ccc !important;
-      }
-      
-      .neo-noir-table-row:nth-child(even) {
-        background: #f9f9f9 !important;
-      }
-      
-      .neo-noir-table-total {
-        background: #e0e0e0 !important;
-        color: black !important;
-      }
-      
-      .no-print {
-        display: none !important;
-      }
-    }
-  }
-
-  /* Animations */
-  .neo-noir-glow {
-    animation: neoNoirGlow 3s ease-in-out infinite alternate;
-  }
-
-  @keyframes neoNoirGlow {
+  @keyframes fadeIn {
     from {
-      box-shadow: 0 0 20px rgba(56, 189, 149, 0.3);
+      opacity: 0;
+      transform: translateY(20px);
     }
     to {
-      box-shadow: 0 0 40px rgba(56, 189, 149, 0.6);
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
-  .neo-noir-float {
-    animation: neoNoirFloat 6s ease-in-out infinite;
-  }
-
-  @keyframes neoNoirFloat {
-    0%, 100% {
-      transform: translateY(0px);
+  /* Print styles */
+  @media print {
+    .print\\:shadow-none {
+      box-shadow: none !important;
     }
-    50% {
-      transform: translateY(-10px);
+    
+    .print\\:pb-2 {
+      padding-bottom: 0.5rem !important;
+    }
+    
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    .neo-card, .aurora-card {
+      border: 1px solid #ccc !important;
+      background: white !important;
+    }
+    
+    .text-muted-foreground {
+      color: #666 !important;
     }
   }
+}
 
-  /* Enhanced Scrollbar */
-  ::-webkit-scrollbar {
-    width: 12px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: var(--surface-color);
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--accent-color), var(--accent-color-secondary));
-    border-radius: 6px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, var(--accent-color-secondary), var(--accent-color));
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2c9d7a;
+}
+
+/* Loading animation */
+.loading-spinner {
+  border: 2px solid var(--muted-text);
+  border-top: 2px solid var(--accent-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form enhancements */
+.form-floating {
+  position: relative;
+}
+
+.form-floating input:focus + label,
+.form-floating input:not(:placeholder-shown) + label {
+  transform: translateY(-1.5rem) scale(0.8);
+  color: var(--accent-color);
+}
+
+.form-floating label {
+  position: absolute;
+  top: 1rem;
+  left: 0.75rem;
+  transition: all 0.2s ease-out;
+  pointer-events: none;
+  color: var(--muted-text);
+}
+
+/* Notification animations */
+.notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease-out;
+}
+
+.notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease-out;
 }

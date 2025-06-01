@@ -1,0 +1,130 @@
+
+:root {
+  /* Neo Noir Color Palette */
+  --bg-color: #0c0d10;
+  --text-color: #e9eaec;
+  --accent-color: #38bd95;
+  --surface-color: #1a1e23;
+  --secondary-surface: #242932;
+  --hover-surface: #2c313a;
+  --border-color: #3a4048;
+  --muted-text: #9ca3af;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  /* Gradient Accents */
+  --primary-gradient: linear-gradient(135deg, #38bd95 0%, #2dd4bf 100%);
+  --secondary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  
+  /* Shadows */
+  --neo-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  --neo-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  --neo-glow: 0 0 20px rgba(56, 189, 149, 0.3);
+  
+  /* Animations */
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.3s ease-out;
+  --transition-slow: 0.5s ease-out;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] {
+  --background: var(--bg-color);
+  --foreground: var(--text-color);
+  --card: var(--surface-color);
+  --card-foreground: var(--text-color);
+  --popover: var(--surface-color);
+  --popover-foreground: var(--text-color);
+  --primary: var(--accent-color);
+  --primary-foreground: var(--bg-color);
+  --secondary: var(--secondary-surface);
+  --secondary-foreground: var(--text-color);
+  --muted: var(--secondary-surface);
+  --muted-foreground: var(--muted-text);
+  --accent: var(--accent-color);
+  --accent-foreground: var(--bg-color);
+  --destructive: var(--error-color);
+  --destructive-foreground: var(--text-color);
+  --border: var(--border-color);
+  --input: var(--secondary-surface);
+  --ring: var(--accent-color);
+}
+
+/* Neo Noir Component Styles */
+.neo-card {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--neo-shadow);
+  transition: all var(--transition-normal);
+}
+
+.neo-card:hover {
+  box-shadow: var(--neo-shadow-lg);
+  border-color: var(--accent-color);
+}
+
+.neo-button-primary {
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  transition: all var(--transition-fast);
+}
+
+.neo-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--neo-glow);
+}
+
+.neo-input {
+  background: var(--secondary-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  transition: all var(--transition-fast);
+}
+
+.neo-input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(56, 189, 149, 0.2);
+}
+
+.neo-glass {
+  background: rgba(26, 30, 35, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 149, 0.2);
+}
+
+.neo-glow-text {
+  text-shadow: 0 0 10px var(--accent-color);
+}
+
+/* Animations */
+@keyframes neoSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes neoPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--accent-color);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--accent-color);
+  }
+}
+
+.neo-animate-in {
+  animation: neoSlideIn 0.3s ease-out;
+}
+
+.neo-pulse {
+  animation: neoPulse 2s infinite;
+}
