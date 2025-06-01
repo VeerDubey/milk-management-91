@@ -1,4 +1,6 @@
 
+import type { OrderItem } from './index';
+
 // Enhanced types for the upgraded ERP system
 
 export interface MilkCollection {

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +63,7 @@ export default function InventoryDashboard() {
 
   const getStockStatus = (product: any) => {
     const stock = product.stock || 0;
-    const minStock = product.minimumStock || 10;
+    const minStock = product.minStock || 10;
     
     if (stock === 0) return { status: 'out', color: 'destructive' };
     if (stock <= minStock) return { status: 'low', color: 'warning' };
@@ -245,7 +244,7 @@ export default function InventoryDashboard() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {filteredProducts.map(product => {
               const stockInfo = getStockStatus(product);
-              const stockPercentage = Math.min((product.stock || 0) / (product.minimumStock || 10) * 100, 100);
+              const stockPercentage = Math.min((product.stock || 0) / (product.minStock || 10) * 100, 100);
               
               return (
                 <Card key={product.id} className="neo-card hover:neo-pulse transition-all">
@@ -264,7 +263,7 @@ export default function InventoryDashboard() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Stock Level</span>
-                        <span>{product.stock || 0} / {product.minimumStock || 10}</span>
+                        <span>{product.stock || 0} / {product.minStock || 10}</span>
                       </div>
                       <Progress value={stockPercentage} className="h-2" />
                     </div>

@@ -15,6 +15,7 @@ import {
 import { format } from 'date-fns';
 import { useData } from '@/contexts/data/DataContext';
 import { toast } from 'sonner';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 
 interface DeliverySheetData {
   customer: string;
@@ -160,6 +161,10 @@ export default function DeliverySheetGenerator() {
     );
   };
 
+  const handleIncludeEmptyRowsChange = (checked: CheckedState) => {
+    setIncludeEmptyRows(checked === true);
+  };
+
   const generatePDF = () => {
     // In a real implementation, this would generate a PDF
     toast.success('PDF generated successfully!');
@@ -244,7 +249,7 @@ export default function DeliverySheetGenerator() {
                 <Checkbox 
                   id="empty-rows" 
                   checked={includeEmptyRows}
-                  onCheckedChange={setIncludeEmptyRows}
+                  onCheckedChange={handleIncludeEmptyRowsChange}
                 />
                 <Label htmlFor="empty-rows">Include empty rows</Label>
               </div>
