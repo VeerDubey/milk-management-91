@@ -28,26 +28,19 @@ function App() {
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
-                  <Route
-                    path="/*"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Routes>
-                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                            <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/customers" element={<Customers />} />
-                            <Route path="/products" element={<Products />} />
-                            <Route path="/inventory" element={<InventoryDashboard />} />
-                            <Route path="/order-entry" element={<OrderEntry />} />
-                            <Route path="/order-history" element={<OrderHistory />} />
-                            <Route path="/delivery-sheet" element={<DeliverySheetGenerator />} />
-                            <Route path="/delivery-entry" element={<DeliveryEntryPage />} />
-                          </Routes>
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route element={<ProtectedRoute />}>
+                    <Route element={<Layout />}>
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/customers" element={<Customers />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/inventory" element={<InventoryDashboard />} />
+                      <Route path="/order-entry" element={<OrderEntry />} />
+                      <Route path="/order-history" element={<OrderHistory />} />
+                      <Route path="/delivery-sheet" element={<DeliverySheetGenerator />} />
+                      <Route path="/delivery-entry" element={<DeliveryEntryPage />} />
+                    </Route>
+                  </Route>
                 </Routes>
               </Suspense>
               <Toaster />
