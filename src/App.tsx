@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -6,18 +7,21 @@ import { DataProvider } from '@/contexts/data/DataContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import { MessagingProvider } from '@/contexts/MessagingContext';
 import { ThemeProvider } from '@/contexts/ThemeProvider';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { EnhancedAuthProvider } from '@/contexts/EnhancedAuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import LoginLayout from '@/components/layout/LoginLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout';
 
 // Import services for initialization
 import { OfflineStorageService } from '@/services/OfflineStorageService';
 import { EnhancedOfflineService } from '@/services/EnhancedOfflineService';
 import { BackupService } from '@/services/BackupService';
 
+// Import enhanced components
+import { EnhancedDashboard } from '@/components/dashboard/EnhancedDashboard';
+
 // Import all pages
-import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 import Master from '@/pages/Master';
 
@@ -123,7 +127,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SettingsProvider>
-            <AuthProvider>
+            <EnhancedAuthProvider>
               <DataProvider>
                 <InvoiceProvider>
                   <MessagingProvider>
@@ -134,7 +138,7 @@ function App() {
                         <Route path="/" element={<ProtectedRoute />}>
                           <Route path="/" element={<AppLayout><Outlet /></AppLayout>}>
                             <Route index element={<Navigate to="/dashboard" replace />} />
-                            <Route path="dashboard" element={<Dashboard />} />
+                            <Route path="dashboard" element={<EnhancedDashboard />} />
                             <Route path="master" element={<Master />} />
                             
                             {/* Enhanced Delivery & Track Sheet Routes */}
@@ -230,7 +234,7 @@ function App() {
                   </MessagingProvider>
                 </InvoiceProvider>
               </DataProvider>
-            </AuthProvider>
+            </EnhancedAuthProvider>
           </SettingsProvider>
         </ThemeProvider>
       </QueryClientProvider>

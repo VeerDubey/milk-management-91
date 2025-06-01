@@ -1,4 +1,3 @@
-
 import { ReactNode, useState, useEffect } from "react";
 import { ModernSidebar } from "../ModernSidebar";
 import { useTheme } from "@/contexts/ThemeProvider";
@@ -8,6 +7,7 @@ import { MoonIcon, SunIcon, Bell, Search, Waves, User } from "lucide-react";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { AppHeader } from "./AppHeader";
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -62,7 +62,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 />
               </div>
               <div className="text-2xl font-bold neo-noir-gradient-text neo-noir-glow">
-                Naik Milk Distributors
+                Vikas Milk Centre
               </div>
               <Badge variant="secondary" className="bg-accent-color/20 text-accent-color border-accent-color/30">
                 Since 1975
@@ -83,17 +83,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             </div>
 
             {/* Enhanced Notifications */}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-10 w-10 rounded-xl neo-noir-button-outline transition-all duration-300 relative group"
-            >
-              <Bell className="h-5 w-5" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-destructive text-destructive-foreground text-xs animate-pulse">
-                3
-              </Badge>
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <NotificationCenter />
 
             {/* Enhanced Theme Toggle */}
             <Button 

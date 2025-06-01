@@ -1,73 +1,255 @@
-# Welcome to your Lovable project
 
-## Project info
+# Vikas Milk Centre Management System
 
-**URL**: https://lovable.dev/projects/3cdf0450-e3e6-42e9-9d0e-fed8189a036c
+A comprehensive milk distribution management system built with React, TypeScript, and modern web technologies. This application helps manage customers, suppliers, products, orders, payments, and delivery operations for a milk distribution business.
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+### Core Features
+- **Customer Management**: Add, edit, and track customer information with area-wise organization
+- **Product Management**: Manage milk products, categories, and inventory
+- **Order Management**: Create and track orders with delivery management
+- **Payment Tracking**: Record and monitor customer payments and outstanding dues
+- **Supplier Management**: Manage supplier information and purchase records
+- **Invoice Generation**: Create professional invoices with customizable templates
+- **Delivery Management**: Track delivery sheets and vehicle assignments
 
-**Use Lovable**
+### Advanced Features
+- **Role-Based Authentication**: Admin and employee roles with different permissions
+- **Real-time Analytics**: Dashboard with charts and business insights
+- **Export Functionality**: PDF and Excel export for reports
+- **Notification System**: Alerts for pending orders, due payments, and low stock
+- **Responsive Design**: Mobile-friendly interface
+- **Data Validation**: Form validation to prevent invalid inputs
+- **Offline Support**: Local storage for data persistence
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3cdf0450-e3e6-42e9-9d0e-fed8189a036c) and start prompting.
+## 🛠️ Technology Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**: React 18, TypeScript
+- **Styling**: Tailwind CSS, Custom Neo-Noir theme
+- **UI Components**: Shadcn/ui, Radix UI
+- **Charts**: Recharts
+- **PDF Generation**: jsPDF
+- **Excel Export**: XLSX
+- **Form Validation**: React Hook Form, Zod
+- **State Management**: React Context API
+- **Build Tool**: Vite
+- **Package Manager**: NPM
 
-**Use your preferred IDE**
+## 📦 Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
+- Node.js (v16 or higher)
+- NPM
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Setup Instructions
 
-Follow these steps:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd milk-management-system
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. **Open your browser**
+   Navigate to `http://localhost:5173`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## 🔐 Default Login Credentials
+
+The application comes with pre-configured user accounts:
+
+**Admin Account:**
+- Email: `admin@vikasmilk.com`
+- Password: `admin123`
+- Role: Administrator (full access)
+
+**Employee Account:**
+- Email: `employee@vikasmilk.com`
+- Password: `employee123`
+- Role: Employee (limited access)
+
+## 📊 Database Schema
+
+The application uses browser localStorage for data persistence with the following structure:
+
+### Users
+- `id`: Unique identifier
+- `name`: User's full name
+- `email`: Login email
+- `role`: 'admin' | 'employee'
+- `passwordHash`: Encrypted password
+- `isActive`: Account status
+
+### Customers
+- `id`: Unique identifier
+- `name`: Customer name
+- `phone`: Contact number (10 digits)
+- `address`: Full address
+- `area`: Area/locality
+- `outstandingBalance`: Amount due
+- `totalPaid`: Total amount paid
+- `isActive`: Account status
+
+### Products
+- `id`: Unique identifier
+- `name`: Product name
+- `category`: Product category
+- `unit`: Unit of measurement
+- `price`: Current price
+- `stock`: Available quantity
+
+### Orders
+- `id`: Unique identifier
+- `customerId`: Reference to customer
+- `vehicleId`: Assigned vehicle
+- `salesmanId`: Assigned salesman
+- `items`: Array of order items
+- `total`: Total amount
+- `status`: Order status
+- `date`: Order date
+
+### Payments
+- `id`: Unique identifier
+- `customerId`: Reference to customer
+- `amount`: Payment amount
+- `method`: Payment method
+- `date`: Payment date
+- `notes`: Additional notes
+
+## 🎯 Usage Guide
+
+### Getting Started
+1. Log in using the default admin credentials
+2. Navigate through the sidebar to access different modules
+3. Start by adding customers and products
+4. Create orders and track deliveries
+5. Record payments and generate reports
+
+### Customer Management
+- **Add Customer**: Use the customer form with validation
+- **Edit Customer**: Update customer information
+- **View Details**: Check customer order history and payments
+- **Area Management**: Organize customers by delivery areas
+
+### Order Processing
+1. **Create Order**: Select customer, add products, assign vehicle/salesman
+2. **Track Order**: Monitor order status through delivery pipeline
+3. **Generate Invoice**: Create professional invoices
+4. **Update Status**: Mark orders as completed/delivered
+
+### Payment Management
+- **Record Payment**: Log customer payments with method
+- **Track Outstanding**: Monitor pending dues
+- **Payment History**: View complete payment records
+- **Export Reports**: Generate payment reports
+
+### Analytics & Reports
+- **Dashboard**: View business metrics and charts
+- **Export Data**: Generate PDF/Excel reports
+- **Customer Analytics**: Track top customers and trends
+- **Sales Reports**: Monitor revenue and order patterns
+
+## 🔒 Security Features
+
+- **Password Encryption**: Using bcryptjs for secure password hashing
+- **Role-Based Access**: Different permissions for admin and employee
+- **Input Validation**: Zod schemas prevent invalid data entry
+- **XSS Protection**: Proper input sanitization
+- **Data Validation**: Form validation on both client side
+
+## 📱 Mobile Support
+
+The application is fully responsive and supports:
+- Touch-friendly interface
+- Mobile-optimized navigation
+- Responsive charts and tables
+- Swipe gestures for mobile interactions
+
+## 🚀 Deployment
+
+### Build for Production
+```bash
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+### Preview Production Build
+```bash
+npm run preview
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Deployment Options
+- **Vercel**: Connect GitHub repository for automatic deployments
+- **Netlify**: Drag and drop build folder or connect repository
+- **GitHub Pages**: Use GitHub Actions for automated deployment
+- **Self-hosted**: Deploy build folder to any web server
 
-**Use GitHub Codespaces**
+## 🔧 Configuration
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Environment Variables
+The application uses localStorage for data persistence, so no database configuration is needed. For production deployment with a real database, you would need:
 
-## What technologies are used for this project?
+```env
+DATABASE_URL=your_database_connection_string
+JWT_SECRET=your_jwt_secret_key
+SMTP_HOST=your_email_smtp_host
+SMTP_USER=your_email_username
+SMTP_PASS=your_email_password
+```
 
-This project is built with:
+### Customization
+- **Theme**: Modify `src/styles/neo-noir-theme.css` for custom styling
+- **Logo**: Replace logo files in `public/` directory
+- **Business Info**: Update company details in relevant components
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📈 Future Enhancements
 
-## How can I deploy this project?
+### Planned Features
+- **Cloud Database**: PostgreSQL/MySQL integration
+- **Real-time Sync**: Multi-device synchronization
+- **SMS Notifications**: Automated customer alerts
+- **GPS Tracking**: Real-time delivery tracking
+- **Mobile App**: React Native mobile application
+- **Barcode Scanning**: Product identification
+- **Advanced Analytics**: Machine learning insights
 
-Simply open [Lovable](https://lovable.dev/projects/3cdf0450-e3e6-42e9-9d0e-fed8189a036c) and click on Share -> Publish.
+### Cloud Migration
+To move to cloud infrastructure:
+1. Set up PostgreSQL database (Supabase recommended)
+2. Implement API backend (Node.js/Express)
+3. Add authentication service (Auth0/Supabase Auth)
+4. Deploy to cloud platform (Vercel/AWS/DigitalOcean)
 
-## Can I connect a custom domain to my Lovable project?
+## 🤝 Contributing
 
-Yes it is!
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit changes (`git commit -am 'Add new feature'`)
+4. Push to branch (`git push origin feature/new-feature`)
+5. Create Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📝 License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+For technical support or questions:
+- Email: support@vikasmilk.com
+- Phone: +91-XXXXXXXXXX
+
+## 🏢 About Vikas Milk Centre
+
+Established in 1975, Vikas Milk Centre has been serving the community with fresh, quality milk and dairy products. This management system helps streamline operations and improve customer service.
+
+---
+
+**Built with ❤️ for the dairy industry**
