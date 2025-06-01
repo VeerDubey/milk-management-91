@@ -141,6 +141,7 @@ function App() {
                             <Route path="delivery-sheet" element={<DeliverySheet />} />
                             <Route path="delivery-sheet-create" element={<DeliverySheetCreate />} />
                             <Route path="enhanced-delivery-sheet" element={<EnhancedDeliverySheet />} />
+                            <Route path="track-delivery-sheet" element={<TrackDeliverySheet />} />
                             
                             {/* Payment & Purchase Management */}
                             <Route path="customer-payment-management" element={<CustomerPaymentManagement />} />
