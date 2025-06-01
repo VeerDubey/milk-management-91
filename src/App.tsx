@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate, Outlet, BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -106,6 +105,9 @@ import EnhancedDeliverySheet from '@/pages/EnhancedDeliverySheet';
 import NotificationsPage from '@/pages/NotificationsPage';
 import RoleManagementPage from '@/pages/RoleManagementPage';
 
+// Import the new delivery sheet creation page
+import DeliverySheetCreate from '@/pages/DeliverySheetCreate';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -137,6 +139,7 @@ function App() {
                             
                             {/* Enhanced Delivery & Track Sheet Routes */}
                             <Route path="delivery-sheet" element={<DeliverySheet />} />
+                            <Route path="delivery-sheet-create" element={<DeliverySheetCreate />} />
                             <Route path="enhanced-delivery-sheet" element={<EnhancedDeliverySheet />} />
                             
                             {/* Payment & Purchase Management */}
