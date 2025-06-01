@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -126,7 +125,6 @@ export default function DeliverySheetCreate() {
             status: 'pending',
             paymentStatus: 'pending',
             total: row.totalAmount,
-            totalAmount: row.totalAmount,
             notes: `Delivery Sheet - ${selectedArea} Area`
           });
           createdOrders++;

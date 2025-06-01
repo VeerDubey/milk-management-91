@@ -1,44 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { Payment, Customer } from '@/types';
-import { initialPayments } from '@/data/initialData';
-import { toast } from 'sonner';
+import { Payment } from '@/types';
 
-export function usePaymentState(customers: Customer[], updateCustomer: Function) {
+export function usePaymentState() {
   const [payments, setPayments] = useState<Payment[]>(() => {
     const saved = localStorage.getItem("payments");
-    return saved ? JSON.parse(saved) : initialPayments;
+    return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
     localStorage.setItem("payments", JSON.stringify(payments));
   }, [payments]);
-
-  // Batch add multiple payments
-  const addBatchPayments = (newPayments: Omit<Payment, "id">[]) => {
-    if (!Array.isArray(newPayments) || newPayments.length === 0) return [];
-    
-    const createdPayments = newPayments.map(payment => ({
-      ...payment,
-      id: `pay${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    }));
-    
-    setPayments(prev => [...prev, ...createdPayments]);
-    
-    // Update customer outstanding balances
-    createdPayments.forEach(payment => {
-      const customer = customers.find(c => c.id === payment.customerId);
-      if (customer && customer.outstandingBalance !== undefined) {
-        updateCustomer(customer.id, {
-          outstandingBalance: customer.outstandingBalance - payment.amount,
-          lastPaymentDate: payment.date,
-          lastPaymentAmount: payment.amount
-        });
-      }
-    });
-    
-    return createdPayments;
-  };
 
   const addPayment = (payment: Omit<Payment, "id">) => {
     const newPayment = {
@@ -46,85 +18,25 @@ export function usePaymentState(customers: Customer[], updateCustomer: Function)
       id: `pay${Date.now()}`
     };
     setPayments([...payments, newPayment]);
-    
-    const customer = customers.find(c => c.id === payment.customerId);
-    if (customer && customer.outstandingBalance !== undefined) {
-      updateCustomer(customer.id, {
-        outstandingBalance: customer.outstandingBalance - payment.amount,
-        lastPaymentDate: payment.date,
-        lastPaymentAmount: payment.amount
-      });
-    }
-    
     return newPayment;
   };
 
   const updatePayment = (id: string, paymentData: Partial<Payment>) => {
-    const oldPayment = payments.find(p => p.id === id);
-    
     setPayments(
       payments.map((payment) =>
         payment.id === id ? { ...payment, ...paymentData } : payment
       )
     );
-    
-    if (oldPayment && paymentData.amount && oldPayment.amount !== paymentData.amount) {
-      const customer = customers.find(c => c.id === oldPayment.customerId);
-      if (customer && customer.outstandingBalance !== undefined) {
-        const difference = paymentData.amount - oldPayment.amount;
-        updateCustomer(customer.id, {
-          outstandingBalance: customer.outstandingBalance - difference,
-          lastPaymentAmount: paymentData.amount,
-          lastPaymentDate: paymentData.date || oldPayment.date
-        });
-      }
-    }
   };
 
   const deletePayment = (id: string) => {
-    const payment = payments.find(p => p.id === id);
-    
-    if (payment) {
-      const customer = customers.find(c => c.id === payment.customerId);
-      if (customer && customer.outstandingBalance !== undefined) {
-        updateCustomer(customer.id, {
-          outstandingBalance: customer.outstandingBalance + payment.amount
-        });
-      }
-    }
-    
     setPayments(payments.filter((payment) => payment.id !== id));
-  };
-  
-  // Delete multiple payments at once
-  const deleteMultiplePayments = (ids: string[]) => {
-    if (!Array.isArray(ids) || ids.length === 0) return;
-    
-    // Update customer balances for each payment being deleted
-    ids.forEach(id => {
-      const payment = payments.find(p => p.id === id);
-      if (payment) {
-        const customer = customers.find(c => c.id === payment.customerId);
-        if (customer && customer.outstandingBalance !== undefined) {
-          updateCustomer(customer.id, {
-            outstandingBalance: customer.outstandingBalance + payment.amount
-          });
-        }
-      }
-    });
-    
-    // Remove the payments
-    setPayments(payments.filter(payment => !ids.includes(payment.id)));
-    
-    toast.success(`${ids.length} payments deleted successfully`);
   };
 
   return {
     payments,
     addPayment,
     updatePayment,
-    deletePayment,
-    addBatchPayments,
-    deleteMultiplePayments
+    deletePayment
   };
 }

@@ -1,19 +1,19 @@
+
 import { useState, useEffect } from 'react';
-import { Supplier, SupplierProductRate, SupplierPayment } from '@/types';
 
 export function useSupplierState() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
+  const [suppliers, setSuppliers] = useState<any[]>(() => {
     const saved = localStorage.getItem("suppliers");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [supplierProductRates, setSupplierProductRates] = useState<SupplierProductRate[]>(() => {
-    const saved = localStorage.getItem("supplierProductRates");
+  const [supplierPayments, setSupplierPayments] = useState<any[]>(() => {
+    const saved = localStorage.getItem("supplierPayments");
     return saved ? JSON.parse(saved) : [];
   });
-  
-  const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>(() => {
-    const saved = localStorage.getItem("supplierPayments");
+
+  const [stockEntries, setStockEntries] = useState<any[]>(() => {
+    const saved = localStorage.getItem("stockEntries");
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -22,123 +22,65 @@ export function useSupplierState() {
   }, [suppliers]);
 
   useEffect(() => {
-    localStorage.setItem("supplierProductRates", JSON.stringify(supplierProductRates));
-  }, [supplierProductRates]);
-  
-  useEffect(() => {
     localStorage.setItem("supplierPayments", JSON.stringify(supplierPayments));
   }, [supplierPayments]);
 
-  const addSupplier = (supplier: Omit<Supplier, "id">) => {
-    const newSupplier = {
-      ...supplier,
-      id: `supplier-${Date.now()}`
-    };
+  useEffect(() => {
+    localStorage.setItem("stockEntries", JSON.stringify(stockEntries));
+  }, [stockEntries]);
+
+  const addSupplier = (supplier: any) => {
+    const newSupplier = { ...supplier, id: `sup${Date.now()}` };
     setSuppliers([...suppliers, newSupplier]);
     return newSupplier;
   };
 
-  const updateSupplier = (id: string, supplierData: Partial<Supplier>) => {
-    setSuppliers(
-      suppliers.map((supplier) =>
-        supplier.id === id ? { ...supplier, ...supplierData } : supplier
-      )
-    );
+  const updateSupplier = (id: string, supplierData: any) => {
+    setSuppliers(suppliers.map(s => s.id === id ? { ...s, ...supplierData } : s));
   };
 
   const deleteSupplier = (id: string) => {
-    setSuppliers(suppliers.filter((supplier) => supplier.id !== id));
+    setSuppliers(suppliers.filter(s => s.id !== id));
   };
 
-  const addSupplierProductRate = (rate: Omit<SupplierProductRate, "id">) => {
-    const newRate = {
-      ...rate,
-      id: `spr-${Date.now()}`
-    };
-    setSupplierProductRates([...supplierProductRates, newRate]);
-    return newRate;
+  const addStockEntry = (entry: any) => {
+    const newEntry = { ...entry, id: `stock${Date.now()}` };
+    setStockEntries([...stockEntries, newEntry]);
+    return newEntry;
   };
 
-  const updateSupplierProductRate = (id: string, rateData: Partial<SupplierProductRate>) => {
-    setSupplierProductRates(
-      supplierProductRates.map((rate) =>
-        rate.id === id ? { ...rate, ...rateData } : rate
-      )
-    );
+  const updateStockEntry = (id: string, entryData: any) => {
+    setStockEntries(stockEntries.map(e => e.id === id ? { ...e, ...entryData } : e));
   };
 
-  const deleteSupplierProductRate = (id: string) => {
-    setSupplierProductRates(supplierProductRates.filter((rate) => rate.id !== id));
+  const deleteStockEntry = (id: string) => {
+    setStockEntries(stockEntries.filter(e => e.id !== id));
   };
-  
-  // Supplier payment functions
-  const addSupplierPayment = (payment: Omit<SupplierPayment, "id">) => {
-    const newPayment = {
-      ...payment,
-      id: `sp-${Date.now()}`
-    };
+
+  const addSupplierPayment = (payment: any) => {
+    const newPayment = { ...payment, id: `suppay${Date.now()}` };
     setSupplierPayments([...supplierPayments, newPayment]);
-    
-    // Update supplier outstanding balance if applicable
-    if (payment.supplierId) {
-      const supplier = suppliers.find(s => s.id === payment.supplierId);
-      if (supplier && supplier.outstandingBalance !== undefined) {
-        updateSupplier(payment.supplierId, {
-          outstandingBalance: supplier.outstandingBalance - payment.amount
-        });
-      }
-    }
-    
     return newPayment;
   };
 
-  const updateSupplierPayment = (id: string, paymentData: Partial<SupplierPayment>) => {
-    const oldPayment = supplierPayments.find(p => p.id === id);
-    
-    setSupplierPayments(
-      supplierPayments.map((payment) =>
-        payment.id === id ? { ...payment, ...paymentData } : payment
-      )
-    );
-    
-    // Update supplier outstanding balance if amount changed
-    if (oldPayment && paymentData.amount !== undefined && oldPayment.amount !== paymentData.amount) {
-      const supplier = suppliers.find(s => s.id === oldPayment.supplierId);
-      if (supplier && supplier.outstandingBalance !== undefined) {
-        const amountDiff = paymentData.amount - oldPayment.amount;
-        updateSupplier(oldPayment.supplierId, {
-          outstandingBalance: supplier.outstandingBalance - amountDiff
-        });
-      }
-    }
+  const updateSupplierPayment = (id: string, paymentData: any) => {
+    setSupplierPayments(supplierPayments.map(p => p.id === id ? { ...p, ...paymentData } : p));
   };
 
   const deleteSupplierPayment = (id: string) => {
-    const payment = supplierPayments.find(p => p.id === id);
-    
-    setSupplierPayments(supplierPayments.filter((payment) => payment.id !== id));
-    
-    // Update supplier outstanding balance
-    if (payment) {
-      const supplier = suppliers.find(s => s.id === payment.supplierId);
-      if (supplier && supplier.outstandingBalance !== undefined) {
-        updateSupplier(payment.supplierId, {
-          outstandingBalance: supplier.outstandingBalance + payment.amount
-        });
-      }
-    }
+    setSupplierPayments(supplierPayments.filter(p => p.id !== id));
   };
 
   return {
     suppliers,
+    supplierPayments,
+    stockEntries,
     addSupplier,
     updateSupplier,
     deleteSupplier,
-    supplierProductRates,
-    addSupplierProductRate,
-    updateSupplierProductRate,
-    deleteSupplierProductRate,
-    supplierPayments,
+    addStockEntry,
+    updateStockEntry,
+    deleteStockEntry,
     addSupplierPayment,
     updateSupplierPayment,
     deleteSupplierPayment
