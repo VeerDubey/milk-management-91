@@ -1,8 +1,14 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Customer, Product, Order, Payment, Supplier, Vehicle, Salesman } from '@/types';
 import { initialCustomers } from '@/data/customerData';
+import { useOtherStates } from './useOtherStates';
+import { useSupplierState } from './useSupplierState';
+import { useStockState } from './useStockState';
+import { useProductRateState } from './useProductRateState';
+import { useTrackSheetState } from './useTrackSheetState';
 
-interface DataContextType {
+export interface DataContextType {
   customers: Customer[];
   products: Product[];
   orders: Order[];
@@ -22,10 +28,12 @@ interface DataContextType {
   addOrder: (order: Omit<Order, 'id'>) => void;
   updateOrder: (id: string, order: Partial<Order>) => void;
   deleteOrder: (id: string) => void;
+  addBatchOrders: (orders: Omit<Order, 'id'>[]) => void;
   
   addPayment: (payment: Omit<Payment, 'id'>) => void;
   updatePayment: (id: string, payment: Partial<Payment>) => void;
   deletePayment: (id: string) => void;
+  deleteMultiplePayments: (ids: string[]) => void;
   
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (id: string, supplier: Partial<Supplier>) => void;
@@ -38,6 +46,60 @@ interface DataContextType {
   addSalesman: (salesman: Omit<Salesman, 'id'>) => void;
   updateSalesman: (id: string, salesman: Partial<Salesman>) => void;
   deleteSalesman: (id: string) => void;
+
+  // Customer product rates
+  customerProductRates: any[];
+  addCustomerProductRate: (rate: any) => any;
+  updateCustomerProductRate: (id: string, rateData: any) => void;
+  deleteCustomerProductRate: (id: string) => void;
+  getProductRateForCustomer: (customerId: string, productId: string) => number;
+
+  // Supplier product rates
+  supplierProductRates: any[];
+  addSupplierProductRate: (rate: any) => any;
+  updateSupplierProductRate: (id: string, rateData: any) => void;
+  deleteSupplierProductRate: (id: string) => void;
+
+  // Stock management
+  stockEntries: any[];
+  stockTransactions: any[];
+  addStockEntry: (entry: any) => any;
+  updateStockEntry: (id: string, entryData: any) => void;
+  deleteStockEntry: (id: string) => void;
+  addStockTransaction: (transaction: any) => any;
+  updateStockTransaction: (id: string, transactionData: any) => void;
+  deleteStockTransaction: (id: string) => void;
+
+  // Supplier payments
+  supplierPayments: any[];
+  addSupplierPayment: (payment: any) => any;
+  updateSupplierPayment: (id: string, paymentData: any) => void;
+  deleteSupplierPayment: (id: string) => void;
+
+  // Invoices
+  invoices: any[];
+  addInvoice: (invoice: any) => string;
+  updateInvoice: (id: string, invoiceData: any) => void;
+  deleteInvoice: (id: string) => void;
+  getInvoiceById: (id: string) => any;
+  generateInvoiceFromOrder: (orderId: string) => string;
+
+  // Track sheets
+  trackSheets: any[];
+  addTrackSheet: (trackSheet: any) => any;
+  updateTrackSheet: (id: string, trackSheetData: any) => void;
+  deleteTrackSheet: (id: string) => void;
+  createTrackSheetFromOrder: (orderId: string) => any;
+
+  // Expenses
+  expenses: any[];
+  addExpense: (expense: any) => any;
+  updateExpense: (id: string, expenseData: any) => void;
+  deleteExpense: (id: string) => void;
+
+  // UI Settings
+  uiSettings: any;
+  updateUISettings: (settings: any) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -137,6 +199,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
+  const [expenses, setExpenses] = useState<any[]>(() => {
+    const saved = localStorage.getItem('expenses');
+    try {
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error parsing saved expenses:', error);
+      return [];
+    }
+  });
+
+  // Use the separate state hooks
+  const otherStates = useOtherStates();
+  const supplierState = useSupplierState();
+  const stockState = useStockState(updateSupplier);
+  const productRateState = useProductRateState(products);
+  const trackSheetState = useTrackSheetState();
+
   // Save to localStorage whenever data changes
   useEffect(() => {
     localStorage.setItem('customers', JSON.stringify(customers));
@@ -165,6 +244,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     localStorage.setItem('salesmen', JSON.stringify(salesmen));
   }, [salesmen]);
+
+  useEffect(() => {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+  }, [expenses]);
 
   // Customer operations
   const addCustomer = (customerData: Omit<Customer, 'id'>) => {
@@ -214,6 +297,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOrders(prev => prev.filter(order => order.id !== id));
   };
 
+  const addBatchOrders = (ordersData: Omit<Order, 'id'>[]) => {
+    const newOrders = ordersData.map(orderData => ({
+      ...orderData,
+      id: `order-${Date.now()}-${Math.random()}`
+    }));
+    setOrders(prev => [...prev, ...newOrders]);
+  };
+
   // Payment operations
   const addPayment = (paymentData: Omit<Payment, 'id'>) => {
     const payment = { ...paymentData, id: `payment-${Date.now()}` };
@@ -230,17 +321,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPayments(prev => prev.filter(payment => payment.id !== id));
   };
 
+  const deleteMultiplePayments = (ids: string[]) => {
+    setPayments(prev => prev.filter(payment => !ids.includes(payment.id)));
+  };
+
   // Supplier operations
   const addSupplier = (supplierData: Omit<Supplier, 'id'>) => {
     const supplier = { ...supplierData, id: `supplier-${Date.now()}` };
     setSuppliers(prev => [...prev, supplier]);
   };
 
-  const updateSupplier = (id: string, supplierData: Partial<Supplier>) => {
+  function updateSupplier(id: string, supplierData: Partial<Supplier>) {
     setSuppliers(prev => prev.map(supplier => 
       supplier.id === id ? { ...supplier, ...supplierData } : supplier
     ));
-  };
+  }
 
   const deleteSupplier = (id: string) => {
     setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
@@ -278,6 +373,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSalesmen(prev => prev.filter(salesman => salesman.id !== id));
   };
 
+  // Expense operations
+  const addExpense = (expenseData: any) => {
+    const expense = { ...expenseData, id: `expense-${Date.now()}` };
+    setExpenses(prev => [...prev, expense]);
+    return expense;
+  };
+
+  const updateExpense = (id: string, expenseData: any) => {
+    setExpenses(prev => prev.map(expense => 
+      expense.id === id ? { ...expense, ...expenseData } : expense
+    ));
+  };
+
+  const deleteExpense = (id: string) => {
+    setExpenses(prev => prev.filter(expense => expense.id !== id));
+  };
+
   const value: DataContextType = {
     customers,
     products,
@@ -286,6 +398,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     suppliers,
     vehicles,
     salesmen,
+    expenses,
     
     addCustomer,
     updateCustomer,
@@ -298,10 +411,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addOrder,
     updateOrder,
     deleteOrder,
+    addBatchOrders,
     
     addPayment,
     updatePayment,
     deletePayment,
+    deleteMultiplePayments,
     
     addSupplier,
     updateSupplier,
@@ -313,7 +428,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     addSalesman,
     updateSalesman,
-    deleteSalesman
+    deleteSalesman,
+
+    addExpense,
+    updateExpense,
+    deleteExpense,
+
+    // Spread all the functionality from the hooks
+    ...otherStates,
+    ...supplierState,
+    ...stockState,
+    ...productRateState,
+    ...trackSheetState
   };
 
   return (
