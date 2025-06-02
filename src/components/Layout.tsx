@@ -1,5 +1,5 @@
 
-import { Outlet } from "react-router-dom";
+import { ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
@@ -15,7 +15,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Layout() {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export function Layout({ children }: LayoutProps) {
   const { theme, toggleTheme } = useTheme();
   const isDarkTheme = theme === 'dark';
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -117,7 +121,7 @@ export function Layout() {
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <div className="mx-auto max-w-7xl">
-            <Outlet />
+            {children}
           </div>
         </main>
       </div>
