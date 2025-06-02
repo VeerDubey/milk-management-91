@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,8 +7,8 @@ import { DataProvider } from './contexts/DataContext';
 import { Toaster } from '@/components/ui/sonner';
 
 // Layout Components
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
+import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Pages
 import Login from './pages/Login';
@@ -108,7 +107,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <DataProvider>
-            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <ThemeProvider>
               <div className="min-h-screen bg-background font-sans antialiased">
                 <Toaster />
                 <Routes>

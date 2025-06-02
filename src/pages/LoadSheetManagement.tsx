@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -303,7 +302,7 @@ export default function LoadSheetManagement() {
                     <SelectContent>
                       {salesmen.map(agent => (
                         <SelectItem key={agent.id} value={agent.name}>
-                          {agent.name} - {agent.area}
+                          {agent.name} - {agent.route || 'No route assigned'}
                         </SelectItem>
                       ))}
                     </SelectContent>
