@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -226,6 +225,7 @@ export interface Salesman {
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  route?: string;
 }
 
 export interface TrackSheetRow {
