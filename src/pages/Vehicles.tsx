@@ -34,7 +34,7 @@ export default function Vehicles() {
       capacity: parseFloat(formData.capacity) || 0,
       type: formData.type,
       isActive: true,
-      lastMaintenance: new Date().toISOString().split('T')[0]
+      lastMaintenanceDate: new Date().toISOString().split('T')[0]
     };
 
     addVehicle(newVehicle);
@@ -184,7 +184,7 @@ export default function Vehicles() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {vehicle.lastMaintenance || 'N/A'}
+                        {vehicle.lastMaintenanceDate || 'N/A'}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
