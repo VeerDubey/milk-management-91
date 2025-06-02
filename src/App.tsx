@@ -13,13 +13,12 @@ import Products from '@/pages/Products';
 import Orders from '@/pages/Orders';
 import Payments from '@/pages/Payments';
 import Reports from '@/pages/Reports';
-import Vehicles from '@/pages/Vehicles';
 import Settings from '@/pages/Settings';
-import Users from '@/pages/Users';
 import DeliverySheet from '@/pages/DeliverySheet';
 import TrackDeliverySheet from '@/pages/TrackDeliverySheet';
 import DeliveryChallan from '@/pages/DeliveryChallan';
-import { AppLayout } from '@/components/layout/AppLayout';
+import VehicleTracking from '@/pages/VehicleTracking';
+import AppLayout from '@/components/layout/AppLayout';
 import DeliveryManagement from '@/components/delivery/DeliveryManagement';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { EnhancedDashboard } from '@/components/dashboard/EnhancedDashboard';
@@ -54,7 +53,7 @@ function App() {
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/suppliers" element={<Suppliers />} />
                   <Route path="/products" element={<Products />} />
-                  <Route path="/users" element={<Users />} />
+                  <Route path="/users" element={<VehicleTracking />} />
                   
                   {/* Orders & Sales */}
                   <Route path="/orders" element={<Orders />} />
@@ -62,7 +61,7 @@ function App() {
                   <Route path="/order-calculator" element={<Orders />} />
                   
                   {/* Delivery Operations */}
-                  <Route path="/vehicles" element={<Vehicles />} />
+                  <Route path="/vehicles" element={<VehicleTracking />} />
                   <Route path="/delivery-management" element={<DeliveryManagement />} />
                   <Route path="/delivery-challan" element={<DeliveryChallan />} />
                   <Route path="/delivery-sheet" element={<DeliverySheet />} />
