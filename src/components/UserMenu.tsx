@@ -8,12 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
+import { useEnhancedAuth } from "@/contexts/EnhancedAuthContext";
 import { LogOut, Settings, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function UserMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useEnhancedAuth();
   const navigate = useNavigate();
   
   if (!user) return null;
@@ -27,11 +27,11 @@ export function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>My Account ({user.role})</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => navigate("/settings")}
+          onClick={() => navigate("/ui-settings")}
         >
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>

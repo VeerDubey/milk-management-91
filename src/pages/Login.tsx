@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, Lock, Sparkles, ArrowRight, Shield, Waves } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('admin123');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useEnhancedAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,15 +22,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      toast.success('Welcome back!', {
-        description: 'You have successfully logged in to Vikas Milk Centre.',
-      });
-      navigate('/dashboard');
+      const success = await login(email, password);
+      if (success) {
+        navigate('/dashboard');
+      }
     } catch (error) {
-      toast.error('Login failed', {
-        description: 'Please check your credentials and try again.',
-      });
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -155,12 +152,12 @@ const Login = () => {
                   <p className="text-sm neo-noir-text font-medium">Demo Credentials</p>
                   <Sparkles className="h-4 w-4 text-accent-color" />
                 </div>
-                <div className="bg-gradient-to-r from-accent-color/10 to-secondary/10 rounded-lg p-4 border border-accent-color/20">
+                <div className="bg-gradient-to-r from-accent-color/10 to-secondary/10 rounded-lg p-4 border border-accent-color/20 space-y-2">
                   <p className="text-sm neo-noir-text-muted">
-                    <strong className="text-accent-color">Email:</strong> admin@vikasmilk.com
+                    <strong className="text-accent-color">Admin:</strong> admin@vikasmilk.com / admin123
                   </p>
                   <p className="text-sm neo-noir-text-muted">
-                    <strong className="text-accent-color">Password:</strong> admin123
+                    <strong className="text-accent-color">Employee:</strong> employee@vikasmilk.com / employee123
                   </p>
                 </div>
               </div>

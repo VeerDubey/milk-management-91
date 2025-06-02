@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldValues, DefaultValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -18,31 +18,31 @@ interface FormFieldConfig {
   required?: boolean;
 }
 
-interface ValidatedFormProps<T extends z.ZodSchema> {
-  schema: T;
+interface ValidatedFormProps<T extends FieldValues> {
+  schema: z.ZodSchema<T>;
   fields: FormFieldConfig[];
-  onSubmit: (data: z.infer<T>) => void;
-  defaultValues?: Partial<z.infer<T>>;
+  onSubmit: (data: T) => void;
+  defaultValues?: DefaultValues<T>;
   submitText?: string;
   isLoading?: boolean;
   className?: string;
 }
 
-export function ValidatedForm<T extends z.ZodSchema>({
+export function ValidatedForm<T extends FieldValues>({
   schema,
   fields,
   onSubmit,
-  defaultValues = {},
+  defaultValues,
   submitText = 'Submit',
   isLoading = false,
   className = ''
 }: ValidatedFormProps<T>) {
-  const form = useForm<z.infer<T>>({
+  const form = useForm<T>({
     resolver: zodResolver(schema),
     defaultValues,
   });
 
-  const handleSubmit = (data: z.infer<T>) => {
+  const handleSubmit = (data: T) => {
     onSubmit(data);
   };
 
@@ -53,7 +53,7 @@ export function ValidatedForm<T extends z.ZodSchema>({
           <FormField
             key={field.name}
             control={form.control}
-            name={field.name}
+            name={field.name as any}
             render={({ field: formField }) => (
               <FormItem>
                 <FormLabel className="neo-noir-text font-medium">
