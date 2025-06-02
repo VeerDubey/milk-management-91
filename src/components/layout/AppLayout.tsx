@@ -1,4 +1,6 @@
-import { ReactNode, useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import { ModernSidebar } from "../ModernSidebar";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { toast } from "sonner";
@@ -9,11 +11,7 @@ import { Badge } from "../ui/badge";
 import { AppHeader } from "./AppHeader";
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 
-interface AppLayoutProps {
-  children: ReactNode;
-}
-
-const AppLayout = ({ children }: AppLayoutProps) => {
+const AppLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -115,7 +113,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         <main className="flex-1 overflow-auto p-6">
           <div className="mx-auto max-w-7xl">
             <div className="animate-fade-in">
-              {children}
+              <Outlet />
             </div>
           </div>
         </main>
