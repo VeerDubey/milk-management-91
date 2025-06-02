@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Home,
@@ -36,7 +35,9 @@ import {
   User,
   Calendar,
   Bell,
-  Key
+  Key,
+  Route,
+  Clock
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -230,7 +231,8 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
         { title: "Email Templates", href: "/email-templates", icon: Mail },
         { title: "SMS Templates", href: "/sms-templates", icon: MessageCircle },
         { title: "Bulk Communication", href: "/bulk-communication", icon: Send },
-        { title: "Notifications", href: "/notifications", icon: Bell }
+        { title: "Notifications", href: "/notifications", icon: Bell },
+        { title: "Delivery Notifications", href: "/delivery-notifications", icon: Bell }
       ]
     },
     {
@@ -241,6 +243,8 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
         { title: "Delivery Sheet", href: "/delivery-sheet", icon: FileText },
         { title: "Enhanced Delivery", href: "/enhanced-delivery-sheet", icon: Truck },
         { title: "Delivery Challan", href: "/delivery-challan", icon: Package },
+        { title: "Delivery Scheduling", href: "/delivery-scheduling", icon: Clock },
+        { title: "Route Management", href: "/route-management", icon: Route },
         { title: "Track Sheet Advanced", href: "/track-sheet-advanced", icon: MapPin },
         { title: "Track Sheet History", href: "/track-sheet-history", icon: History },
         { title: "Track Sheet Manager", href: "/track-sheet-manager", icon: Settings },

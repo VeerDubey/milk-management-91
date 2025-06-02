@@ -112,6 +112,11 @@ import RoleManagementPage from '@/pages/RoleManagementPage';
 // Import the new delivery sheet creation page
 import DeliverySheetCreate from '@/pages/DeliverySheetCreate';
 
+// Import new enhanced delivery management components
+import DeliveryScheduling from '@/pages/DeliveryScheduling';
+import RouteManagement from '@/pages/RouteManagement';
+import DeliveryNotifications from '@/pages/DeliveryNotifications';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -146,6 +151,9 @@ function App() {
                             <Route path="delivery-sheet-create" element={<DeliverySheetCreate />} />
                             <Route path="enhanced-delivery-sheet" element={<EnhancedDeliverySheet />} />
                             <Route path="track-delivery-sheet" element={<TrackDeliverySheet />} />
+                            <Route path="delivery-scheduling" element={<DeliveryScheduling />} />
+                            <Route path="route-management" element={<RouteManagement />} />
+                            <Route path="delivery-notifications" element={<DeliveryNotifications />} />
                             
                             {/* Payment & Purchase Management */}
                             <Route path="customer-payment-management" element={<CustomerPaymentManagement />} />
