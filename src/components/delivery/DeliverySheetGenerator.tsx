@@ -15,6 +15,7 @@ import {
 import { format } from 'date-fns';
 import { useData } from '@/contexts/data/DataContext';
 import { toast } from 'sonner';
+import { downloadDeliverySheetPDF, printDeliverySheet, exportToExcel } from '@/utils/deliverySheetUtils';
 import type { CheckedState } from '@radix-ui/react-checkbox';
 
 interface DeliverySheetData {
@@ -166,20 +167,81 @@ export default function DeliverySheetGenerator() {
   };
 
   const generatePDF = () => {
-    // In a real implementation, this would generate a PDF
-    toast.success('PDF generated successfully!');
-    console.log('Generating PDF with data:', deliveryData);
+    try {
+      const pdfData = {
+        date: format(selectedDate, 'dd/MM/yyyy'),
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: deliveryData.map(row => ({
+          customerName: row.customer,
+          GGH: row.GGH,
+          GGH450: row.GGH450,
+          GTSF: row.GTSF,
+          GSD1KG: row.GSD1KG,
+          GPC: row.GPC,
+          FL: row.FL,
+          totalQty: row.QTY,
+          amount: row.AMOUNT
+        })),
+        totals
+      };
+      
+      downloadDeliverySheetPDF(pdfData);
+      toast.success('PDF generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate PDF');
+    }
   };
 
-  const exportToExcel = () => {
-    // In a real implementation, this would export to Excel
-    toast.success('Excel file exported successfully!');
-    console.log('Exporting to Excel:', deliveryData);
+  const exportExcel = () => {
+    try {
+      const excelData = {
+        date: format(selectedDate, 'dd/MM/yyyy'),
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: deliveryData.map(row => ({
+          customerName: row.customer,
+          GGH: row.GGH,
+          GGH450: row.GGH450,
+          GTSF: row.GTSF,
+          GSD1KG: row.GSD1KG,
+          GPC: row.GPC,
+          FL: row.FL,
+          totalQty: row.QTY,
+          amount: row.AMOUNT
+        })),
+        totals
+      };
+      
+      exportToExcel(excelData);
+      toast.success('Excel file exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export to Excel');
+    }
   };
 
   const printSheet = () => {
-    window.print();
-    toast.success('Print dialog opened');
+    try {
+      const printData = {
+        date: format(selectedDate, 'dd/MM/yyyy'),
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: deliveryData.map(row => ({
+          customerName: row.customer,
+          GGH: row.GGH,
+          GGH450: row.GGH450,
+          GTSF: row.GTSF,
+          GSD1KG: row.GSD1KG,
+          GPC: row.GPC,
+          FL: row.FL,
+          totalQty: row.QTY,
+          amount: row.AMOUNT
+        })),
+        totals
+      };
+      
+      printDeliverySheet(printData);
+      toast.success('Print dialog opened');
+    } catch (error) {
+      toast.error('Failed to print');
+    }
   };
 
   return (
@@ -199,7 +261,7 @@ export default function DeliverySheetGenerator() {
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
-          <Button variant="outline" onClick={exportToExcel} className="neo-glass">
+          <Button variant="outline" onClick={exportExcel} className="neo-glass">
             <Download className="mr-2 h-4 w-4" />
             Excel
           </Button>
