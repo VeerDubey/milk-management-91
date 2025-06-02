@@ -37,7 +37,9 @@ import {
   Bell,
   Key,
   Route,
-  Clock
+  Clock,
+  ClipboardList,
+  Receipt
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -141,144 +143,140 @@ function SidebarGroup({ title, icon: Icon, color, collapsed, items }: SidebarGro
   );
 }
 
+const sidebarItems = [
+  {
+    title: "Dashboard",
+    icon: Home,
+    href: "/dashboard",
+    color: "text-blue-400"
+  },
+  {
+    title: "Customers",
+    icon: Users,
+    color: "text-green-400",
+    submenu: [
+      { title: "Customer List", href: "/customer-list", icon: List },
+      { title: "Customer Directory", href: "/customer-directory", icon: Book },
+      { title: "Customer Ledger", href: "/customer-ledger", icon: CreditCard },
+      { title: "Customer Rates", href: "/customer-rates", icon: TrendingUp },
+      { title: "Customer Report", href: "/customer-report", icon: BarChart3 },
+      { title: "Outstanding Dues", href: "/outstanding-dues", icon: AlertCircle },
+      { title: "Outstanding Amounts", href: "/outstanding-amounts", icon: DollarSign }
+    ]
+  },
+  {
+    title: "Products & Inventory",
+    icon: Package,
+    color: "text-purple-400",
+    submenu: [
+      { title: "Inventory Dashboard", href: "/inventory-dashboard", icon: BarChart3 },
+      { title: "Product List", href: "/product-list", icon: List },
+      { title: "Product Rates", href: "/product-rates", icon: TrendingUp },
+      { title: "Stock Management", href: "/stock-management", icon: Package },
+      { title: "Stock Settings", href: "/stock-settings", icon: Settings },
+      { title: "Product Categories", href: "/product-categories", icon: Grid3X3 },
+      { title: "Bulk Rates", href: "/bulk-rates", icon: Calculator }
+    ]
+  },
+  {
+    title: "Orders",
+    icon: ShoppingCart,
+    color: "text-orange-400",
+    submenu: [
+      { title: "Order List", href: "/order-list", icon: List },
+      { title: "Order Entry", href: "/order-entry", icon: Plus },
+      { title: "Order History", href: "/order-history", icon: History }
+    ]
+  },
+  {
+    title: "Payments & Ledger",
+    icon: CreditCard,
+    color: "text-green-400",
+    submenu: [
+      { title: "Payment Management", href: "/customer-payment-management", icon: CreditCard },
+      { title: "Payment List", href: "/payment-list", icon: List },
+      { title: "Payment Create", href: "/payment-create", icon: Plus },
+      { title: "Customer Ledger", href: "/customer-ledger", icon: BookOpen }
+    ]
+  },
+  {
+    title: "Purchases & Suppliers",
+    icon: Building,
+    color: "text-yellow-400",
+    submenu: [
+      { title: "Purchase Management", href: "/purchase-management", icon: Building },
+      { title: "Supplier Directory", href: "/supplier-directory", icon: Building },
+      { title: "Supplier Ledger", href: "/supplier-ledger", icon: BookOpen },
+      { title: "Supplier Payments", href: "/supplier-payments", icon: CreditCard },
+      { title: "Supplier Rates", href: "/supplier-rates", icon: TrendingUp }
+    ]
+  },
+  {
+    title: "Invoices",
+    icon: FileText,
+    color: "text-blue-400",
+    submenu: [
+      { title: "Invoice History", href: "/invoice-history", icon: History },
+      { title: "Invoice Create", href: "/invoice-create", icon: Plus },
+      { title: "Invoice Templates", href: "/invoice-templates", icon: FileText }
+    ]
+  },
+  {
+    title: "Communication",
+    icon: MessageSquare,
+    color: "text-cyan-400",
+    submenu: [
+      { title: "Messaging", href: "/messaging", icon: MessageSquare },
+      { title: "Email Templates", href: "/email-templates", icon: Mail },
+      { title: "SMS Templates", href: "/sms-templates", icon: MessageCircle },
+      { title: "Bulk Communication", href: "/bulk-communication", icon: Send },
+      { title: "Notifications", href: "/notifications", icon: Bell },
+      { title: "Delivery Notifications", href: "/delivery-notifications", icon: Bell }
+    ]
+  },
+  {
+    title: "Delivery & Distribution",
+    items: [
+      { name: "Load Sheet Management", path: "/load-sheet", icon: Package },
+      { name: "Delivery Sheet", path: "/delivery-sheet", icon: FileText },
+      { name: "Delivery Scheduling", path: "/delivery-scheduling", icon: Calendar },
+      { name: "Route Management", path: "/route-management", icon: MapPin },
+      { name: "Delivery Notifications", path: "/delivery-notifications", icon: Bell },
+      { name: "Track Sheet", path: "/track-sheet", icon: ClipboardList },
+      { name: "Track Delivery Sheet", path: "/track-delivery-sheet", icon: Truck },
+      { name: "Delivery Challan", path: "/delivery-challan", icon: Receipt },
+    ]
+  },
+  {
+    title: "Reports & Analytics",
+    icon: BarChart3,
+    color: "text-red-400",
+    submenu: [
+      { title: "Sales Analytics", href: "/sales-analytics", icon: BarChart3 },
+      { title: "Sales Report", href: "/sales-report", icon: FileText },
+      { title: "Analytics", href: "/analytics", icon: TrendingUp },
+      { title: "Testing Report", href: "/testing-report", icon: TestTube }
+    ]
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    color: "text-gray-400",
+    submenu: [
+      { title: "Company Profile", href: "/company-profile", icon: Building },
+      { title: "Area Management", href: "/area-management", icon: MapPin },
+      { title: "Financial Year", href: "/financial-year", icon: Calendar },
+      { title: "Tax Settings", href: "/tax-settings", icon: Calculator },
+      { title: "UI Settings", href: "/ui-settings", icon: Palette },
+      { title: "User Access", href: "/user-access", icon: Shield },
+      { title: "Role Management", href: "/role-management", icon: Key },
+      { title: "Expenses", href: "/expenses", icon: DollarSign }
+    ]
+  }
+];
+
 export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  const menuItems = [
-    {
-      title: "Dashboard",
-      icon: Home,
-      href: "/dashboard",
-      color: "text-blue-400"
-    },
-    {
-      title: "Customers",
-      icon: Users,
-      color: "text-green-400",
-      submenu: [
-        { title: "Customer List", href: "/customer-list", icon: List },
-        { title: "Customer Directory", href: "/customer-directory", icon: Book },
-        { title: "Customer Ledger", href: "/customer-ledger", icon: CreditCard },
-        { title: "Customer Rates", href: "/customer-rates", icon: TrendingUp },
-        { title: "Customer Report", href: "/customer-report", icon: BarChart3 },
-        { title: "Outstanding Dues", href: "/outstanding-dues", icon: AlertCircle },
-        { title: "Outstanding Amounts", href: "/outstanding-amounts", icon: DollarSign }
-      ]
-    },
-    {
-      title: "Products & Inventory",
-      icon: Package,
-      color: "text-purple-400",
-      submenu: [
-        { title: "Inventory Dashboard", href: "/inventory-dashboard", icon: BarChart3 },
-        { title: "Product List", href: "/product-list", icon: List },
-        { title: "Product Rates", href: "/product-rates", icon: TrendingUp },
-        { title: "Stock Management", href: "/stock-management", icon: Package },
-        { title: "Stock Settings", href: "/stock-settings", icon: Settings },
-        { title: "Product Categories", href: "/product-categories", icon: Grid3X3 },
-        { title: "Bulk Rates", href: "/bulk-rates", icon: Calculator }
-      ]
-    },
-    {
-      title: "Orders",
-      icon: ShoppingCart,
-      color: "text-orange-400",
-      submenu: [
-        { title: "Order List", href: "/order-list", icon: List },
-        { title: "Order Entry", href: "/order-entry", icon: Plus },
-        { title: "Order History", href: "/order-history", icon: History }
-      ]
-    },
-    {
-      title: "Payments & Ledger",
-      icon: CreditCard,
-      color: "text-green-400",
-      submenu: [
-        { title: "Payment Management", href: "/customer-payment-management", icon: CreditCard },
-        { title: "Payment List", href: "/payment-list", icon: List },
-        { title: "Payment Create", href: "/payment-create", icon: Plus },
-        { title: "Customer Ledger", href: "/customer-ledger", icon: BookOpen }
-      ]
-    },
-    {
-      title: "Purchases & Suppliers",
-      icon: Building,
-      color: "text-yellow-400",
-      submenu: [
-        { title: "Purchase Management", href: "/purchase-management", icon: Building },
-        { title: "Supplier Directory", href: "/supplier-directory", icon: Building },
-        { title: "Supplier Ledger", href: "/supplier-ledger", icon: BookOpen },
-        { title: "Supplier Payments", href: "/supplier-payments", icon: CreditCard },
-        { title: "Supplier Rates", href: "/supplier-rates", icon: TrendingUp }
-      ]
-    },
-    {
-      title: "Invoices",
-      icon: FileText,
-      color: "text-blue-400",
-      submenu: [
-        { title: "Invoice History", href: "/invoice-history", icon: History },
-        { title: "Invoice Create", href: "/invoice-create", icon: Plus },
-        { title: "Invoice Templates", href: "/invoice-templates", icon: FileText }
-      ]
-    },
-    {
-      title: "Communication",
-      icon: MessageSquare,
-      color: "text-cyan-400",
-      submenu: [
-        { title: "Messaging", href: "/messaging", icon: MessageSquare },
-        { title: "Email Templates", href: "/email-templates", icon: Mail },
-        { title: "SMS Templates", href: "/sms-templates", icon: MessageCircle },
-        { title: "Bulk Communication", href: "/bulk-communication", icon: Send },
-        { title: "Notifications", href: "/notifications", icon: Bell },
-        { title: "Delivery Notifications", href: "/delivery-notifications", icon: Bell }
-      ]
-    },
-    {
-      title: "Delivery & Track",
-      icon: Truck,
-      color: "text-accent-color",
-      submenu: [
-        { title: "Delivery Sheet", href: "/delivery-sheet", icon: FileText },
-        { title: "Enhanced Delivery", href: "/enhanced-delivery-sheet", icon: Truck },
-        { title: "Delivery Challan", href: "/delivery-challan", icon: Package },
-        { title: "Delivery Scheduling", href: "/delivery-scheduling", icon: Clock },
-        { title: "Route Management", href: "/route-management", icon: Route },
-        { title: "Track Sheet Advanced", href: "/track-sheet-advanced", icon: MapPin },
-        { title: "Track Sheet History", href: "/track-sheet-history", icon: History },
-        { title: "Track Sheet Manager", href: "/track-sheet-manager", icon: Settings },
-        { title: "Vehicle Tracking", href: "/vehicle-tracking", icon: Truck },
-        { title: "Vehicle & Salesman", href: "/vehicle-salesman-create", icon: UserPlus }
-      ]
-    },
-    {
-      title: "Reports & Analytics",
-      icon: BarChart3,
-      color: "text-red-400",
-      submenu: [
-        { title: "Sales Analytics", href: "/sales-analytics", icon: BarChart3 },
-        { title: "Sales Report", href: "/sales-report", icon: FileText },
-        { title: "Analytics", href: "/analytics", icon: TrendingUp },
-        { title: "Testing Report", href: "/testing-report", icon: TestTube }
-      ]
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      color: "text-gray-400",
-      submenu: [
-        { title: "Company Profile", href: "/company-profile", icon: Building },
-        { title: "Area Management", href: "/area-management", icon: MapPin },
-        { title: "Financial Year", href: "/financial-year", icon: Calendar },
-        { title: "Tax Settings", href: "/tax-settings", icon: Calculator },
-        { title: "UI Settings", href: "/ui-settings", icon: Palette },
-        { title: "User Access", href: "/user-access", icon: Shield },
-        { title: "Role Management", href: "/role-management", icon: Key },
-        { title: "Expenses", href: "/expenses", icon: DollarSign }
-      ]
-    }
-  ];
 
   return (
     <div className={`${collapsed ? 'w-16' : 'w-72'} transition-all duration-300 neo-noir-surface border-r border-border-color flex flex-col h-screen relative z-40`}>
@@ -309,7 +307,7 @@ export function ModernSidebar({ collapsed, onToggle }: ModernSidebarProps) {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-4">
         <nav className="space-y-2 px-3">
-          {menuItems.map((item) => (
+          {sidebarItems.map((item) => (
             <div key={item.title}>
               {item.submenu ? (
                 <SidebarGroup 
