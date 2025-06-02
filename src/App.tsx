@@ -112,133 +112,307 @@ function App() {
                 <Toaster />
                 <Routes>
                   <Route path="/login" element={<Login />} />
-                  <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+                  <Route path="/" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Dashboard /></Layout>} />
+                  </Route>
+                  <Route path="/dashboard" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Dashboard /></Layout>} />
+                  </Route>
                   
                   {/* Customer Management */}
-                  <Route path="/customers" element={<ProtectedRoute><Layout><Customers /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-list" element={<ProtectedRoute><Layout><CustomerList /></Layout></ProtectedRoute>} />
-                  <Route path="/customer/:id" element={<ProtectedRoute><Layout><CustomerDetail /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-directory" element={<ProtectedRoute><Layout><CustomerDirectory /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-ledger" element={<ProtectedRoute><Layout><CustomerLedger /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-statement" element={<ProtectedRoute><Layout><CustomerStatement /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-report" element={<ProtectedRoute><Layout><CustomerReport /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-ledger-report" element={<ProtectedRoute><Layout><CustomerLedgerReport /></Layout></ProtectedRoute>} />
-                  <Route path="/customer-payment-management" element={<ProtectedRoute><Layout><CustomerPaymentManagement /></Layout></ProtectedRoute>} />
+                  <Route path="/customers" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Customers /></Layout>} />
+                  </Route>
+                  <Route path="/customer-list" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerList /></Layout>} />
+                  </Route>
+                  <Route path="/customer/:id" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerDetail /></Layout>} />
+                  </Route>
+                  <Route path="/customer-directory" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerDirectory /></Layout>} />
+                  </Route>
+                  <Route path="/customer-ledger" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerLedger /></Layout>} />
+                  </Route>
+                  <Route path="/customer-statement" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerStatement /></Layout>} />
+                  </Route>
+                  <Route path="/customer-report" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerReport /></Layout>} />
+                  </Route>
+                  <Route path="/customer-ledger-report" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerLedgerReport /></Layout>} />
+                  </Route>
+                  <Route path="/customer-payment-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerPaymentManagement /></Layout>} />
+                  </Route>
                   
                   {/* Product Management */}
-                  <Route path="/products" element={<ProtectedRoute><Layout><Products /></Layout></ProtectedRoute>} />
-                  <Route path="/product-list" element={<ProtectedRoute><Layout><ProductList /></Layout></ProtectedRoute>} />
-                  <Route path="/product/:id" element={<ProtectedRoute><Layout><ProductDetail /></Layout></ProtectedRoute>} />
-                  <Route path="/product-categories" element={<ProtectedRoute><Layout><ProductCategories /></Layout></ProtectedRoute>} />
+                  <Route path="/products" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Products /></Layout>} />
+                  </Route>
+                  <Route path="/product-list" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><ProductList /></Layout>} />
+                  </Route>
+                  <Route path="/product/:id" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><ProductDetail /></Layout>} />
+                  </Route>
+                  <Route path="/product-categories" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><ProductCategories /></Layout>} />
+                  </Route>
                   
                   {/* Order Management */}
-                  <Route path="/orders" element={<ProtectedRoute><Layout><Orders /></Layout></ProtectedRoute>} />
-                  <Route path="/order-list" element={<ProtectedRoute><Layout><OrderList /></Layout></ProtectedRoute>} />
-                  <Route path="/order-entry" element={<ProtectedRoute><Layout><OrderEntry /></Layout></ProtectedRoute>} />
-                  <Route path="/order-history" element={<ProtectedRoute><Layout><OrderHistory /></Layout></ProtectedRoute>} />
+                  <Route path="/orders" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Orders /></Layout>} />
+                  </Route>
+                  <Route path="/order-list" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><OrderList /></Layout>} />
+                  </Route>
+                  <Route path="/order-entry" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><OrderEntry /></Layout>} />
+                  </Route>
+                  <Route path="/order-history" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><OrderHistory /></Layout>} />
+                  </Route>
                   
                   {/* Payment Management */}
-                  <Route path="/payments" element={<ProtectedRoute><Layout><Payments /></Layout></ProtectedRoute>} />
-                  <Route path="/payment-list" element={<ProtectedRoute><Layout><PaymentList /></Layout></ProtectedRoute>} />
-                  <Route path="/payment-create" element={<ProtectedRoute><Layout><PaymentCreate /></Layout></ProtectedRoute>} />
-                  <Route path="/payment-list-view" element={<ProtectedRoute><Layout><PaymentListView /></Layout></ProtectedRoute>} />
+                  <Route path="/payments" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Payments /></Layout>} />
+                  </Route>
+                  <Route path="/payment-list" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><PaymentList /></Layout>} />
+                  </Route>
+                  <Route path="/payment-create" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><PaymentCreate /></Layout>} />
+                  </Route>
+                  <Route path="/payment-list-view" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><PaymentListView /></Layout>} />
+                  </Route>
                   
                   {/* Outstanding Management */}
-                  <Route path="/outstanding" element={<ProtectedRoute><Layout><Outstanding /></Layout></ProtectedRoute>} />
-                  <Route path="/outstanding-dues" element={<ProtectedRoute><Layout><OutstandingDues /></Layout></ProtectedRoute>} />
-                  <Route path="/outstanding-amounts" element={<ProtectedRoute><Layout><OutstandingAmounts /></Layout></ProtectedRoute>} />
+                  <Route path="/outstanding" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Outstanding /></Layout>} />
+                  </Route>
+                  <Route path="/outstanding-dues" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><OutstandingDues /></Layout>} />
+                  </Route>
+                  <Route path="/outstanding-amounts" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><OutstandingAmounts /></Layout>} />
+                  </Route>
                   
                   {/* Supplier Management */}
-                  <Route path="/suppliers" element={<ProtectedRoute><Layout><Suppliers /></Layout></ProtectedRoute>} />
-                  <Route path="/supplier-directory" element={<ProtectedRoute><Layout><SupplierDirectory /></Layout></ProtectedRoute>} />
-                  <Route path="/supplier-payments" element={<ProtectedRoute><Layout><SupplierPayments /></Layout></ProtectedRoute>} />
-                  <Route path="/supplier-ledger" element={<ProtectedRoute><Layout><SupplierLedger /></Layout></ProtectedRoute>} />
-                  <Route path="/supplier-rates" element={<ProtectedRoute><Layout><SupplierRates /></Layout></ProtectedRoute>} />
+                  <Route path="/suppliers" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Suppliers /></Layout>} />
+                  </Route>
+                  <Route path="/supplier-directory" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SupplierDirectory /></Layout>} />
+                  </Route>
+                  <Route path="/supplier-payments" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SupplierPayments /></Layout>} />
+                  </Route>
+                  <Route path="/supplier-ledger" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SupplierLedger /></Layout>} />
+                  </Route>
+                  <Route path="/supplier-rates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SupplierRates /></Layout>} />
+                  </Route>
                   
                   {/* Delivery & Distribution */}
-                  <Route path="/load-sheet" element={<ProtectedRoute><Layout><LoadSheetManagement /></Layout></ProtectedRoute>} />
-                  <Route path="/delivery-sheet" element={<ProtectedRoute><Layout><DeliverySheet /></Layout></ProtectedRoute>} />
-                  <Route path="/delivery-scheduling" element={<ProtectedRoute><Layout><DeliveryScheduling /></Layout></ProtectedRoute>} />
-                  <Route path="/route-management" element={<ProtectedRoute><Layout><RouteManagement /></Layout></ProtectedRoute>} />
-                  <Route path="/delivery-notifications" element={<ProtectedRoute><Layout><DeliveryNotifications /></Layout></ProtectedRoute>} />
-                  <Route path="/delivery-sheet-create" element={<ProtectedRoute><Layout><DeliverySheetCreate /></Layout></ProtectedRoute>} />
-                  <Route path="/enhanced-delivery-sheet" element={<ProtectedRoute><Layout><EnhancedDeliverySheet /></Layout></ProtectedRoute>} />
-                  <Route path="/track-delivery-sheet" element={<ProtectedRoute><Layout><TrackDeliverySheet /></Layout></ProtectedRoute>} />
-                  <Route path="/delivery-challan" element={<ProtectedRoute><Layout><DeliveryChallan /></Layout></ProtectedRoute>} />
+                  <Route path="/load-sheet" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><LoadSheetManagement /></Layout>} />
+                  </Route>
+                  <Route path="/delivery-sheet" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><DeliverySheet /></Layout>} />
+                  </Route>
+                  <Route path="/delivery-scheduling" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><DeliveryScheduling /></Layout>} />
+                  </Route>
+                  <Route path="/route-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><RouteManagement /></Layout>} />
+                  </Route>
+                  <Route path="/delivery-notifications" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><DeliveryNotifications /></Layout>} />
+                  </Route>
+                  <Route path="/delivery-sheet-create" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><DeliverySheetCreate /></Layout>} />
+                  </Route>
+                  <Route path="/enhanced-delivery-sheet" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><EnhancedDeliverySheet /></Layout>} />
+                  </Route>
+                  <Route path="/track-delivery-sheet" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TrackDeliverySheet /></Layout>} />
+                  </Route>
+                  <Route path="/delivery-challan" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><DeliveryChallan /></Layout>} />
+                  </Route>
                   
                   {/* Track Sheet Management */}
-                  <Route path="/track-sheet" element={<ProtectedRoute><Layout><TrackSheet /></Layout></ProtectedRoute>} />
-                  <Route path="/track-sheet-history" element={<ProtectedRoute><Layout><TrackSheetHistory /></Layout></ProtectedRoute>} />
-                  <Route path="/track-sheet-manager" element={<ProtectedRoute><Layout><TrackSheetManager /></Layout></ProtectedRoute>} />
-                  <Route path="/track-sheet-advanced" element={<ProtectedRoute><Layout><TrackSheetAdvanced /></Layout></ProtectedRoute>} />
+                  <Route path="/track-sheet" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TrackSheet /></Layout>} />
+                  </Route>
+                  <Route path="/track-sheet-history" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TrackSheetHistory /></Layout>} />
+                  </Route>
+                  <Route path="/track-sheet-manager" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TrackSheetManager /></Layout>} />
+                  </Route>
+                  <Route path="/track-sheet-advanced" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TrackSheetAdvanced /></Layout>} />
+                  </Route>
                   
                   {/* Inventory Management */}
-                  <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
-                  <Route path="/inventory-dashboard" element={<ProtectedRoute><Layout><InventoryDashboard /></Layout></ProtectedRoute>} />
-                  <Route path="/stock-management" element={<ProtectedRoute><Layout><StockManagement /></Layout></ProtectedRoute>} />
-                  <Route path="/stock-settings" element={<ProtectedRoute><Layout><StockSettings /></Layout></ProtectedRoute>} />
+                  <Route path="/inventory" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Inventory /></Layout>} />
+                  </Route>
+                  <Route path="/inventory-dashboard" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InventoryDashboard /></Layout>} />
+                  </Route>
+                  <Route path="/stock-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><StockManagement /></Layout>} />
+                  </Route>
+                  <Route path="/stock-settings" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><StockSettings /></Layout>} />
+                  </Route>
                   
                   {/* Purchase Management */}
-                  <Route path="/purchase-management" element={<ProtectedRoute><Layout><PurchaseManagement /></Layout></ProtectedRoute>} />
-                  <Route path="/purchase-history" element={<ProtectedRoute><Layout><PurchaseHistory /></Layout></ProtectedRoute>} />
+                  <Route path="/purchase-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><PurchaseManagement /></Layout>} />
+                  </Route>
+                  <Route path="/purchase-history" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><PurchaseHistory /></Layout>} />
+                  </Route>
                   
                   {/* Invoice Management */}
-                  <Route path="/invoices" element={<ProtectedRoute><Layout><Invoices /></Layout></ProtectedRoute>} />
-                  <Route path="/invoice-create" element={<ProtectedRoute><Layout><InvoiceCreate /></Layout></ProtectedRoute>} />
-                  <Route path="/invoice-history" element={<ProtectedRoute><Layout><InvoiceHistory /></Layout></ProtectedRoute>} />
-                  <Route path="/invoice/:id" element={<ProtectedRoute><Layout><InvoiceDetail /></Layout></ProtectedRoute>} />
-                  <Route path="/invoice-generator" element={<ProtectedRoute><Layout><InvoiceGenerator /></Layout></ProtectedRoute>} />
-                  <Route path="/invoice-templates" element={<ProtectedRoute><Layout><InvoiceTemplates /></Layout></ProtectedRoute>} />
+                  <Route path="/invoices" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Invoices /></Layout>} />
+                  </Route>
+                  <Route path="/invoice-create" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InvoiceCreate /></Layout>} />
+                  </Route>
+                  <Route path="/invoice-history" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InvoiceHistory /></Layout>} />
+                  </Route>
+                  <Route path="/invoice/:id" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InvoiceDetail /></Layout>} />
+                  </Route>
+                  <Route path="/invoice-generator" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InvoiceGenerator /></Layout>} />
+                  </Route>
+                  <Route path="/invoice-templates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><InvoiceTemplates /></Layout>} />
+                  </Route>
                   
                   {/* Rate Management */}
-                  <Route path="/customer-rates" element={<ProtectedRoute><Layout><CustomerRates /></Layout></ProtectedRoute>} />
-                  <Route path="/bulk-rates" element={<ProtectedRoute><Layout><BulkRates /></Layout></ProtectedRoute>} />
-                  <Route path="/bulk-rate-update" element={<ProtectedRoute><Layout><BulkRateUpdate /></Layout></ProtectedRoute>} />
-                  <Route path="/product-rates" element={<ProtectedRoute><Layout><ProductRates /></Layout></ProtectedRoute>} />
+                  <Route path="/customer-rates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CustomerRates /></Layout>} />
+                  </Route>
+                  <Route path="/bulk-rates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><BulkRates /></Layout>} />
+                  </Route>
+                  <Route path="/bulk-rate-update" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><BulkRateUpdate /></Layout>} />
+                  </Route>
+                  <Route path="/product-rates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><ProductRates /></Layout>} />
+                  </Route>
                   
                   {/* Vehicle & Route Management */}
-                  <Route path="/vehicle-tracking" element={<ProtectedRoute><Layout><VehicleTracking /></Layout></ProtectedRoute>} />
-                  <Route path="/vehicle-salesman-create" element={<ProtectedRoute><Layout><VehicleSalesmanCreate /></Layout></ProtectedRoute>} />
-                  <Route path="/area-management" element={<ProtectedRoute><Layout><AreaManagement /></Layout></ProtectedRoute>} />
+                  <Route path="/vehicle-tracking" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><VehicleTracking /></Layout>} />
+                  </Route>
+                  <Route path="/vehicle-salesman-create" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><VehicleSalesmanCreate /></Layout>} />
+                  </Route>
+                  <Route path="/area-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><AreaManagement /></Layout>} />
+                  </Route>
                   
                   {/* Analytics & Reports */}
-                  <Route path="/analytics" element={<ProtectedRoute><Layout><Analytics /></Layout></ProtectedRoute>} />
-                  <Route path="/sales-analytics" element={<ProtectedRoute><Layout><SalesAnalytics /></Layout></ProtectedRoute>} />
-                  <Route path="/business-intelligence" element={<ProtectedRoute><Layout><BusinessIntelligence /></Layout></ProtectedRoute>} />
-                  <Route path="/reports" element={<ProtectedRoute><Layout><Reports /></Layout></ProtectedRoute>} />
-                  <Route path="/sales-report" element={<ProtectedRoute><Layout><SalesReport /></Layout></ProtectedRoute>} />
+                  <Route path="/analytics" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Analytics /></Layout>} />
+                  </Route>
+                  <Route path="/sales-analytics" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SalesAnalytics /></Layout>} />
+                  </Route>
+                  <Route path="/business-intelligence" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><BusinessIntelligence /></Layout>} />
+                  </Route>
+                  <Route path="/reports" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Reports /></Layout>} />
+                  </Route>
+                  <Route path="/sales-report" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SalesReport /></Layout>} />
+                  </Route>
                   
                   {/* Expenses */}
-                  <Route path="/expenses" element={<ProtectedRoute><Layout><Expenses /></Layout></ProtectedRoute>} />
-                  <Route path="/expenses-revamped" element={<ProtectedRoute><Layout><ExpensesRevamped /></Layout></ProtectedRoute>} />
+                  <Route path="/expenses" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Expenses /></Layout>} />
+                  </Route>
+                  <Route path="/expenses-revamped" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><ExpensesRevamped /></Layout>} />
+                  </Route>
                   
                   {/* Communication */}
-                  <Route path="/messaging" element={<ProtectedRoute><Layout><Messaging /></Layout></ProtectedRoute>} />
-                  <Route path="/communication" element={<ProtectedRoute><Layout><Communication /></Layout></ProtectedRoute>} />
-                  <Route path="/bulk-communication" element={<ProtectedRoute><Layout><BulkCommunication /></Layout></ProtectedRoute>} />
-                  <Route path="/sms-templates" element={<ProtectedRoute><Layout><SmsTemplates /></Layout></ProtectedRoute>} />
-                  <Route path="/email-templates" element={<ProtectedRoute><Layout><EmailTemplates /></Layout></ProtectedRoute>} />
-                  <Route path="/notifications" element={<ProtectedRoute><Layout><NotificationsPage /></Layout></ProtectedRoute>} />
+                  <Route path="/messaging" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Messaging /></Layout>} />
+                  </Route>
+                  <Route path="/communication" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Communication /></Layout>} />
+                  </Route>
+                  <Route path="/bulk-communication" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><BulkCommunication /></Layout>} />
+                  </Route>
+                  <Route path="/sms-templates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><SmsTemplates /></Layout>} />
+                  </Route>
+                  <Route path="/email-templates" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><EmailTemplates /></Layout>} />
+                  </Route>
+                  <Route path="/notifications" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><NotificationsPage /></Layout>} />
+                  </Route>
                   
                   {/* Advanced Features */}
-                  <Route path="/advanced" element={<ProtectedRoute><Layout><Advanced /></Layout></ProtectedRoute>} />
-                  <Route path="/advanced-features" element={<ProtectedRoute><Layout><AdvancedFeatures /></Layout></ProtectedRoute>} />
+                  <Route path="/advanced" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Advanced /></Layout>} />
+                  </Route>
+                  <Route path="/advanced-features" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><AdvancedFeatures /></Layout>} />
+                  </Route>
                   
                   {/* Master Data */}
-                  <Route path="/master" element={<ProtectedRoute><Layout><Master /></Layout></ProtectedRoute>} />
+                  <Route path="/master" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Master /></Layout>} />
+                  </Route>
                   
                   {/* Settings */}
-                  <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
-                  <Route path="/tax-settings" element={<ProtectedRoute><Layout><TaxSettings /></Layout></ProtectedRoute>} />
-                  <Route path="/financial-year" element={<ProtectedRoute><Layout><FinancialYear /></Layout></ProtectedRoute>} />
-                  <Route path="/ui-settings" element={<ProtectedRoute><Layout><UISettings /></Layout></ProtectedRoute>} />
-                  <Route path="/user-access" element={<ProtectedRoute><Layout><UserAccess /></Layout></ProtectedRoute>} />
-                  <Route path="/role-management" element={<ProtectedRoute><Layout><RoleManagementPage /></Layout></ProtectedRoute>} />
-                  <Route path="/company-profile" element={<ProtectedRoute><Layout><CompanyProfile /></Layout></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><Settings /></Layout>} />
+                  </Route>
+                  <Route path="/tax-settings" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TaxSettings /></Layout>} />
+                  </Route>
+                  <Route path="/financial-year" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><FinancialYear /></Layout>} />
+                  </Route>
+                  <Route path="/ui-settings" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><UISettings /></Layout>} />
+                  </Route>
+                  <Route path="/user-access" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><UserAccess /></Layout>} />
+                  </Route>
+                  <Route path="/role-management" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><RoleManagementPage /></Layout>} />
+                  </Route>
+                  <Route path="/company-profile" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><CompanyProfile /></Layout>} />
+                  </Route>
                   
                   {/* Testing */}
-                  <Route path="/testing-report" element={<ProtectedRoute><Layout><TestingReport /></Layout></ProtectedRoute>} />
+                  <Route path="/testing-report" element={<ProtectedRoute />}>
+                    <Route index element={<Layout><TestingReport /></Layout>} />
+                  </Route>
                 </Routes>
               </div>
             </ThemeProvider>
