@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EnhancedAuthProvider } from '@/contexts/EnhancedAuthContext';
 import { DataProvider } from '@/contexts/data/DataContext';
-import { ThemeProvider } from '@/contexts/ThemeProvider';
 import { Toaster } from 'sonner';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Login from '@/pages/Login';
@@ -23,8 +22,6 @@ import AppLayout from '@/components/layout/AppLayout';
 import DeliveryManagement from '@/components/delivery/DeliveryManagement';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { EnhancedDashboard } from '@/components/dashboard/EnhancedDashboard';
-import Vehicles from '@/pages/Vehicles';
-import Users from '@/pages/Users';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -39,54 +36,52 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <EnhancedAuthProvider>
-          <DataProvider>
-            <Router>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                
-                <Route element={<ProtectedRoute />}>
-                  <Route element={<AppLayout />}>
-                    <Route path="/dashboard" element={<EnhancedDashboard />} />
-                    <Route path="/analytics" element={<EnhancedDashboard />} />
-                    <Route path="/notifications" element={<NotificationCenter />} />
-                    
-                    {/* Core Management */}
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/suppliers" element={<Suppliers />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/users" element={<Users />} />
-                    
-                    {/* Orders & Sales */}
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/payments" element={<Payments />} />
-                    <Route path="/order-calculator" element={<Orders />} />
-                    
-                    {/* Delivery Operations */}
-                    <Route path="/vehicles" element={<Vehicles />} />
-                    <Route path="/delivery-management" element={<DeliveryManagement />} />
-                    <Route path="/delivery-challan" element={<DeliveryChallan />} />
-                    <Route path="/delivery-sheet" element={<DeliverySheet />} />
-                    <Route path="/track-delivery-sheet" element={<TrackDeliverySheet />} />
-                    <Route path="/route-optimizer" element={<DeliveryManagement />} />
-                    
-                    {/* Reports & Export */}
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="/data-export" element={<Reports />} />
-                    <Route path="/delivery-reports" element={<Reports />} />
-                    
-                    {/* System */}
-                    <Route path="/settings" element={<Settings />} />
-                  </Route>
+      <EnhancedAuthProvider>
+        <DataProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/dashboard" element={<EnhancedDashboard />} />
+                  <Route path="/analytics" element={<EnhancedDashboard />} />
+                  <Route path="/notifications" element={<NotificationCenter />} />
+                  
+                  {/* Core Management */}
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/suppliers" element={<Suppliers />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/users" element={<VehicleTracking />} />
+                  
+                  {/* Orders & Sales */}
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/payments" element={<Payments />} />
+                  <Route path="/order-calculator" element={<Orders />} />
+                  
+                  {/* Delivery Operations */}
+                  <Route path="/vehicles" element={<VehicleTracking />} />
+                  <Route path="/delivery-management" element={<DeliveryManagement />} />
+                  <Route path="/delivery-challan" element={<DeliveryChallan />} />
+                  <Route path="/delivery-sheet" element={<DeliverySheet />} />
+                  <Route path="/track-delivery-sheet" element={<TrackDeliverySheet />} />
+                  <Route path="/route-optimizer" element={<DeliveryManagement />} />
+                  
+                  {/* Reports & Export */}
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/data-export" element={<Reports />} />
+                  <Route path="/delivery-reports" element={<Reports />} />
+                  
+                  {/* System */}
+                  <Route path="/settings" element={<Settings />} />
                 </Route>
-              </Routes>
-              <Toaster position="top-right" richColors />
-            </Router>
-          </DataProvider>
-        </EnhancedAuthProvider>
-      </ThemeProvider>
+              </Route>
+            </Routes>
+            <Toaster position="top-right" richColors />
+          </Router>
+        </DataProvider>
+      </EnhancedAuthProvider>
     </QueryClientProvider>
   );
 }
