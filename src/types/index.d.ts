@@ -1,4 +1,3 @@
-
 // Customer Types
 export interface Customer {
   id: string;
@@ -211,6 +210,7 @@ export interface Salesman {
   name: string;
   contactNumber?: string;
   email?: string;
+  route?: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
