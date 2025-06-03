@@ -18,6 +18,10 @@ export function UserMenu() {
   const navigate = useNavigate();
   
   if (!user) return null;
+
+  const handleCompanySwitch = async (companyId: string) => {
+    await switchCompany(companyId);
+  };
   
   return (
     <div className="flex items-center gap-3">
@@ -26,7 +30,7 @@ export function UserMenu() {
         <CompanySwitcher
           companies={companies}
           currentCompany={currentCompany}
-          onCompanySwitch={switchCompany}
+          onCompanySwitch={handleCompanySwitch}
         />
       )}
       

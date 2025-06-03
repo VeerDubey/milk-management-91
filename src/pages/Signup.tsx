@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEnhancedAuth } from '@/contexts/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,7 @@ const Signup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup } = useEnhancedAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +41,17 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
-      const success = await signup(name, email, password);
+      const success = await signup({
+        name,
+        email,
+        password,
+        confirmPassword,
+        acceptTerms: true
+      });
       
       if (success) {
         toast.success('Account created successfully');
-        navigate('/');
+        navigate('/login');
       } else {
         toast.error('Email already in use');
       }

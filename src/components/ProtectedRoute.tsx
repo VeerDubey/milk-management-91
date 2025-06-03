@@ -8,8 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ redirectPath = '/login' }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useEnhancedAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useEnhancedAuth();
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export const ProtectedRoute = ({ redirectPath = '/login' }: ProtectedRouteProps)
       // Simulate a small delay to check auth status
       timer = window.setTimeout(() => {
         setLoadingProgress(100);
-        setTimeout(() => setIsLoading(false), 300); // Small delay for final animation
+        setTimeout(() => setLoadingProgress(0), 300); // Small delay for final animation
       }, 800);
     }
     

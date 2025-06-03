@@ -1,15 +1,16 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
-import { Dashboard } from './pages/Dashboard';
-import { Invoices } from './pages/Invoices';
-import { Settings } from './pages/Settings';
-import { NotFound } from './pages/NotFound';
-import { Signup } from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Invoices from './pages/Invoices';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import Signup from './pages/Signup';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { ModernInvoice } from './pages/ModernInvoice';
 import { EnhancedAuthProvider } from '@/contexts/EnhancedAuthContext';
 import ModernAuthForm from '@/components/auth/ModernAuthForm';
+import { Toaster } from 'sonner';
 
 function App() {
   return (
@@ -26,7 +27,6 @@ function App() {
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/ui-settings" element={<Settings />} />
-              <Route path="/modern-invoice" element={<ModernInvoice />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
