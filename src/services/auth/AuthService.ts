@@ -1,88 +1,138 @@
-import bcrypt from 'bcryptjs';
+
+import { User, LoginCredentials, SignupData, UserCompany } from '@/types/auth';
 import { toast } from 'sonner';
-import { 
-  User, 
-  AuthSession, 
-  LoginCredentials, 
-  SignupData, 
-  PasswordResetRequest,
-  UserCompany,
-  Company 
-} from '@/types/auth';
-import { checkPasswordStrength } from '@/utils/passwordStrength';
+import bcrypt from 'bcryptjs';
 
 export class AuthService {
-  private static readonly SALT_ROUNDS = 12;
+  private static readonly STORAGE_KEYS = {
+    USERS: 'auth_users',
+    CURRENT_USER: 'auth_current_user',
+    CURRENT_COMPANY: 'auth_current_company',
+    SESSION_TOKEN: 'auth_session_token',
+    LOGIN_ATTEMPTS: 'auth_login_attempts'
+  };
+
   private static readonly MAX_LOGIN_ATTEMPTS = 5;
-  private static readonly LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes
-  private static readonly SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-  private static readonly REFRESH_THRESHOLD = 2 * 60 * 60 * 1000; // 2 hours
+  private static readonly LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+
+  static initializeDefaultUsers(): void {
+    const existingUsers = this.getStoredUsers();
+    
+    if (existingUsers.length === 0) {
+      const defaultUsers: User[] = [
+        {
+          id: 'admin-001',
+          name: 'Admin User',
+          email: 'admin@vikasmilk.com',
+          passwordHash: bcrypt.hashSync('admin123', 10),
+          role: 'admin',
+          isEmailVerified: true,
+          companies: [
+            {
+              id: 'company-001',
+              name: 'Vikas Milk Centre',
+              role: 'admin',
+              isDefault: true
+            }
+          ],
+          createdAt: new Date(),
+          lastLogin: null,
+          loginAttempts: 0,
+          isLocked: false
+        },
+        {
+          id: 'employee-001',
+          name: 'Employee User',
+          email: 'employee@vikasmilk.com',
+          passwordHash: bcrypt.hashSync('employee123', 10),
+          role: 'employee',
+          isEmailVerified: true,
+          companies: [
+            {
+              id: 'company-001',
+              name: 'Vikas Milk Centre',
+              role: 'employee',
+              isDefault: true
+            }
+          ],
+          createdAt: new Date(),
+          lastLogin: null,
+          loginAttempts: 0,
+          isLocked: false
+        }
+      ];
+
+      localStorage.setItem(this.STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
+      console.log('Default users initialized:', defaultUsers.map(u => ({ email: u.email, role: u.role })));
+    }
+  }
 
   static async login(credentials: LoginCredentials): Promise<User | null> {
+    const { email, password, rememberMe } = credentials;
+    
     try {
-      // Check for account lockout first
-      if (this.isAccountLocked(credentials.email)) {
-        toast.error('Account temporarily locked due to too many failed attempts');
-        return null;
-      }
-
-      const users = this.getUsers();
-      const user = users.find(u => 
-        u.email.toLowerCase() === credentials.email.toLowerCase() && 
-        u.isActive
-      );
+      const users = this.getStoredUsers();
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
       if (!user) {
-        this.recordLoginAttempt(credentials.email, false);
         toast.error('Invalid email or password');
         return null;
       }
 
-      // Check email verification
-      if (!user.emailVerified) {
-        toast.error('Please verify your email before logging in');
+      // Check if account is locked
+      if (user.isLocked && user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
+        const remainingTime = Math.ceil((new Date(user.lockedUntil).getTime() - new Date().getTime()) / 60000);
+        toast.error(`Account locked. Try again in ${remainingTime} minutes.`);
         return null;
       }
 
-      const passwordHashes = this.getPasswordHashes();
-      const storedHash = passwordHashes[user.id];
-
-      if (!storedHash) {
-        toast.error('Authentication error');
-        return null;
-      }
-
-      const isValid = await bcrypt.compare(credentials.password, storedHash);
-
-      if (!isValid) {
-        this.recordLoginAttempt(credentials.email, false);
-        toast.error('Invalid email or password');
-        return null;
-      }
-
-      // Check 2FA if enabled
-      if (user.twoFactorEnabled && !credentials.twoFactorCode) {
-        toast.info('Two-factor authentication required');
-        return null; // Frontend should show 2FA input
-      }
-
-      if (user.twoFactorEnabled && credentials.twoFactorCode) {
-        const isValid2FA = this.verify2FACode(user.id, credentials.twoFactorCode);
-        if (!isValid2FA) {
-          toast.error('Invalid 2FA code');
-          return null;
+      // Verify password
+      const isPasswordValid = bcrypt.compareSync(password, user.passwordHash);
+      
+      if (!isPasswordValid) {
+        // Increment login attempts
+        user.loginAttempts = (user.loginAttempts || 0) + 1;
+        
+        if (user.loginAttempts >= this.MAX_LOGIN_ATTEMPTS) {
+          user.isLocked = true;
+          user.lockedUntil = new Date(Date.now() + this.LOCKOUT_DURATION).toISOString();
+          toast.error('Too many failed attempts. Account locked for 15 minutes.');
+        } else {
+          const remainingAttempts = this.MAX_LOGIN_ATTEMPTS - user.loginAttempts;
+          toast.error(`Invalid password. ${remainingAttempts} attempts remaining.`);
         }
+        
+        this.updateUser(user);
+        return null;
       }
 
-      // Successful login
-      this.recordLoginAttempt(credentials.email, true);
+      // Reset login attempts on successful login
+      user.loginAttempts = 0;
+      user.isLocked = false;
+      user.lockedUntil = undefined;
       user.lastLogin = new Date().toISOString();
-      this.updateUser(user);
 
       // Create session
-      this.createSession(user, credentials.rememberMe);
+      const sessionToken = this.generateSessionToken();
+      const sessionData = {
+        userId: user.id,
+        token: sessionToken,
+        expiresAt: new Date(Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)), // 30 days if remember me, 1 day otherwise
+        rememberMe
+      };
 
+      localStorage.setItem(this.STORAGE_KEYS.SESSION_TOKEN, JSON.stringify(sessionData));
+      localStorage.setItem(this.STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      
+      // Set default company
+      const defaultCompany = user.companies.find(c => c.isDefault) || user.companies[0];
+      if (defaultCompany) {
+        localStorage.setItem(this.STORAGE_KEYS.CURRENT_COMPANY, JSON.stringify(defaultCompany));
+      }
+
+      this.updateUser(user);
       toast.success(`Welcome back, ${user.name}!`);
+      
       return user;
     } catch (error) {
       console.error('Login error:', error);
@@ -93,282 +143,129 @@ export class AuthService {
 
   static async signup(data: SignupData): Promise<User | null> {
     try {
-      const users = this.getUsers();
+      const users = this.getStoredUsers();
       
-      if (users.some(u => u.email.toLowerCase() === data.email.toLowerCase())) {
-        toast.error('User with this email already exists');
+      // Check if email already exists
+      const existingUser = users.find(u => u.email.toLowerCase() === data.email.toLowerCase());
+      if (existingUser) {
+        toast.error('Email already registered');
         return null;
       }
 
-      // Validate password strength
-      const passwordStrength = checkPasswordStrength(data.password);
-      if (!passwordStrength.isValid) {
-        toast.error('Password does not meet security requirements');
-        return null;
-      }
-
-      const passwordHash = await bcrypt.hash(data.password, this.SALT_ROUNDS);
-      
-      // Create default company if provided
-      let companies: UserCompany[] = [];
-      if (data.companyName) {
-        const companyId = `company_${Date.now()}`;
-        const company: Company = {
-          id: companyId,
-          name: data.companyName,
-          address: '',
-          phone: data.phone || '',
-          email: data.email,
-          settings: {
-            currency: 'INR',
-            timezone: 'Asia/Kolkata',
-            dateFormat: 'DD/MM/YYYY',
-            theme: 'light'
-          }
-        };
-        
-        this.saveCompany(company);
-        
-        companies.push({
-          id: companyId,
-          name: data.companyName,
-          role: 'owner',
-          permissions: ['*'],
-          isDefault: true
-        });
-      }
-
+      // Create new user
       const newUser: User = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `user-${Date.now()}`,
         name: data.name,
         email: data.email,
-        role: 'admin',
-        createdAt: new Date().toISOString(),
-        isActive: true,
-        emailVerified: false, // Require email verification
-        twoFactorEnabled: false,
-        companies,
-        phone: data.phone
+        passwordHash: bcrypt.hashSync(data.password, 10),
+        role: 'employee', // Default role
+        isEmailVerified: false,
+        companies: [
+          {
+            id: 'company-001',
+            name: 'Vikas Milk Centre',
+            role: 'employee',
+            isDefault: true
+          }
+        ],
+        createdAt: new Date(),
+        lastLogin: null,
+        loginAttempts: 0,
+        isLocked: false
       };
 
       users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Store password hash
-      const passwordHashes = this.getPasswordHashes();
-      passwordHashes[newUser.id] = passwordHash;
-      localStorage.setItem('password_hashes', JSON.stringify(passwordHashes));
+      localStorage.setItem(this.STORAGE_KEYS.USERS, JSON.stringify(users));
 
       // Send verification email (mock)
-      this.sendVerificationEmail(newUser);
-
-      toast.success('Account created! Please check your email to verify your account.');
+      toast.info(`Verification email sent to ${data.email}`);
+      
       return newUser;
     } catch (error) {
       console.error('Signup error:', error);
-      toast.error('Account creation failed. Please try again.');
+      toast.error('Signup failed. Please try again.');
       return null;
+    }
+  }
+
+  static logout(): void {
+    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_USER);
+    localStorage.removeItem(this.STORAGE_KEYS.CURRENT_COMPANY);
+    localStorage.removeItem(this.STORAGE_KEYS.SESSION_TOKEN);
+    toast.success('Logged out successfully');
+  }
+
+  static getCurrentUser(): User | null {
+    try {
+      const userData = localStorage.getItem(this.STORAGE_KEYS.CURRENT_USER);
+      return userData ? JSON.parse(userData) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static getCurrentCompany(): UserCompany | null {
+    try {
+      const companyData = localStorage.getItem(this.STORAGE_KEYS.CURRENT_COMPANY);
+      return companyData ? JSON.parse(companyData) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static isAuthenticated(): boolean {
+    const sessionData = localStorage.getItem(this.STORAGE_KEYS.SESSION_TOKEN);
+    if (!sessionData) return false;
+
+    try {
+      const session = JSON.parse(sessionData);
+      const now = new Date();
+      const expiresAt = new Date(session.expiresAt);
+      
+      return now < expiresAt;
+    } catch {
+      return false;
     }
   }
 
   static async switchCompany(userId: string, companyId: string): Promise<boolean> {
     try {
-      const user = this.getUsers().find(u => u.id === userId);
-      if (!user) return false;
+      const user = this.getCurrentUser();
+      if (!user || user.id !== userId) return false;
 
       const company = user.companies.find(c => c.id === companyId);
-      if (!company) {
-        toast.error('Access denied to this company');
-        return false;
-      }
+      if (!company) return false;
 
-      // Update session with new company
-      const session = this.getSession();
-      if (session) {
-        session.currentCompany = company;
-        localStorage.setItem('auth_session', JSON.stringify(session));
-        localStorage.setItem('last_company', companyId);
-        
-        toast.success(`Switched to ${company.name}`);
-        return true;
-      }
-
-      return false;
+      localStorage.setItem(this.STORAGE_KEYS.CURRENT_COMPANY, JSON.stringify(company));
+      localStorage.setItem('last_company', companyId);
+      
+      toast.success(`Switched to ${company.name}`);
+      return true;
     } catch (error) {
       console.error('Company switch error:', error);
-      toast.error('Failed to switch company');
       return false;
     }
   }
 
-  private static createSession(user: User, rememberMe: boolean): void {
-    const duration = rememberMe ? 30 * 24 * 60 * 60 * 1000 : this.SESSION_DURATION; // 30 days if remember me
-    const expiresAt = new Date(Date.now() + duration).toISOString();
-    
-    const defaultCompany = user.companies.find(c => c.isDefault) || user.companies[0];
-    
-    const session: AuthSession = {
-      user,
-      currentCompany: defaultCompany,
-      token: this.generateToken(),
-      refreshToken: this.generateToken(),
-      expiresAt,
-      loginAttempts: 0,
-      isLocked: false
-    };
-
-    localStorage.setItem('auth_session', JSON.stringify(session));
-    if (defaultCompany) {
-      localStorage.setItem('last_company', defaultCompany.id);
+  private static getStoredUsers(): User[] {
+    try {
+      const usersData = localStorage.getItem(this.STORAGE_KEYS.USERS);
+      return usersData ? JSON.parse(usersData) : [];
+    } catch {
+      return [];
     }
-  }
-
-  private static generateToken(): string {
-    return `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private static getUsers(): User[] {
-    return JSON.parse(localStorage.getItem('users') || '[]');
-  }
-
-  private static getPasswordHashes(): Record<string, string> {
-    return JSON.parse(localStorage.getItem('password_hashes') || '{}');
   }
 
   private static updateUser(user: User): void {
-    const users = this.getUsers();
+    const users = this.getStoredUsers();
     const index = users.findIndex(u => u.id === user.id);
     if (index !== -1) {
       users[index] = user;
-      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem(this.STORAGE_KEYS.USERS, JSON.stringify(users));
     }
   }
 
-  private static saveCompany(company: Company): void {
-    const companies = JSON.parse(localStorage.getItem('companies') || '[]');
-    companies.push(company);
-    localStorage.setItem('companies', JSON.stringify(companies));
-  }
-
-  private static getSession(): AuthSession | null {
-    const sessionData = localStorage.getItem('auth_session');
-    return sessionData ? JSON.parse(sessionData) : null;
-  }
-
-  private static recordLoginAttempt(email: string, success: boolean): void {
-    const attempts = JSON.parse(localStorage.getItem('login_attempts') || '[]');
-    attempts.push({
-      email: email.toLowerCase(),
-      timestamp: Date.now(),
-      success
-    });
-
-    // Keep only last 1000 attempts
-    if (attempts.length > 1000) {
-      attempts.splice(0, attempts.length - 1000);
-    }
-
-    localStorage.setItem('login_attempts', JSON.stringify(attempts));
-  }
-
-  private static isAccountLocked(email: string): boolean {
-    const attempts = JSON.parse(localStorage.getItem('login_attempts') || '[]');
-    const recentFailedAttempts = attempts.filter((attempt: any) => 
-      attempt.email === email.toLowerCase() && 
-      !attempt.success && 
-      Date.now() - attempt.timestamp < this.LOCKOUT_DURATION
-    );
-
-    return recentFailedAttempts.length >= this.MAX_LOGIN_ATTEMPTS;
-  }
-
-  private static sendVerificationEmail(user: User): void {
-    // Mock email verification - in real app, this would send an actual email
-    const verificationToken = this.generateToken();
-    const verificationTokens = JSON.parse(localStorage.getItem('verification_tokens') || '{}');
-    verificationTokens[verificationToken] = {
-      userId: user.id,
-      expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-    };
-    localStorage.setItem('verification_tokens', JSON.stringify(verificationTokens));
-    
-    console.log(`Verification email sent to ${user.email} with token: ${verificationToken}`);
-  }
-
-  private static verify2FACode(userId: string, code: string): boolean {
-    // Mock 2FA verification - in real app, this would verify against TOTP
-    return code === '123456'; // Demo code
-  }
-
-  static logout(): void {
-    localStorage.removeItem('auth_session');
-    localStorage.removeItem('last_company');
-    toast.info('You have been logged out');
-  }
-
-  static getCurrentUser(): User | null {
-    const session = this.getSession();
-    return session?.user || null;
-  }
-
-  static getCurrentCompany(): UserCompany | null {
-    const session = this.getSession();
-    return session?.currentCompany || null;
-  }
-
-  static isAuthenticated(): boolean {
-    const session = this.getSession();
-    if (!session) return false;
-    
-    return new Date(session.expiresAt) > new Date();
-  }
-
-  static initializeDefaultUsers(): void {
-    const users = this.getUsers();
-    if (users.length === 0) {
-      console.log('Creating default users with enhanced features...');
-      
-      // Create default companies
-      const companies = [
-        {
-          id: 'company_main',
-          name: 'Vikas Milk Centre - Main',
-          address: 'Mumbai, Maharashtra',
-          phone: '+91 98765 43210',
-          email: 'admin@vikasmilk.com',
-          settings: {
-            currency: 'INR' as const,
-            timezone: 'Asia/Kolkata',
-            dateFormat: 'DD/MM/YYYY',
-            theme: 'light'
-          }
-        },
-        {
-          id: 'company_branch',
-          name: 'Vikas Milk Centre - Pune Branch',
-          address: 'Pune, Maharashtra', 
-          phone: '+91 98765 43211',
-          email: 'pune@vikasmilk.com',
-          settings: {
-            currency: 'INR' as const,
-            timezone: 'Asia/Kolkata',
-            dateFormat: 'DD/MM/YYYY',
-            theme: 'light'
-          }
-        }
-      ];
-
-      localStorage.setItem('companies', JSON.stringify(companies));
-
-      this.signup({
-        name: 'Administrator',
-        email: 'admin@vikasmilk.com',
-        password: 'Admin@123',
-        confirmPassword: 'Admin@123',
-        phone: '+91 98765 43210',
-        companyName: 'Vikas Milk Centre - Main',
-        acceptTerms: true
-      });
-    }
+  private static generateSessionToken(): string {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
   }
 }

@@ -12,23 +12,20 @@ export const ProtectedRoute = ({ redirectPath = '/login' }: ProtectedRouteProps)
   const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate progressive loading effect
     let interval: number | undefined;
     let timer: number | undefined;
     
     if (isLoading) {
       interval = window.setInterval(() => {
         setLoadingProgress(prev => {
-          // Slow down near the end to wait for auth check
           const increment = prev < 70 ? 15 : 5;
           return Math.min(prev + increment, 90);
         });
       }, 200);
       
-      // Simulate a small delay to check auth status
       timer = window.setTimeout(() => {
         setLoadingProgress(100);
-        setTimeout(() => setLoadingProgress(0), 300); // Small delay for final animation
+        setTimeout(() => setLoadingProgress(0), 300);
       }, 800);
     }
     
