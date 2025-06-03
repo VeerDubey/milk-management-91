@@ -51,6 +51,8 @@ export interface Product {
   taxRate?: number;
   hsnCode?: string;
   customFields?: Record<string, any>;
+  maxStock?: number;
+  supplierId?: string;
 }
 
 export interface ProductVariant {
@@ -319,12 +321,14 @@ export interface Invoice {
   customerId: string;
   customerName?: string;
   number: string;
+  invoiceNumber?: string;
   date: string;
   dueDate: string;
   items: InvoiceItem[];
   subtotal: number;
   taxRate: number;
   taxAmount: number;
+  discountAmount?: number;
   total: number;
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
   notes?: string;
@@ -332,6 +336,17 @@ export interface Invoice {
   createdAt: string;
   updatedAt: string;
   gstDetails?: GSTDetails;
+  discount?: number;
+  shipping?: number;
+  orderId?: string;
+  amount?: number;
+  amountPaid?: number;
+  balance?: number;
+  terms?: string;
+  paymentMethod?: string;
+  referenceNumber?: string;
+  trackSheetId?: string;
+  customFields?: Record<string, any>;
 }
 
 export interface StockRecord {
