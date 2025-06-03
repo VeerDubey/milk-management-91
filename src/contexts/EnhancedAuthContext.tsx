@@ -13,7 +13,12 @@ import {
 import { AuthService } from '@/services/auth/AuthService';
 import { checkPasswordStrength } from '@/utils/passwordStrength';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Extend the AuthContextType to include isAdmin helper
+interface ExtendedAuthContextType extends AuthContextType {
+  isAdmin: boolean;
+}
+
+const AuthContext = createContext<ExtendedAuthContextType | undefined>(undefined);
 
 export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -21,6 +26,13 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [companies, setCompanies] = useState<UserCompany[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Compute isAdmin based on user role or current company role
+  const isAdmin = Boolean(
+    user?.role === 'admin' || 
+    currentCompany?.role === 'admin' || 
+    currentCompany?.role === 'owner'
+  );
 
   useEffect(() => {
     initializeAuth();
@@ -167,6 +179,7 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       companies,
       isAuthenticated,
       isLoading,
+      isAdmin,
       login,
       signup,
       logout,
@@ -184,7 +197,7 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
-export const useEnhancedAuth = (): AuthContextType => {
+export const useEnhancedAuth = (): ExtendedAuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useEnhancedAuth must be used within an EnhancedAuthProvider');

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,11 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await login({
+        email,
+        password,
+        rememberMe: false
+      });
       if (success) {
         navigate('/dashboard');
       }

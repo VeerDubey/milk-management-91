@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,7 +49,13 @@ const AdvancedLoginForm = () => {
         return;
       }
 
-      const success = await login(loginData.email, loginData.password);
+      const success = await login({
+        email: loginData.email,
+        password: loginData.password,
+        rememberMe: loginData.rememberMe,
+        twoFactorCode: loginData.twoFactor || undefined
+      });
+      
       if (success && loginData.rememberMe) {
         localStorage.setItem('rememberLogin', 'true');
       }
@@ -82,12 +87,14 @@ const AdvancedLoginForm = () => {
     setIsLoading(true);
 
     try {
-      const success = await signup(
-        signupData.name, 
-        signupData.email, 
-        signupData.password, 
-        signupData.role as 'admin' | 'employee'
-      );
+      const success = await signup({
+        name: signupData.name,
+        email: signupData.email,
+        phone: signupData.phone,
+        password: signupData.password,
+        confirmPassword: signupData.confirmPassword,
+        acceptTerms: signupData.agreeTerms
+      });
       
       if (success) {
         // Store additional profile data
