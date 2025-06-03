@@ -54,23 +54,25 @@ export class OfflineDatabase extends Dexie {
     return entity;
   }
 
-  async updateWithSync<T extends SyncableEntity>(table: Table<T>, id: string, updates: Partial<T>): Promise<void> {
-    const updated = {
+  async updateWithSync<T extends SyncableEntity>(table: Table<T>, id: string, updates: Partial<Omit<T, 'id'>>): Promise<void> {
+    const updateData = {
       ...updates,
       lastModified: Date.now(),
       syncStatus: 'pending' as const
     };
 
-    await table.update(id, updated);
-    await this.queueSync('update', table.name, { id, ...updated });
+    await table.update(id, updateData);
+    await this.queueSync('update', table.name, { id, ...updateData });
   }
 
   async deleteWithSync<T extends SyncableEntity>(table: Table<T>, id: string): Promise<void> {
-    await table.update(id, { 
-      isDeleted: true, 
-      lastModified: Date.now(), 
-      syncStatus: 'pending' as const 
-    });
+    const deleteData = {
+      isDeleted: true,
+      lastModified: Date.now(),
+      syncStatus: 'pending' as const
+    };
+
+    await table.update(id, deleteData);
     await this.queueSync('delete', table.name, { id });
   }
 
