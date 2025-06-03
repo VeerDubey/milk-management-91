@@ -1,5 +1,5 @@
 
-import { db } from '../database/OfflineDatabase';
+import { db, InvoiceEntity } from '../database/OfflineDatabase';
 import { Invoice, Customer, Product } from '@/types';
 import { toast } from 'sonner';
 
@@ -89,8 +89,7 @@ export class AdvancedBillingService {
       const gstDetails = this.calculateGST(invoiceItems, subtotal);
       const total = subtotal + gstDetails.totalTax;
 
-      const invoice: Invoice = {
-        id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      const invoiceData: Omit<InvoiceEntity, 'id' | 'lastModified' | 'syncStatus'> = {
         customerId,
         number: this.generateInvoiceNumber(),
         date: new Date().toISOString().split('T')[0],
@@ -104,12 +103,13 @@ export class AdvancedBillingService {
         notes: `Monthly bill for ${month}/${year}`,
         termsAndConditions: 'Payment due within 30 days. GST as applicable.',
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        centerId: localStorage.getItem('currentCenterId') || 'default'
       };
 
-      await db.addWithSync(db.invoices, invoice);
+      const savedInvoice = await db.addWithSync(db.invoices, invoiceData);
       toast.success('Monthly bill generated successfully');
-      return invoice;
+      return savedInvoice;
     } catch (error) {
       console.error('Error generating monthly bill:', error);
       toast.error('Failed to generate monthly bill');
