@@ -10,10 +10,28 @@ export interface SyncableEntity {
   centerId?: string;
 }
 
+export interface GSTDetails {
+  gstNumber: string;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalTax: number;
+  hsnCode: string;
+}
+
 export interface CustomerEntity extends Customer, SyncableEntity {}
-export interface ProductEntity extends Product, SyncableEntity {}
+
+export interface ProductEntity extends Product, SyncableEntity {
+  maxStock?: number;
+  supplierId?: string;
+}
+
 export interface OrderEntity extends Order, SyncableEntity {}
-export interface InvoiceEntity extends Invoice, SyncableEntity {}
+
+export interface InvoiceEntity extends Invoice, SyncableEntity {
+  gstDetails?: GSTDetails;
+}
+
 export interface PaymentEntity extends Payment, SyncableEntity {}
 export interface TrackSheetEntity extends TrackSheet, SyncableEntity {}
 

@@ -317,7 +317,7 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   customerId: string;
-  invoiceNumber?: string;
+  customerName?: string;
   number: string;
   date: string;
   dueDate: string;
@@ -325,25 +325,13 @@ export interface Invoice {
   subtotal: number;
   taxRate: number;
   taxAmount: number;
-  discountAmount?: number;
   total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled';
-  notes: string;
-  termsAndConditions: string;
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
+  notes?: string;
+  termsAndConditions?: string;
   createdAt: string;
   updatedAt: string;
-  discount?: number;
-  shipping?: number;
-  orderId?: string;
-  customerName?: string;
-  amount?: number;
-  amountPaid?: number;
-  balance?: number;
-  terms?: string;
-  paymentMethod?: string;
-  referenceNumber?: string;
-  trackSheetId?: string;
-  customFields?: Record<string, any>;
+  gstDetails?: GSTDetails;
 }
 
 export interface StockRecord {
@@ -489,4 +477,13 @@ export interface Route {
   areas: string[];
   description?: string;
   isActive: boolean;
+}
+
+export interface GSTDetails {
+  gstNumber: string;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalTax: number;
+  hsnCode: string;
 }

@@ -1,4 +1,3 @@
-
 import { db } from '../database/OfflineDatabase';
 import { toast } from 'sonner';
 
@@ -395,7 +394,7 @@ export class EnhancedPredictiveAnalyticsService {
       // Check current stock levels
       const currentStock = product.stock || 0;
       const minStock = product.minStock || 10;
-      const maxStock = product.maxStock || 100;
+      const maxStock = product.maxStock || product.minStock ? product.minStock * 10 : 100; // Fallback calculation
       
       // Get predictions for next 3 days
       const predictions = await this.predictDailyDemand(product.id, 3);

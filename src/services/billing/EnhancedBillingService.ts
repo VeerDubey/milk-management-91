@@ -115,7 +115,7 @@ export class EnhancedBillingService {
 
       const savedInvoice = await db.addWithSync(db.invoices, invoiceData);
       toast.success(`Monthly bill generated for ${customer.name}`);
-      return savedInvoice;
+      return savedInvoice as Invoice;
     } catch (error) {
       console.error('Error generating monthly bill:', error);
       toast.error('Failed to generate monthly bill');
