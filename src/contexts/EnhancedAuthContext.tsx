@@ -1,121 +1,75 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import bcryptjs from 'bcryptjs';
 import { toast } from 'sonner';
-import { User, AuthContextType } from '@/types/auth';
+import { 
+  User, 
+  AuthContextType, 
+  LoginCredentials, 
+  SignupData, 
+  PasswordResetRequest,
+  UserCompany,
+  PasswordStrength 
+} from '@/types/auth';
+import { AuthService } from '@/services/auth/AuthService';
+import { checkPasswordStrength } from '@/utils/passwordStrength';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const SALT_ROUNDS = 10;
-
 export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [currentCompany, setCurrentCompany] = useState<UserCompany | null>(null);
+  const [companies, setCompanies] = useState<UserCompany[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        console.log('User loaded from localStorage:', parsedUser.name);
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('currentUser');
-      }
-    } else {
-      initializeDefaultUser();
-    }
+    initializeAuth();
   }, []);
 
-  const initializeDefaultUser = async (): Promise<void> => {
+  const initializeAuth = async () => {
     try {
-      const usersJson = localStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
+      AuthService.initializeDefaultUsers();
       
-      if (users.length === 0) {
-        console.log('Creating default admin and employee users');
-        
-        // Create admin user
-        const adminPasswordHash = await bcryptjs.hash('admin123', SALT_ROUNDS);
-        const adminUser = {
-          id: 'user_admin_default',
-          name: 'Administrator',
-          email: 'admin@vikasmilk.com',
-          role: 'admin' as const,
-          passwordHash: adminPasswordHash,
-          createdAt: new Date().toISOString(),
-          isActive: true
-        };
-        
-        // Create employee user
-        const employeePasswordHash = await bcryptjs.hash('employee123', SALT_ROUNDS);
-        const employeeUser = {
-          id: 'user_employee_default',
-          name: 'Employee',
-          email: 'employee@vikasmilk.com',
-          role: 'employee' as const,
-          passwordHash: employeePasswordHash,
-          createdAt: new Date().toISOString(),
-          isActive: true
-        };
-        
-        users.push(adminUser, employeeUser);
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        toast.info(
-          'Default accounts created:\nAdmin: admin@vikasmilk.com / admin123\nEmployee: employee@vikasmilk.com / employee123',
-          { duration: 8000 }
-        );
+      const currentUser = AuthService.getCurrentUser();
+      const currentComp = AuthService.getCurrentCompany();
+      
+      if (currentUser && AuthService.isAuthenticated()) {
+        setUser(currentUser);
+        setCurrentCompany(currentComp);
+        setCompanies(currentUser.companies);
+        setIsAuthenticated(true);
+        console.log('User restored from session:', currentUser.name);
       }
     } catch (error) {
-      console.error('Error initializing default users:', error);
+      console.error('Auth initialization error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (credentials: LoginCredentials): Promise<boolean> => {
     try {
-      const usersJson = localStorage.getItem('users');
-      if (!usersJson) {
-        await initializeDefaultUser();
-        return false;
-      }
+      const loggedInUser = await AuthService.login(credentials);
       
-      const users = JSON.parse(usersJson);
-      const foundUser = users.find((u: any) => u.email === email && u.isActive);
-      
-      if (!foundUser) {
-        toast.error('User not found or account is disabled');
-        return false;
-      }
-      
-      const match = await bcryptjs.compare(password, foundUser.passwordHash);
-      
-      if (match) {
-        const userInfo: User = {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          role: foundUser.role,
-          createdAt: foundUser.createdAt,
-          isActive: foundUser.isActive
-        };
-        
-        setUser(userInfo);
+      if (loggedInUser) {
+        setUser(loggedInUser);
+        setCompanies(loggedInUser.companies);
         setIsAuthenticated(true);
-        localStorage.setItem('currentUser', JSON.stringify(userInfo));
         
-        toast.success(`Welcome back, ${userInfo.name}!`, {
-          description: `Logged in as ${userInfo.role}`
-        });
+        // Set current company (last used or default)
+        const lastCompanyId = localStorage.getItem('last_company');
+        const targetCompany = lastCompanyId 
+          ? loggedInUser.companies.find(c => c.id === lastCompanyId)
+          : loggedInUser.companies.find(c => c.isDefault) || loggedInUser.companies[0];
         
-        console.log('User logged in successfully:', userInfo.name, 'Role:', userInfo.role);
+        if (targetCompany) {
+          setCurrentCompany(targetCompany);
+        }
+        
         return true;
-      } else {
-        toast.error('Invalid password');
-        return false;
       }
+      
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
@@ -123,76 +77,107 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: 'admin' | 'employee' = 'employee'): Promise<boolean> => {
+  const signup = async (data: SignupData): Promise<boolean> => {
     try {
-      const usersJson = localStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
-      
-      if (users.some((u: any) => u.email === email)) {
-        toast.error('User with this email already exists');
-        return false;
-      }
-      
-      const passwordHash = await bcryptjs.hash(password, SALT_ROUNDS);
-      
-      const newUser = {
-        id: `user_${Date.now()}`,
-        name,
-        email,
-        role,
-        passwordHash,
-        createdAt: new Date().toISOString(),
-        isActive: true
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      const userInfo: User = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        createdAt: newUser.createdAt,
-        isActive: newUser.isActive
-      };
-      
-      setUser(userInfo);
-      setIsAuthenticated(true);
-      localStorage.setItem('currentUser', JSON.stringify(userInfo));
-      
-      toast.success(`Account created successfully! Welcome, ${userInfo.name}!`);
-      console.log('New user signed up and logged in:', userInfo.name, 'Role:', userInfo.role);
-      
-      return true;
+      const newUser = await AuthService.signup(data);
+      return !!newUser;
     } catch (error) {
       console.error('Signup error:', error);
-      toast.error('Account creation failed. Please try again.');
+      toast.error('Signup failed. Please try again.');
       return false;
     }
   };
 
   const logout = () => {
+    AuthService.logout();
     setUser(null);
+    setCurrentCompany(null);
+    setCompanies([]);
     setIsAuthenticated(false);
-    localStorage.removeItem('currentUser');
-    toast.info('You have been logged out');
-    console.log('User logged out');
   };
 
-  const isAdmin = user?.role === 'admin';
-  const isEmployee = user?.role === 'employee';
+  const switchCompany = async (companyId: string): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const success = await AuthService.switchCompany(user.id, companyId);
+      
+      if (success) {
+        const newCurrentCompany = user.companies.find(c => c.id === companyId);
+        if (newCurrentCompany) {
+          setCurrentCompany(newCurrentCompany);
+          // Trigger a re-render of the entire app to update company-specific data
+          window.dispatchEvent(new CustomEvent('company-switched', { 
+            detail: { companyId, company: newCurrentCompany } 
+          }));
+        }
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Company switch error:', error);
+      toast.error('Failed to switch company');
+      return false;
+    }
+  };
+
+  const resetPassword = async (request: PasswordResetRequest): Promise<boolean> => {
+    // Mock implementation - in real app, this would trigger password reset email
+    toast.info('Password reset instructions sent to your email');
+    return true;
+  };
+
+  const verifyEmail = async (token: string): Promise<boolean> => {
+    // Mock implementation - in real app, this would verify the token
+    toast.success('Email verified successfully!');
+    return true;
+  };
+
+  const resendVerification = async (): Promise<boolean> => {
+    // Mock implementation
+    toast.info('Verification email sent!');
+    return true;
+  };
+
+  const enable2FA = async (): Promise<string> => {
+    // Mock implementation - return QR code data
+    toast.success('2FA enabled successfully!');
+    return 'mock-qr-code-data';
+  };
+
+  const verify2FA = async (code: string): Promise<boolean> => {
+    // Mock implementation
+    return code === '123456';
+  };
+
+  const checkPasswordStrengthWrapper = (password: string): PasswordStrength => {
+    return checkPasswordStrength(password);
+  };
+
+  const unlockAccount = async (token: string): Promise<boolean> => {
+    // Mock implementation
+    toast.success('Account unlocked successfully!');
+    return true;
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      signup, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      currentCompany,
+      companies,
       isAuthenticated,
-      isAdmin,
-      isEmployee,
-      initializeDefaultUser 
+      isLoading,
+      login,
+      signup,
+      logout,
+      switchCompany,
+      resetPassword,
+      verifyEmail,
+      resendVerification,
+      enable2FA,
+      verify2FA,
+      checkPasswordStrength: checkPasswordStrengthWrapper,
+      unlockAccount
     }}>
       {children}
     </AuthContext.Provider>
