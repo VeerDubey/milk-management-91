@@ -3,13 +3,15 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  passwordHash: string;
   role: 'admin' | 'employee';
-  createdAt: string;
-  isActive: boolean;
-  emailVerified: boolean;
-  twoFactorEnabled: boolean;
-  lastLogin?: string;
+  isEmailVerified: boolean;
   companies: UserCompany[];
+  createdAt: Date | string;
+  lastLogin: Date | string | null;
+  loginAttempts: number;
+  isLocked: boolean;
+  lockedUntil?: string;
   profilePicture?: string;
   phone?: string;
 }

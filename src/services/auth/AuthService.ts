@@ -32,6 +32,7 @@ export class AuthService {
               id: 'company-001',
               name: 'Vikas Milk Centre',
               role: 'admin',
+              permissions: ['all'],
               isDefault: true
             }
           ],
@@ -52,6 +53,7 @@ export class AuthService {
               id: 'company-001',
               name: 'Vikas Milk Centre',
               role: 'employee',
+              permissions: ['read', 'write'],
               isDefault: true
             }
           ],
@@ -165,6 +167,7 @@ export class AuthService {
             id: 'company-001',
             name: 'Vikas Milk Centre',
             role: 'employee',
+            permissions: ['read', 'write'],
             isDefault: true
           }
         ],
