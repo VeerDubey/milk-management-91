@@ -283,53 +283,94 @@ export default function TrackSheet() {
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Customer</th>
-                  {productNames.map(name => (
-                    <th key={name} className="text-center p-2">{name}</th>
+          <div className="relative">
+            {/* Fixed Customer Column Container */}
+            <div className="flex">
+              {/* Locked Customer Column */}
+              <div className="bg-background border-r border-border shadow-lg z-10" style={{ minWidth: '200px' }}>
+                <div className="border-b bg-muted/50">
+                  <div className="p-3 font-medium text-left">Customer</div>
+                </div>
+                <div className="max-h-[400px] overflow-y-auto">
+                  {rows.map((row, rowIndex) => (
+                    <div key={`customer-${rowIndex}`} className="border-b border-border p-3 bg-background">
+                      <span className="font-medium text-primary">{row.name}</span>
+                    </div>
                   ))}
-                  <th className="text-center p-2">Total</th>
-                  <th className="text-right p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="border-b">
-                    <td className="p-2">{row.name}</td>
+                  {rows.length === 0 && (
+                    <div className="p-3 text-center text-muted-foreground">
+                      No customers
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Scrollable Products and Data Area */}
+              <div className="flex-1 overflow-x-auto">
+                <div className="min-w-max">
+                  {/* Header for scrollable area */}
+                  <div className="border-b bg-muted/50 flex">
                     {productNames.map(name => (
-                      <td key={name} className="p-2">
-                        <Input 
-                          type="text"
-                          value={row.quantities[name]}
-                          onChange={(e) => handleQuantityChange(rowIndex, name, e.target.value)}
-                          className="w-16 text-center"
-                        />
-                      </td>
+                      <div key={name} className="p-3 text-center font-medium border-r border-border" style={{ minWidth: '120px' }}>
+                        {name}
+                      </div>
                     ))}
-                    <td className="p-2 text-center">{row.total}</td>
-                    <td className="p-2 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => removeRow(rowIndex)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={productNames.length + 3} className="text-center p-4">
-                      No customers added. Click 'Add Row' to add customers.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    <div className="p-3 text-center font-medium border-r border-border" style={{ minWidth: '80px' }}>
+                      Total
+                    </div>
+                    <div className="p-3 text-center font-medium" style={{ minWidth: '100px' }}>
+                      Actions
+                    </div>
+                  </div>
+                  
+                  {/* Data rows for scrollable area */}
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {rows.map((row, rowIndex) => (
+                      <div key={`data-${rowIndex}`} className="border-b border-border flex">
+                        {productNames.map(name => (
+                          <div key={name} className="p-2 border-r border-border" style={{ minWidth: '120px' }}>
+                            <Input 
+                              type="text"
+                              value={row.quantities[name]}
+                              onChange={(e) => handleQuantityChange(rowIndex, name, e.target.value)}
+                              className="w-full text-center h-8"
+                              placeholder="0"
+                            />
+                          </div>
+                        ))}
+                        <div className="p-3 text-center border-r border-border font-semibold text-primary" style={{ minWidth: '80px' }}>
+                          {row.total}
+                        </div>
+                        <div className="p-2 text-center" style={{ minWidth: '100px' }}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => removeRow(rowIndex)}
+                            className="h-8 w-8"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {rows.length === 0 && (
+                      <div className="flex">
+                        <div className="p-8 text-center text-muted-foreground" style={{ minWidth: `${productNames.length * 120 + 180}px` }}>
+                          No customers added. Click 'Add Row' to add customers.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Horizontal Scroll Indicator */}
+            {productNames.length > 4 && (
+              <div className="mt-2 text-xs text-muted-foreground text-center">
+                ← Scroll horizontally to view all products →
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

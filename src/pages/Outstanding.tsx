@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, FileDown, Printer, Filter, Users, RefreshCcw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function Outstanding() {
   const { customers, orders, payments } = useData();
@@ -71,12 +72,121 @@ export default function Outstanding() {
   const totalOutstanding = outstandingData.reduce((sum, customer) => sum + customer.outstandingBalance, 0);
   
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const printContent = `
+      <html>
+        <head>
+          <title>Outstanding Amounts Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .summary { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .text-right { text-align: right; }
+            .status-overdue { color: #dc2626; font-weight: bold; }
+            .status-recent { color: #16a34a; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Outstanding Amounts Report</h1>
+            <p>Generated on ${format(new Date(), 'PPP')}</p>
+          </div>
+          
+          <div class="summary">
+            <h3>Summary</h3>
+            <p><strong>Total Outstanding:</strong> ₹${totalOutstanding.toFixed(2)}</p>
+            <p><strong>Customers with Balance:</strong> ${outstandingData.length}</p>
+            <p><strong>Average Outstanding:</strong> ₹${outstandingData.length ? (totalOutstanding / outstandingData.length).toFixed(2) : "0.00"}</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Contact</th>
+                <th class="text-right">Total Ordered</th>
+                <th class="text-right">Total Paid</th>
+                <th class="text-right">Outstanding</th>
+                <th>Last Payment</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${outstandingData.map(customer => `
+                <tr>
+                  <td>${customer.name}</td>
+                  <td>${customer.phone || '-'}</td>
+                  <td class="text-right">₹${customer.totalOrdered.toFixed(2)}</td>
+                  <td class="text-right">₹${customer.totalPaid.toFixed(2)}</td>
+                  <td class="text-right">₹${customer.outstandingBalance.toFixed(2)}</td>
+                  <td>${customer.lastPaymentDate ? format(customer.lastPaymentDate, "dd/MM/yyyy") : "No payments"}</td>
+                  <td class="${customer.daysSincePayment === null ? '' : customer.daysSincePayment > 30 ? 'status-overdue' : 'status-recent'}">
+                    ${customer.daysSincePayment === null ? 'New' : customer.daysSincePayment > 30 ? 'Overdue' : 'Recent'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    
+    toast.success("Outstanding report sent to printer");
   };
   
   const handleExport = () => {
-    // Export logic would go here
-    alert("Export functionality to be implemented");
+    try {
+      // Prepare CSV data
+      const headers = ['Customer Name', 'Phone', 'Total Ordered', 'Total Paid', 'Outstanding Balance', 'Last Payment Date', 'Days Since Payment', 'Status'];
+      
+      const csvData = outstandingData.map(customer => [
+        customer.name,
+        customer.phone || '',
+        customer.totalOrdered.toFixed(2),
+        customer.totalPaid.toFixed(2),
+        customer.outstandingBalance.toFixed(2),
+        customer.lastPaymentDate ? format(customer.lastPaymentDate, "dd/MM/yyyy") : "No payments",
+        customer.daysSincePayment?.toString() || 'N/A',
+        customer.daysSincePayment === null ? 'New' : customer.daysSincePayment > 30 ? 'Overdue' : 'Recent'
+      ]);
+      
+      // Convert to CSV format
+      const csvContent = [
+        headers.join(','),
+        ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `outstanding-amounts-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("Outstanding amounts exported successfully");
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error("Failed to export outstanding amounts");
+    }
   };
 
   return (

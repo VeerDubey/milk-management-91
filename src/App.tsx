@@ -13,9 +13,13 @@ import { DataProvider } from '@/contexts/data/DataContext';
 import { InvoiceProvider } from '@/contexts/InvoiceContext';
 import ModernAuthForm from '@/components/auth/ModernAuthForm';
 import { Toaster } from 'sonner';
+import AppLayout from '@/components/layout/AppLayout';
 
 // Import all pages
 import Customers from './pages/Customers';
+import OrderDetail from './pages/OrderDetail';
+import OrderEdit from './pages/OrderEdit';
+import InvoiceCreate from './pages/InvoiceCreate';
 import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Payments from './pages/Payments';
@@ -44,27 +48,30 @@ function App() {
                 <Route path="/login" element={<ModernAuthForm />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route element={<ProtectedRoute />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/payments" element={<Payments />} />
-                  <Route path="/outstanding" element={<Outstanding />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/suppliers" element={<Suppliers />} />
-                  <Route path="/master" element={<Master />} />
-                  <Route path="/advanced" element={<Advanced />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/communication" element={<Communication />} />
-                  <Route path="/messaging" element={<Messaging />} />
-                  <Route path="/track-sheet" element={<TrackSheet />} />
-                  <Route path="/delivery-sheet" element={<DeliverySheet />} />
-                  <Route path="/inventory" element={<Inventory />} />
-                  <Route path="/role-management" element={<RoleManagementPage />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/ui-settings" element={<Settings />} />
+                  <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+                  <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+                  <Route path="/invoices" element={<AppLayout><Invoices /></AppLayout>} />
+                  <Route path="/customers" element={<AppLayout><Customers /></AppLayout>} />
+                  <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
+                  <Route path="/orders" element={<AppLayout><Orders /></AppLayout>} />
+                  <Route path="/orders/:id" element={<AppLayout><OrderDetail /></AppLayout>} />
+                  <Route path="/orders/edit/:id" element={<AppLayout><OrderEdit /></AppLayout>} />
+                  <Route path="/invoices/create/:orderId" element={<AppLayout><InvoiceCreate /></AppLayout>} />
+                  <Route path="/payments" element={<AppLayout><Payments /></AppLayout>} />
+                  <Route path="/outstanding" element={<AppLayout><Outstanding /></AppLayout>} />
+                  <Route path="/reports" element={<AppLayout><Reports /></AppLayout>} />
+                  <Route path="/suppliers" element={<AppLayout><Suppliers /></AppLayout>} />
+                  <Route path="/master" element={<AppLayout><Master /></AppLayout>} />
+                  <Route path="/advanced" element={<AppLayout><Advanced /></AppLayout>} />
+                  <Route path="/analytics" element={<AppLayout><Analytics /></AppLayout>} />
+                  <Route path="/communication" element={<AppLayout><Communication /></AppLayout>} />
+                  <Route path="/messaging" element={<AppLayout><Messaging /></AppLayout>} />
+                  <Route path="/track-sheet" element={<AppLayout><TrackSheet /></AppLayout>} />
+                  <Route path="/delivery-sheet" element={<AppLayout><DeliverySheet /></AppLayout>} />
+                  <Route path="/inventory" element={<AppLayout><Inventory /></AppLayout>} />
+                  <Route path="/role-management" element={<AppLayout><RoleManagementPage /></AppLayout>} />
+                  <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+                  <Route path="/ui-settings" element={<AppLayout><Settings /></AppLayout>} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

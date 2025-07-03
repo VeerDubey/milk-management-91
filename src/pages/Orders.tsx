@@ -209,15 +209,15 @@ export default function Orders() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => navigate(`/order/${order.id}`)}>
+                            <DropdownMenuItem onClick={() => navigate(`/orders/${order.id}`)}>
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/order-edit/${order.id}`)}>
+                            <DropdownMenuItem onClick={() => navigate(`/orders/edit/${order.id}`)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit Order
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/create-invoice/${order.id}`)}>
+                            <DropdownMenuItem onClick={() => navigate(`/invoices/create/${order.id}`)}>
                               <FileText className="mr-2 h-4 w-4" />
                               Create Invoice
                             </DropdownMenuItem>
