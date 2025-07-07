@@ -24,7 +24,8 @@ export default function OrderEdit() {
   const [notes, setNotes] = useState(order?.notes || '');
   const [items, setItems] = useState<OrderItem[]>(order?.items?.map(item => ({
     ...item,
-    unitPrice: item.unitPrice || item.rate || 0
+    unitPrice: item.unitPrice || item.rate || 0,
+    rate: item.rate || item.unitPrice || 0
   })) || []);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function OrderEdit() {
   }
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1, unitPrice: 0 }]);
+    setItems([...items, { productId: '', quantity: 1, unitPrice: 0, rate: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -53,7 +54,7 @@ export default function OrderEdit() {
   };
 
   const calculateTotal = () => {
-    return items.reduce((total, item) => total + (item.quantity * (item.unitPrice || item.rate || 0)), 0);
+    return items.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
   };
 
   const handleSave = () => {
@@ -233,7 +234,11 @@ export default function OrderEdit() {
                      <Input
                        type="number"
                        value={item.unitPrice}
-                       onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
+                       onChange={(e) => {
+                         const value = Number(e.target.value);
+                         updateItem(index, 'unitPrice', value);
+                         updateItem(index, 'rate', value);
+                       }}
                        min="0"
                        step="0.01"
                      />

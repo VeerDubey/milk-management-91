@@ -17,7 +17,8 @@ import {
   UserCog,
   TrendingUp,
   Mail,
-  Building2
+  Building2,
+  MapPin
 } from "lucide-react";
 
 import {
@@ -48,22 +49,34 @@ const operationsItems = [
   { title: "Delivery Sheet", url: "/delivery-sheet", icon: Truck },
   { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Suppliers", url: "/suppliers", icon: Building2 },
+  { title: "Order Entry", url: "/order-entry", icon: ShoppingCart },
+  { title: "Expenses", url: "/expenses", icon: DollarSign },
 ];
 
 const reportsItems = [
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
+  { title: "Customer Reports", url: "/customer-report", icon: Users },
+  { title: "Sales Report", url: "/sales-report", icon: TrendingUp },
+  { title: "Invoice History", url: "/invoice-history", icon: FileText },
+  { title: "Order History", url: "/order-history", icon: ShoppingCart },
 ];
 
 const communicationItems = [
   { title: "Communication", url: "/communication", icon: Mail },
   { title: "Messaging", url: "/messaging", icon: MessageSquare },
+  { title: "Email Templates", url: "/email-templates", icon: Mail },
+  { title: "SMS Templates", url: "/sms-templates", icon: MessageSquare },
+  { title: "Bulk Communication", url: "/bulk-communication", icon: Mail },
 ];
 
 const managementItems = [
   { title: "Master", url: "/master", icon: Factory },
   { title: "Advanced", url: "/advanced", icon: Settings },
   { title: "Role Management", url: "/role-management", icon: UserCog },
+  { title: "Area Management", url: "/area-management", icon: MapPin },
+  { title: "Vehicle Tracking", url: "/vehicle-tracking", icon: Truck },
+  { title: "Company Profile", url: "/company-profile", icon: Building2 },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
