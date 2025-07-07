@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '@/contexts/data/DataContext';
+import { OrderItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Save, Plus, Trash } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface OrderItem {
-  productId: string;
-  quantity: number;
-  rate: number;
-  unitPrice: number;
-}
 
 export default function OrderEdit() {
   const { id } = useParams();
@@ -30,7 +24,6 @@ export default function OrderEdit() {
   const [notes, setNotes] = useState(order?.notes || '');
   const [items, setItems] = useState<OrderItem[]>(order?.items?.map(item => ({
     ...item,
-    rate: item.rate || item.unitPrice || 0,
     unitPrice: item.unitPrice || item.rate || 0
   })) || []);
 
@@ -46,7 +39,7 @@ export default function OrderEdit() {
   }
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1, rate: 0, unitPrice: 0 }]);
+    setItems([...items, { productId: '', quantity: 1, unitPrice: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -56,19 +49,11 @@ export default function OrderEdit() {
   const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
-    
-    // Sync rate and unitPrice
-    if (field === 'rate') {
-      newItems[index].unitPrice = value as number;
-    } else if (field === 'unitPrice') {
-      newItems[index].rate = value as number;
-    }
-    
     setItems(newItems);
   };
 
   const calculateTotal = () => {
-    return items.reduce((total, item) => total + (item.quantity * item.rate), 0);
+    return items.reduce((total, item) => total + (item.quantity * (item.unitPrice || item.rate || 0)), 0);
   };
 
   const handleSave = () => {
@@ -243,30 +228,30 @@ export default function OrderEdit() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Rate (₹)</Label>
-                    <Input
-                      type="number"
-                      value={item.rate}
-                      onChange={(e) => updateItem(index, 'rate', Number(e.target.value))}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
+                   <div className="space-y-2">
+                     <Label>Rate (₹)</Label>
+                     <Input
+                       type="number"
+                       value={item.unitPrice}
+                       onChange={(e) => updateItem(index, 'unitPrice', Number(e.target.value))}
+                       min="0"
+                       step="0.01"
+                     />
+                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Total</Label>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-semibold">₹{(item.quantity * item.rate).toFixed(2)}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => removeItem(index)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                   <div className="space-y-2">
+                     <Label>Total</Label>
+                     <div className="flex items-center justify-between">
+                       <span className="text-lg font-semibold">₹{(item.quantity * item.unitPrice).toFixed(2)}</span>
+                       <Button
+                         variant="outline"
+                         size="icon"
+                         onClick={() => removeItem(index)}
+                       >
+                         <Trash className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </div>
                 </div>
               </div>
             ))}

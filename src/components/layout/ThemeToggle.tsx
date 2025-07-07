@@ -1,19 +1,15 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/contexts/ThemeProvider';
+import { useTheme } from '@/components/ui/theme-provider';
 import { MoonIcon, SunIcon } from 'lucide-react';
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
-  React.useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute('data-theme', theme);
-    
-    // Save to localStorage
-    localStorage.setItem('theme-preference', theme);
-  }, [theme]);
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <Button
