@@ -14,6 +14,7 @@ interface OrderItem {
   productId: string;
   quantity: number;
   rate: number;
+  unitPrice: number;
 }
 
 export default function OrderEdit() {
@@ -29,7 +30,8 @@ export default function OrderEdit() {
   const [notes, setNotes] = useState(order?.notes || '');
   const [items, setItems] = useState<OrderItem[]>(order?.items?.map(item => ({
     ...item,
-    rate: item.rate || 0
+    rate: item.rate || item.unitPrice || 0,
+    unitPrice: item.unitPrice || item.rate || 0
   })) || []);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function OrderEdit() {
   }
 
   const addItem = () => {
-    setItems([...items, { productId: '', quantity: 1, rate: 0 }]);
+    setItems([...items, { productId: '', quantity: 1, rate: 0, unitPrice: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -54,6 +56,14 @@ export default function OrderEdit() {
   const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
+    
+    // Sync rate and unitPrice
+    if (field === 'rate') {
+      newItems[index].unitPrice = value as number;
+    } else if (field === 'unitPrice') {
+      newItems[index].rate = value as number;
+    }
+    
     setItems(newItems);
   };
 
