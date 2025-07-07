@@ -33,6 +33,7 @@ import Communication from './pages/Communication';
 import Messaging from './pages/Messaging';
 import TrackSheet from './pages/TrackSheet';
 import DeliverySheet from './pages/DeliverySheet';
+import LoadSheetManagement from './pages/LoadSheetManagement';
 import Inventory from './pages/Inventory';
 import RoleManagementPage from './pages/RoleManagementPage';
 import OrderEntry from './pages/OrderEntry';
@@ -47,6 +48,14 @@ import BulkCommunication from './pages/BulkCommunication';
 import AreaManagement from './pages/AreaManagement';
 import VehicleTracking from './pages/VehicleTracking';
 import CompanyProfile from './pages/CompanyProfile';
+import PurchaseManagement from './pages/PurchaseManagement';
+import RouteManagement from './pages/RouteManagement';
+import ProductCategories from './pages/ProductCategories';
+import NotificationsPage from './pages/NotificationsPage';
+import SalesAnalytics from './pages/SalesAnalytics';
+import OutstandingDues from './pages/OutstandingDues';
+import CustomerDirectory from './pages/CustomerDirectory';
+import PurchaseHistory from './pages/PurchaseHistory';
 
 function App() {
   return (
@@ -87,9 +96,18 @@ function App() {
                   <Route path="/bulk-communication" element={<AppLayout><BulkCommunication /></AppLayout>} />
                   <Route path="/track-sheet" element={<AppLayout><TrackSheet /></AppLayout>} />
                   <Route path="/delivery-sheet" element={<AppLayout><DeliverySheet /></AppLayout>} />
+                  <Route path="/load-sheet" element={<AppLayout><LoadSheetManagement /></AppLayout>} />
                   <Route path="/inventory" element={<AppLayout><Inventory /></AppLayout>} />
                   <Route path="/order-entry" element={<AppLayout><OrderEntry /></AppLayout>} />
                   <Route path="/expenses" element={<AppLayout><Expenses /></AppLayout>} />
+                  <Route path="/purchase-management" element={<AppLayout><PurchaseManagement /></AppLayout>} />
+                  <Route path="/product-categories" element={<AppLayout><ProductCategories /></AppLayout>} />
+                  <Route path="/purchase-history" element={<AppLayout><PurchaseHistory /></AppLayout>} />
+                  <Route path="/sales-analytics" element={<AppLayout><SalesAnalytics /></AppLayout>} />
+                  <Route path="/outstanding-dues" element={<AppLayout><OutstandingDues /></AppLayout>} />
+                  <Route path="/customer-directory" element={<AppLayout><CustomerDirectory /></AppLayout>} />
+                  <Route path="/route-management" element={<AppLayout><RouteManagement /></AppLayout>} />
+                  <Route path="/notifications" element={<AppLayout><NotificationsPage /></AppLayout>} />
                   <Route path="/role-management" element={<AppLayout><RoleManagementPage /></AppLayout>} />
                   <Route path="/area-management" element={<AppLayout><AreaManagement /></AppLayout>} />
                   <Route path="/vehicle-tracking" element={<AppLayout><VehicleTracking /></AppLayout>} />

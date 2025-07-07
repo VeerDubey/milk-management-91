@@ -47,19 +47,25 @@ const mainMenuItems = [
 const operationsItems = [
   { title: "Track Sheet", url: "/track-sheet", icon: Clipboard },
   { title: "Delivery Sheet", url: "/delivery-sheet", icon: Truck },
+  { title: "Load Sheet", url: "/load-sheet", icon: Package },
   { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Suppliers", url: "/suppliers", icon: Building2 },
   { title: "Order Entry", url: "/order-entry", icon: ShoppingCart },
   { title: "Expenses", url: "/expenses", icon: DollarSign },
+  { title: "Purchase Management", url: "/purchase-management", icon: ShoppingCart },
+  { title: "Product Categories", url: "/product-categories", icon: Package },
 ];
 
 const reportsItems = [
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
+  { title: "Sales Analytics", url: "/sales-analytics", icon: TrendingUp },
   { title: "Customer Reports", url: "/customer-report", icon: Users },
   { title: "Sales Report", url: "/sales-report", icon: TrendingUp },
   { title: "Invoice History", url: "/invoice-history", icon: FileText },
   { title: "Order History", url: "/order-history", icon: ShoppingCart },
+  { title: "Purchase History", url: "/purchase-history", icon: ShoppingCart },
+  { title: "Outstanding Dues", url: "/outstanding-dues", icon: DollarSign },
 ];
 
 const communicationItems = [
@@ -75,8 +81,11 @@ const managementItems = [
   { title: "Advanced", url: "/advanced", icon: Settings },
   { title: "Role Management", url: "/role-management", icon: UserCog },
   { title: "Area Management", url: "/area-management", icon: MapPin },
+  { title: "Route Management", url: "/route-management", icon: MapPin },
   { title: "Vehicle Tracking", url: "/vehicle-tracking", icon: Truck },
   { title: "Company Profile", url: "/company-profile", icon: Building2 },
+  { title: "Customer Directory", url: "/customer-directory", icon: Users },
+  { title: "Notifications", url: "/notifications", icon: MessageSquare },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
