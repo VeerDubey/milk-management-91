@@ -1,250 +1,228 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Edit, Trash, Mail, Send, Eye, Copy } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Mail, Pencil, Plus, Save, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+interface EmailTemplate {
+  id: string;
+  name: string;
+  category: 'order' | 'payment' | 'delivery' | 'promotion' | 'reminder';
+  subject: string;
+  content: string;
+  variables: string[];
+  isActive: boolean;
+  createdAt: string;
+  usageCount: number;
+}
 
-const EmailTemplates = () => {
-  // Sample templates
-  const [templates, setTemplates] = useState([
+export default function EmailTemplates() {
+  const [templates, setTemplates] = useState<EmailTemplate[]>([
     {
-      id: "1",
-      name: "Payment Reminder",
-      subject: "Payment Reminder for Invoice #[INVOICE_NUMBER]",
-      content: "Dear [Customer Name],\n\nThis is a reminder that invoice #[INVOICE_NUMBER] for Rs.[AMOUNT] is due on [DUE_DATE].\n\nPlease arrange for payment at your earliest convenience.\n\nThank you,\nVikas Milk Center"
+      id: '1',
+      name: 'Order Confirmation',
+      category: 'order',
+      subject: 'Order Confirmation - {{orderNumber}}',
+      content: 'Dear {{customerName}},\n\nThank you for your order! Your order #{{orderNumber}} has been confirmed.\n\nOrder Details:\nTotal Amount: ₹{{amount}}\nDelivery Date: {{deliveryDate}}\n\nThank you for choosing us!\n\nBest regards,\nVikas Milk Centre',
+      variables: ['customerName', 'orderNumber', 'amount', 'deliveryDate'],
+      isActive: true,
+      createdAt: '2024-01-15',
+      usageCount: 245
     },
     {
-      id: "2",
-      name: "Order Confirmation",
-      subject: "Your Order #[ORDER_NUMBER] has been confirmed",
-      content: "Dear [Customer Name],\n\nYour order #[ORDER_NUMBER] has been confirmed and will be delivered on [DELIVERY_DATE].\n\nOrder Details:\n[ORDER_DETAILS]\n\nThank you for your business.\n\nRegards,\nVikas Milk Center"
-    },
-    {
-      id: "3",
-      name: "Monthly Statement",
-      subject: "Your Monthly Statement for [MONTH]",
-      content: "Dear [Customer Name],\n\nPlease find attached your monthly statement for the period of [START_DATE] to [END_DATE].\n\nTotal amount: Rs.[TOTAL_AMOUNT]\nPaid: Rs.[PAID_AMOUNT]\nOutstanding: Rs.[OUTSTANDING_AMOUNT]\n\nPlease contact us if you have any questions.\n\nRegards,\nVikas Milk Center"
+      id: '2',
+      name: 'Payment Reminder',
+      category: 'reminder',
+      subject: 'Payment Reminder - Due {{dueDate}}',
+      content: 'Dear {{customerName}},\n\nThis is a friendly reminder that your payment of ₹{{amount}} is due on {{dueDate}}.\n\nPlease make the payment at your earliest convenience to avoid any late charges.\n\nIf you have already made the payment, please ignore this message.\n\nThank you!\n\nVikas Milk Centre',
+      variables: ['customerName', 'amount', 'dueDate'],
+      isActive: true,
+      createdAt: '2024-01-10',
+      usageCount: 156
     }
   ]);
 
-  const [newTemplate, setNewTemplate] = useState({
-    name: "",
-    subject: "",
-    content: ""
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'order' as EmailTemplate['category'],
+    subject: '',
+    content: ''
   });
 
-  const [editingTemplate, setEditingTemplate] = useState<{
-    id: string;
-    name: string;
-    subject: string;
-    content: string;
-  } | null>(null);
-
-  const [showNewDialog, setShowNewDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-
   const handleCreateTemplate = () => {
-    if (!newTemplate.name || !newTemplate.subject || !newTemplate.content) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    const templateId = `template-${Date.now()}`;
-    const template = {
-      id: templateId,
-      ...newTemplate
+    const newTemplate: EmailTemplate = {
+      id: Date.now().toString(),
+      name: formData.name,
+      category: formData.category,
+      subject: formData.subject,
+      content: formData.content,
+      variables: extractVariables(formData.content + ' ' + formData.subject),
+      isActive: true,
+      createdAt: new Date().toISOString().split('T')[0],
+      usageCount: 0
     };
 
-    setTemplates([...templates, template]);
-    setNewTemplate({ name: "", subject: "", content: "" });
-    setShowNewDialog(false);
-    toast.success(`Template "${template.name}" created successfully`);
+    setTemplates([...templates, newTemplate]);
+    setFormData({ name: '', category: 'order', subject: '', content: '' });
+    setIsDialogOpen(false);
+    toast.success('Email template created successfully');
   };
 
-  const handleEditTemplate = () => {
-    if (!editingTemplate || !editingTemplate.name || !editingTemplate.subject || !editingTemplate.content) {
-      toast.error("Please fill in all fields");
-      return;
+  const extractVariables = (content: string): string[] => {
+    const regex = /\{\{(\w+)\}\}/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      matches.push(match[1]);
     }
-
-    setTemplates(templates.map(t => t.id === editingTemplate.id ? editingTemplate : t));
-    setEditingTemplate(null);
-    setShowEditDialog(false);
-    toast.success("Template updated successfully");
-  };
-
-  const handleDeleteTemplate = (id: string) => {
-    setTemplates(templates.filter(t => t.id !== id));
-    toast.success("Template deleted successfully");
+    return [...new Set(matches)];
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Email Templates</h1>
-        <p className="text-muted-foreground">
-          Create and manage email templates for quick communications
-        </p>
-      </div>
-
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
         <div>
-          <span className="text-muted-foreground">{templates.length} templates</span>
+          <h1 className="text-3xl font-bold tracking-tight text-gradient-aurora">
+            Email Templates
+          </h1>
+          <p className="text-muted-foreground">Create and manage email templates for automated messaging</p>
         </div>
-        <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="aurora-button">
               <Plus className="mr-2 h-4 w-4" />
               New Template
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create Email Template</DialogTitle>
-              <DialogDescription>
-                Create a new email template for quick communications.
-              </DialogDescription>
+              <DialogDescription>Design a new email template for your campaigns</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Template Name</Label>
-                <Input
-                  id="name"
-                  value={newTemplate.name}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                  placeholder="Payment Reminder"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Template Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="Enter template name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={formData.category} onValueChange={(value: any) => setFormData({...formData, category: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="order">Order</SelectItem>
+                      <SelectItem value="payment">Payment</SelectItem>
+                      <SelectItem value="delivery">Delivery</SelectItem>
+                      <SelectItem value="promotion">Promotion</SelectItem>
+                      <SelectItem value="reminder">Reminder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="subject">Email Subject</Label>
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject Line</Label>
                 <Input
                   id="subject"
-                  value={newTemplate.subject}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
-                  placeholder="Your Payment is Due"
+                  value={formData.subject}
+                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                  placeholder="Enter email subject with variables like {{customerName}}"
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <Label htmlFor="content">Email Content</Label>
                 <Textarea
                   id="content"
-                  value={newTemplate.content}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
-                  placeholder="Dear [Customer Name],\n\nThis is a reminder that..."
-                  className="min-h-[200px]"
+                  value={formData.content}
+                  onChange={(e) => setFormData({...formData, content: e.target.value})}
+                  placeholder="Enter your email content. Use {{variableName}} for dynamic content."
+                  rows={6}
                 />
+                <p className="text-sm text-muted-foreground">
+                  Use double curly braces for variables: {`{{customerName}}, {{amount}}, {{orderNumber}}`}
+                </p>
               </div>
-              <div className="text-sm text-muted-foreground">
-                <p>Available placeholders:</p>
-                <ul className="list-disc list-inside">
-                  <li>[Customer Name] - Customer's name</li>
-                  <li>[INVOICE_NUMBER] - Invoice number</li>
-                  <li>[AMOUNT] - Invoice amount</li>
-                  <li>[DUE_DATE] - Due date</li>
-                </ul>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateTemplate} disabled={!formData.name || !formData.subject || !formData.content}>
+                  Create Template
+                </Button>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowNewDialog(false)}>Cancel</Button>
-              <Button onClick={handleCreateTemplate}>Create Template</Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {templates.map((template) => (
-          <Card key={template.id}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Mail className="h-5 w-5 mr-2" />
-                  {template.name}
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setEditingTemplate(template);
-                      setShowEditDialog(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteTemplate(template.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardTitle>
-              <CardDescription>{template.subject}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground whitespace-pre-line max-h-[150px] overflow-hidden">
-                {template.content}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Email Template</DialogTitle>
-            <DialogDescription>
-              Make changes to your email template.
-            </DialogDescription>
-          </DialogHeader>
-          {editingTemplate && (
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Template Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editingTemplate.name}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-subject">Email Subject</Label>
-                <Input
-                  id="edit-subject"
-                  value={editingTemplate.subject}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, subject: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-content">Email Content</Label>
-                <Textarea
-                  id="edit-content"
-                  value={editingTemplate.content}
-                  onChange={(e) => setEditingTemplate({ ...editingTemplate, content: e.target.value })}
-                  className="min-h-[200px]"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-            <Button onClick={handleEditTemplate}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Card className="aurora-card">
+        <CardHeader>
+          <CardTitle>Email Templates</CardTitle>
+          <CardDescription>Manage your email templates and track their usage</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table className="aurora-table">
+            <TableHeader>
+              <TableRow className="aurora-table-header">
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Usage</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map((template) => (
+                <TableRow key={template.id} className="aurora-table-row">
+                  <TableCell className="font-medium">{template.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{template.category}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-xs">
+                    <div className="truncate text-sm text-muted-foreground">
+                      {template.subject}
+                    </div>
+                  </TableCell>
+                  <TableCell>{template.usageCount}</TableCell>
+                  <TableCell>
+                    <Badge variant={template.isActive ? "default" : "secondary"}>
+                      {template.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="ghost" size="sm">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default EmailTemplates;
+}
