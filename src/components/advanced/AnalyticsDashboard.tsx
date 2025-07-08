@@ -2,13 +2,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, Users, Package, DollarSign, Calendar } from 'lucide-react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/data/DataContext';
 
 export function AnalyticsDashboard() {
   const { orders, customers, products } = useData();
   
   // Calculate metrics
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
   const totalOrders = orders.length;
   const activeCustomers = customers.filter(c => c.isActive).length;
   const totalProducts = products.length;

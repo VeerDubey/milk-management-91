@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useData } from "@/contexts/DataContext";
+import { useData } from "@/contexts/data/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -260,17 +260,10 @@ const Customers = () => {
           {customers.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground mb-4">No customers found</p>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Your First Customer
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  {/* Same dialog content as above */}
-                </DialogContent>
-              </Dialog>
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Your First Customer
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">

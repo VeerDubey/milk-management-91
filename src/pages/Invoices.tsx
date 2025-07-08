@@ -244,7 +244,7 @@ export default function Invoices() {
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="sm">
                             <span className="sr-only">Open menu</span>
-                            <ArrowUpDown className="h-4 w-4" />
+                            ⋯
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -260,7 +260,7 @@ export default function Invoices() {
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload(invoice.id)}>
                             <Download className="mr-2 h-4 w-4" />
-                            Download
+                            Download PDF
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toast.success(`Invoice sent to ${invoice.customerName}`)}>
                             <Send className="mr-2 h-4 w-4" />

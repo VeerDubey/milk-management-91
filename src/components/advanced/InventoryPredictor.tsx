@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, TrendingUp, AlertTriangle } from 'lucide-react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/data/DataContext';
 
 export function InventoryPredictor() {
   const { products, orders } = useData();

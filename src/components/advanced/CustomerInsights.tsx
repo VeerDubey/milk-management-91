@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, TrendingUp, Star, Target } from 'lucide-react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/data/DataContext';
 
 export function CustomerInsights() {
   const { customers, orders } = useData();
@@ -11,7 +11,7 @@ export function CustomerInsights() {
   // Calculate customer insights
   const customerStats = customers.map(customer => {
     const customerOrders = orders.filter(order => order.customerId === customer.id);
-    const totalSpent = customerOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalSpent = customerOrders.reduce((sum, order) => sum + (order.total || 0), 0);
     const orderCount = customerOrders.length;
     const avgOrderValue = orderCount > 0 ? totalSpent / orderCount : 0;
     
