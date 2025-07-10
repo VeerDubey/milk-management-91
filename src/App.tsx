@@ -57,6 +57,9 @@ import CustomerDirectory from './pages/CustomerDirectory';
 import PurchaseHistory from './pages/PurchaseHistory';
 import StockManagement from './pages/StockManagement';
 import StockSettings from './pages/StockSettings';
+import TaxSettings from './pages/TaxSettings';
+import FinancialYear from './pages/FinancialYear';
+import UserAccess from './pages/UserAccess';
 
 function App() {
   return (
@@ -118,6 +121,9 @@ function App() {
                   
                   <Route path="/stock-management" element={<AppLayout><StockManagement /></AppLayout>} />
                   <Route path="/stock-settings" element={<AppLayout><StockSettings /></AppLayout>} />
+                  <Route path="/tax-settings" element={<AppLayout><TaxSettings /></AppLayout>} />
+                  <Route path="/financial-year" element={<AppLayout><FinancialYear /></AppLayout>} />
+                  <Route path="/user-access" element={<AppLayout><UserAccess /></AppLayout>} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
