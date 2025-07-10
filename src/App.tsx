@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -56,6 +55,8 @@ import SalesAnalytics from './pages/SalesAnalytics';
 import OutstandingDues from './pages/OutstandingDues';
 import CustomerDirectory from './pages/CustomerDirectory';
 import PurchaseHistory from './pages/PurchaseHistory';
+import StockManagement from './pages/StockManagement';
+import StockSettings from './pages/StockSettings';
 
 function App() {
   return (
@@ -114,6 +115,9 @@ function App() {
                   <Route path="/company-profile" element={<AppLayout><CompanyProfile /></AppLayout>} />
                   <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
                   <Route path="/ui-settings" element={<AppLayout><Settings /></AppLayout>} />
+                  
+                  <Route path="/stock-management" element={<AppLayout><StockManagement /></AppLayout>} />
+                  <Route path="/stock-settings" element={<AppLayout><StockSettings /></AppLayout>} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

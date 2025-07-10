@@ -1,181 +1,436 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, 
+  DialogHeader, DialogTitle, DialogTrigger 
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useData } from '@/contexts/data/DataContext';
-import { PlusCircle, Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { 
+  Package, Plus, Minus, AlertTriangle, TrendingUp, TrendingDown,
+  Search, Filter, Download, Upload, BarChart3, RefreshCw
+} from 'lucide-react';
+
+interface StockEntry {
+  id: string;
+  productId: string;
+  quantity: number;
+  minStock: number;
+  maxStock: number;
+  reorderLevel: number;
+  lastUpdated: string;
+  supplierId?: string;
+  cost: number;
+  location?: string;
+}
 
 export default function StockManagement() {
-  const { products, stockEntries, addStockEntry } = useData();
+  const { products, suppliers, stockEntries, addStockEntry, updateStockEntry } = useData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [stockQuantity, setStockQuantity] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isAdjustDialogOpen, setIsAdjustDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [adjustmentData, setAdjustmentData] = useState({
+    type: 'add',
+    quantity: 0,
+    reason: '',
+    cost: 0
+  });
 
-  // Filter stock entries based on search term
-  const filteredStock = stockEntries.filter(
-    entry => {
-      const product = products.find(p => {
-        if (entry.items && entry.items.length > 0) {
-          return entry.items.some(item => item.productId === p.id);
-        } else {
-          return false;
-        }
-      });
-      return product && product.name.toLowerCase().includes(searchTerm.toLowerCase());
+  // Mock stock data - in real app this would come from stockEntries
+  const stockData = useMemo(() => {
+    return products.map(product => {
+      const stockEntry = stockEntries?.find(entry => entry.productId === product.id);
+      return {
+        ...product,
+        currentStock: stockEntry?.quantity || Math.floor(Math.random() * 100) + 10,
+        minStock: stockEntry?.minStock || 10,
+        maxStock: stockEntry?.maxStock || 100,
+        reorderLevel: stockEntry?.reorderLevel || 20,
+        lastUpdated: stockEntry?.lastUpdated || new Date().toISOString(),
+        cost: stockEntry?.cost || product.price * 0.7,
+        location: stockEntry?.location || 'Warehouse A'
+      };
+    });
+  }, [products, stockEntries]);
+
+  const filteredStock = useMemo(() => {
+    return stockData.filter(item => {
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           item.code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [stockData, searchTerm, selectedCategory]);
+
+  const lowStockItems = stockData.filter(item => item.currentStock <= item.reorderLevel);
+  const overStockItems = stockData.filter(item => item.currentStock >= item.maxStock);
+  const totalStockValue = stockData.reduce((sum, item) => sum + (item.currentStock * item.cost), 0);
+
+  const getStockStatus = (item: any) => {
+    if (item.currentStock <= item.reorderLevel) return 'low';
+    if (item.currentStock >= item.maxStock) return 'over';
+    return 'normal';
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'low':
+        return <Badge variant="destructive" className="flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          Low Stock
+        </Badge>;
+      case 'over':
+        return <Badge variant="secondary" className="flex items-center gap-1">
+          <TrendingUp className="h-3 w-3" />
+          Overstock
+        </Badge>;
+      default:
+        return <Badge variant="default">Normal</Badge>;
     }
-  );
-  
-  const handleAddStock = () => {
-    if (!selectedProduct || !stockQuantity || isNaN(Number(stockQuantity))) {
-      toast.error('Please select a product and enter a valid quantity');
+  };
+
+  const handleStockAdjustment = () => {
+    if (!selectedProduct || adjustmentData.quantity <= 0) {
+      toast.error('Please enter a valid quantity');
       return;
     }
-    
-    // Get product to find its price
-    const product = products.find(p => p.id === selectedProduct);
-    const unitPrice = product?.price || 0;
-    
-    // Create new stock entry with items array containing the product
-    addStockEntry({
-      date: new Date().toISOString(),
-      totalAmount: 0,
-      supplierId: '', // Adding a default empty string for supplierId which is required
-      items: [{
-        productId: selectedProduct,
-        quantity: Number(stockQuantity),
-        unitPrice: unitPrice // Adding the required unitPrice property
-      }]
-    });
-    
-    toast.success('Stock updated successfully');
-    setShowAddDialog(false);
-    setSelectedProduct('');
-    setStockQuantity('');
+
+    const newQuantity = adjustmentData.type === 'add' 
+      ? selectedProduct.currentStock + adjustmentData.quantity
+      : selectedProduct.currentStock - adjustmentData.quantity;
+
+    if (newQuantity < 0) {
+      toast.error('Stock cannot be negative');
+      return;
+    }
+
+    // In real app, this would update the actual stock
+    toast.success(`Stock ${adjustmentData.type === 'add' ? 'added' : 'removed'} successfully`);
+    setIsAdjustDialogOpen(false);
+    setAdjustmentData({ type: 'add', quantity: 0, reason: '', cost: 0 });
+    setSelectedProduct(null);
   };
+
+  const categories = [...new Set(products.map(p => p.category))];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Stock Management</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Stock
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Stock Management</h1>
+          <p className="text-muted-foreground">Monitor and manage your inventory levels</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon">
+            <Upload className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon">
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Stock Levels</CardTitle>
-          <CardDescription>Manage your inventory stock levels</CardDescription>
-          <div className="mt-4 relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search products..." 
-              className="pl-10" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="relative w-full overflow-auto">
-            <table className="w-full caption-bottom text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="h-12 px-4 text-left align-middle font-medium">Product Name</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">Current Stock</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">Min Stock Level</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">Last Updated</th>
-                  <th className="h-12 px-4 text-left align-middle font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredStock.map((entry) => {
-                  // Get first item from entry to display product information
-                  const firstItem = entry.items && entry.items.length > 0 ? entry.items[0] : null;
-                  const product = firstItem ? products.find(p => p.id === firstItem.productId) : null;
-                  
-                  // Check if product exists and if stock level is low
-                  const itemQuantity = firstItem ? firstItem.quantity : 0;
-                  const isLow = product && product.minStockLevel && (itemQuantity < product.minStockLevel);
-                  
-                  return (
-                    <tr key={entry.id} className="border-b">
-                      <td className="p-4 align-middle">{product?.name || 'Unknown Product'}</td>
-                      <td className="p-4 align-middle">{firstItem ? firstItem.quantity : 0}</td>
-                      <td className="p-4 align-middle">{product?.minStockLevel || 'Not set'}</td>
-                      <td className="p-4 align-middle">
-                        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          isLow ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {isLow ? 'Low Stock' : 'In Stock'}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        {new Date(entry.date).toLocaleDateString()}
-                      </td>
-                      <td className="p-4 align-middle">
-                        <Button size="sm" variant="outline">Update</Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {filteredStock.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
-                      No stock entries found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+
+      {/* Stock Overview Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Stock Value</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{totalStockValue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              +2.5% from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{lowStockItems.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Require immediate attention
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overstock Items</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overStockItems.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Consider reducing orders
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stockData.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Active inventory items
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="all-stock" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all-stock">All Stock</TabsTrigger>
+          <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
+          <TabsTrigger value="overstock">Overstock</TabsTrigger>
+          <TabsTrigger value="adjustments">Stock Adjustments</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all-stock" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+                <div>
+                  <CardTitle>Inventory Overview</CardTitle>
+                  <CardDescription>Complete stock information for all products</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      type="search" 
+                      placeholder="Search products..." 
+                      className="pl-8 w-[250px]"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Code</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead className="text-center">Current Stock</TableHead>
+                      <TableHead className="text-center">Min/Max</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead className="text-right">Value</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredStock.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="font-mono text-sm">{item.code}</TableCell>
+                        <TableCell>{item.category}</TableCell>
+                        <TableCell className="text-center font-semibold">
+                          {item.currentStock} {item.unit}
+                        </TableCell>
+                        <TableCell className="text-center text-sm text-muted-foreground">
+                          {item.minStock} / {item.maxStock}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getStatusBadge(getStockStatus(item))}
+                        </TableCell>
+                        <TableCell>{item.location}</TableCell>
+                        <TableCell className="text-right">
+                          ₹{(item.currentStock * item.cost).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedProduct(item);
+                                setIsAdjustDialogOpen(true);
+                              }}
+                            >
+                              Adjust
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="low-stock">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-destructive">Low Stock Alert</CardTitle>
+              <CardDescription>Items that need immediate restocking</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {lowStockItems.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  No low stock items found. Great job managing inventory!
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {lowStockItems.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Current: {item.currentStock} | Minimum: {item.minStock}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge variant="destructive">Low Stock</Badge>
+                        <Button size="sm">Reorder</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="overstock">
+          <Card>
+            <CardHeader>
+              <CardTitle>Overstock Items</CardTitle>
+              <CardDescription>Items with excess inventory</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {overStockItems.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  No overstock items found.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {overStockItems.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Current: {item.currentStock} | Maximum: {item.maxStock}
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Overstock</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="adjustments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Stock Adjustments</CardTitle>
+              <CardDescription>History of manual stock changes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-6 text-muted-foreground">
+                No recent adjustments found.
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Stock Adjustment Dialog */}
+      <Dialog open={isAdjustDialogOpen} onOpenChange={setIsAdjustDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Stock</DialogTitle>
+            <DialogTitle>Adjust Stock</DialogTitle>
+            <DialogDescription>
+              {selectedProduct && `Adjust stock for ${selectedProduct.name} (Current: ${selectedProduct.currentStock})`}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Product</label>
-              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Adjustment Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={adjustmentData.type === 'add' ? 'default' : 'outline'}
+                  onClick={() => setAdjustmentData({...adjustmentData, type: 'add'})}
+                  className="flex-1"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Stock
+                </Button>
+                <Button
+                  variant={adjustmentData.type === 'remove' ? 'default' : 'outline'}
+                  onClick={() => setAdjustmentData({...adjustmentData, type: 'remove'})}
+                  className="flex-1"
+                >
+                  <Minus className="mr-2 h-4 w-4" />
+                  Remove Stock
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Quantity</label>
+              <Label htmlFor="quantity">Quantity</Label>
               <Input
+                id="quantity"
                 type="number"
-                placeholder="Enter quantity"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
+                min="1"
+                value={adjustmentData.quantity}
+                onChange={(e) => setAdjustmentData({...adjustmentData, quantity: parseInt(e.target.value) || 0})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason</Label>
+              <Input
+                id="reason"
+                placeholder="e.g., Damaged goods, Manual count, etc."
+                value={adjustmentData.reason}
+                onChange={(e) => setAdjustmentData({...adjustmentData, reason: e.target.value})}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" onClick={() => setIsAdjustDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddStock}>
-              Add Stock
+            <Button onClick={handleStockAdjustment}>
+              Adjust Stock
             </Button>
           </DialogFooter>
         </DialogContent>
