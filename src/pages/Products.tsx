@@ -1,185 +1,181 @@
+
 import { useState } from "react";
-import { useData } from "@/contexts/DataContext";
+import { useData } from "@/contexts/data/DataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Edit, Trash2, Package } from "lucide-react";
+import { ProductDialog } from "@/components/dialogs/ProductDialog";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function Products() {
-  const { products, addProduct, updateProduct, deleteProduct } = useData();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [unit, setUnit] = useState("");
-  const [category, setCategory] = useState("");
-  const [stock, setStock] = useState("");
-  const [costPrice, setCostPrice] = useState("");
+  const { products, deleteProduct } = useData();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleAddProduct = () => {
-    if (!name || !price || !unit || !stock) {
-      toast.error("Please fill in all required fields.");
-      return;
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDeleteProduct = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
+      deleteProduct(id);
+      toast.success("Product deleted successfully!");
     }
-
-    const product = {
-      name,
-      description,
-      price: parseFloat(price),
-      unit,
-      category: category || 'General',
-      stock: parseInt(stock),
-      costPrice: parseFloat(costPrice || '0'),
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      hasVariants: false
-    };
-
-    addProduct(product);
-    toast.success("Product added successfully!");
-    setName("");
-    setDescription("");
-    setPrice("");
-    setUnit("");
-    setCategory("");
-    setStock("");
-    setCostPrice("");
   };
 
-  const handleDeleteProduct = (id: string) => {
-    deleteProduct(id);
-    toast.success("Product deleted successfully!");
+  const getStockStatus = (stock: number) => {
+    if (stock === 0) return { variant: "destructive" as const, label: "Out of Stock" };
+    if (stock < 10) return { variant: "secondary" as const, label: "Low Stock" };
+    return { variant: "default" as const, label: "In Stock" };
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-        <p className="text-muted-foreground">
-          Manage your products and their details
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+          <p className="text-muted-foreground">
+            Manage your product inventory and pricing
+          </p>
+        </div>
+        <ProductDialog />
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Products</p>
+                <p className="text-2xl font-bold">{products.length}</p>
+              </div>
+              <Package className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Low Stock</p>
+                <p className="text-2xl font-bold text-orange-500">
+                  {products.filter(p => p.stock < 10 && p.stock > 0).length}
+                </p>
+              </div>
+              <Package className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Out of Stock</p>
+                <p className="text-2xl font-bold text-red-500">
+                  {products.filter(p => p.stock === 0).length}
+                </p>
+              </div>
+              <Package className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Categories</p>
+                <p className="text-2xl font-bold">
+                  {new Set(products.map(p => p.category)).size}
+                </p>
+              </div>
+              <Package className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Add Product</CardTitle>
-          <CardDescription>
-            Add a new product to your inventory
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Product name"
-              />
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Product Inventory</CardTitle>
+              <CardDescription>
+                View and manage your product catalog
+              </CardDescription>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                id="price"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Product price"
+                placeholder="Search products..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Input
-                id="unit"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="Product unit (e.g., kg, piece)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                type="number"
-                value={stock}
-                onChange={(e) => setStock(e.target.value)}
-                placeholder="Product stock"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="Product category"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="costPrice">Cost Price</Label>
-              <Input
-                id="costPrice"
-                type="number"
-                value={costPrice}
-                onChange={(e) => setCostPrice(e.target.value)}
-                placeholder="Product cost price"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Product description"
-            />
-          </div>
-          <Button onClick={handleAddProduct}>Add Product</Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Product List</CardTitle>
-          <CardDescription>
-            View and manage your existing products
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="border rounded-md p-4 flex items-center justify-between"
-              >
-                <div>
-                  <h3 className="text-lg font-semibold">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {product.description}
-                  </p>
-                  <p className="text-sm">Price: ₹{product.price}</p>
-                  <p className="text-sm">Stock: {product.stock}</p>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteProduct(product.id)}
-                >
-                  Delete
-                </Button>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Stock</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => {
+                    const status = getStockStatus(product.stock);
+                    
+                    return (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell>{product.category || 'General'}</TableCell>
+                        <TableCell>{product.unit}</TableCell>
+                        <TableCell className="text-right">₹{product.price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{product.stock}</TableCell>
+                        <TableCell>
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center space-x-2">
+                            <ProductDialog product={product}>
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </ProductDialog>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      {searchQuery ? 'No products found matching your search.' : 'No products added yet. Click "Add Product" to get started.'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
