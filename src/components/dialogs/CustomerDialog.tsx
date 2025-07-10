@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,18 @@ export function CustomerDialog({ customer, children }: CustomerDialogProps) {
         updateCustomer(customer.id, formData);
         toast.success('Customer updated successfully');
       } else {
-        addCustomer(formData);
+        const customerData = {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          notes: formData.notes,
+          isActive: true,
+          outstandingBalance: 0,
+          balance: 0,
+          createdAt: new Date().toISOString()
+        };
+        addCustomer(customerData);
         toast.success('Customer added successfully');
       }
       setOpen(false);

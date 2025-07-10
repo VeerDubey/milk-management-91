@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ export function PaymentDialog({ customerId, children }: PaymentDialogProps) {
         referenceNumber: formData.referenceNumber || undefined,
         notes: formData.notes || undefined,
         date: formData.date,
-        status: 'completed'
+        status: 'completed' as const
       };
 
       addPayment(paymentData);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,9 +13,11 @@ interface OrderDialogProps {
 }
 
 export function OrderDialog({ children }: OrderDialogProps) {
-  const { customers, products, addOrder } = useData();
+  const { customers, products, vehicles, salesmen, addOrder } = useData();
   const [open, setOpen] = useState(false);
   const [customerId, setCustomerId] = useState('');
+  const [vehicleId, setVehicleId] = useState('');
+  const [salesmanId, setSalesmanId] = useState('');
   const [orderItems, setOrderItems] = useState([{ productId: '', quantity: 1, rate: 0 }]);
 
   const addOrderItem = () => {
@@ -61,14 +62,18 @@ export function OrderDialog({ children }: OrderDialogProps) {
     try {
       const orderData = {
         customerId,
+        vehicleId: vehicleId || (vehicles.length > 0 ? vehicles[0].id : ''),
+        salesmanId: salesmanId || (salesmen.length > 0 ? salesmen[0].id : ''),
         items: orderItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
+          unitPrice: item.rate,
           rate: item.rate,
           total: item.quantity * item.rate
         })),
         total: calculateTotal(),
-        status: 'pending',
+        status: 'pending' as const,
+        paymentStatus: 'pending' as const,
         date: new Date().toISOString().split('T')[0]
       };
 
@@ -76,6 +81,8 @@ export function OrderDialog({ children }: OrderDialogProps) {
       toast.success('Order created successfully');
       setOpen(false);
       setCustomerId('');
+      setVehicleId('');
+      setSalesmanId('');
       setOrderItems([{ productId: '', quantity: 1, rate: 0 }]);
     } catch (error) {
       toast.error('Failed to create order');
@@ -100,16 +107,49 @@ export function OrderDialog({ children }: OrderDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer">Customer *</Label>
+              <Select value={customerId} onValueChange={setCustomerId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(customer => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicle">Vehicle</Label>
+              <Select value={vehicleId} onValueChange={setVehicleId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select vehicle" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.map(vehicle => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="customer">Customer *</Label>
-            <Select value={customerId} onValueChange={setCustomerId}>
+            <Label htmlFor="salesman">Salesman</Label>
+            <Select value={salesmanId} onValueChange={setSalesmanId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
+                <SelectValue placeholder="Select salesman" />
               </SelectTrigger>
               <SelectContent>
-                {customers.map(customer => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
+                {salesmen.map(salesman => (
+                  <SelectItem key={salesman.id} value={salesman.id}>
+                    {salesman.name}
                   </SelectItem>
                 ))}
               </SelectContent>
