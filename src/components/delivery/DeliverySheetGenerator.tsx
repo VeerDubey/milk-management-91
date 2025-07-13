@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,12 +9,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { 
   FileText, Download, Printer, Calculator, MapPin, 
-  Calendar, Users, Package, IndianRupee
+  Calendar, Users, Package, IndianRupee, Truck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useData } from '@/contexts/data/DataContext';
 import { toast } from 'sonner';
 import { downloadDeliverySheetPDF, printDeliverySheet, exportToExcel } from '@/utils/deliverySheetUtils';
+import { LoadSheetCreator } from './LoadSheetCreator';
 import type { CheckedState } from '@radix-ui/react-checkbox';
 
 interface DeliverySheetData {
@@ -341,6 +341,14 @@ export default function DeliverySheetGenerator() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Load Sheet Creator */}
+      <LoadSheetCreator 
+        deliverySheetData={deliveryData}
+        selectedDate={selectedDate}
+        selectedArea={selectedAreas.length > 0 ? selectedAreas.join(', ') : undefined}
+        selectedVehicle={selectedVehicle}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
