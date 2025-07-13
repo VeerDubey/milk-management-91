@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useData } from '@/contexts/data/DataContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,19 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Printer, Download, FileSpreadsheet, Calendar, MapPin, Truck, Edit, Save, Plus, CreditCard } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Printer, Download, FileSpreadsheet, Calendar, MapPin, Truck, Edit, Save, Plus, CreditCard, Users, Package, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { downloadDeliverySheetPDF, printDeliverySheet, exportToExcel } from '@/utils/deliverySheetUtils';
 
 interface DeliveryItem {
+  id: string;
+  customerId: string;
   customerName: string;
-  GGH: number;
-  GGH450: number;
-  GTSF: number;
-  GSD1KG: number;
-  GPC: number;
-  FL: number;
+  area: string;
+  productQuantities: { [productId: string]: number };
   totalQty: number;
   amount: number;
   totalPaid?: number;
@@ -29,76 +27,188 @@ interface DeliveryItem {
 }
 
 export default function DeliverySheet() {
-  const { customers, vehicles, orders } = useData();
+  const { customers, vehicles, orders, products, getProductRateForCustomer } = useData();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedArea, setSelectedArea] = useState('EICHER');
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(true);
   const [showPayments, setShowPayments] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced delivery data with payment tracking
-  const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>([
-    { 
-      customerName: 'SHAMIM DAIRY', 
-      GGH: 12, GGH450: 0, GTSF: 0, GSD1KG: 40, GPC: 0, FL: 0, 
-      totalQty: 52, amount: 2784.00, totalPaid: 2000.00, balanceDue: 784.00, paymentReceived: 500.00 
-    },
-    { 
-      customerName: 'INDIA DAIRY', 
-      GGH: 8, GGH450: 15, GTSF: 25, GSD1KG: 12, GPC: 5, FL: 8, 
-      totalQty: 73, amount: 3912.00, totalPaid: 3000.00, balanceDue: 912.00, paymentReceived: 800.00 
-    },
-    { 
-      customerName: 'FRESH MILK CENTER', 
-      GGH: 15, GGH450: 20, GTSF: 30, GSD1KG: 8, GPC: 3, FL: 6, 
-      totalQty: 82, amount: 4396.00, totalPaid: 4000.00, balanceDue: 396.00, paymentReceived: 396.00 
-    },
-    { 
-      customerName: 'ROYAL DAIRY', 
-      GGH: 10, GGH450: 25, GTSF: 15, GSD1KG: 0, GPC: 2, FL: 5, 
-      totalQty: 57, amount: 3057.00, totalPaid: 2500.00, balanceDue: 557.00, paymentReceived: 300.00 
-    },
-    { 
-      customerName: 'GOLDEN MILK HOUSE', 
-      GGH: 15, GGH450: 24, GTSF: 25, GSD1KG: 0, GPC: 2, FL: 5, 
-      totalQty: 71, amount: 3807.00, totalPaid: 3500.00, balanceDue: 307.00, paymentReceived: 307.00 
-    },
-  ]);
+  // Get unique areas from customers
+  const areas = useMemo(() => {
+    const areaSet = new Set(customers.map(c => c.area).filter(Boolean));
+    return Array.from(areaSet);
+  }, [customers]);
 
-  // Calculate totals
-  const totals = {
-    GGH: deliveryItems.reduce((sum, item) => sum + item.GGH, 0),
-    GGH450: deliveryItems.reduce((sum, item) => sum + item.GGH450, 0),
-    GTSF: deliveryItems.reduce((sum, item) => sum + item.GTSF, 0),
-    GSD1KG: deliveryItems.reduce((sum, item) => sum + item.GSD1KG, 0),
-    GPC: deliveryItems.reduce((sum, item) => sum + item.GPC, 0),
-    FL: deliveryItems.reduce((sum, item) => sum + item.FL, 0),
-    totalQty: deliveryItems.reduce((sum, item) => sum + item.totalQty, 0),
-    amount: deliveryItems.reduce((sum, item) => sum + item.amount, 0),
-    totalPaid: deliveryItems.reduce((sum, item) => sum + (item.totalPaid || 0), 0),
-    balanceDue: deliveryItems.reduce((sum, item) => sum + (item.balanceDue || 0), 0),
-    paymentReceived: deliveryItems.reduce((sum, item) => sum + (item.paymentReceived || 0), 0),
+  // Filter customers by selected areas
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(customer => 
+      selectedAreas.length === 0 || selectedAreas.includes(customer.area || '')
+    );
+  }, [customers, selectedAreas]);
+
+  // Generate delivery items from existing orders or create empty ones
+  const [deliveryItems, setDeliveryItems] = useState<DeliveryItem[]>(() => {
+    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    const relevantOrders = orders.filter(order => 
+      order.date === dateStr && order.status !== 'cancelled'
+    );
+
+    const itemsMap = new Map<string, DeliveryItem>();
+
+    // Initialize with all customers
+    filteredCustomers.forEach(customer => {
+      itemsMap.set(customer.id, {
+        id: customer.id,
+        customerId: customer.id,
+        customerName: customer.name,
+        area: customer.area || 'No Area',
+        productQuantities: {},
+        totalQty: 0,
+        amount: 0,
+        totalPaid: 0,
+        balanceDue: 0,
+        paymentReceived: 0
+      });
+    });
+
+    // Fill in order data
+    relevantOrders.forEach(order => {
+      const item = itemsMap.get(order.customerId);
+      if (!item) return;
+
+      order.items.forEach(orderItem => {
+        item.productQuantities[orderItem.productId] = orderItem.quantity;
+        item.totalQty += orderItem.quantity;
+        item.amount += orderItem.quantity * orderItem.unitPrice;
+      });
+    });
+
+    return Array.from(itemsMap.values());
+  });
+
+  // Update delivery items when customers or areas change
+  const filteredDeliveryItems = useMemo(() => {
+    return deliveryItems.filter(item => 
+      selectedAreas.length === 0 || selectedAreas.includes(item.area)
+    );
+  }, [deliveryItems, selectedAreas]);
+
+  // Update quantity for a specific customer and product
+  const updateQuantity = (customerId: string, productId: string, quantity: number) => {
+    setDeliveryItems(prev => prev.map(item => {
+      if (item.customerId === customerId) {
+        const newProductQuantities = { ...item.productQuantities };
+        if (quantity > 0) {
+          newProductQuantities[productId] = quantity;
+        } else {
+          delete newProductQuantities[productId];
+        }
+
+        // Recalculate totals
+        const totalQty = Object.values(newProductQuantities).reduce((sum, qty) => sum + qty, 0);
+        const amount = Object.entries(newProductQuantities).reduce((sum, [pId, qty]) => {
+          const rate = getProductRateForCustomer(customerId, pId) || 
+                      products.find(p => p.id === pId)?.price || 0;
+          return sum + (qty * rate);
+        }, 0);
+
+        return {
+          ...item,
+          productQuantities: newProductQuantities,
+          totalQty,
+          amount,
+          balanceDue: amount - (item.totalPaid || 0) - (item.paymentReceived || 0)
+        };
+      }
+      return item;
+    }));
   };
 
-  const updatePayment = (index: number, payment: number) => {
-    const newItems = [...deliveryItems];
-    newItems[index] = { 
-      ...newItems[index], 
-      paymentReceived: payment,
-      balanceDue: newItems[index].amount - (newItems[index].totalPaid || 0) - payment
+  // Calculate totals
+  const totals = useMemo(() => {
+    const productTotals: { [productId: string]: number } = {};
+    let totalQty = 0;
+    let totalAmount = 0;
+    let totalPaid = 0;
+    let totalBalance = 0;
+    let totalPaymentReceived = 0;
+
+    filteredDeliveryItems.forEach(item => {
+      Object.entries(item.productQuantities).forEach(([productId, quantity]) => {
+        productTotals[productId] = (productTotals[productId] || 0) + quantity;
+      });
+      totalQty += item.totalQty;
+      totalAmount += item.amount;
+      totalPaid += item.totalPaid || 0;
+      totalBalance += item.balanceDue || 0;
+      totalPaymentReceived += item.paymentReceived || 0;
+    });
+
+    return {
+      productTotals,
+      totalQty,
+      totalAmount,
+      totalPaid,
+      totalBalance,
+      totalPaymentReceived
     };
-    setDeliveryItems(newItems);
+  }, [filteredDeliveryItems]);
+
+  const handleAreaToggle = (area: string) => {
+    setSelectedAreas(prev => 
+      prev.includes(area) 
+        ? prev.filter(a => a !== area)
+        : [...prev, area]
+    );
+  };
+
+  const updatePayment = (customerId: string, payment: number) => {
+    setDeliveryItems(prev => prev.map(item => {
+      if (item.customerId === customerId) {
+        const newPaymentReceived = payment;
+        const newBalanceDue = item.amount - (item.totalPaid || 0) - newPaymentReceived;
+        return {
+          ...item,
+          paymentReceived: newPaymentReceived,
+          balanceDue: newBalanceDue
+        };
+      }
+      return item;
+    }));
   };
 
   const handlePrint = () => {
     try {
-      printDeliverySheet({
+      const printData = {
         date: format(selectedDate, 'dd/MM/yyyy'),
-        area: selectedArea,
-        items: deliveryItems,
-        totals
-      });
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: filteredDeliveryItems.map(item => ({
+          customerName: item.customerName,
+          area: item.area,
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              item.productQuantities[product.id] || 0
+            ])
+          ),
+          totalQty: item.totalQty,
+          amount: item.amount
+        })),
+        totals: {
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              totals.productTotals[product.id] || 0
+            ])
+          ),
+          totalQty: totals.totalQty,
+          amount: totals.totalAmount
+        }
+      };
+      
+      printDeliverySheet(printData);
       toast.success('Print dialog opened');
     } catch (error) {
       toast.error('Failed to print delivery sheet');
@@ -107,12 +217,34 @@ export default function DeliverySheet() {
 
   const handleDownloadPDF = () => {
     try {
-      downloadDeliverySheetPDF({
+      const pdfData = {
         date: format(selectedDate, 'dd/MM/yyyy'),
-        area: selectedArea,
-        items: deliveryItems,
-        totals
-      });
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: filteredDeliveryItems.map(item => ({
+          customerName: item.customerName,
+          area: item.area,
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              item.productQuantities[product.id] || 0
+            ])
+          ),
+          totalQty: item.totalQty,
+          amount: item.amount
+        })),
+        totals: {
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              totals.productTotals[product.id] || 0
+            ])
+          ),
+          totalQty: totals.totalQty,
+          amount: totals.totalAmount
+        }
+      };
+      
+      downloadDeliverySheetPDF(pdfData);
       toast.success('PDF downloaded successfully');
     } catch (error) {
       toast.error('Failed to generate PDF');
@@ -121,12 +253,34 @@ export default function DeliverySheet() {
 
   const handleExportExcel = () => {
     try {
-      exportToExcel({
+      const excelData = {
         date: format(selectedDate, 'dd/MM/yyyy'),
-        area: selectedArea,
-        items: deliveryItems,
-        totals
-      });
+        area: selectedAreas.length > 0 ? selectedAreas.join(', ') : 'All Areas',
+        items: filteredDeliveryItems.map(item => ({
+          customerName: item.customerName,
+          area: item.area,
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              item.productQuantities[product.id] || 0
+            ])
+          ),
+          totalQty: item.totalQty,
+          amount: item.amount
+        })),
+        totals: {
+          ...Object.fromEntries(
+            products.map(product => [
+              product.code || product.name.replace(/\s+/g, ''),
+              totals.productTotals[product.id] || 0
+            ])
+          ),
+          totalQty: totals.totalQty,
+          amount: totals.totalAmount
+        }
+      };
+      
+      exportToExcel(excelData);
       toast.success('Excel file exported successfully');
     } catch (error) {
       toast.error('Failed to export Excel');
@@ -134,79 +288,78 @@ export default function DeliverySheet() {
   };
 
   return (
-    <div className="neo-noir-bg min-h-screen">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold neo-noir-gradient-text">
-              Delivery Sheet Management
+            <h1 className="text-4xl font-bold text-gradient-aurora">
+              VIKAS MILK CENTRE
             </h1>
-            <p className="neo-noir-text-muted">
-              Generate and manage delivery sheets with payment tracking
+            <p className="text-lg text-muted-foreground">
+              Delivery Sheet Management - Since 1975
             </p>
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
             <Button 
+              onClick={() => setIsEditMode(!isEditMode)} 
+              variant="outline"
+            >
+              {isEditMode ? <Save className="mr-2 h-4 w-4" /> : <Edit className="mr-2 h-4 w-4" />}
+              {isEditMode ? 'Save' : 'Edit'}
+            </Button>
+            <Button 
               onClick={() => setShowPayments(!showPayments)} 
-              variant="outline" 
-              className="neo-noir-button-outline"
+              variant="outline"
             >
               <CreditCard className="mr-2 h-4 w-4" />
               {showPayments ? 'Hide' : 'Show'} Payments
             </Button>
-            <Button onClick={handlePrint} variant="outline" className="neo-noir-button-outline">
+            <Button onClick={handlePrint} variant="outline">
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
-            <Button onClick={handleDownloadPDF} className="neo-noir-button-accent">
+            <Button onClick={handleDownloadPDF} className="bg-primary">
               <Download className="mr-2 h-4 w-4" />
               PDF
             </Button>
-            <Button onClick={handleExportExcel} variant="outline" className="neo-noir-button-outline">
+            <Button onClick={handleExportExcel} variant="outline">
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               Excel
             </Button>
           </div>
         </div>
 
-        {/* Controls */}
-        <Card className="neo-noir-card">
+        {/* Filters */}
+        <Card>
           <CardHeader>
-            <CardTitle className="neo-noir-text">Delivery Parameters</CardTitle>
-            <CardDescription className="neo-noir-text-muted">
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Delivery Parameters
+            </CardTitle>
+            <CardDescription>
               Configure delivery sheet parameters and filters
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="space-y-2">
-                <Label className="neo-noir-text">Date</Label>
+                <Label>Date</Label>
                 <DatePicker
                   date={selectedDate}
                   setDate={setSelectedDate}
-                  className="w-full neo-noir-input"
+                  className="w-full"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label className="neo-noir-text">Delivery Area</Label>
-                <Input
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
-                  placeholder="Enter area"
-                  className="neo-noir-input"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="neo-noir-text">Vehicle</Label>
+                <Label>Vehicle</Label>
                 <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
-                  <SelectTrigger className="neo-noir-input">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select vehicle" />
                   </SelectTrigger>
-                  <SelectContent className="neo-noir-surface">
+                  <SelectContent>
                     {vehicles.map(vehicle => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
                         <div className="flex items-center gap-2">
@@ -218,115 +371,207 @@ export default function DeliverySheet() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2 flex items-end">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {format(selectedDate, 'dd/MM/yyyy')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Select Areas (leave empty for all)</Label>
+              <div className="flex flex-wrap gap-2">
+                {areas.map(area => (
+                  <Badge
+                    key={area}
+                    variant={selectedAreas.includes(area) ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/80"
+                    onClick={() => handleAreaToggle(area)}
+                  >
+                    <MapPin className="mr-1 h-3 w-3" />
+                    {area}
+                  </Badge>
+                ))}
+              </div>
+              {selectedAreas.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Selected Areas: {selectedAreas.join(', ')}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Delivery Sheet */}
-        <div ref={printRef} className="neo-noir-print-container">
-          <Card className="neo-noir-card">
-            <CardContent className="p-8">
-              {/* Header */}
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  <img 
-                    src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
-                    alt="Vikas Milk Centre" 
-                    className="h-16 w-16"
-                  />
-                  <div>
-                    <h1 className="text-2xl font-bold neo-noir-text">VIKAS MILK CENTRE</h1>
-                    <p className="neo-noir-text-muted">SINCE 1975</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center neo-noir-text">
-                  <span className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {format(selectedDate, 'dd/MM/yyyy')}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Area: {selectedArea}
-                  </span>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-primary" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-muted-foreground">Customers</p>
+                  <p className="text-2xl font-bold">{filteredDeliveryItems.length}</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Table */}
-              <Table className="neo-noir-table">
-                <TableHeader>
-                  <TableRow className="neo-noir-table-header">
-                    <TableHead className="text-center">S.NO</TableHead>
-                    <TableHead>CUSTOMER NAME</TableHead>
-                    <TableHead className="text-center">GGH</TableHead>
-                    <TableHead className="text-center">GGH450</TableHead>
-                    <TableHead className="text-center">GTSF</TableHead>
-                    <TableHead className="text-center">GSD1KG</TableHead>
-                    <TableHead className="text-center">GPC</TableHead>
-                    <TableHead className="text-center">F&L</TableHead>
-                    <TableHead className="text-center">QTY</TableHead>
-                    <TableHead className="text-center">AMOUNT</TableHead>
-                    {showPayments && <TableHead className="text-center">PAID</TableHead>}
-                    {showPayments && <TableHead className="text-center">BALANCE</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deliveryItems.map((item, index) => (
-                    <TableRow key={index} className="neo-noir-table-row">
-                      <TableCell className="text-center font-medium">{index + 1}</TableCell>
-                      <TableCell className="font-medium">{item.customerName}</TableCell>
-                      <TableCell className="text-center">{item.GGH || ''}</TableCell>
-                      <TableCell className="text-center">{item.GGH450 || ''}</TableCell>
-                      <TableCell className="text-center">{item.GTSF || ''}</TableCell>
-                      <TableCell className="text-center">{item.GSD1KG || ''}</TableCell>
-                      <TableCell className="text-center">{item.GPC || ''}</TableCell>
-                      <TableCell className="text-center">{item.FL || ''}</TableCell>
-                      <TableCell className="text-center font-semibold">{item.totalQty}</TableCell>
-                      <TableCell className="text-center font-semibold">₹{item.amount.toFixed(2)}</TableCell>
-                      {showPayments && (
-                        <TableCell className="text-center">
-                          <Input
-                            type="number"
-                            value={item.paymentReceived || 0}
-                            onChange={(e) => updatePayment(index, parseFloat(e.target.value) || 0)}
-                            className="w-20 text-center neo-noir-input"
-                          />
-                        </TableCell>
-                      )}
-                      {showPayments && (
-                        <TableCell className="text-center font-semibold text-orange-400">
-                          ₹{(item.balanceDue || 0).toFixed(2)}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                  
-                  {/* Totals Row */}
-                  <TableRow className="neo-noir-table-total">
-                    <TableCell className="text-center font-bold"></TableCell>
-                    <TableCell className="font-bold">TOTAL</TableCell>
-                    <TableCell className="text-center font-bold">{totals.GGH}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.GGH450}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.GTSF}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.GSD1KG}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.GPC}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.FL}</TableCell>
-                    <TableCell className="text-center font-bold">{totals.totalQty}</TableCell>
-                    <TableCell className="text-center font-bold">₹{totals.amount.toFixed(2)}</TableCell>
-                    {showPayments && <TableCell className="text-center font-bold">₹{totals.paymentReceived.toFixed(2)}</TableCell>}
-                    {showPayments && <TableCell className="text-center font-bold">₹{totals.balanceDue.toFixed(2)}</TableCell>}
-                  </TableRow>
-                </TableBody>
-              </Table>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <Package className="h-8 w-8 text-success" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-muted-foreground">Total Qty</p>
+                  <p className="text-2xl font-bold">{totals.totalQty}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <div className="h-8 w-8 text-warning">₹</div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-muted-foreground">Total Amount</p>
+                  <p className="text-2xl font-bold">₹{totals.totalAmount.toFixed(2)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <div className="h-8 w-8 text-info">₹</div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-muted-foreground">Avg per Customer</p>
+                  <p className="text-2xl font-bold">
+                    ₹{filteredDeliveryItems.length > 0 ? (totals.totalAmount / filteredDeliveryItems.length).toFixed(0) : '0'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Delivery Sheet Table */}
+        <div ref={printRef}>
+          <Card className="print:shadow-none">
+            <CardHeader className="print:pb-2 text-center">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <img 
+                  src="/lovable-uploads/28f4e98f-6710-4594-b4b9-244b3b660626.png" 
+                  alt="Vikas Milk Centre" 
+                  className="h-16 w-16"
+                />
+                <div>
+                  <CardTitle className="text-2xl">VIKAS MILK CENTRE</CardTitle>
+                  <p className="text-muted-foreground">SINCE 1975</p>
+                </div>
+              </div>
+              <CardDescription className="text-center">
+                Delivery Sheet - {format(selectedDate, 'dd/MM/yyyy')} 
+                {selectedAreas.length > 0 && ` - Areas: ${selectedAreas.join(', ')}`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-border">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="border border-border p-2 text-center">S.NO</th>
+                      <th className="border border-border p-2 text-left">CUSTOMER NAME</th>
+                      <th className="border border-border p-2 text-center">AREA</th>
+                      {products.map(product => (
+                        <th key={product.id} className="border border-border p-2 text-center min-w-[60px]">
+                          {product.code || product.name.substring(0, 6)}
+                        </th>
+                      ))}
+                      <th className="border border-border p-2 text-center">QTY</th>
+                      <th className="border border-border p-2 text-center">AMOUNT</th>
+                      {showPayments && <th className="border border-border p-2 text-center">PAID</th>}
+                      {showPayments && <th className="border border-border p-2 text-center">BALANCE</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDeliveryItems.map((item, index) => (
+                      <tr key={item.id} className={item.totalQty === 0 ? 'text-muted-foreground' : ''}>
+                        <td className="border border-border p-2 text-center font-medium">{index + 1}</td>
+                        <td className="border border-border p-2 font-medium">{item.customerName}</td>
+                        <td className="border border-border p-2 text-center">{item.area}</td>
+                        {products.map(product => (
+                          <td key={product.id} className="border border-border p-2 text-center">
+                            {isEditMode ? (
+                              <Input
+                                type="number"
+                                min="0"
+                                value={item.productQuantities[product.id] || ''}
+                                onChange={(e) => updateQuantity(item.customerId, product.id, parseInt(e.target.value) || 0)}
+                                className="w-16 h-8 text-center text-xs p-1"
+                                placeholder="0"
+                              />
+                            ) : (
+                              item.productQuantities[product.id] || '-'
+                            )}
+                          </td>
+                        ))}
+                        <td className="border border-border p-2 text-center font-semibold">{item.totalQty || '-'}</td>
+                        <td className="border border-border p-2 text-center font-semibold">
+                          {item.amount > 0 ? `₹${item.amount.toFixed(2)}` : '-'}
+                        </td>
+                        {showPayments && (
+                          <td className="border border-border p-2 text-center">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={item.paymentReceived || ''}
+                              onChange={(e) => updatePayment(item.customerId, parseFloat(e.target.value) || 0)}
+                              className="w-20 h-8 text-center text-xs p-1"
+                              placeholder="0"
+                            />
+                          </td>
+                        )}
+                        {showPayments && (
+                          <td className="border border-border p-2 text-center font-semibold text-orange-500">
+                            ₹{(item.balanceDue || 0).toFixed(2)}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                    
+                    {/* Totals Row */}
+                    <tr className="bg-primary/10 font-bold">
+                      <td className="border border-border p-2 text-center"></td>
+                      <td className="border border-border p-2">TOTAL</td>
+                      <td className="border border-border p-2"></td>
+                      {products.map(product => (
+                        <td key={product.id} className="border border-border p-2 text-center">
+                          {totals.productTotals[product.id] || 0}
+                        </td>
+                      ))}
+                      <td className="border border-border p-2 text-center">{totals.totalQty}</td>
+                      <td className="border border-border p-2 text-center">₹{totals.totalAmount.toFixed(2)}</td>
+                      {showPayments && <td className="border border-border p-2 text-center">₹{totals.totalPaymentReceived.toFixed(2)}</td>}
+                      {showPayments && <td className="border border-border p-2 text-center">₹{totals.totalBalance.toFixed(2)}</td>}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               {/* Signature Section */}
-              <div className="mt-12 flex justify-between items-end">
+              <div className="mt-12 flex justify-between items-end print:block">
                 <div className="text-center">
-                  <div className="border-b-2 border-gray-400 w-48 mb-2"></div>
-                  <p className="neo-noir-text-muted text-sm">Driver's Signature</p>
+                  <div className="border-b-2 border-border w-48 mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Driver's Signature</p>
                 </div>
                 <div className="text-center">
-                  <div className="border-b-2 border-gray-400 w-48 mb-2"></div>
-                  <p className="neo-noir-text-muted text-sm">Supervisor's Signature</p>
+                  <div className="border-b-2 border-border w-48 mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Supervisor's Signature</p>
                 </div>
               </div>
             </CardContent>
