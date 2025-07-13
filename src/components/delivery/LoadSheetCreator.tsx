@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useData } from '@/contexts/data/DataContext';
 import { format } from 'date-fns';
-import { exportLoadSheetToPDF, printLoadSheet, exportLoadSheetToExcel } from '@/utils/loadSheetUtils';
+import { exportLoadSheetToPDF, printLoadSheet as printLoadSheetUtil, exportLoadSheetToExcel } from '@/utils/loadSheetUtils';
 
 interface LoadSheetItem {
   productId: string;
@@ -182,7 +181,7 @@ export function LoadSheetCreator({ deliverySheetData = [], selectedDate, selecte
     }
   };
 
-  const printLoadSheet = () => {
+  const handlePrintLoadSheet = () => {
     const totals = calculateTotals();
     const loadSheetData = {
       date: format(selectedDate, 'dd/MM/yyyy'),
@@ -194,7 +193,7 @@ export function LoadSheetCreator({ deliverySheetData = [], selectedDate, selecte
     };
 
     try {
-      printLoadSheet(loadSheetData);
+      printLoadSheetUtil(loadSheetData);
       toast.success('Print dialog opened');
     } catch (error) {
       toast.error('Failed to print load sheet');
@@ -402,7 +401,7 @@ export function LoadSheetCreator({ deliverySheetData = [], selectedDate, selecte
             {/* Action Buttons */}
             <div className="flex justify-between">
               <div className="flex gap-2">
-                <Button variant="outline" onClick={printLoadSheet}>
+                <Button variant="outline" onClick={handlePrintLoadSheet}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
