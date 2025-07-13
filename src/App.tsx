@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/components/ui/theme-provider"
@@ -60,6 +61,8 @@ import StockSettings from './pages/StockSettings';
 import TaxSettings from './pages/TaxSettings';
 import FinancialYear from './pages/FinancialYear';
 import UserAccess from './pages/UserAccess';
+import BulkRates from './pages/BulkRates';
+import BusinessIntelligencePage from './pages/BusinessIntelligence';
 
 function App() {
   return (
@@ -93,6 +96,7 @@ function App() {
                   <Route path="/master" element={<AppLayout><Master /></AppLayout>} />
                   <Route path="/advanced" element={<AppLayout><Advanced /></AppLayout>} />
                   <Route path="/analytics" element={<AppLayout><Analytics /></AppLayout>} />
+                  <Route path="/business-intelligence" element={<AppLayout><BusinessIntelligencePage /></AppLayout>} />
                   <Route path="/communication" element={<AppLayout><Communication /></AppLayout>} />
                   <Route path="/messaging" element={<AppLayout><Messaging /></AppLayout>} />
                   <Route path="/email-templates" element={<AppLayout><EmailTemplates /></AppLayout>} />
@@ -118,12 +122,12 @@ function App() {
                   <Route path="/company-profile" element={<AppLayout><CompanyProfile /></AppLayout>} />
                   <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
                   <Route path="/ui-settings" element={<AppLayout><Settings /></AppLayout>} />
-                  
                   <Route path="/stock-management" element={<AppLayout><StockManagement /></AppLayout>} />
                   <Route path="/stock-settings" element={<AppLayout><StockSettings /></AppLayout>} />
                   <Route path="/tax-settings" element={<AppLayout><TaxSettings /></AppLayout>} />
                   <Route path="/financial-year" element={<AppLayout><FinancialYear /></AppLayout>} />
                   <Route path="/user-access" element={<AppLayout><UserAccess /></AppLayout>} />
+                  <Route path="/bulk-rates" element={<AppLayout><BulkRates /></AppLayout>} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

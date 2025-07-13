@@ -32,6 +32,9 @@ import {
   Download,
   FileText,
   DollarSign,
+  Activity,
+  Target,
+  Zap
 } from 'lucide-react';
 import { format, subDays, isAfter } from 'date-fns';
 import { toast } from 'sonner';
@@ -125,15 +128,23 @@ export const EnhancedDashboard: React.FC = () => {
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold neo-noir-gradient-text">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             Welcome back, {user?.name}!
           </h1>
-          <p className="neo-noir-text-muted">
+          <p className="text-muted-foreground mt-1">
             Here's what's happening with your milk distribution business today.
           </p>
-          <Badge variant="secondary" className="mt-2">
-            {user?.role === 'admin' ? 'Administrator' : 'Employee'}
-          </Badge>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary">
+              {user?.role === 'admin' ? 'Administrator' : 'Employee'}
+            </Badge>
+            {isAdmin && (
+              <Badge variant="outline" className="bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+                <Zap className="w-3 h-3 mr-1" />
+                Full Access
+              </Badge>
+            )}
+          </div>
         </div>
         
         <RoleGuard allowedRoles={['admin']}>
@@ -142,7 +153,6 @@ export const EnhancedDashboard: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleExportCustomers}
-              className="neo-noir-button-outline"
             >
               <Download className="h-4 w-4 mr-2" />
               Export Customers
@@ -151,7 +161,6 @@ export const EnhancedDashboard: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={handleExportOrders}
-              className="neo-noir-button-outline"
             >
               <FileText className="h-4 w-4 mr-2" />
               Export Orders
@@ -162,53 +171,53 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Key Metrics */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="neo-noir-card">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium neo-noir-text">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-accent-color" />
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold neo-noir-text">₹{totalRevenue.toFixed(2)}</div>
-            <p className="text-xs neo-noir-text-muted">
+            <div className="text-2xl font-bold">₹{totalRevenue.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
               +₹{recentRevenue.toFixed(2)} this week
             </p>
           </CardContent>
         </Card>
         
-        <Card className="neo-noir-card">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/50 border-orange-200 dark:border-orange-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium neo-noir-text">Outstanding</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
+            <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold neo-noir-text">₹{totalOutstanding.toFixed(2)}</div>
-            <p className="text-xs neo-noir-text-muted">
+            <div className="text-2xl font-bold">₹{totalOutstanding.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
               {customers.filter(c => (c.outstandingBalance || 0) > 0).length} customers with dues
             </p>
           </CardContent>
         </Card>
         
-        <Card className="neo-noir-card">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium neo-noir-text">Active Customers</CardTitle>
-            <Users className="h-4 w-4 text-accent-color" />
+            <CardTitle className="text-sm font-medium">Active Customers</CardTitle>
+            <Users className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold neo-noir-text">{activeCustomers}</div>
-            <p className="text-xs neo-noir-text-muted">
+            <div className="text-2xl font-bold">{activeCustomers}</div>
+            <p className="text-xs text-muted-foreground">
               {totalCustomers} total customers
             </p>
           </CardContent>
         </Card>
         
-        <Card className="neo-noir-card">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium neo-noir-text">Pending Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-warning" />
+            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold neo-noir-text">{pendingOrders}</div>
-            <p className="text-xs neo-noir-text-muted">
+            <div className="text-2xl font-bold">{pendingOrders}</div>
+            <p className="text-xs text-muted-foreground">
               {totalOrders} total orders
             </p>
           </CardContent>
@@ -217,23 +226,23 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="neo-noir-card">
+        <Card>
           <CardHeader>
-            <CardTitle className="neo-noir-text">Daily Sales (Last 7 Days)</CardTitle>
-            <CardDescription className="neo-noir-text-muted">
+            <CardTitle>Daily Sales (Last 7 Days)</CardTitle>
+            <CardDescription>
               Revenue and order trends
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dailySalesData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.7)" />
-                <YAxis stroke="rgba(255,255,255,0.7)" />
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="name" className="text-muted-foreground" />
+                <YAxis className="text-muted-foreground" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'rgba(26, 30, 35, 0.95)', 
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
                   }}
                 />
@@ -241,14 +250,14 @@ export const EnhancedDashboard: React.FC = () => {
                 <Line
                   type="monotone"
                   dataKey="sales"
-                  stroke="#38bd95"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   name="Revenue (₹)"
                 />
                 <Line
                   type="monotone"
                   dataKey="orders"
-                  stroke="#3b82f6"
+                  stroke="hsl(var(--secondary))"
                   strokeWidth={2}
                   name="Orders"
                 />
@@ -257,10 +266,10 @@ export const EnhancedDashboard: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card className="neo-noir-card">
+        <Card>
           <CardHeader>
-            <CardTitle className="neo-noir-text">Order Status Distribution</CardTitle>
-            <CardDescription className="neo-noir-text-muted">
+            <CardTitle>Order Status Distribution</CardTitle>
+            <CardDescription>
               Current order statuses
             </CardDescription>
           </CardHeader>
@@ -289,32 +298,89 @@ export const EnhancedDashboard: React.FC = () => {
       </div>
 
       <RoleGuard allowedRoles={['admin']}>
-        <Card className="neo-noir-card">
+        <Card>
           <CardHeader>
-            <CardTitle className="neo-noir-text">Top Customers by Spending</CardTitle>
-            <CardDescription className="neo-noir-text-muted">
+            <CardTitle>Top Customers by Spending</CardTitle>
+            <CardDescription>
               Your most valuable customers
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={topCustomersData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.7)" />
-                <YAxis stroke="rgba(255,255,255,0.7)" />
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="name" className="text-muted-foreground" />
+                <YAxis className="text-muted-foreground" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'rgba(26, 30, 35, 0.95)', 
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
                   }}
                 />
-                <Bar dataKey="spent" fill="#38bd95" name="Total Spent (₹)" />
+                <Bar dataKey="spent" fill="hsl(var(--primary))" name="Total Spent (₹)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </RoleGuard>
+
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Business Intelligence</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Access advanced analytics and AI-powered insights
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              <Target className="mr-2 h-4 w-4" />
+              View Analytics
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Inventory Control</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Manage stock levels and track inventory
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              <Package className="mr-2 h-4 w-4" />
+              Manage Stock
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Financial Overview</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Track payments, dues, and financial health
+            </p>
+            <Button variant="outline" size="sm" className="w-full">
+              <TrendingUp className="mr-2 h-4 w-4" />
+              View Finances
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

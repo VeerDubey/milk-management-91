@@ -1,531 +1,401 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-  Truck, Package, Users, FileText, Download, Printer, 
-  QrCode, AlertTriangle, Plus, Minus, Save, Eye
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { useData } from '@/contexts/data/DataContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { exportLoadSheetToPDF, printLoadSheet, exportLoadSheetToExcel } from '@/utils/loadSheetUtils';
-
-interface LoadSheetItem {
-  productId: string;
-  productName: string;
-  brand: string;
-  packSize: string;
-  category: string;
-  standingQuantity: number;
-  todayQuantity: number;
-  adjustedQuantity: number;
-  finalQuantity: number;
-  crateCount: number;
-  remarks?: string;
-}
+import { 
+  Truck, 
+  Plus, 
+  Eye, 
+  Edit, 
+  Download, 
+  MapPin, 
+  Clock, 
+  Package,
+  Route,
+  CheckCircle,
+  AlertCircle,
+  Users
+} from 'lucide-react';
 
 interface LoadSheet {
   id: string;
-  date: string;
+  vehicleNumber: string;
+  driverName: string;
   route: string;
-  deliveryAgent: string;
-  items: LoadSheetItem[];
-  status: 'draft' | 'finalized' | 'dispatched';
-  createdBy: string;
+  totalOrders: number;
+  totalQuantity: number;
+  status: 'pending' | 'loaded' | 'in-transit' | 'delivered';
   createdAt: string;
-  version: number;
+  estimatedDelivery: string;
 }
 
+const mockLoadSheets: LoadSheet[] = [
+  {
+    id: 'LS001',
+    vehicleNumber: 'MH-12-AB-1234',
+    driverName: 'Ramesh Kumar',
+    route: 'Route A - Sector 1-5',
+    totalOrders: 45,
+    totalQuantity: 320,
+    status: 'in-transit',
+    createdAt: '2024-01-15T08:30:00',
+    estimatedDelivery: '2024-01-15T12:00:00'
+  },
+  {
+    id: 'LS002',
+    vehicleNumber: 'MH-12-CD-5678',
+    driverName: 'Suresh Patel',
+    route: 'Route B - Sector 6-10',
+    totalOrders: 38,
+    totalQuantity: 275,
+    status: 'loaded',
+    createdAt: '2024-01-15T09:00:00',
+    estimatedDelivery: '2024-01-15T13:30:00'
+  },
+  {
+    id: 'LS003',
+    vehicleNumber: 'MH-12-EF-9012',
+    driverName: 'Mahesh Singh',
+    route: 'Route C - Sector 11-15',
+    totalOrders: 52,
+    totalQuantity: 410,
+    status: 'delivered',
+    createdAt: '2024-01-15T07:45:00',
+    estimatedDelivery: '2024-01-15T11:15:00'
+  }
+];
+
 export default function LoadSheetManagement() {
-  const { customers, orders, products, salesmen, vehicles } = useData();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedRoute, setSelectedRoute] = useState('');
-  const [selectedAgent, setSelectedAgent] = useState('');
-  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
-  const [loadSheetItems, setLoadSheetItems] = useState<LoadSheetItem[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [savedLoadSheets, setSavedLoadSheets] = useState<LoadSheet[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Get unique routes from customers
-  const routes = useMemo(() => {
-    const routeSet = new Set(customers.map(c => c.area).filter(Boolean));
-    return Array.from(routeSet);
-  }, [customers]);
-
-  // Get customers for selected route
-  const routeCustomers = useMemo(() => {
-    return customers.filter(c => c.area === selectedRoute);
-  }, [customers, selectedRoute]);
-
-  // Auto-fetch standing orders and today's subscriptions
-  const fetchOrderData = () => {
-    if (!selectedDate || !selectedRoute || selectedCustomers.length === 0) {
-      toast.error('Please select date, route, and customers first');
-      return;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'loaded': return 'default';
+      case 'in-transit': return 'default';
+      case 'delivered': return 'default';
+      default: return 'secondary';
     }
-
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    const relevantOrders = orders.filter(order => 
-      order.date === dateStr && 
-      selectedCustomers.includes(order.customerId) &&
-      order.status !== 'cancelled'
-    );
-
-    const itemMap = new Map<string, LoadSheetItem>();
-
-    // Process orders
-    relevantOrders.forEach(order => {
-      order.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        if (!product) return;
-
-        const key = `${product.id}-${product.name}-${product.code}`;
-        
-        if (!itemMap.has(key)) {
-          itemMap.set(key, {
-            productId: product.id,
-            productName: product.name,
-            brand: product.category || 'Generic',
-            packSize: product.unit || 'piece',
-            category: product.category || 'Dairy',
-            standingQuantity: 0,
-            todayQuantity: item.quantity,
-            adjustedQuantity: 0,
-            finalQuantity: item.quantity,
-            crateCount: Math.ceil(item.quantity / 12), // Assuming 12 units per crate
-            remarks: ''
-          });
-        } else {
-          const existing = itemMap.get(key)!;
-          existing.todayQuantity += item.quantity;
-          existing.finalQuantity = existing.standingQuantity + existing.todayQuantity + existing.adjustedQuantity;
-          existing.crateCount = Math.ceil(existing.finalQuantity / 12);
-        }
-      });
-    });
-
-    setLoadSheetItems(Array.from(itemMap.values()));
-    toast.success(`Loaded ${itemMap.size} products for ${relevantOrders.length} orders`);
   };
 
-  // Handle quantity adjustments
-  const adjustQuantity = (productId: string, adjustment: number) => {
-    setLoadSheetItems(prev => prev.map(item => {
-      if (item.productId === productId) {
-        const newAdjusted = item.adjustedQuantity + adjustment;
-        const newFinal = item.standingQuantity + item.todayQuantity + newAdjusted;
-        return {
-          ...item,
-          adjustedQuantity: newAdjusted,
-          finalQuantity: Math.max(0, newFinal),
-          crateCount: Math.ceil(Math.max(0, newFinal) / 12)
-        };
-      }
-      return item;
-    }));
-  };
-
-  // Handle customer selection
-  const toggleCustomer = (customerId: string) => {
-    setSelectedCustomers(prev => 
-      prev.includes(customerId) 
-        ? prev.filter(id => id !== customerId)
-        : [...prev, customerId]
-    );
-  };
-
-  // Save load sheet
-  const saveLoadSheet = (status: 'draft' | 'finalized') => {
-    if (!selectedRoute || !selectedAgent || loadSheetItems.length === 0) {
-      toast.error('Please complete all required fields');
-      return;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return <Clock className="h-4 w-4" />;
+      case 'loaded': return <Package className="h-4 w-4" />;
+      case 'in-transit': return <Truck className="h-4 w-4" />;
+      case 'delivered': return <CheckCircle className="h-4 w-4" />;
+      default: return <AlertCircle className="h-4 w-4" />;
     }
-
-    const loadSheet: LoadSheet = {
-      id: `ls-${Date.now()}`,
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      route: selectedRoute,
-      deliveryAgent: selectedAgent,
-      items: loadSheetItems,
-      status,
-      createdBy: 'Admin', // In real app, get from auth context
-      createdAt: new Date().toISOString(),
-      version: 1
-    };
-
-    setSavedLoadSheets(prev => [...prev, loadSheet]);
-    toast.success(`Load sheet ${status === 'draft' ? 'saved as draft' : 'finalized'}`);
   };
 
-  // Export functions
-  const exportToPDF = () => {
-    const data = {
-      date: format(selectedDate, 'dd/MM/yyyy'),
-      route: selectedRoute,
-      agent: selectedAgent,
-      items: loadSheetItems,
-      totalQuantity: loadSheetItems.reduce((sum, item) => sum + item.finalQuantity, 0),
-      totalCrates: loadSheetItems.reduce((sum, item) => sum + item.crateCount, 0)
-    };
-    exportLoadSheetToPDF(data);
+  const handleCreateLoadSheet = () => {
+    toast.success('Load sheet created successfully');
+    setIsCreateDialogOpen(false);
   };
-
-  const exportToExcel = () => {
-    const data = {
-      date: format(selectedDate, 'dd/MM/yyyy'),
-      route: selectedRoute,
-      agent: selectedAgent,
-      items: loadSheetItems
-    };
-    exportLoadSheetToExcel(data);
-  };
-
-  const printSheet = () => {
-    const data = {
-      date: format(selectedDate, 'dd/MM/yyyy'),
-      route: selectedRoute,
-      agent: selectedAgent,
-      items: loadSheetItems,
-      totalQuantity: loadSheetItems.reduce((sum, item) => sum + item.finalQuantity, 0),
-      totalCrates: loadSheetItems.reduce((sum, item) => sum + item.crateCount, 0)
-    };
-    printLoadSheet(data);
-  };
-
-  // Group items by brand and category
-  const groupedItems = useMemo(() => {
-    const grouped = loadSheetItems.reduce((acc, item) => {
-      const key = `${item.brand}-${item.category}`;
-      if (!acc[key]) {
-        acc[key] = {
-          brand: item.brand,
-          category: item.category,
-          items: []
-        };
-      }
-      acc[key].items.push(item);
-      return acc;
-    }, {} as Record<string, { brand: string; category: string; items: LoadSheetItem[] }>);
-
-    return Object.values(grouped);
-  }, [loadSheetItems]);
 
   return (
-    <div className="space-y-6 p-6 neo-animate-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gradient-aurora neo-glow-text">
-            Load Sheet Management
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Load Sheet Management</h1>
           <p className="text-muted-foreground">
-            Automate warehouse dispatch with intelligent load sheet generation
+            Manage vehicle load sheets and delivery operations
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowPreview(true)} className="neo-glass">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
-          </Button>
-          <Button variant="outline" onClick={printSheet} className="neo-glass">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          <Button variant="outline" onClick={exportToExcel} className="neo-glass">
-            <Download className="mr-2 h-4 w-4" />
-            Excel
-          </Button>
-          <Button onClick={exportToPDF} className="neo-button-primary">
-            <FileText className="mr-2 h-4 w-4" />
-            PDF
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="create" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="create">Create Load Sheet</TabsTrigger>
-          <TabsTrigger value="history">Load Sheet History</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="create" className="space-y-6">
-          {/* Input Parameters */}
-          <Card className="neo-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Load Sheet Parameters
-              </CardTitle>
-              <CardDescription>Configure delivery parameters and fetch orders</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Load Sheet
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Load Sheet</DialogTitle>
+                <DialogDescription>
+                  Generate a new load sheet for vehicle delivery operations
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="date">Delivery Date</Label>
-                  <DatePicker
-                    date={selectedDate}
-                    setDate={setSelectedDate}
-                    className="w-full neo-input"
-                  />
+                  <Label>Vehicle Number</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select vehicle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vehicle1">MH-12-AB-1234</SelectItem>
+                      <SelectItem value="vehicle2">MH-12-CD-5678</SelectItem>
+                      <SelectItem value="vehicle3">MH-12-EF-9012</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="route">Route</Label>
-                  <Select value={selectedRoute} onValueChange={setSelectedRoute}>
-                    <SelectTrigger className="neo-input">
+                  <Label>Driver Name</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select driver" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="driver1">Ramesh Kumar</SelectItem>
+                      <SelectItem value="driver2">Suresh Patel</SelectItem>
+                      <SelectItem value="driver3">Mahesh Singh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Route</Label>
+                  <Select>
+                    <SelectTrigger>
                       <SelectValue placeholder="Select route" />
                     </SelectTrigger>
                     <SelectContent>
-                      {routes.map(route => (
-                        <SelectItem key={route} value={route}>{route}</SelectItem>
-                      ))}
+                      <SelectItem value="route1">Route A - Sector 1-5</SelectItem>
+                      <SelectItem value="route2">Route B - Sector 6-10</SelectItem>
+                      <SelectItem value="route3">Route C - Sector 11-15</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="agent">Delivery Agent</Label>
-                  <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-                    <SelectTrigger className="neo-input">
-                      <SelectValue placeholder="Select agent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {salesmen.map(agent => (
-                        <SelectItem key={agent.id} value={agent.name}>
-                          {agent.name} - {agent.route || 'No route assigned'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2 flex items-end">
-                  <Button onClick={fetchOrderData} className="w-full neo-button-primary">
-                    Fetch Orders
-                  </Button>
+                  <Label>Delivery Date</Label>
+                  <Input type="date" defaultValue={selectedDate} />
                 </div>
               </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateLoadSheet}>
+                  Create Load Sheet
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-              {/* Customer Selection */}
-              {selectedRoute && (
-                <div className="space-y-3">
-                  <Label>Select Customers for Route</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
-                    {routeCustomers.map(customer => (
-                      <div key={customer.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={customer.id}
-                          checked={selectedCustomers.includes(customer.id)}
-                          onCheckedChange={() => toggleCustomer(customer.id)}
-                        />
-                        <Label htmlFor={customer.id} className="text-sm">
-                          {customer.name}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {selectedCustomers.length} customers
-                  </p>
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
+            <Truck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-muted-foreground">
+              Currently on routes
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">135</div>
+            <p className="text-xs text-muted-foreground">
+              Today's deliveries
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Drivers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">
+              Available drivers
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Routes</CardTitle>
+            <Route className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15</div>
+            <p className="text-xs text-muted-foreground">
+              Delivery routes
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="active" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="active">Active Load Sheets</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="routes">Route Planning</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Today's Load Sheets</CardTitle>
+                  <CardDescription>
+                    Active delivery operations for {new Date().toLocaleDateString()}
+                  </CardDescription>
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <Label>Date:</Label>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Load Sheet ID</TableHead>
+                    <TableHead>Vehicle</TableHead>
+                    <TableHead>Driver</TableHead>
+                    <TableHead>Route</TableHead>
+                    <TableHead className="text-center">Orders</TableHead>
+                    <TableHead className="text-center">Quantity (L)</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockLoadSheets.map((sheet) => (
+                    <TableRow key={sheet.id}>
+                      <TableCell className="font-medium">{sheet.id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-muted-foreground" />
+                          {sheet.vehicleNumber}
+                        </div>
+                      </TableCell>
+                      <TableCell>{sheet.driverName}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          {sheet.route}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">{sheet.totalOrders}</TableCell>
+                      <TableCell className="text-center">{sheet.totalQuantity}L</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusColor(sheet.status)} className="flex items-center gap-1 w-fit">
+                          {getStatusIcon(sheet.status)}
+                          {sheet.status.charAt(0).toUpperCase() + sheet.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Load Sheet Items */}
-          {loadSheetItems.length > 0 && (
-            <Card className="neo-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Load Sheet Items
-                </CardTitle>
-                <CardDescription>Review and adjust quantities per product</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {groupedItems.map((group, groupIndex) => (
-                    <div key={groupIndex} className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-semibold">
-                          {group.brand}
-                        </Badge>
-                        <Badge variant="secondary">
-                          {group.category}
-                        </Badge>
+        <TabsContent value="completed" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Completed Load Sheets</CardTitle>
+              <CardDescription>
+                Historical delivery records and performance metrics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                No completed load sheets for selected date
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="routes" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Route Planning & Optimization</CardTitle>
+              <CardDescription>
+                Plan and optimize delivery routes for maximum efficiency
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Route Efficiency</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Route A</span>
+                        <Badge variant="default">92% Efficient</Badge>
                       </div>
-                      
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Product</TableHead>
-                              <TableHead className="text-center">Pack Size</TableHead>
-                              <TableHead className="text-center">Standing</TableHead>
-                              <TableHead className="text-center">Today's Orders</TableHead>
-                              <TableHead className="text-center">Adjustment</TableHead>
-                              <TableHead className="text-center">Final Qty</TableHead>
-                              <TableHead className="text-center">Crates</TableHead>
-                              <TableHead className="text-center">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {group.items.map((item, itemIndex) => (
-                              <TableRow key={itemIndex}>
-                                <TableCell className="font-medium">{item.productName}</TableCell>
-                                <TableCell className="text-center">{item.packSize}</TableCell>
-                                <TableCell className="text-center">{item.standingQuantity}</TableCell>
-                                <TableCell className="text-center">{item.todayQuantity}</TableCell>
-                                <TableCell className="text-center">
-                                  <span className={item.adjustedQuantity > 0 ? 'text-green-600' : 
-                                    item.adjustedQuantity < 0 ? 'text-red-600' : ''}>
-                                    {item.adjustedQuantity > 0 ? '+' : ''}{item.adjustedQuantity}
-                                  </span>
-                                </TableCell>
-                                <TableCell className="text-center font-semibold">
-                                  {item.finalQuantity}
-                                </TableCell>
-                                <TableCell className="text-center">{item.crateCount}</TableCell>
-                                <TableCell className="text-center">
-                                  <div className="flex items-center justify-center gap-1">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => adjustQuantity(item.productId, -1)}
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => adjustQuantity(item.productId, 1)}
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <Plus className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                      <div className="flex justify-between text-sm">
+                        <span>Route B</span>
+                        <Badge variant="secondary">87% Efficient</Badge>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Route C</span>
+                        <Badge variant="default">95% Efficient</Badge>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </CardContent>
+                </Card>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-2 mt-6">
-                  <Button variant="outline" onClick={() => saveLoadSheet('draft')}>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Draft
-                  </Button>
-                  <Button onClick={() => saveLoadSheet('finalized')} className="neo-button-primary">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Finalize Load Sheet
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-6">
-          <Card className="neo-card">
-            <CardHeader>
-              <CardTitle>Load Sheet History</CardTitle>
-              <CardDescription>View and manage previously created load sheets</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {savedLoadSheets.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No load sheets created yet
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Route</TableHead>
-                        <TableHead>Agent</TableHead>
-                        <TableHead>Items</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {savedLoadSheets.map((sheet) => (
-                        <TableRow key={sheet.id}>
-                          <TableCell>{sheet.date}</TableCell>
-                          <TableCell>{sheet.route}</TableCell>
-                          <TableCell>{sheet.deliveryAgent}</TableCell>
-                          <TableCell>{sheet.items.length} products</TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              sheet.status === 'finalized' ? 'default' :
-                              sheet.status === 'dispatched' ? 'secondary' : 'outline'
-                            }>
-                              {sheet.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Download className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-6">
-          <Card className="neo-card">
-            <CardHeader>
-              <CardTitle>Load Sheet Analytics</CardTitle>
-              <CardDescription>Performance metrics and insights</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-primary">
-                    {savedLoadSheets.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Load Sheets</div>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {savedLoadSheets.filter(s => s.status === 'finalized').length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Finalized</div>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {savedLoadSheets.filter(s => s.status === 'dispatched').length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Dispatched</div>
-                </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Optimization Suggestions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span>Consolidate Route B stops</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-yellow-500" />
+                        <span>Peak hour traffic on Route A</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <span>Route C performing optimally</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
