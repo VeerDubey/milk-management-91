@@ -54,12 +54,10 @@ export default function StockAlerts() {
 
   const getAlertVariant = (type: StockAlert['alertType']) => {
     switch (type) {
-      case 'low_stock':
-        return 'warning';
       case 'negative_stock':
         return 'destructive';
+      case 'low_stock':
       case 'expiry_warning':
-        return 'warning';
       default:
         return 'default';
     }
